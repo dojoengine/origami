@@ -8,7 +8,7 @@ env:
 jobs:
   check:
     runs-on: ubuntu-latest
-    name: Build package
+    name: Check format
     steps:
       - uses: actions/checkout@v4
       - uses: software-mansion/setup-scarb@v1
@@ -21,7 +21,7 @@ jobs:
     name: Build package
     steps:
       - uses: actions/checkout@v4
-      - uses: ./actions/setup
+      - uses: ./.github/actions/setup
       - name: Build
         run: sozo build
         shell: bash
@@ -31,7 +31,7 @@ jobs:
     name: Test random crate
     steps:
       - uses: actions/checkout@v4
-      - uses: ./actions/setup
+      - uses: ./.github/actions/setup
       - name: Test
         run: sozo test -f random
         shell: bash
@@ -41,7 +41,7 @@ jobs:
     name: Test security crate
     steps:
       - uses: actions/checkout@v4
-      - uses: ./actions/setup
+      - uses: ./.github/actions/setup
       - name: Test
         run: sozo test -f security
         shell: bash
