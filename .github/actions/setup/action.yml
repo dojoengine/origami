@@ -4,13 +4,16 @@ runs:
   using: "composite"
   steps:
     - name: Install dojoup
-      run: curl -L https://install.dojoengine.org | bash
+      run: curl -L https://install.dojoengine.org
+      shell: bash
 
     - name: Install dojo
       run: |
         /home/runner/.config/.dojo/bin/dojoup --version ${{ env.DOJO_VERSION }}
         sudo mv /home/runner/.config/.dojo/bin/katana /usr/local/bin/
         sudo mv /home/runner/.config/.dojo/bin/sozo /usr/local/bin/
+      shell: bash
 
     - name: Install scarb
       uses: software-mansion/setup-scarb@v1
+      shell: bash
