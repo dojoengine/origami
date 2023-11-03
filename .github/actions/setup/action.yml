@@ -16,4 +16,3 @@ runs:
 
     - name: Install scarb
       uses: software-mansion/setup-scarb@v1
-      shell: bash
