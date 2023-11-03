@@ -26,6 +26,26 @@ jobs:
         run: sozo build
         shell: bash
       
+  algebra:
+    runs-on: ubuntu-latest
+    name: Test random crate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Test
+        run: sozo test -f algebra
+        shell: bash
+
+  defi:
+    runs-on: ubuntu-latest
+    name: Test random crate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Test
+        run: sozo test -f defi
+        shell: bash
+      
   random:
     runs-on: ubuntu-latest
     name: Test random crate
