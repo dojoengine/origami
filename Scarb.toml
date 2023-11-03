@@ -1,0 +1,14 @@
+[workspace]
+name = "origami"
+version = "0.0.0"
+description = "Community-maintained libraries for Cairo"
+homepage = "https://github.com/dojoengine/origami"
+members = [
+    "crates/algebra",
+    "crates/defi",
+    "crates/random",
+    "crates/security",
+]
+
+[workspace.dependencies]
+dojo = { git = "https://github.com/dojoengine/dojo.git", tag = "v0.3.3" }
