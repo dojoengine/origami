@@ -2,10 +2,11 @@
 name = "origami"
 version = "0.0.0"
 description = "Community-maintained libraries for Cairo"
-homepage = "https://github.com/dojoengine/dojo"
+homepage = "https://github.com/dojoengine/origami"
 members = [
-    "crates/security",
+    "crates/defi",
     "crates/random",
+    "crates/security",
 ]
 
 [workspace.dependencies]

@@ -1,0 +1,9 @@
+[package]
+name = "defi"
+version = "0.0.0"
+description = "Implementations of defi primitives"
+homepage = "https://github.com/dojoengine/origami/tree/crates/defi"
+
+[dependencies]
+cubit = { git = "https://github.com/ponderingdemocritus/cubit", rev = "9c3bbdf" }
+dojo = { git = "https://github.com/dojoengine/dojo.git", tag = "v0.3.3" }
