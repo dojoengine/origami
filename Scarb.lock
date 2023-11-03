@@ -2,16 +2,35 @@
 version = 1
 
 [[package]]
+name = "algebra"
+version = "0.0.0"
+dependencies = [
+ "cubit",
+]
+
+[[package]]
+name = "cubit"
+version = "1.2.0"
+source = "git+https://github.com/influenceth/cubit?rev=b459053#b4590530d5aeae9aabd36740cc2a3d9e6adc5fde"
+
+[[package]]
+name = "defi"
+version = "0.0.0"
+dependencies = [
+ "cubit",
+]
+
+[[package]]
 name = "dojo"
-version = "0.3.2"
-source = "git+https://github.com/dojoengine/dojo.git?tag=v0.3.2#a0fa1ad96fb98c088be05da6178f43217891c8c6"
+version = "0.3.3"
+source = "git+https://github.com/dojoengine/dojo.git?tag=v0.3.3#3c9f109e667ca5d12739e6553fdb8261378f4ecf"
 dependencies = [
  "dojo_plugin",
 ]
 
 [[package]]
 name = "dojo_plugin"
-version = "0.3.2"
+version = "0.3.3"
 
 [[package]]
 name = "random"

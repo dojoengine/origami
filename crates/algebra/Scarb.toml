@@ -1,0 +1,8 @@
+[package]
+name = "algebra"
+version = "0.0.0"
+description = "Implementations of a algebra library."
+homepage = "https://github.com/dojoengine/origami/tree/crates/algebra"
+
+[dependencies]
+cubit = { git = "https://github.com/influenceth/cubit", rev = "b459053" }
