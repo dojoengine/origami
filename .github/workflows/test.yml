@@ -1,0 +1,31 @@
+name: Test
+
+on: [push, pull_request]
+
+env:
+    DOJO_VERSION: v0.3.3
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dojoup
+        run: curl -L https://install.dojoengine.org | bash
+
+      - name: Install dojo
+        run: |-
+          /home/runner/.config/.dojo/bin/dojoup --version ${{ env.DOJO_VERSION }}
+          echo "home/runner/.config/.dojo/bin/katana" >> "$GITHUB_PATH"
+          echo "home/runner/.config/.dojo/bin/sozo" >> "$GITHUB_PATH"
+
+      - uses: actions/checkout@v3
+      - uses: software-mansion/setup-scarb@v1
+
+      - name: Format
+        run: scarb fmt --check
+
+      - name: Tests
+        run: sozo test
+
+      - name: Build
+        run: sozo build
