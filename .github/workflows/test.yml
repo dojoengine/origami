@@ -28,7 +28,7 @@ jobs:
       
   algebra:
     runs-on: ubuntu-latest
-    name: Test random crate
+    name: Test algebra crate
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -38,7 +38,7 @@ jobs:
 
   defi:
     runs-on: ubuntu-latest
-    name: Test random crate
+    name: Test defi crate
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
