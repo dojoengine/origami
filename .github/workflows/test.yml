@@ -6,18 +6,42 @@ env:
     DOJO_VERSION: v0.3.3
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    name: Build package
+    steps:
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+      - name: Format
+        run: scarb fmt --package random --check
+        shell: bash
+
+  build:
+    runs-on: ubuntu-latest
+    name: Build package
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./actions/setup
+      - name: Build
+        run: sozo build
+        shell: bash
+      
   random:
     runs-on: ubuntu-latest
     name: Test random crate
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-
-      - name: Format
-        run: scarb fmt --check
-
-      - name: Build
-        run: sozo build
-
+      - uses: ./actions/setup
       - name: Test
-        run: sozo test
+        run: sozo test -f random
+        shell: bash
+
+  security:
+    runs-on: ubuntu-latest
+    name: Test security crate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./actions/setup
+      - name: Test
+        run: sozo test -f security
+        shell: bash

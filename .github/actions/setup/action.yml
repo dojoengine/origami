@@ -13,6 +13,3 @@ runs:
         sudo mv /home/runner/.config/.dojo/bin/katana /usr/local/bin/
         sudo mv /home/runner/.config/.dojo/bin/sozo /usr/local/bin/
       shell: bash
-
-    - name: Install scarb
-      uses: software-mansion/setup-scarb@v1
