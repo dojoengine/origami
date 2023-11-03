@@ -6,26 +6,18 @@ env:
     DOJO_VERSION: v0.3.3
 
 jobs:
-  check:
+  random:
     runs-on: ubuntu-latest
+    name: Test random crate
     steps:
-      - name: Install dojoup
-        run: curl -L https://install.dojoengine.org | bash
-
-      - name: Install dojo
-        run: |-
-          /home/runner/.config/.dojo/bin/dojoup --version ${{ env.DOJO_VERSION }}
-          sudo mv /home/runner/.config/.dojo/bin/katana /usr/local/bin/
-          sudo mv /home/runner/.config/.dojo/bin/sozo /usr/local/bin/
-
-      - uses: actions/checkout@v3
-      - uses: software-mansion/setup-scarb@v1
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup@v1
 
       - name: Format
         run: scarb fmt --check
 
-      - name: Tests
-        run: sozo test
-
       - name: Build
         run: sozo build
+
+      - name: Test
+        run: sozo test
