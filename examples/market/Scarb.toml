@@ -6,4 +6,6 @@ homepage = "https://github.com/dojoengine/origami/tree/examples/market"
 
 [dependencies]
 cubit = { git = "https://github.com/influenceth/cubit", rev = "b459053" }
-dojo = { git = "https://github.com/dojoengine/dojo.git", tag = "v0.3.3" }
+dojo.workspace = true
+
+[[target.dojo]]
