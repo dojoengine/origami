@@ -78,22 +78,22 @@ impl Vec2Impl<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of Vec2Trait<T> {
     /// Vec2<T> -> Vec2<T>
     #[inline(always)]
     fn xx(self: Vec2<T>) -> Vec2<T> {
-        Vec2 { x: self.x, y: self.x,  }
+        Vec2 { x: self.x, y: self.x, }
     }
 
     #[inline(always)]
     fn xy(self: Vec2<T>) -> Vec2<T> {
-        Vec2 { x: self.x, y: self.y,  }
+        Vec2 { x: self.x, y: self.y, }
     }
 
     #[inline(always)]
     fn yx(self: Vec2<T>) -> Vec2<T> {
-        Vec2 { x: self.y, y: self.x,  }
+        Vec2 { x: self.y, y: self.x, }
     }
 
     #[inline(always)]
     fn yy(self: Vec2<T>) -> Vec2<T> {
-        Vec2 { x: self.y, y: self.y,  }
+        Vec2 { x: self.y, y: self.y, }
     }
 }
 

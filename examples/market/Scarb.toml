@@ -1,0 +1,9 @@
+[package]
+name = "market"
+version = "0.0.0"
+description = "Example of defi crate usage."
+homepage = "https://github.com/dojoengine/origami/tree/examples/market"
+
+[dependencies]
+cubit = { git = "https://github.com/influenceth/cubit", rev = "b459053" }
+dojo = { git = "https://github.com/dojoengine/dojo.git", tag = "v0.3.3" }

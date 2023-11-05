@@ -1,0 +1,53 @@
+name: Test
+
+on: [push, pull_request]
+
+env:
+    DOJO_VERSION: v0.3.3
+    WORKING-DIRECTORY: examples
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    name: Check format
+    steps:
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+      - name: Format
+        working-directory: ${{ env.WORKING-DIRECTORY }}
+        run: scarb fmt --package random --check
+        shell: bash
+
+  build:
+    runs-on: ubuntu-latest
+    name: Build package
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Build
+        working-directory: ${{ env.WORKING-DIRECTORY }}
+        run: sozo build
+        shell: bash
+      
+  market:
+    runs-on: ubuntu-latest
+    name: Test market example
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Test
+        working-directory: ${{ env.WORKING-DIRECTORY }}
+        run: sozo test
+        shell: bash
+
+  projectile:
+    runs-on: ubuntu-latest
+    name: Test projectile example
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Test
+        working-directory: ${{ env.WORKING-DIRECTORY }}
+        run: sozo test
+        shell: bash
+      
