@@ -1,29 +1,71 @@
+// External imports
+
+use openzeppelin::token::erc721::interface;
+
 #[starknet::contract]
 mod ERC721 {
-    use dojo_erc::token::erc721::models::{
-        ERC721Meta, ERC721OperatorApproval, ERC721Owner, ERC721Balance, ERC721TokenApproval
-    };
-    use dojo_erc::token::erc721::interface;
-    use dojo_erc::token::erc721::interface::{IERC721, IERC721CamelOnly};
-    use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
+    // Core imports
+
     use integer::BoundedInt;
+    use zeroable::Zeroable;
+
+    // Starknet imports
+
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};
-    use zeroable::Zeroable;
-    use debug::PrintTrait;
 
+    // Dojo imports
+
+    use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
+
+    // External imports
+
+    use openzeppelin::token::erc721::erc721::ERC721;
+    use openzeppelin::introspection::interface::{ISRC5, ISRC5Camel};
+    use openzeppelin::introspection::src5::SRC5Component;
+
+    // Internal imports
+
+    use presets::erc721::models::{
+        ERC721Meta,
+        ERC721OperatorApproval,
+        ERC721Owner,
+        ERC721Balance,
+        ERC721TokenApproval,
+    };
+
+    // Local imports
+
+    use super::interface;
+
+    // Components
+
+    component!(path: SRC5Component, storage: src5, event: SRC5Event);
+    #[abi(embed_v0)]
+    impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
+    #[abi(embed_v0)]
+    impl SRC5CamelImpl = SRC5Component::SRC5CamelImpl<ContractState>;
+    impl SRC5InternalImpl = SRC5Component::InternalImpl<ContractState>;
+    impl SRC5EventCopy of Copy<SRC5Component::Event> {}
+
+    // Storage
 
     #[storage]
     struct Storage {
         _world: ContractAddress,
+        #[substorage(v0)]
+        src5: SRC5Component::Storage
     }
+
+    // Events
 
     #[event]
     #[derive(Copy, Drop, starknet::Event)]
     enum Event {
         Transfer: Transfer,
         Approval: Approval,
-        ApprovalForAll: ApprovalForAll
+        ApprovalForAll: ApprovalForAll,
+        SRC5Event: SRC5Component::Event,
     }
 
     #[derive(Copy, Drop, starknet::Event)]
@@ -56,8 +98,6 @@ mod ERC721 {
         const INVALID_RECEIVER: felt252 = 'ERC721: invalid receiver';
         const ALREADY_MINTED: felt252 = 'ERC721: token already minted';
         const WRONG_SENDER: felt252 = 'ERC721: wrong sender';
-        const SAFE_MINT_FAILED: felt252 = 'ERC721: safe mint failed';
-        const SAFE_TRANSFER_FAILED: felt252 = 'ERC721: safe transfer failed';
     }
 
     #[constructor]
@@ -79,22 +119,6 @@ mod ERC721 {
     // External
     //
 
-    // #[external(v0)]
-    // impl SRC5Impl of ISRC5<ContractState> {
-    //     fn supports_interface(self: @ContractState, interface_id: felt252) -> bool {
-    //         let unsafe_state = src5::SRC5::unsafe_new_contract_state();
-    //         src5::SRC5::SRC5Impl::supports_interface(@unsafe_state, interface_id)
-    //     }
-    // }
-
-    // #[external(v0)]
-    // impl SRC5CamelImpl of ISRC5Camel<ContractState> {
-    //     fn supportsInterface(self: @ContractState, interfaceId: felt252) -> bool {
-    //         let unsafe_state = src5::SRC5::unsafe_new_contract_state();
-    //         src5::SRC5::SRC5CamelImpl::supportsInterface(@unsafe_state, interfaceId)
-    //     }
-    // }
-
     #[external(v0)]
     impl ERC721MetadataImpl of interface::IERC721Metadata<ContractState> {
         fn name(self: @ContractState) -> felt252 {
@@ -115,8 +139,7 @@ mod ERC721 {
     #[external(v0)]
     impl ERC721MetadataCamelOnlyImpl of interface::IERC721MetadataCamelOnly<ContractState> {
         fn tokenURI(self: @ContractState, tokenId: u256) -> felt252 {
-            assert(self._exists(tokenId), Errors::INVALID_TOKEN_ID);
-            self.get_uri(tokenId)
+            self.token_uri(tokenId)
         }
     }
 
@@ -178,7 +201,8 @@ mod ERC721 {
             assert(
                 self._is_approved_or_owner(get_caller_address(), token_id), Errors::UNAUTHORIZED
             );
-            self._safe_transfer(from, to, token_id, data);
+            // TODO: move to real safe transfer when support of SRC6 is enabled
+            self.transfer_from(from, to, token_id);
         }
     }
 
@@ -312,11 +336,8 @@ mod ERC721 {
         fn initializer(ref self: ContractState, name: felt252, symbol: felt252, base_uri: felt252) {
             let meta = ERC721Meta { token: get_contract_address(), name, symbol, base_uri };
             set!(self.world(), (meta));
-        // let mut unsafe_state = src5::SRC5::unsafe_new_contract_state();
-        // src5::SRC5::InternalImpl::register_interface(ref unsafe_state, interface::IERC721_ID);
-        // src5::SRC5::InternalImpl::register_interface(
-        //     ref unsafe_state, interface::IERC721_METADATA_ID
-        // );
+            self.src5.register_interface(interface::IERC721_ID);
+            self.src5.register_interface(interface::IERC721_METADATA_ID);
         }
 
         fn _owner_of(self: @ContractState, token_id: u256) -> ContractAddress {
@@ -397,47 +418,5 @@ mod ERC721 {
 
             self.emit_event(Transfer { from: owner, to: Zeroable::zero(), token_id });
         }
-
-        fn _safe_mint(
-            ref self: ContractState, to: ContractAddress, token_id: u256, data: Span<felt252>
-        ) {
-            self._mint(to, token_id);
-        // assert(
-        //     _check_on_erc721_received(Zeroable::zero(), to, token_id, data),
-        //     Errors::SAFE_MINT_FAILED
-        // );
-        }
-
-        fn _safe_transfer(
-            ref self: ContractState,
-            from: ContractAddress,
-            to: ContractAddress,
-            token_id: u256,
-            data: Span<felt252>
-        ) {
-            self._transfer(from, to, token_id);
-        // assert(
-        //     _check_on_erc721_received(from, to, token_id, data), Errors::SAFE_TRANSFER_FAILED
-        // );
-        }
-    // fn _set_token_uri(ref self: ContractState, token_id: u256, token_uri: felt252) {
-    //     assert(self._exists(token_id), Errors::INVALID_TOKEN_ID);
-    //     self._token_uri.write(token_id, token_uri)
-    // }
     }
-
-//#[internal]
-// fn _check_on_erc721_received(
-//     from: ContractAddress, to: ContractAddress, token_id: u256, data: Span<felt252>
-// ) -> bool {
-//     if (DualCaseSRC5 { contract_address: to }
-//         .supports_interface(interface::IERC721_RECEIVER_ID)) {
-//         DualCaseERC721Receiver { contract_address: to }
-//             .on_erc721_received(
-//                 get_caller_address(), from, token_id, data
-//             ) == interface::IERC721_RECEIVER_ID
-//     } else {
-//         DualCaseSRC5 { contract_address: to }.supports_interface(account::interface::ISRC6_ID)
-//     }
-// }
 }

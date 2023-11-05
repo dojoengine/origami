@@ -1,30 +1,41 @@
+// Core imports
+
 use integer::u256;
 use integer::u256_from_felt252;
-use dojo_erc::tests::utils;
-use dojo_erc::tests::constants::{
-    ZERO, OWNER, SPENDER, RECIPIENT, OPERATOR, OTHER, NAME, SYMBOL, URI, TOKEN_ID
-};
+use zeroable::Zeroable;
+use debug::PrintTrait;
 
-use dojo_erc::token::erc721::ERC721::ERC721Impl;
-use dojo_erc::token::erc721::ERC721::ERC721CamelOnlyImpl;
-use dojo_erc::token::erc721::ERC721::ERC721MetadataImpl;
-use dojo_erc::token::erc721::ERC721::InternalImpl;
-use dojo_erc::token::erc721::ERC721::WorldInteractionsImpl;
-use dojo_erc::token::erc721::ERC721::{Approval, ApprovalForAll, Transfer};
-use dojo_erc::token::erc721::ERC721;
+// Starknet imports
+
 use starknet::ContractAddress;
 use starknet::contract_address_const;
 use starknet::testing;
-use zeroable::Zeroable;
+
+// Dojo imports
+
 use dojo::test_utils::spawn_test_world;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 
-use dojo_erc::token::erc721::models::{
+// External imports
+
+// Internal imports
+
+use presets::tests::utils;
+use presets::tests::constants::{
+    ZERO, OWNER, SPENDER, RECIPIENT, OPERATOR, OTHER, NAME, SYMBOL, URI, TOKEN_ID
+};
+use presets::erc721::ERC721::ERC721Impl;
+use presets::erc721::ERC721::ERC721CamelOnlyImpl;
+use presets::erc721::ERC721::ERC721MetadataImpl;
+use presets::erc721::ERC721::InternalImpl;
+use presets::erc721::ERC721::WorldInteractionsImpl;
+use presets::erc721::ERC721::{Approval, ApprovalForAll, Transfer};
+use presets::erc721::ERC721;
+use presets::erc721::models::{
     ERC721Meta, erc_721_meta, ERC721OperatorApproval, erc_721_operator_approval, ERC721Owner,
     erc_721_owner, ERC721Balance, erc_721_balance, ERC721TokenApproval, erc_721_token_approval
 };
-use dojo_erc::token::erc721::ERC721::_worldContractMemberStateTrait;
-use debug::PrintTrait;
+use presets::erc721::ERC721::_worldContractMemberStateTrait;
 
 //
 // Setup

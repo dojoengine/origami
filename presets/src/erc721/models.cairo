@@ -1,3 +1,5 @@
+// Starknet imports
+
 use starknet::ContractAddress;
 
 #[derive(Model, Copy, Drop, Serde)]

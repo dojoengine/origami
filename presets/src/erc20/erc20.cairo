@@ -1,39 +1,20 @@
-use starknet::ContractAddress;
+// External imports
 
-#[starknet::interface]
-trait IERC20<TState> {
-    fn name(self: @TState) -> felt252;
-    fn symbol(self: @TState) -> felt252;
-    fn decimals(self: @TState) -> u8;
-    fn total_supply(self: @TState) -> u256;
-    fn balance_of(self: @TState, account: ContractAddress) -> u256;
-    fn allowance(self: @TState, owner: ContractAddress, spender: ContractAddress) -> u256;
-    fn transfer(ref self: TState, recipient: ContractAddress, amount: u256) -> bool;
-    fn transfer_from(
-        ref self: TState, sender: ContractAddress, recipient: ContractAddress, amount: u256
-    ) -> bool;
-    fn approve(ref self: TState, spender: ContractAddress, amount: u256) -> bool;
-}
-
-trait IERC20CamelOnly<TState> {
-    fn totalSupply(self: @TState) -> u256;
-    fn balanceOf(self: @TState, account: ContractAddress) -> u256;
-    fn transferFrom(
-        ref self: TState, sender: ContractAddress, recipient: ContractAddress, amount: u256
-    ) -> bool;
-}
+use openzeppelin::token::erc20::interface;
 
 #[starknet::contract]
 mod ERC20 {
     use dojo_erc::token::erc20_models::{ERC20Allowance, ERC20Balance, ERC20Meta};
     use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
     use integer::BoundedInt;
-    use super::IERC20;
-    use super::IERC20CamelOnly;
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};
     use zeroable::Zeroable;
     use debug::PrintTrait;
+
+    // Local imports
+
+    use super::interface::{IERC20, IERC20CamelOnly};
 
 
     #[storage]

@@ -1,29 +1,27 @@
-use starknet::ContractAddress;
-
 #[derive(Model, Copy, Drop, Serde)]
 struct ERC20Balance {
     #[key]
-    token: ContractAddress,
+    token: starknet::ContractAddress,
     #[key]
-    account: ContractAddress,
+    account: starknet::ContractAddress,
     amount: u256,
 }
 
 #[derive(Model, Copy, Drop, Serde)]
 struct ERC20Allowance {
     #[key]
-    token: ContractAddress,
+    token: starknet::ContractAddress,
     #[key]
-    owner: ContractAddress,
+    owner: starknet::ContractAddress,
     #[key]
-    spender: ContractAddress,
+    spender: starknet::ContractAddress,
     amount: u256,
 }
 
 #[derive(Model, Copy, Drop, Serde)]
 struct ERC20Meta {
     #[key]
-    token: ContractAddress,
+    token: starknet::ContractAddress,
     name: felt252,
     symbol: felt252,
     total_supply: u256,

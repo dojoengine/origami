@@ -9,4 +9,4 @@ members = [
 ]
 
 [workspace.dependencies]
-dojo = { git = "https://github.com/dojoengine/dojo.git", tag = "v0.3.3" }
+dojo = { git = "https://github.com/dojoengine/dojo.git", tag = "v0.3.4" }
