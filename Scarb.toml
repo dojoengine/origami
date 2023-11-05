@@ -5,6 +5,7 @@ description = "Community-maintained libraries for Cairo"
 homepage = "https://github.com/dojoengine/origami"
 members = [
     "crates/*",
+    "examples/*",
 ]
 
 [workspace.dependencies]

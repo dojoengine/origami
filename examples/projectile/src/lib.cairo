@@ -1,14 +1,9 @@
-use core::option::OptionTrait;
-use array::ArrayTrait;
-use debug::PrintTrait;
-use array::ArrayTCloneImpl;
-use array::SpanTrait;
-use clone::Clone;
-use traits::PartialOrd;
+// External imports
 
-use cubit::f128::test::helpers::assert_precise;
-use cubit::f128::types::fixed::{Fixed, FixedPartialOrd, FixedTrait, ONE_u128};
+use cubit::f128::types::fixed::{Fixed, FixedTrait, ONE_u128};
 use cubit::f128::math::trig;
+
+// Internal imports
 
 use algebra::vec2::{Vec2, Vec2Trait};
 
@@ -50,10 +45,10 @@ fn main() -> (usize, Array::<Fixed>, Array::<Fixed>) {
     assert(v_0_mag.sign == false, 'need v_0_mag_felt > 0');
     // `theta_0_deg.mag` not exact after conversion, so use 180.0000001 
     assert(theta_0_deg.mag <= 180000001 * ONE_u128 / 1000000, '-180 <= theta_0_deg_felt <= 180');
-    assert(FixedPartialOrd::le(x_0, x_max), 'need x_0 <= x_max');
-    assert(FixedPartialOrd::ge(x_0, x_min), 'need x_0 >= x_min');
-    assert(FixedPartialOrd::le(y_0, y_max), 'need y_0 <= y_max');
-    assert(FixedPartialOrd::ge(y_0, y_min), 'need y_0 >= y_min');
+    assert(x_0 <= x_max, 'need x_0 <= x_max');
+    assert(x_0 >= x_min, 'need x_0 >= x_min');
+    assert(y_0 <= y_max, 'need y_0 <= y_max');
+    assert(y_0 >= y_min, 'need y_0 >= y_min');
     // Initial position vector
     let r_0 = Vec2Trait::<Fixed>::new(x_0, y_0);
     // Initial velocity vector
@@ -136,110 +131,127 @@ fn calc_y(y_0: Fixed, v_0y: Fixed, g: Fixed, t: Fixed) -> Fixed {
     y_0 + v_0y * t - half * g * t * t
 }
 
-#[test]
-#[available_gas(2000000)]
-fn test_deg_to_rad() {
-    let sixty = FixedTrait::new(60 * ONE_u128, false);
-    let theta = deg_to_rad(sixty);
-    assert_precise(theta, 19317385221538994246, 'invalid PI/3', Option::None(()));
-    assert(theta.sign == false, 'invalid sign');
+#[cfg(test)]
+mod tests {
+    // External imports
 
-    let minus_120 = FixedTrait::new(120 * ONE_u128, true);
-    let theta = deg_to_rad(minus_120);
-    assert_precise(theta, -38634770443077988493, 'invalid -2*PI/3', Option::None(()));
-    assert(theta.sign == true, 'invalid sign');
-}
+    use cubit::f128::test::helpers::assert_precise;
 
-#[test]
-#[available_gas(20000000)]
-fn test_vec2_from_mag_theta() {
-    let mag = FixedTrait::new(100 * ONE_u128, false);
-    let sixty = FixedTrait::new(60 * ONE_u128, false);
-    let theta = deg_to_rad(sixty);
-    let vec2 = vec2_from_mag_theta(mag, theta);
-    assert_precise(vec2.x, 922337203685477580800, 'invalid vec2.x mag', Option::None(())); // 50
-    assert(vec2.x.sign == false, 'invalid vec2.x.sign');
-    assert_precise(vec2.y, 1597534898494251510150, 'invalid vec2.y mag', Option::None(())); // 86.6
-    assert(vec2.y.sign == false, 'invalid vec2.y.sig');
+    // Local imports
 
-    let minus_120 = FixedTrait::new(120 * ONE_u128, true);
-    let theta = deg_to_rad(minus_120);
-    let vec2 = vec2_from_mag_theta(mag, theta);
-    assert_precise(vec2.x, -922337203685477580800, 'invalid vec2.x mag', Option::None(())); // -50
-    assert(vec2.x.sign == true, 'invalid vec2.x.sign');
-    assert_precise(
-        vec2.y, -1597534898494251510150, 'invalid vec2.y mag', Option::None(())
-    ); // -86.6
-    assert(vec2.y.sign == true, 'invalid vec2.y.sig');
-}
+    use super::{deg_to_rad, fill_position_s, vec2_from_mag_theta, calc_x, calc_y};
+    use super::{Vec2Trait, Fixed, FixedTrait, ONE_u128};
+    #[test]
+    #[available_gas(2000000)]
+    fn test_deg_to_rad() {
+        let sixty = FixedTrait::new(60 * ONE_u128, false);
+        let theta = deg_to_rad(sixty);
+        assert_precise(theta, 19317385221538994246, 'invalid PI/3', Option::None(()));
+        assert(theta.sign == false, 'invalid sign');
 
-#[test]
-#[available_gas(20000000)]
-fn test_fill_position_s() {
-    let v_0_mag = FixedTrait::from_unscaled_felt(100);
-    let theta_0_deg = FixedTrait::from_unscaled_felt(65);
-    let theta_0 = deg_to_rad(theta_0_deg);
-    let x_0 = FixedTrait::from_unscaled_felt(0);
-    let y_0 = FixedTrait::from_unscaled_felt(0);
+        let minus_120 = FixedTrait::new(120 * ONE_u128, true);
+        let theta = deg_to_rad(minus_120);
+        assert_precise(theta, -38634770443077988493, 'invalid -2*PI/3', Option::None(()));
+        assert(theta.sign == true, 'invalid sign');
+    }
 
-    let x_max = FixedTrait::from_unscaled_felt(1000);
-    let x_min = FixedTrait::from_unscaled_felt(-1000);
-    let y_max = FixedTrait::from_unscaled_felt(500);
-    let y_min = FixedTrait::from_unscaled_felt(-500);
+    #[test]
+    #[available_gas(20000000)]
+    fn test_vec2_from_mag_theta() {
+        let mag = FixedTrait::new(100 * ONE_u128, false);
+        let sixty = FixedTrait::new(60 * ONE_u128, false);
+        let theta = deg_to_rad(sixty);
+        let vec2 = vec2_from_mag_theta(mag, theta);
+        assert_precise(vec2.x, 922337203685477580800, 'invalid vec2.x mag', Option::None(())); // 50
+        assert(vec2.x.sign == false, 'invalid vec2.x.sign');
+        assert_precise(
+            vec2.y, 1597534898494251510150, 'invalid vec2.y mag', Option::None(())
+        ); // 86.6
+        assert(vec2.y.sign == false, 'invalid vec2.y.sig');
 
-    let r_0 = Vec2Trait::<Fixed>::new(x_0, y_0);
-    let v_0 = vec2_from_mag_theta(v_0_mag, theta_0);
-    let g = FixedTrait::new(98 * ONE_u128 / 10, false);
-    let delta_t = FixedTrait::from_unscaled_felt(2);
+        let minus_120 = FixedTrait::new(120 * ONE_u128, true);
+        let theta = deg_to_rad(minus_120);
+        let vec2 = vec2_from_mag_theta(mag, theta);
+        assert_precise(
+            vec2.x, -922337203685477580800, 'invalid vec2.x mag', Option::None(())
+        ); // -50
+        assert(vec2.x.sign == true, 'invalid vec2.x.sign');
+        assert_precise(
+            vec2.y, -1597534898494251510150, 'invalid vec2.y mag', Option::None(())
+        ); // -86.6
+        assert(vec2.y.sign == true, 'invalid vec2.y.sig');
+    }
 
-    let plot_params = (x_max, x_min, y_max, y_min);
-    let motion_params = (r_0, v_0, g, delta_t);
+    #[test]
+    #[available_gas(20000000)]
+    fn test_fill_position_s() {
+        let v_0_mag = FixedTrait::from_unscaled_felt(100);
+        let theta_0_deg = FixedTrait::from_unscaled_felt(65);
+        let theta_0 = deg_to_rad(theta_0_deg);
+        let x_0 = FixedTrait::from_unscaled_felt(0);
+        let y_0 = FixedTrait::from_unscaled_felt(0);
 
-    let mut position_s: (Array<Fixed>, Array<Fixed>) = fill_position_s(plot_params, motion_params);
+        let x_max = FixedTrait::from_unscaled_felt(1000);
+        let x_min = FixedTrait::from_unscaled_felt(-1000);
+        let y_max = FixedTrait::from_unscaled_felt(500);
+        let y_min = FixedTrait::from_unscaled_felt(-500);
 
-    let (x_s, y_s) = position_s;
-    let length = x_s.len();
-    assert(length == 12, 'invalid length');
+        let r_0 = Vec2Trait::<Fixed>::new(x_0, y_0);
+        let v_0 = vec2_from_mag_theta(v_0_mag, theta_0);
+        let g = FixedTrait::new(98 * ONE_u128 / 10, false);
+        let delta_t = FixedTrait::from_unscaled_felt(2);
 
-    assert_precise(
-        *x_s[5], 7795930915206679528264, 'invalid x_s[5]', Option::None(())
-    ); // 422.61826174069944
-    assert(*x_s.at(5).sign == false, 'invalid sign');
-    assert_precise(
-        *y_s[5], 7679523203357457794972, 'invalid y_s[5]', Option::None(())
-    ); // 416.3077870366498
-    assert(*y_s.at(5).sign == false, 'invalid sign');
+        let plot_params = (x_max, x_min, y_max, y_min);
+        let motion_params = (r_0, v_0, g, delta_t);
 
-    assert_precise(
-        *x_s[10], 15591861830413359425462, 'invalid x_s[10]', Option::None(())
-    ); // 845.2365234813989, custom precision 1e-6
-    assert(*x_s.at(10).sign == false, 'invalid sign');
-    assert_precise(
-        *y_s[10], -2718762785520446838411, 'invalid y_s[10]', Option::None(())
-    ); // -147.3844259267005, custom precision 1e-6
-    assert(*y_s.at(10).sign == true, 'invalid sign');
-}
+        let mut position_s: (Array<Fixed>, Array<Fixed>) = fill_position_s(
+            plot_params, motion_params
+        );
 
-#[test]
-#[available_gas(2000000)]
-fn test_calc_x() {
-    let x_0 = FixedTrait::new(100 * ONE_u128, false);
-    let v_0x = FixedTrait::new(50 * ONE_u128, false);
-    let t = FixedTrait::new(16 * ONE_u128, false);
-    let x = calc_x(x_0, v_0x, t);
-    assert(x.mag == 900 * ONE_u128, 'invalid mag');
-    assert(x.sign == false, 'invalid sign');
-}
+        let (x_s, y_s) = position_s;
+        let length = x_s.len();
+        assert(length == 12, 'invalid length');
 
-#[test]
-#[available_gas(2000000)]
-fn test_calc_y() {
-    let y_0 = FixedTrait::new(100 * ONE_u128, false);
-    let v_0y = FixedTrait::new(50 * ONE_u128, false);
-    let t = FixedTrait::new(16 * ONE_u128, false);
-    let g = FixedTrait::new(98 * ONE_u128 / 10, false);
+        assert_precise(
+            *x_s[5], 7795930915206679528264, 'invalid x_s[5]', Option::None(())
+        ); // 422.61826174069944
+        assert(*x_s.at(5).sign == false, 'invalid sign');
+        assert_precise(
+            *y_s[5], 7679523203357457794972, 'invalid y_s[5]', Option::None(())
+        ); // 416.3077870366498
+        assert(*y_s.at(5).sign == false, 'invalid sign');
 
-    let y = calc_y(y_0, v_0y, g, t);
-    assert_precise(y, -6537526099722665092710, 'invalid y', Option::None(())); // -354.4
-    assert(y.sign == true, 'invalid sign');
+        assert_precise(
+            *x_s[10], 15591861830413359425462, 'invalid x_s[10]', Option::None(())
+        ); // 845.2365234813989, custom precision 1e-6
+        assert(*x_s.at(10).sign == false, 'invalid sign');
+        assert_precise(
+            *y_s[10], -2718762785520446838411, 'invalid y_s[10]', Option::None(())
+        ); // -147.3844259267005, custom precision 1e-6
+        assert(*y_s.at(10).sign == true, 'invalid sign');
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    fn test_calc_x() {
+        let x_0 = FixedTrait::new(100 * ONE_u128, false);
+        let v_0x = FixedTrait::new(50 * ONE_u128, false);
+        let t = FixedTrait::new(16 * ONE_u128, false);
+        let x = calc_x(x_0, v_0x, t);
+        assert(x.mag == 900 * ONE_u128, 'invalid mag');
+        assert(x.sign == false, 'invalid sign');
+    }
+
+    #[test]
+    #[available_gas(2000000)]
+    fn test_calc_y() {
+        let y_0 = FixedTrait::new(100 * ONE_u128, false);
+        let v_0y = FixedTrait::new(50 * ONE_u128, false);
+        let t = FixedTrait::new(16 * ONE_u128, false);
+        let g = FixedTrait::new(98 * ONE_u128 / 10, false);
+
+        let y = calc_y(y_0, v_0y, g, t);
+        assert_precise(y, -6537526099722665092710, 'invalid y', Option::None(())); // -354.4
+        assert(y.sign == true, 'invalid sign');
+    }
 }
