@@ -22,15 +22,31 @@ dependencies = [
 
 [[package]]
 name = "dojo"
-version = "0.3.3"
-source = "git+https://github.com/dojoengine/dojo.git?tag=v0.3.3#3c9f109e667ca5d12739e6553fdb8261378f4ecf"
+version = "0.3.4"
+source = "git+https://github.com/dojoengine/dojo.git?tag=v0.3.4#a3140d88b08b79c5ff2261c1db81bafe80b5cc91"
 dependencies = [
  "dojo_plugin",
 ]
 
 [[package]]
 name = "dojo_plugin"
-version = "0.3.3"
+version = "0.3.4"
+
+[[package]]
+name = "market"
+version = "0.0.0"
+dependencies = [
+ "cubit",
+ "dojo",
+]
+
+[[package]]
+name = "projectile"
+version = "0.0.0"
+dependencies = [
+ "algebra",
+ "cubit",
+]
 
 [[package]]
 name = "random"

@@ -1,0 +1,9 @@
+[package]
+name = "projectile"
+version = "0.0.0"
+description = "Example of algebria crate usage."
+homepage = "https://github.com/dojoengine/origami/tree/examples/projectile"
+
+[dependencies]
+cubit = { git = "https://github.com/influenceth/cubit", rev = "b459053" }
+algebra = { path = "../../crates/algebra" }
