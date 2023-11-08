@@ -1,7 +1,9 @@
+// Starknet imports
+
 use starknet::ContractAddress;
 
 #[derive(Model, Copy, Drop, Serde)]
-struct ERC1155Meta {
+struct ERC721Meta {
     #[key]
     token: ContractAddress,
     name: felt252,
@@ -10,7 +12,7 @@ struct ERC1155Meta {
 }
 
 #[derive(Model, Copy, Drop, Serde)]
-struct ERC1155OperatorApproval {
+struct ERC721OperatorApproval {
     #[key]
     token: ContractAddress,
     #[key]
@@ -20,14 +22,29 @@ struct ERC1155OperatorApproval {
     approved: bool
 }
 
+#[derive(Model, Copy, Drop, Serde)]
+struct ERC721Owner {
+    #[key]
+    token: ContractAddress,
+    #[key]
+    token_id: u256,
+    address: ContractAddress
+}
 
 #[derive(Model, Copy, Drop, Serde)]
-struct ERC1155Balance {
+struct ERC721Balance {
     #[key]
     token: ContractAddress,
     #[key]
     account: ContractAddress,
+    amount: u256,
+}
+
+#[derive(Model, Copy, Drop, Serde)]
+struct ERC721TokenApproval {
     #[key]
-    id: u256,
-    amount: u256
+    token: ContractAddress,
+    #[key]
+    token_id: u256,
+    address: ContractAddress,
 }

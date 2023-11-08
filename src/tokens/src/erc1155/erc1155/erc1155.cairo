@@ -1,8 +1,6 @@
 #[starknet::contract]
 mod ERC1155 {
-    use dojo_erc::token::erc1155::models::{
-        ERC1155Meta, ERC1155OperatorApproval, ERC1155Balance
-    };
+    use dojo_erc::token::erc1155::models::{ERC1155Meta, ERC1155OperatorApproval, ERC1155Balance};
     use dojo_erc::token::erc1155::interface;
     use dojo_erc::token::erc1155::interface::{IERC1155, IERC1155CamelOnly};
     use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};

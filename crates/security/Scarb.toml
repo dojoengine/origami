@@ -1,8 +1,0 @@
-[package]
-name = "security"
-version = "0.0.0"
-description = "A set of security patterns for games"
-homepage = "https://github.com/dojoengine/origami/tree/main/crates/security"
-
-[dependencies]
-dojo.workspace = true

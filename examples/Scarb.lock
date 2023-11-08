@@ -19,9 +19,25 @@ name = "dojo_plugin"
 version = "0.3.4"
 
 [[package]]
+name = "market"
+version = "0.0.0"
+dependencies = [
+ "cubit",
+ "dojo",
+]
+
+[[package]]
 name = "origami"
 version = "0.0.0"
 dependencies = [
  "cubit",
  "dojo",
+]
+
+[[package]]
+name = "projectile"
+version = "0.0.0"
+dependencies = [
+ "cubit",
+ "origami",
 ]

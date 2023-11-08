@@ -5,7 +5,7 @@ use cubit::f128::math::trig;
 
 // Internal imports
 
-use algebra::vec2::{Vec2, Vec2Trait};
+use origami::algebra::vec2::{Vec2, Vec2Trait};
 
 fn main() -> (usize, Array::<Fixed>, Array::<Fixed>) {
     // to be inputs for #[view] function
