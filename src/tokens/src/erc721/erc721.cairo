@@ -27,11 +27,7 @@ mod ERC721 {
     // Internal imports
 
     use presets::erc721::models::{
-        ERC721Meta,
-        ERC721OperatorApproval,
-        ERC721Owner,
-        ERC721Balance,
-        ERC721TokenApproval,
+        ERC721Meta, ERC721OperatorApproval, ERC721Owner, ERC721Balance, ERC721TokenApproval,
     };
 
     // Local imports
