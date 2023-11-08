@@ -1,0 +1,42 @@
+name: Origami CI
+
+on: [push, pull_request]
+
+env:
+  DOJO_VERSION: v0.3.4
+  SCARB_VERSION: v2.3.1
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    name: Check format
+    steps:
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+      - name: Format
+        run: scarb fmt --check
+        shell: bash
+
+  build:
+    needs: check
+    runs-on: ubuntu-latest
+    name: Build package
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Build
+        run: sozo build
+        shell: bash
+
+  origami:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    name: Test crates
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Test
+        run: sozo test
+        shell: bash

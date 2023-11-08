@@ -1,8 +1,0 @@
-[package]
-name = "defi"
-version = "0.0.0"
-description = "Implementations of defi primitives"
-homepage = "https://github.com/dojoengine/origami/tree/crates/defi"
-
-[dependencies]
-cubit = { git = "https://github.com/influenceth/cubit", rev = "b459053" }
