@@ -1,0 +1,10 @@
+[package]
+name = "origami"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+homepage = "https://github.com/dojoengine/origami/tree/main/crates"
+
+[dependencies]
+cubit.workspace = true
+dojo.workspace = true
