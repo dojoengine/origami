@@ -1,4 +1,4 @@
-name: Origami Crates CI
+name: Origami CI
 
 on: [push, pull_request]
 
