@@ -1,11 +1,10 @@
-name: Origami Examples CI
+name: Origami Crates CI
 
 on: [push, pull_request]
 
 env:
   DOJO_VERSION: v0.3.4
   SCARB_VERSION: v2.3.1
-  WORKING_DIRECTORY: examples
 
 jobs:
   check:
@@ -17,7 +16,6 @@ jobs:
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - name: Format
-        working-directory: ${{ env.WORKING_DIRECTORY }}
         run: scarb fmt --check
         shell: bash
 
@@ -29,30 +27,39 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Build
-        working-directory: ${{ env.WORKING_DIRECTORY }}
         run: sozo build
         shell: bash
 
-  market:
+  origami:
     needs: [check, build]
     runs-on: ubuntu-latest
-    name: Test market
+    name: Test crates
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Test
-        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: sozo test -f origami
+        shell: bash
+
+
+  market:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    name: Test example market
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Test
         run: sozo test -f market
         shell: bash
 
   projectile:
     needs: [check, build]
     runs-on: ubuntu-latest
-    name: Test projectile
+    name: Test example projectile
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Test
-        working-directory: ${{ env.WORKING_DIRECTORY }}
         run: sozo test -f projectile
         shell: bash

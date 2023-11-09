@@ -5,5 +5,5 @@ description = "Example of defi crate usage."
 homepage = "https://github.com/dojoengine/origami/tree/examples/market"
 
 [dependencies]
-cubit = { git = "https://github.com/influenceth/cubit", rev = "b459053" }
+cubit.workspace = true
 dojo.workspace = true
