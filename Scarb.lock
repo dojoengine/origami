@@ -8,15 +8,15 @@ source = "git+https://github.com/influenceth/cubit?rev=b459053#b4590530d5aeae9aa
 
 [[package]]
 name = "dojo"
-version = "0.3.6"
-source = "git+https://github.com/dojoengine/dojo?tag=v0.3.6#08f1eba55b53de56b08221ae093a00f799fa60c1"
+version = "0.3.10"
+source = "git+https://github.com/dojoengine/dojo?tag=v0.3.10#be1676252c41f8188465741edcbcb381d2c12080"
 dependencies = [
  "dojo_plugin",
 ]
 
 [[package]]
 name = "dojo_plugin"
-version = "0.3.6"
+version = "0.3.10"
 
 [[package]]
 name = "market"
