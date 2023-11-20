@@ -3,7 +3,7 @@ name: Origami Examples CI
 on: [push, pull_request]
 
 env:
-  DOJO_VERSION: v0.3.4
+  DOJO_VERSION: v0.3.10
   SCARB_VERSION: v2.3.1
   WORKING_DIRECTORY: examples
 

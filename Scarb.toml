@@ -8,4 +8,4 @@ homepage = "https://github.com/dojoengine/origami"
 
 [dependencies]
 cubit = { git = "https://github.com/influenceth/cubit", rev = "b459053" }
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.3.4" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.3.10" }
