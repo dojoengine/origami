@@ -20,3 +20,10 @@ mod random {
 mod security {
     mod commitment;
 }
+
+mod map {
+    mod hex {
+        mod hex;
+        mod types;
+    }
+}

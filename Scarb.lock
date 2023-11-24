@@ -8,15 +8,25 @@ source = "git+https://github.com/influenceth/cubit?rev=b459053#b4590530d5aeae9aa
 
 [[package]]
 name = "dojo"
-version = "0.3.10"
-source = "git+https://github.com/dojoengine/dojo?tag=v0.3.10#be1676252c41f8188465741edcbcb381d2c12080"
+version = "0.3.12"
+source = "git+https://github.com/dojoengine/dojo?tag=v0.3.12#12d58f29ec53454317f1f6d265007a053d279288"
 dependencies = [
  "dojo_plugin",
 ]
 
 [[package]]
 name = "dojo_plugin"
-version = "0.3.10"
+version = "0.3.11"
+source = "git+https://github.com/dojoengine/dojo?tag=v0.3.11#1e651b5d4d3b79b14a7d8aa29a92062fcb9e6659"
+
+[[package]]
+name = "hex_map"
+version = "0.0.0"
+dependencies = [
+ "cubit",
+ "dojo",
+ "origami",
+]
 
 [[package]]
 name = "market"
@@ -28,7 +38,7 @@ dependencies = [
 
 [[package]]
 name = "origami"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "cubit",
  "dojo",
