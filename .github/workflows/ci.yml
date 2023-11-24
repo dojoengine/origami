@@ -3,7 +3,7 @@ name: Origami CI
 on: [push, pull_request]
 
 env:
-  DOJO_VERSION: v0.3.10
+  DOJO_VERSION: v0.3.12
   SCARB_VERSION: v2.3.1
 
 jobs:
@@ -40,7 +40,6 @@ jobs:
       - name: Test
         run: sozo test -f origami
         shell: bash
-
 
   market:
     needs: [check, build]
