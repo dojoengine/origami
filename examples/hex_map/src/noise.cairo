@@ -1,3 +1,9 @@
+//
+//
+// Unique buisness logic of your world. It imports both the hex from origami and the simplex from cubit
+//
+//
+
 use cubit::f64::procgen::simplex3;
 use cubit::f64::types::vec3::{Vec3, Vec3Trait};
 use cubit::f64::types::fixed::{Fixed, FixedTrait, FixedPrint, FixedImpl, ONE};
@@ -5,6 +11,7 @@ use cubit::f64::types::fixed::{Fixed, FixedTrait, FixedPrint, FixedImpl, ONE};
 use origami::map::hex::{types::{Direction, HexTile}};
 use origami::map::hex::{hex::{IHexTile, ImplHexTile}};
 
+// You can expand this to add more types
 mod TileType {
     const WATER: u8 = 0;
     const LAND: u8 = 1;
@@ -26,6 +33,7 @@ impl ImplTile of ITile {
         let mag = simplex.mag;
         let one: u64 = ONE.into();
 
+        // how tiles are defined
         if mag > (one * 3 / 4) {
             TileType::MOUNTAIN
         } else if mag > (one * 2 / 4) {

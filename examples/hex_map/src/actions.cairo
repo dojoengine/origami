@@ -52,25 +52,15 @@ mod actions {
         new_position
     }
 
-    // impl: implement functions specified in trait
     #[external(v0)]
     impl ActionsImpl of IActions<ContractState> {
         // ContractState is defined by system decorator expansion
         fn spawn(self: @ContractState) { // Access the world dispatcher for reading.
             let world = self.world_dispatcher.read();
 
-            // Get the address of the current caller, possibly the player's address.
-            let player = get_caller_address();
-
-            // Retrieve the player's current position from the world.
-            let position = get!(world, player, (Position));
-
-            // Update the world state with the new data.
-            // 1. Set players moves to 10
-            // 2. Move the player's position 100 units in both the x and y direction.
-            set!(world, (Position { player, vec: Vec2 { x: 10, y: 10 } },));
+            set!(world, (Position { player: get_caller_address(), vec: Vec2 { x: 10, y: 10 } }));
         }
-        // Implementation of the move function for the ContractState struct.
+        // Moves player in the provided direction.
         fn move(self: @ContractState, direction: Direction) {
             // Access the world dispatcher for reading.
             let world = self.world_dispatcher.read();
@@ -94,6 +84,7 @@ mod actions {
 }
 #[cfg(test)]
 mod tests {
+    use debug::PrintTrait;
     use starknet::class_hash::Felt252TryIntoClassHash;
 
     // import world dispatcher
@@ -126,7 +117,7 @@ mod tests {
 
     #[test]
     #[available_gas(30000000)]
-    fn test_north_east() {
+    fn test_east() {
         // caller
         let caller = starknet::contract_address_const::<0x0>();
 
@@ -146,6 +137,111 @@ mod tests {
 
         // check new position y
         assert(new_position.vec.y == 10, 'position y is wrong');
+    }
+
+
+    #[test]
+    #[should_panic(expected: ('Cannot walk on water', 'ENTRYPOINT_FAILED'))]
+    #[available_gas(30000000)]
+    fn test_south_east() {
+        // caller
+        let caller = starknet::contract_address_const::<0x0>();
+
+        let (world, actions_system) = setup_world();
+
+        // call spawn()
+        actions_system.spawn();
+
+        // call move with direction right
+        actions_system.move(Direction::SouthEast(()));
+
+        // get new_position
+        let new_position = get!(world, caller, Position);
+    }
+
+    #[test]
+    #[available_gas(30000000)]
+    fn test_south() {
+        // caller
+        let caller = starknet::contract_address_const::<0x0>();
+
+        let (world, actions_system) = setup_world();
+
+        // call spawn()
+        actions_system.spawn();
+
+        // call move with direction right
+        actions_system.move(Direction::SouthWest(()));
+
+        // get new_position
+        let new_position = get!(world, caller, Position);
+
+        // check new position x
+        assert(new_position.vec.x == 10, 'position x is wrong');
+
+        // check new position y
+        assert(new_position.vec.y == 11, 'position y is wrong');
+    }
+    #[test]
+    #[should_panic(expected: ('Cannot walk on water', 'ENTRYPOINT_FAILED'))]
+    #[available_gas(30000000)]
+    fn test_north() {
+        // caller
+        let caller = starknet::contract_address_const::<0x0>();
+
+        let (world, actions_system) = setup_world();
+
+        // call spawn()
+        actions_system.spawn();
+
+        // call move with direction right
+        actions_system.move(Direction::West(()));
+
+        // get new_position
+        let new_position = get!(world, caller, Position);
+    }
+
+    #[test]
+    #[available_gas(30000000)]
+    fn test_north_west() {
+        // caller
+        let caller = starknet::contract_address_const::<0x0>();
+
+        let (world, actions_system) = setup_world();
+
+        // call spawn()
+        actions_system.spawn();
+
+        // call move with direction right
+        actions_system.move(Direction::NorthWest(()));
+
+        // get new_position
+        let new_position = get!(world, caller, Position);
+
+        // check new position x
+        assert(new_position.vec.x == 10, 'position x is wrong');
+
+        // check new position y
+        assert(new_position.vec.y == 9, 'position y is wrong');
+    }
+
+    #[test]
+    #[should_panic(expected: ('Cannot walk on water', 'ENTRYPOINT_FAILED'))]
+    #[available_gas(30000000)]
+    fn test_north_east() {
+        // caller
+        let caller = starknet::contract_address_const::<0x0>();
+
+        let (world, actions_system) = setup_world();
+
+        // call spawn()
+        actions_system.spawn();
+
+        // call move with direction right
+        actions_system.move(Direction::NorthEast(()));
+
+        // get new_position
+        let new_position = get!(world, caller, Position);
     }
 }
 
