@@ -44,7 +44,7 @@ Add the following to your `[dependencies]`:
 
 ```toml
 [dependencies]
-origami = { git = "https://github.com/OpenZeppelin/cairo-contracts.git" }
+origami = { git = "https://github.com/dojoengine/origami.git" }
 ```
 
 Now you will be able to use origami like any other Cairo package!
