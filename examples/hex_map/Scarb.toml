@@ -1,0 +1,10 @@
+[package]
+name = "hex_map"
+version = "0.0.0"
+description = "Example Hex Map with noise"
+homepage = "https://github.com/dojoengine/origami/tree/examples/hex_map"
+
+[dependencies]
+cubit.workspace = true
+dojo.workspace = true
+origami.workspace = true
