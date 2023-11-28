@@ -1,15 +1,15 @@
 use integer::BoundedInt;
 use integer::u256;
 use integer::u256_from_felt252;
-use dojo_erc::tests::utils;
-use dojo_erc::tests::constants::{
+use token::tests::utils;
+use token::tests::constants::{
     ZERO, OWNER, SPENDER, RECIPIENT, NAME, SYMBOL, DECIMALS, SUPPLY, VALUE
 };
-use dojo_erc::token::erc20::ERC20::Approval;
-use dojo_erc::token::erc20::ERC20::ERC20Impl;
-use dojo_erc::token::erc20::ERC20::InternalImpl;
-use dojo_erc::token::erc20::ERC20::Transfer;
-use dojo_erc::token::erc20::ERC20;
+use token::erc20::ERC20::Approval;
+use token::erc20::ERC20::ERC20Impl;
+use token::erc20::ERC20::InternalImpl;
+use token::erc20::ERC20::Transfer;
+use token::erc20::ERC20;
 use starknet::ContractAddress;
 use starknet::contract_address_const;
 use starknet::testing;
@@ -17,10 +17,10 @@ use zeroable::Zeroable;
 use dojo::test_utils::spawn_test_world;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 
-use dojo_erc::token::erc20_models::{
+use token::erc20::models::{
     ERC20Allowance, erc_20_allowance, ERC20Balance, erc_20_balance, ERC20Meta, erc_20_meta
 };
-use dojo_erc::token::erc20::ERC20::_worldContractMemberStateTrait;
+use token::erc20::ERC20::_worldContractMemberStateTrait;
 use debug::PrintTrait;
 
 //

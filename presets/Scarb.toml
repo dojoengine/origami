@@ -1,9 +1,0 @@
-[package]
-name = "presets"
-version = "0.0.0"
-description = "Implementations of ERC standards for the Dojo framework."
-homepage = "https://github.com/dojoengine/origami/tree/presets"
-
-[dependencies]
-dojo = { git = "https://github.com/dojoengine/dojo.git", rev = "d62ec8a" }
-openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", rev = "4eafccf" }

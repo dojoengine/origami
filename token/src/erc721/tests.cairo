@@ -20,22 +20,22 @@ use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 
 // Internal imports
 
-use presets::tests::utils;
-use presets::tests::constants::{
+use token::tests::utils;
+use token::tests::constants::{
     ZERO, OWNER, SPENDER, RECIPIENT, OPERATOR, OTHER, NAME, SYMBOL, URI, TOKEN_ID
 };
-use presets::erc721::ERC721::ERC721Impl;
-use presets::erc721::ERC721::ERC721CamelOnlyImpl;
-use presets::erc721::ERC721::ERC721MetadataImpl;
-use presets::erc721::ERC721::InternalImpl;
-use presets::erc721::ERC721::WorldInteractionsImpl;
-use presets::erc721::ERC721::{Approval, ApprovalForAll, Transfer};
-use presets::erc721::ERC721;
-use presets::erc721::models::{
+use token::erc721::ERC721::ERC721Impl;
+use token::erc721::ERC721::ERC721CamelOnlyImpl;
+use token::erc721::ERC721::ERC721MetadataImpl;
+use token::erc721::ERC721::InternalImpl;
+use token::erc721::ERC721::WorldInteractionsImpl;
+use token::erc721::ERC721::{Approval, ApprovalForAll, Transfer};
+use token::erc721::ERC721;
+use token::erc721::models::{
     ERC721Meta, erc_721_meta, ERC721OperatorApproval, erc_721_operator_approval, ERC721Owner,
     erc_721_owner, ERC721Balance, erc_721_balance, ERC721TokenApproval, erc_721_token_approval
 };
-use presets::erc721::ERC721::_worldContractMemberStateTrait;
+use token::erc721::ERC721::_worldContractMemberStateTrait;
 
 //
 // Setup

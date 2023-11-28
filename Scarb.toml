@@ -1,8 +1,8 @@
 [workspace]
-members = ["crates", "examples/*"]
+members = ["crates", "examples/*", "token"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.0.0"
 description = "Community-maintained libraries for Cairo"
 homepage = "https://github.com/dojoengine/origami"
 authors = ["bal7hazar@proton.me"]
