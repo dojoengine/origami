@@ -63,7 +63,7 @@ mod ERC20 {
     //
 
     #[external(v0)]
-    impl ERC20Impl of interface::IERC20<ContractState> {
+    impl ERC20MetadataImpl of interface::IERC20Metadata<ContractState> {
         fn name(self: @ContractState) -> felt252 {
             self.get_meta().name
         }
@@ -75,7 +75,10 @@ mod ERC20 {
         fn decimals(self: @ContractState) -> u8 {
             18
         }
+    }
 
+    #[external(v0)]
+    impl ERC20Impl of interface::IERC20<ContractState> {
         fn total_supply(self: @ContractState) -> u256 {
             self.get_meta().total_supply
         }
