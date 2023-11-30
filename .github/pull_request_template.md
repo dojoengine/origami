@@ -15,5 +15,5 @@ Closes #
 - [ ] Linked relevant issue
 - [ ] Updated relevant documentation
 - [ ] Added relevant tests
-- [ ] Add a dedicated job for new examples
+- [ ] Add a dedicated CI job for new examples
 - [ ] Performed self-review of the code
