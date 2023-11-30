@@ -1,8 +1,8 @@
 #[starknet::contract]
 mod ERC1155 {
-    use dojo_erc::token::erc1155::models::{ERC1155Meta, ERC1155OperatorApproval, ERC1155Balance};
-    use dojo_erc::token::erc1155::interface;
-    use dojo_erc::token::erc1155::interface::{IERC1155, IERC1155CamelOnly};
+    use token::erc1155::models::{ERC1155Meta, ERC1155OperatorApproval, ERC1155Balance};
+    use token::erc1155::interface;
+    use token::erc1155::interface::{IERC1155, IERC1155CamelOnly};
     use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};
@@ -72,26 +72,6 @@ mod ERC1155 {
         self._world.write(world);
         self.initializer(name, symbol, base_uri);
     }
-
-    //
-    // External
-    //
-
-    // #[external(v0)]
-    // impl SRC5Impl of ISRC5<ContractState> {
-    //     fn supports_interface(self: @ContractState, interface_id: felt252) -> bool {
-    //         let unsafe_state = src5::SRC5::unsafe_new_contract_state();
-    //         src5::SRC5::SRC5Impl::supports_interface(@unsafe_state, interface_id)
-    //     }
-    // }
-
-    // #[external(v0)]
-    // impl SRC5CamelImpl of ISRC5Camel<ContractState> {
-    //     fn supportsInterface(self: @ContractState, interfaceId: felt252) -> bool {
-    //         let unsafe_state = src5::SRC5::unsafe_new_contract_state();
-    //         src5::SRC5::SRC5CamelImpl::supportsInterface(@unsafe_state, interfaceId)
-    //     }
-    // }
 
     #[external(v0)]
     impl ERC1155MetadataImpl of interface::IERC1155Metadata<ContractState> {
@@ -297,11 +277,6 @@ mod ERC1155 {
         fn initializer(ref self: ContractState, name: felt252, symbol: felt252, base_uri: felt252) {
             let meta = ERC1155Meta { token: get_contract_address(), name, symbol, base_uri };
             set!(self.world(), (meta));
-        // let mut unsafe_state = src5::SRC5::unsafe_new_contract_state();
-        // src5::SRC5::InternalImpl::register_interface(ref unsafe_state, interface::IERC721_ID);
-        // src5::SRC5::InternalImpl::register_interface(
-        //     ref unsafe_state, interface::IERC721_METADATA_ID
-        // );
         }
 
         fn _is_approved_for_all_or_owner(
@@ -329,9 +304,6 @@ mod ERC1155 {
             data: Array<u8>
         ) {
             self.update_balances(from, to, id, amount);
-            // assert(
-            //     _check_on_erc1155_received(from, to, id, data), Errors::SAFE_TRANSFER_FAILED
-            // );
 
             self
                 .emit_event(
@@ -359,9 +331,6 @@ mod ERC1155 {
                 let id = *ids_span.pop_front().unwrap();
                 let amount = *amounts_span.pop_front().unwrap();
                 self.update_balances(from, to, id, amount);
-            // assert(
-            //     _check_on_erc1155_received(from, to, id, data), Errors::SAFE_TRANSFER_FAILED
-            // );
             };
 
             self
@@ -413,25 +382,6 @@ mod ERC1155 {
             data: Span<felt252>
         ) {
             self._mint(to, id, amount);
-        // assert(
-        //     _check_on_erc1155_received(Zeroable::zero(), to, id, data),
-        //     Errors::SAFE_MINT_FAILED
-        // );
         }
     }
-//#[internal]
-// fn _check_on_erc1155_received(
-//     from: ContractAddress, to: ContractAddress, token_id: u256, data: Span<felt252>
-// ) -> bool {
-//     if (DualCaseSRC5 { contract_address: to }
-//         .supports_interface(interface::IERC1155_RECEIVER_ID)) {
-//         DualCaseERC1155Receiver { contract_address: to }
-//             .on_erc1155_received(
-//                 get_caller_address(), from, token_id, data
-//             ) == interface::IERC1155_RECEIVER_ID
-//     } else {
-//         DualCaseSRC5 { contract_address: to }.supports_interface(account::interface::ISRC6_ID)
-//     }
-// }
-
 }

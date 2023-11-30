@@ -1,20 +1,12 @@
-// External imports
-
-use openzeppelin::token::erc20::interface;
-
 #[starknet::contract]
 mod ERC20 {
-    use dojo_erc::token::erc20_models::{ERC20Allowance, ERC20Balance, ERC20Meta};
+    use token::erc20::models::{ERC20Allowance, ERC20Balance, ERC20Meta};
     use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
+    use token::erc20::interface;
     use integer::BoundedInt;
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};
     use zeroable::Zeroable;
-    use debug::PrintTrait;
-
-    // Local imports
-
-    use super::interface::{IERC20, IERC20CamelOnly};
 
 
     #[storage]
@@ -71,7 +63,7 @@ mod ERC20 {
     //
 
     #[external(v0)]
-    impl ERC20Impl of IERC20<ContractState> {
+    impl ERC20MetadataImpl of interface::IERC20Metadata<ContractState> {
         fn name(self: @ContractState) -> felt252 {
             self.get_meta().name
         }
@@ -83,7 +75,10 @@ mod ERC20 {
         fn decimals(self: @ContractState) -> u8 {
             18
         }
+    }
 
+    #[external(v0)]
+    impl ERC20Impl of interface::IERC20<ContractState> {
         fn total_supply(self: @ContractState) -> u256 {
             self.get_meta().total_supply
         }
@@ -127,7 +122,7 @@ mod ERC20 {
     }
 
     #[external(v0)]
-    impl ERC20CamelOnlyImpl of IERC20CamelOnly<ContractState> {
+    impl ERC20CamelOnlyImpl of interface::IERC20CamelOnly<ContractState> {
         fn totalSupply(self: @ContractState) -> u256 {
             ERC20Impl::total_supply(self)
         }

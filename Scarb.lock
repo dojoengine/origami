@@ -38,7 +38,7 @@ dependencies = [
 
 [[package]]
 name = "origami"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "cubit",
  "dojo",
@@ -51,4 +51,11 @@ dependencies = [
  "cubit",
  "dojo",
  "origami",
+]
+
+[[package]]
+name = "token"
+version = "0.0.0"
+dependencies = [
+ "dojo",
 ]

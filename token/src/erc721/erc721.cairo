@@ -1,67 +1,27 @@
-// External imports
-
-use openzeppelin::token::erc721::interface;
-
 #[starknet::contract]
 mod ERC721 {
-    // Core imports
-
+    use token::erc721::models::{
+        ERC721Meta, ERC721OperatorApproval, ERC721Owner, ERC721Balance, ERC721TokenApproval
+    };
+    use token::erc721::interface;
+    use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
     use integer::BoundedInt;
-    use zeroable::Zeroable;
-
-    // Starknet imports
-
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};
+    use zeroable::Zeroable;
 
-    // Dojo imports
-
-    use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-
-    // External imports
-
-    use openzeppelin::token::erc721::erc721::ERC721;
-    use openzeppelin::introspection::interface::{ISRC5, ISRC5Camel};
-    use openzeppelin::introspection::src5::SRC5Component;
-
-    // Internal imports
-
-    use presets::erc721::models::{
-        ERC721Meta, ERC721OperatorApproval, ERC721Owner, ERC721Balance, ERC721TokenApproval,
-    };
-
-    // Local imports
-
-    use super::interface;
-
-    // Components
-
-    component!(path: SRC5Component, storage: src5, event: SRC5Event);
-    #[abi(embed_v0)]
-    impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
-    #[abi(embed_v0)]
-    impl SRC5CamelImpl = SRC5Component::SRC5CamelImpl<ContractState>;
-    impl SRC5InternalImpl = SRC5Component::InternalImpl<ContractState>;
-    impl SRC5EventCopy of Copy<SRC5Component::Event> {}
-
-    // Storage
 
     #[storage]
     struct Storage {
         _world: ContractAddress,
-        #[substorage(v0)]
-        src5: SRC5Component::Storage
     }
-
-    // Events
 
     #[event]
     #[derive(Copy, Drop, starknet::Event)]
     enum Event {
         Transfer: Transfer,
         Approval: Approval,
-        ApprovalForAll: ApprovalForAll,
-        SRC5Event: SRC5Component::Event,
+        ApprovalForAll: ApprovalForAll
     }
 
     #[derive(Copy, Drop, starknet::Event)]
@@ -94,6 +54,8 @@ mod ERC721 {
         const INVALID_RECEIVER: felt252 = 'ERC721: invalid receiver';
         const ALREADY_MINTED: felt252 = 'ERC721: token already minted';
         const WRONG_SENDER: felt252 = 'ERC721: wrong sender';
+        const SAFE_MINT_FAILED: felt252 = 'ERC721: safe mint failed';
+        const SAFE_TRANSFER_FAILED: felt252 = 'ERC721: safe transfer failed';
     }
 
     #[constructor]
@@ -110,10 +72,6 @@ mod ERC721 {
         self.initializer(name, symbol, base_uri);
         self._mint(recipient, token_id);
     }
-
-    //
-    // External
-    //
 
     #[external(v0)]
     impl ERC721MetadataImpl of interface::IERC721Metadata<ContractState> {
@@ -135,7 +93,8 @@ mod ERC721 {
     #[external(v0)]
     impl ERC721MetadataCamelOnlyImpl of interface::IERC721MetadataCamelOnly<ContractState> {
         fn tokenURI(self: @ContractState, tokenId: u256) -> felt252 {
-            self.token_uri(tokenId)
+            assert(self._exists(tokenId), Errors::INVALID_TOKEN_ID);
+            self.get_uri(tokenId)
         }
     }
 
@@ -197,8 +156,7 @@ mod ERC721 {
             assert(
                 self._is_approved_or_owner(get_caller_address(), token_id), Errors::UNAUTHORIZED
             );
-            // TODO: move to real safe transfer when support of SRC6 is enabled
-            self.transfer_from(from, to, token_id);
+            self._safe_transfer(from, to, token_id, data);
         }
     }
 
@@ -332,8 +290,6 @@ mod ERC721 {
         fn initializer(ref self: ContractState, name: felt252, symbol: felt252, base_uri: felt252) {
             let meta = ERC721Meta { token: get_contract_address(), name, symbol, base_uri };
             set!(self.world(), (meta));
-            self.src5.register_interface(interface::IERC721_ID);
-            self.src5.register_interface(interface::IERC721_METADATA_ID);
         }
 
         fn _owner_of(self: @ContractState, token_id: u256) -> ContractAddress {
@@ -413,6 +369,22 @@ mod ERC721 {
             self.set_owner(token_id, Zeroable::zero());
 
             self.emit_event(Transfer { from: owner, to: Zeroable::zero(), token_id });
+        }
+
+        fn _safe_mint(
+            ref self: ContractState, to: ContractAddress, token_id: u256, data: Span<felt252>
+        ) {
+            self._mint(to, token_id);
+        }
+
+        fn _safe_transfer(
+            ref self: ContractState,
+            from: ContractAddress,
+            to: ContractAddress,
+            token_id: u256,
+            data: Span<felt252>
+        ) {
+            self._transfer(from, to, token_id);
         }
     }
 }

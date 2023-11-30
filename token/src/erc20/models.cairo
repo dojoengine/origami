@@ -1,33 +1,32 @@
+// Starknet imports
+
 use starknet::ContractAddress;
 
 #[derive(Model, Copy, Drop, Serde)]
-struct ERC1155Meta {
+struct ERC20Balance {
     #[key]
     token: ContractAddress,
-    name: felt252,
-    symbol: felt252,
-    base_uri: felt252,
+    #[key]
+    account: ContractAddress,
+    amount: u256,
 }
 
 #[derive(Model, Copy, Drop, Serde)]
-struct ERC1155OperatorApproval {
+struct ERC20Allowance {
     #[key]
     token: ContractAddress,
     #[key]
     owner: ContractAddress,
     #[key]
-    operator: ContractAddress,
-    approved: bool
+    spender: ContractAddress,
+    amount: u256,
 }
 
-
 #[derive(Model, Copy, Drop, Serde)]
-struct ERC1155Balance {
+struct ERC20Meta {
     #[key]
     token: ContractAddress,
-    #[key]
-    account: ContractAddress,
-    #[key]
-    id: u256,
-    amount: u256
+    name: felt252,
+    symbol: felt252,
+    total_supply: u256,
 }
