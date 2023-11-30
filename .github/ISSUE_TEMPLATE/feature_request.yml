@@ -1,0 +1,51 @@
+name: Feature request
+description: Suggest a feature
+title: "[Feature]: "
+labels: [ "feature" ]
+body:
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Feature Request
+      description: Describe the feature(s) you would like to be added.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe a prefered solution.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Describe alternatives.
+    validations:
+      required: false
+
+  - type: textarea
+    id: related
+    attributes:
+      label: Related Code
+      description: Link the related code.
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: If relevant, please provide the additional context.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: If the feature is accepted, would you be willing to contribute it?
+      options:
+        - label: Yes

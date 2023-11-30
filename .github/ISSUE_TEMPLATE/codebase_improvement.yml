@@ -1,0 +1,19 @@
+name: Codebase improvement
+description: Feedback on the codebase
+title: "[Enhancement]: "
+labels: [ "enhancement" ]
+body:
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Feedback
+      description: Provide your feedback for the existing codebase.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: If the request is accepted, would you be willing to contribute it?
+      options:
+        - label: Yes
