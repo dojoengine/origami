@@ -62,3 +62,14 @@ jobs:
       - name: Test
         run: sozo test -f projectile
         shell: bash
+
+  hex-map:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    name: Test example hex map
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Test
+        run: sozo test -f hex_map
+        shell: bash

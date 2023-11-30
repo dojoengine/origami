@@ -1,7 +1,6 @@
 name: Codebase improvement
 description: Feedback on the codebase
 title: "[Enhancement]: "
-labels: [ "enhancement" ]
 body:
   - type: textarea
     id: feedback
