@@ -36,6 +36,11 @@
 - [random](./crates/src/random)
 - [security](./crates/src/security)
 
+### Examples using the Origami
+- [Simplex noise hex map](./examples/hex_map)
+- [Market](./examples/market)
+- [Projectile](./examples/projectile)
+
 ### Easy integration into your project
 
 Incorporate `origami` seamlessly into your projects using Scarb.toml.
