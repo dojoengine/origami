@@ -4,6 +4,10 @@ mod algebra {
     mod matrix;
 }
 
+mod physics {
+    mod solver;
+}
+
 mod defi {
     mod auction {
         mod gda;
