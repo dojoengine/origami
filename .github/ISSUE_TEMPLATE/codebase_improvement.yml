@@ -15,4 +15,4 @@ body:
     attributes:
       label: If the request is accepted, would you be willing to contribute it?
       options:
-        - label: Yes
+        - label: Yes I would be willing to contribute
