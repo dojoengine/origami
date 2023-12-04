@@ -1,13 +1,19 @@
-#[dojo::contract]
+#[starknet::contract]
 mod ERC1155 {
     use token::erc1155::models::{ERC1155Meta, ERC1155OperatorApproval, ERC1155Balance};
     use token::erc1155::interface;
     use token::erc1155::interface::{IERC1155, IERC1155CamelOnly};
+    use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};
     use array::ArrayTCloneImpl;
     use zeroable::Zeroable;
     use debug::PrintTrait;
+
+    #[storage]
+    struct Storage {
+        _world: ContractAddress,
+    }
 
     #[event]
     #[derive(Clone, Drop, starknet::Event)]
@@ -56,7 +62,14 @@ mod ERC1155 {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, name: felt252, symbol: felt252, base_uri: felt252,) {
+    fn constructor(
+        ref self: ContractState,
+        world: ContractAddress,
+        name: felt252,
+        symbol: felt252,
+        base_uri: felt252,
+    ) {
+        self._world.write(world);
         self.initializer(name, symbol, base_uri);
     }
 
@@ -196,6 +209,10 @@ mod ERC1155 {
 
     #[generate_trait]
     impl WorldInteractionsImpl of WorldInteractionsTrait {
+        fn world(self: @ContractState) -> IWorldDispatcher {
+            IWorldDispatcher { contract_address: self._world.read() }
+        }
+
         fn get_meta(self: @ContractState) -> ERC1155Meta {
             get!(self.world(), get_contract_address(), ERC1155Meta)
         }

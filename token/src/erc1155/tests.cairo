@@ -22,7 +22,7 @@ use token::erc1155::models::{
     ERC1155Meta, erc_1155_meta, ERC1155OperatorApproval, erc_1155_operator_approval, ERC1155Balance,
     erc_1155_balance
 };
-use token::erc1155::ERC1155::world_dispatcherContractMemberStateTrait;
+use token::erc1155::ERC1155::_worldContractMemberStateTrait;
 use debug::PrintTrait;
 
 //
@@ -38,7 +38,7 @@ fn STATE() -> (IWorldDispatcher, ERC1155::ContractState) {
         ]
     );
     let mut state = ERC1155::contract_state_for_testing();
-    state.world_dispatcher.write(world);
+    state._world.write(world.contract_address);
 
     InternalImpl::_mint(ref state, OWNER(), TOKEN_ID, TOKEN_AMOUNT);
     utils::drop_event(ZERO());
@@ -51,7 +51,7 @@ fn STATE() -> (IWorldDispatcher, ERC1155::ContractState) {
 
 fn setup() -> ERC1155::ContractState {
     let (world, mut state) = STATE();
-    ERC1155::constructor(ref state, NAME, SYMBOL, URI);
+    ERC1155::constructor(ref state, world.contract_address, NAME, SYMBOL, URI);
     utils::drop_event(ZERO());
     state
 }
@@ -64,7 +64,7 @@ fn setup() -> ERC1155::ContractState {
 #[available_gas(20000000)]
 fn test_constructor() {
     let (world, mut state) = STATE();
-    ERC1155::constructor(ref state, NAME, SYMBOL, URI);
+    ERC1155::constructor(ref state, world.contract_address, NAME, SYMBOL, URI);
 
     assert(ERC1155MetadataImpl::name(@state) == NAME, 'Name should be NAME');
     assert(ERC1155MetadataImpl::symbol(@state) == SYMBOL, 'Symbol should be SYMBOL');
