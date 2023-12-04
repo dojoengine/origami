@@ -1,6 +1,5 @@
 [workspace]
-# members = ["crates", "examples/*", "token"]
-members = ["crates"]
+members = ["crates", "examples/*", "token"]
 
 [workspace.package]
 version = "0.0.0"
@@ -10,6 +9,6 @@ authors = ["bal7hazar@proton.me"]
 
 [workspace.dependencies]
 cubit = { git = "https://github.com/influenceth/cubit.git", rev = "b459053" }
-# dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.3.14" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.3.14" }
 orion = { git = "https://github.com/gizatechxyz/orion", rev = "df6d6b9" }
 origami = { path = "crates" }
