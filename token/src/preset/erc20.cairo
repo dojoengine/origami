@@ -8,13 +8,17 @@ mod ERC20 {
     use zeroable::Zeroable;
 
     use token::components::token::erc20_metadata::ERC20MetadataComponent;
+    use token::components::security::initializable::InitializableComponent;
 
+    component!(path: InitializableComponent, storage: initializable, event: InitializableEvent);
     component!(path: ERC20MetadataComponent, storage: erc20_metadata, event: ERC20MetadataEvent);
 
     #[storage]
     struct Storage {
         #[substorage(v0)]
-        erc20_metadata: ERC20MetadataComponent::Storage
+        initializable: InitializableComponent::Storage,
+        #[substorage(v0)]
+        erc20_metadata: ERC20MetadataComponent::Storage,
     }
 
     #[event]
@@ -23,7 +27,9 @@ mod ERC20 {
         Transfer: Transfer,
         Approval: Approval,
         #[flat]
-        ERC20MetadataEvent: ERC20MetadataComponent::Event
+        InitializableEvent: InitializableComponent::Event,
+        #[flat]
+        ERC20MetadataEvent: ERC20MetadataComponent::Event,
     }
 
     #[derive(Copy, Drop, starknet::Event)]
@@ -41,6 +47,9 @@ mod ERC20 {
     }
 
     mod Errors {
+        const ALREADY_INITIALIZED: felt252 = 'ERC20: already initialized';
+        const CALLER_IS_NOT_OWNER: felt252 = 'ERC20: caller is not owner';
+
         const APPROVE_FROM_ZERO: felt252 = 'ERC20: approve from 0';
         const APPROVE_TO_ZERO: felt252 = 'ERC20: approve to 0';
         const TRANSFER_FROM_ZERO: felt252 = 'ERC20: transfer from 0';
@@ -49,32 +58,39 @@ mod ERC20 {
         const MINT_TO_ZERO: felt252 = 'ERC20: mint to 0';
     }
 
-    #[constructor]
-    fn constructor(
-        ref self: ContractState,
-        name: felt252,
-        symbol: felt252,
-        initial_supply: u256,
-        recipient: ContractAddress
-    ) {
-        self.initializer(name, symbol);
-        self._mint(recipient, initial_supply);
-    }
-
-    //
-    // External
-    //
-
+    #[abi(embed_v0)]
+    impl InitializableImpl =
+        InitializableComponent::InitializableImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl ERC20MetadataImpl =
         ERC20MetadataComponent::ERC20MetadataImpl<ContractState>;
 
+
+    #[external(v0)]
+    fn initializer(
+        ref self: ContractState,
+        name: felt252,
+        symbol: felt252,
+        recipient: ContractAddress,
+        initial_supply: u256
+    ) {
+        assert(!self.initializable.is_initialized(), Errors::ALREADY_INITIALIZED);
+        assert(
+            self.world().is_owner(get_caller_address(), get_contract_address().into()),
+            Errors::CALLER_IS_NOT_OWNER
+        );
+
+        self.erc20_metadata.initialize(name, symbol, 18);
+        self._mint(recipient, initial_supply);
+
+        self.initializable.initialize();
+    }
+
     #[external(v0)]
     impl ERC20Impl of interface::IERC20<ContractState> {
         fn total_supply(self: @ContractState) -> u256 {
-            //self.get_meta().total_supply
-            0.into()
+            self.erc20_metadata.get_metadata().total_supply
         }
 
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
@@ -118,8 +134,7 @@ mod ERC20 {
     #[external(v0)]
     impl ERC20CamelOnlyImpl of interface::IERC20CamelOnly<ContractState> {
         fn totalSupply(self: @ContractState) -> u256 {
-            //  ERC20Impl::total_supply(self)
-            0.into()
+            ERC20Impl::total_supply(self)
         }
 
         fn balanceOf(self: @ContractState, account: ContractAddress) -> u256 {
@@ -170,21 +185,11 @@ mod ERC20 {
     // Internal
     //
 
+    impl InitializableInternalImpl = InitializableComponent::InternalImpl<ContractState>;
+    impl ERC20MetadataInternalImpl = ERC20MetadataComponent::InternalImpl<ContractState>;
+
     #[generate_trait]
     impl WorldInteractionsImpl of WorldInteractionsTrait {
-        fn get_meta(self: @ContractState) -> ERC20Meta {
-            get!(self.world(), get_contract_address(), ERC20Meta)
-        }
-
-        // Helper function to update total_supply model
-        fn update_total_supply(ref self: ContractState, subtract: u256, add: u256) {
-            let mut meta = self.get_meta();
-            // adding and subtracting is fewer steps than if
-            meta.total_supply = meta.total_supply - subtract;
-            meta.total_supply = meta.total_supply + add;
-            set!(self.world(), (meta));
-        }
-
         // Helper function for balance model
         fn get_balance(self: @ContractState, account: ContractAddress) -> ERC20Balance {
             get!(self.world(), (get_contract_address(), account), ERC20Balance)
@@ -245,21 +250,16 @@ mod ERC20 {
 
     #[generate_trait]
     impl InternalImpl of InternalTrait {
-        fn initializer(ref self: ContractState, name: felt252, symbol: felt252) {
-            let meta = ERC20Meta { token: get_contract_address(), name, symbol, total_supply: 0 };
-            set!(self.world(), (meta));
-        }
-
         fn _mint(ref self: ContractState, recipient: ContractAddress, amount: u256) {
             assert(!recipient.is_zero(), Errors::MINT_TO_ZERO);
-            self.update_total_supply(0, amount);
+            self.erc20_metadata.update_total_supply(0, amount);
             self.update_balance(recipient, 0, amount);
             self.emit_event(Transfer { from: Zeroable::zero(), to: recipient, value: amount });
         }
 
         fn _burn(ref self: ContractState, account: ContractAddress, amount: u256) {
             assert(!account.is_zero(), Errors::BURN_FROM_ZERO);
-            self.update_total_supply(amount, 0);
+            self.erc20_metadata.update_total_supply(amount, 0);
             self.update_balance(account, amount, 0);
             self.emit_event(Transfer { from: account, to: Zeroable::zero(), value: amount });
         }

@@ -11,6 +11,7 @@ struct ERC20MetadataModel {
     name: felt252,
     symbol: felt252,
     decimals: u8,
+    total_supply: u256,
 }
 
 ///
@@ -40,38 +41,53 @@ mod ERC20MetadataComponent {
     #[storage]
     struct Storage {}
 
-    mod Errors {
-      //  const INITIALIZED: felt252 = 'Initializable: is initialized';
-    }
-
     #[embeddable_as(ERC20MetadataImpl)]
     impl ERC20Metadata<
         TContractState, +HasComponent<TContractState>, +IWorldProvider<TContractState>
     > of IERC20Metadata<ComponentState<TContractState>> {
-        fn name(self: @ComponentState<TContractState>) -> felt252{
-           self.get_metadata().name
+        fn name(self: @ComponentState<TContractState>) -> felt252 {
+            self.get_metadata().name
         }
-        fn symbol(self: @ComponentState<TContractState>) -> felt252{
-           self.get_metadata().symbol
+        fn symbol(self: @ComponentState<TContractState>) -> felt252 {
+            self.get_metadata().symbol
         }
-        fn decimals(self: @ComponentState<TContractState>) -> u8{
-           self.get_metadata().decimals
+        fn decimals(self: @ComponentState<TContractState>) -> u8 {
+            self.get_metadata().decimals
         }
     }
 
     #[generate_trait]
-    impl ERC20MetadataInternalImpl<
+    impl InternalImpl<
         TContractState, +HasComponent<TContractState>, +IWorldProvider<TContractState>
     > of InternalTrait<TContractState> {
-        fn initialize(ref self: ComponentState<TContractState>, name:felt252, symbol: felt252, decimals: u8) {
+        fn initialize(
+            ref self: ComponentState<TContractState>, name: felt252, symbol: felt252, decimals: u8
+        ) {
             set!(
                 self.get_contract().world(),
-                ERC20MetadataModel { token: get_contract_address(), name, symbol, decimals }
+                ERC20MetadataModel {
+                    token: get_contract_address(), name, symbol, decimals, total_supply: 0
+                }
             )
         }
 
         fn get_metadata(self: @ComponentState<TContractState>) -> ERC20MetadataModel {
-            get!(self.get_contract().world(), get_contract_address(),(ERC20MetadataModel))
+            get!(self.get_contract().world(), get_contract_address(), (ERC20MetadataModel))
+        }
+
+        fn total_supply(self: @ComponentState<TContractState>) -> u256 {
+            self.get_metadata().total_supply
+        }
+
+        // Helper function to update total_supply model
+        fn update_total_supply(
+            ref self: ComponentState<TContractState>, subtract: u256, add: u256
+        ) {
+            let mut meta = self.get_metadata();
+            // // adding and subtracting is fewer steps than if
+            meta.total_supply = meta.total_supply - subtract;
+            meta.total_supply = meta.total_supply + add;
+            set!(self.get_contract().world(), (meta));
         }
     }
 }
