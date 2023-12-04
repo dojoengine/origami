@@ -3,25 +3,20 @@ version = 1
 
 [[package]]
 name = "dojo"
-version = "0.3.4"
-source = "git+https://github.com/dojoengine/dojo.git?rev=d62ec8a#d62ec8a522f92d0a0ccf226c6e929bb918b31128"
+version = "0.3.15"
+source = "git+https://github.com/dojoengine/dojo?tag=v0.3.15#cdbaca4121b1642e1a8ca40d6831bad73d28ed26"
 dependencies = [
  "dojo_plugin",
 ]
 
 [[package]]
 name = "dojo_plugin"
-version = "0.3.4"
+version = "0.3.11"
+source = "git+https://github.com/dojoengine/dojo?tag=v0.3.11#1e651b5d4d3b79b14a7d8aa29a92062fcb9e6659"
 
 [[package]]
-name = "openzeppelin"
-version = "0.8.0-beta.0"
-source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?rev=4eafccf#4eafccf107f98d975b20cbb6544b2a998e5f403f"
-
-[[package]]
-name = "presets"
+name = "token"
 version = "0.0.0"
 dependencies = [
  "dojo",
- "openzeppelin",
 ]

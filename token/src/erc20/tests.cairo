@@ -21,7 +21,7 @@ use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use token::erc20::models::{
     ERC20Allowance, erc_20_allowance, ERC20Balance, erc_20_balance, ERC20Meta, erc_20_meta
 };
-use token::erc20::ERC20::_worldContractMemberStateTrait;
+use token::erc20::ERC20::world_dispatcherContractMemberStateTrait;
 use debug::PrintTrait;
 
 //
@@ -37,13 +37,13 @@ fn STATE() -> (IWorldDispatcher, ERC20::ContractState) {
         ]
     );
     let mut state = ERC20::contract_state_for_testing();
-    state._world.write(world.contract_address);
+    state.world_dispatcher.write(world);
     (world, state)
 }
 
 fn setup() -> ERC20::ContractState {
     let (world, mut state) = STATE();
-    ERC20::constructor(ref state, world.contract_address, NAME, SYMBOL, SUPPLY, OWNER());
+    ERC20::constructor(ref state, NAME, SYMBOL, SUPPLY, OWNER());
     utils::drop_event(ZERO());
     state
 }
@@ -69,7 +69,7 @@ fn test_initializer() {
 #[available_gas(25000000)]
 fn test_constructor() {
     let (world, mut state) = STATE();
-    ERC20::constructor(ref state, world.contract_address, NAME, SYMBOL, SUPPLY, OWNER());
+    ERC20::constructor(ref state, NAME, SYMBOL, SUPPLY, OWNER());
 
     assert_only_event_transfer(ZERO(), OWNER(), SUPPLY);
 
