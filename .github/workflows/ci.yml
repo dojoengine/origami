@@ -84,3 +84,14 @@ jobs:
       - name: Test
         run: sozo test -f hex_map
         shell: bash
+
+  token:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    name: Test token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Test
+        run: sozo test -f token
+        shell: bash
