@@ -9,7 +9,7 @@ mod ERC721 {
     use starknet::{get_caller_address, get_contract_address};
     use zeroable::Zeroable;
 
-  
+
     #[event]
     #[derive(Copy, Drop, starknet::Event)]
     enum Event {

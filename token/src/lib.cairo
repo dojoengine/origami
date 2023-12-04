@@ -1,3 +1,11 @@
+mod components {
+    mod security {
+        mod initializable;
+    }
+
+    mod tests;
+}
+
 mod erc20 {
     mod interface;
     mod models;
