@@ -56,12 +56,7 @@ mod ERC1155 {
     }
 
     #[constructor]
-    fn constructor(
-        ref self: ContractState,
-        name: felt252,
-        symbol: felt252,
-        base_uri: felt252,
-    ) {
+    fn constructor(ref self: ContractState, name: felt252, symbol: felt252, base_uri: felt252,) {
         self.initializer(name, symbol, base_uri);
     }
 
