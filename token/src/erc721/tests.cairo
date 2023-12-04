@@ -35,7 +35,7 @@ use token::erc721::models::{
     ERC721Meta, erc_721_meta, ERC721OperatorApproval, erc_721_operator_approval, ERC721Owner,
     erc_721_owner, ERC721Balance, erc_721_balance, ERC721TokenApproval, erc_721_token_approval
 };
-use token::erc721::ERC721::_worldContractMemberStateTrait;
+use token::erc721::ERC721::world_dispatcherContractMemberStateTrait;
 
 //
 // Setup
@@ -52,13 +52,13 @@ fn STATE() -> (IWorldDispatcher, ERC721::ContractState) {
         ]
     );
     let mut state = ERC721::contract_state_for_testing();
-    state._world.write(world.contract_address);
+    state.world_dispatcher.write(world);
     (world, state)
 }
 
 fn setup() -> ERC721::ContractState {
     let (world, mut state) = STATE();
-    ERC721::constructor(ref state, world.contract_address, NAME, SYMBOL, URI, OWNER(), TOKEN_ID);
+    ERC721::constructor(ref state, NAME, SYMBOL, URI, OWNER(), TOKEN_ID);
     utils::drop_event(ZERO());
     state
 }
@@ -89,7 +89,7 @@ fn setup() -> ERC721::ContractState {
 #[available_gas(20000000)]
 fn test_constructor() {
     let (world, mut state) = STATE();
-    ERC721::constructor(ref state, world.contract_address, NAME, SYMBOL, URI, OWNER(), TOKEN_ID);
+    ERC721::constructor(ref state, NAME, SYMBOL, URI, OWNER(), TOKEN_ID);
 
     assert(ERC721MetadataImpl::name(@state) == NAME, 'Name should be NAME');
     assert(ERC721MetadataImpl::symbol(@state) == SYMBOL, 'Symbol should be SYMBOL');

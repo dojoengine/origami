@@ -1,21 +1,15 @@
-#[starknet::contract]
+#[dojo::contract]
 mod ERC721 {
     use token::erc721::models::{
         ERC721Meta, ERC721OperatorApproval, ERC721Owner, ERC721Balance, ERC721TokenApproval
     };
     use token::erc721::interface;
-    use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
     use integer::BoundedInt;
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};
     use zeroable::Zeroable;
 
-
-    #[storage]
-    struct Storage {
-        _world: ContractAddress,
-    }
-
+  
     #[event]
     #[derive(Copy, Drop, starknet::Event)]
     enum Event {
@@ -61,14 +55,12 @@ mod ERC721 {
     #[constructor]
     fn constructor(
         ref self: ContractState,
-        world: ContractAddress,
         name: felt252,
         symbol: felt252,
         base_uri: felt252,
         recipient: ContractAddress,
         token_id: u256
     ) {
-        self._world.write(world);
         self.initializer(name, symbol, base_uri);
         self._mint(recipient, token_id);
     }
@@ -207,10 +199,6 @@ mod ERC721 {
 
     #[generate_trait]
     impl WorldInteractionsImpl of WorldInteractionsTrait {
-        fn world(self: @ContractState) -> IWorldDispatcher {
-            IWorldDispatcher { contract_address: self._world.read() }
-        }
-
         fn get_meta(self: @ContractState) -> ERC721Meta {
             get!(self.world(), get_contract_address(), ERC721Meta)
         }
