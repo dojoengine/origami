@@ -46,7 +46,6 @@ name = "origami"
 version = "0.0.0"
 dependencies = [
  "cubit",
- "dojo",
  "orion",
 ]
 

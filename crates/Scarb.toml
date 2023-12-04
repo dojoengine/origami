@@ -8,4 +8,3 @@ homepage = "https://github.com/dojoengine/origami/tree/main/crates"
 [dependencies]
 cubit.workspace = true
 orion.workspace = true
-dojo.workspace = true
