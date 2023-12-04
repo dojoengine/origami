@@ -1,5 +1,6 @@
 [workspace]
-members = ["crates", "examples/*", "token"]
+# members = ["crates", "examples/*", "token"]
+members = ["crates", "examples/*"]
 
 [workspace.package]
 version = "0.0.0"

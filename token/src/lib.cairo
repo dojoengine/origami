@@ -3,6 +3,10 @@ mod components {
         mod initializable;
     }
 
+    mod token {
+        mod erc20_metadata;
+    }
+
     mod tests;
 }
 
@@ -31,6 +35,10 @@ mod erc1155 {
     use erc1155::ERC1155;
     #[cfg(test)]
     mod tests;
+}
+
+mod preset {
+    mod erc20;
 }
 
 #[cfg(test)]
