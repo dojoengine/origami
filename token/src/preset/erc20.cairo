@@ -1,17 +1,22 @@
 #[dojo::contract]
 mod ERC20 {
-    use token::erc20::models::{ERC20Allowance, ERC20Balance, ERC20Meta};
     use token::erc20::interface;
     use integer::BoundedInt;
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};
     use zeroable::Zeroable;
 
-    use token::components::token::erc20_metadata::ERC20MetadataComponent;
     use token::components::security::initializable::InitializableComponent;
 
+    use token::components::token::erc20_metadata::ERC20MetadataComponent;
+    use token::components::token::erc20_balance::ERC20BalanceComponent;
+    use token::components::token::erc20_allowance::ERC20AllowanceComponent;
+
     component!(path: InitializableComponent, storage: initializable, event: InitializableEvent);
+
     component!(path: ERC20MetadataComponent, storage: erc20_metadata, event: ERC20MetadataEvent);
+    component!(path: ERC20BalanceComponent, storage: erc20_balance, event: ERC20BalanceEvent);
+    component!(path: ERC20AllowanceComponent, storage: erc20_allowance, event: ERC20AllowanceEvent);
 
     #[storage]
     struct Storage {
@@ -19,52 +24,52 @@ mod ERC20 {
         initializable: InitializableComponent::Storage,
         #[substorage(v0)]
         erc20_metadata: ERC20MetadataComponent::Storage,
+        #[substorage(v0)]
+        erc20_balance: ERC20BalanceComponent::Storage,
+        #[substorage(v0)]
+        erc20_allowance: ERC20AllowanceComponent::Storage,
     }
 
     #[event]
     #[derive(Copy, Drop, starknet::Event)]
     enum Event {
-        Transfer: Transfer,
-        Approval: Approval,
         #[flat]
         InitializableEvent: InitializableComponent::Event,
         #[flat]
         ERC20MetadataEvent: ERC20MetadataComponent::Event,
-    }
-
-    #[derive(Copy, Drop, starknet::Event)]
-    struct Transfer {
-        from: ContractAddress,
-        to: ContractAddress,
-        value: u256
-    }
-
-    #[derive(Copy, Drop, starknet::Event)]
-    struct Approval {
-        owner: ContractAddress,
-        spender: ContractAddress,
-        value: u256
+        #[flat]
+        ERC20BalanceEvent: ERC20BalanceComponent::Event,
+        #[flat]
+        ERC20AllowanceEvent: ERC20AllowanceComponent::Event,
     }
 
     mod Errors {
         const ALREADY_INITIALIZED: felt252 = 'ERC20: already initialized';
         const CALLER_IS_NOT_OWNER: felt252 = 'ERC20: caller is not owner';
 
-        const APPROVE_FROM_ZERO: felt252 = 'ERC20: approve from 0';
-        const APPROVE_TO_ZERO: felt252 = 'ERC20: approve to 0';
-        const TRANSFER_FROM_ZERO: felt252 = 'ERC20: transfer from 0';
-        const TRANSFER_TO_ZERO: felt252 = 'ERC20: transfer to 0';
         const BURN_FROM_ZERO: felt252 = 'ERC20: burn from 0';
         const MINT_TO_ZERO: felt252 = 'ERC20: mint to 0';
     }
 
-    #[abi(embed_v0)]
-    impl InitializableImpl =
-        InitializableComponent::InitializableImpl<ContractState>;
+    impl InitializableImpl = InitializableComponent::InitializableImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl ERC20MetadataImpl =
         ERC20MetadataComponent::ERC20MetadataImpl<ContractState>;
+
+    // #[abi(embed_v0)]
+    impl ERC20BalanceImpl = ERC20BalanceComponent::ERC20BalanceImpl<ContractState>;
+
+    //#[abi(embed_v0)]
+    impl ERC20AllowanceImpl = ERC20AllowanceComponent::ERC20AllowanceImpl<ContractState>;
+
+    #[abi(embed_v0)]
+    impl ERC20SafeAllowanceImpl =
+        ERC20AllowanceComponent::ERC20SafeAllowanceImpl<ContractState>;
+
+    #[abi(embed_v0)]
+    impl ERC20SafeAllowanceCamelImpl =
+        ERC20AllowanceComponent::ERC20SafeAllowanceCamelImpl<ContractState>;
 
 
     #[external(v0)]
@@ -81,7 +86,7 @@ mod ERC20 {
             Errors::CALLER_IS_NOT_OWNER
         );
 
-        self.erc20_metadata.initialize(name, symbol, 18);
+        self.erc20_metadata._initialize(name, symbol, 18);
         self._mint(recipient, initial_supply);
 
         self.initializable.initialize();
@@ -90,23 +95,21 @@ mod ERC20 {
     #[external(v0)]
     impl ERC20Impl of interface::IERC20<ContractState> {
         fn total_supply(self: @ContractState) -> u256 {
-            self.erc20_metadata.get_metadata().total_supply
+            self.erc20_metadata.total_supply()
         }
 
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
-            self.get_balance(account).amount
+            self.erc20_balance.balance_of(account)
         }
 
         fn allowance(
             self: @ContractState, owner: ContractAddress, spender: ContractAddress
         ) -> u256 {
-            self.get_allowance(owner, spender).amount
+            self.erc20_allowance.allowance(owner, spender)
         }
 
         fn transfer(ref self: ContractState, recipient: ContractAddress, amount: u256) -> bool {
-            let sender = get_caller_address();
-            self._transfer(sender, recipient, amount);
-            true
+            self.erc20_balance.transfer(recipient, amount)
         }
 
         fn transfer_from(
@@ -116,18 +119,13 @@ mod ERC20 {
             amount: u256
         ) -> bool {
             let caller = get_caller_address();
-            self._spend_allowance(sender, caller, amount);
-            self._transfer(sender, recipient, amount);
+            self.erc20_allowance._spend_allowance(sender, caller, amount);
+            self.erc20_balance._transfer(sender, recipient, amount);
             true
         }
 
         fn approve(ref self: ContractState, spender: ContractAddress, amount: u256) -> bool {
-            let owner = get_caller_address();
-            self
-                .set_allowance(
-                    ERC20Allowance { token: get_contract_address(), owner, spender, amount }
-                );
-            true
+            self.erc20_allowance.approve(spender, amount)
         }
     }
 
@@ -151,35 +149,6 @@ mod ERC20 {
         }
     }
 
-    #[external(v0)]
-    fn increase_allowance(
-        ref self: ContractState, spender: ContractAddress, added_value: u256
-    ) -> bool {
-        self.update_allowance(get_caller_address(), spender, 0, added_value);
-        true
-    }
-
-    #[external(v0)]
-    fn increaseAllowance(
-        ref self: ContractState, spender: ContractAddress, addedValue: u256
-    ) -> bool {
-        increase_allowance(ref self, spender, addedValue)
-    }
-
-    #[external(v0)]
-    fn decrease_allowance(
-        ref self: ContractState, spender: ContractAddress, subtracted_value: u256
-    ) -> bool {
-        self.update_allowance(get_caller_address(), spender, subtracted_value, 0);
-        true
-    }
-
-    #[external(v0)]
-    fn decreaseAllowance(
-        ref self: ContractState, spender: ContractAddress, subtractedValue: u256
-    ) -> bool {
-        decrease_allowance(ref self, spender, subtractedValue)
-    }
 
     //
     // Internal
@@ -187,57 +156,11 @@ mod ERC20 {
 
     impl InitializableInternalImpl = InitializableComponent::InternalImpl<ContractState>;
     impl ERC20MetadataInternalImpl = ERC20MetadataComponent::InternalImpl<ContractState>;
+    impl ERC20BalanceInternalImpl = ERC20BalanceComponent::InternalImpl<ContractState>;
+    impl ERC20AllowanceInternalImpl = ERC20AllowanceComponent::InternalImpl<ContractState>;
 
     #[generate_trait]
     impl WorldInteractionsImpl of WorldInteractionsTrait {
-        // Helper function for balance model
-        fn get_balance(self: @ContractState, account: ContractAddress) -> ERC20Balance {
-            get!(self.world(), (get_contract_address(), account), ERC20Balance)
-        }
-
-        fn update_balance(
-            ref self: ContractState, account: ContractAddress, subtract: u256, add: u256
-        ) {
-            let mut balance: ERC20Balance = self.get_balance(account);
-            // adding and subtracting is fewer steps than if
-            balance.amount = balance.amount - subtract;
-            balance.amount = balance.amount + add;
-            set!(self.world(), (balance));
-        }
-
-        // Helper function for allowance model
-        fn get_allowance(
-            self: @ContractState, owner: ContractAddress, spender: ContractAddress,
-        ) -> ERC20Allowance {
-            get!(self.world(), (get_contract_address(), owner, spender), ERC20Allowance)
-        }
-
-        fn update_allowance(
-            ref self: ContractState,
-            owner: ContractAddress,
-            spender: ContractAddress,
-            subtract: u256,
-            add: u256
-        ) {
-            let mut allowance = self.get_allowance(owner, spender);
-            // adding and subtracting is fewer steps than if
-            allowance.amount = allowance.amount - subtract;
-            allowance.amount = allowance.amount + add;
-            self.set_allowance(allowance);
-        }
-
-        fn set_allowance(ref self: ContractState, allowance: ERC20Allowance) {
-            assert(!allowance.owner.is_zero(), Errors::APPROVE_FROM_ZERO);
-            assert(!allowance.spender.is_zero(), Errors::APPROVE_TO_ZERO);
-            set!(self.world(), (allowance));
-            self
-                .emit_event(
-                    Approval {
-                        owner: allowance.owner, spender: allowance.spender, value: allowance.amount
-                    }
-                );
-        }
-
         fn emit_event<
             S, impl IntoImp: traits::Into<S, Event>, impl SDrop: Drop<S>, impl SCopy: Copy<S>
         >(
@@ -248,51 +171,42 @@ mod ERC20 {
         }
     }
 
+
     #[generate_trait]
     impl InternalImpl of InternalTrait {
         fn _mint(ref self: ContractState, recipient: ContractAddress, amount: u256) {
             assert(!recipient.is_zero(), Errors::MINT_TO_ZERO);
-            self.erc20_metadata.update_total_supply(0, amount);
-            self.update_balance(recipient, 0, amount);
-            self.emit_event(Transfer { from: Zeroable::zero(), to: recipient, value: amount });
+            self.erc20_metadata._update_total_supply(0, amount);
+            self.erc20_balance._update_balance(recipient, 0, amount);
+            //self.emit_event(Transfer { from: Zeroable::zero(), to: recipient, value: amount });
+
+            // self
+            //     .emit_event(
+            //         ERC20BalanceComponent::Transfer {
+            //             from: Zeroable::zero(), to: recipient, value: amount
+            //         }
+            //     );
+
+        // self.erc20_balance
+        //     .emit(
+        //         ERC20BalanceComponent::Transfer {
+        //             from: Zeroable::zero(), to: recipient, value: amount
+        //         }
+        //     );
         }
 
         fn _burn(ref self: ContractState, account: ContractAddress, amount: u256) {
             assert(!account.is_zero(), Errors::BURN_FROM_ZERO);
-            self.erc20_metadata.update_total_supply(amount, 0);
-            self.update_balance(account, amount, 0);
-            self.emit_event(Transfer { from: account, to: Zeroable::zero(), value: amount });
-        }
+            self.erc20_metadata._update_total_supply(amount, 0);
+            self.erc20_balance._update_balance(account, amount, 0);
+        //self.emit_event(Transfer { from: account, to: Zeroable::zero(), value: amount });
 
-        fn _approve(
-            ref self: ContractState, owner: ContractAddress, spender: ContractAddress, amount: u256
-        ) {
-            self
-                .set_allowance(
-                    ERC20Allowance { token: get_contract_address(), owner, spender, amount }
-                );
-        }
-
-        fn _transfer(
-            ref self: ContractState,
-            sender: ContractAddress,
-            recipient: ContractAddress,
-            amount: u256
-        ) {
-            assert(!sender.is_zero(), Errors::TRANSFER_FROM_ZERO);
-            assert(!recipient.is_zero(), Errors::TRANSFER_TO_ZERO);
-            self.update_balance(sender, amount, 0);
-            self.update_balance(recipient, 0, amount);
-            self.emit_event(Transfer { from: sender, to: recipient, value: amount });
-        }
-
-        fn _spend_allowance(
-            ref self: ContractState, owner: ContractAddress, spender: ContractAddress, amount: u256
-        ) {
-            let current_allowance = self.get_allowance(owner, spender).amount;
-            if current_allowance != BoundedInt::max() {
-                self.update_allowance(owner, spender, amount, 0);
-            }
+        // self.erc20_balance
+        //     .emit(
+        //         ERC20BalanceComponent::Transfer {
+        //             from: account, to: Zeroable::zero(), value: amount
+        //         }
+        //     );
         }
     }
 }

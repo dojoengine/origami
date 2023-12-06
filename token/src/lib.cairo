@@ -4,8 +4,14 @@ mod components {
     }
 
     mod token {
+        mod erc20_allowance;
+        mod erc20_balance;
         mod erc20_metadata;
     }
+
+    // mod utility {
+    //     mod event_emitter;
+    // }
 
     mod tests;
 }
