@@ -19,7 +19,6 @@ mod ERC20MetadataMock {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        #[flat]
         ERC20MetadataEvent: ERC20MetadataComponent::Event
     }
 }

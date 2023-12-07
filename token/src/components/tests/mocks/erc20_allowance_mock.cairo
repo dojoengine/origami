@@ -25,7 +25,6 @@ mod ERC20AllowanceMock {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        #[flat]
         ERC20AllowanceEvent: ERC20AllowanceComponent::Event
     }
 }

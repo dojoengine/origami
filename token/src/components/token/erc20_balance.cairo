@@ -41,12 +41,12 @@ mod ERC20BalanceComponent {
     struct Storage {}
 
     #[event]
-    #[derive(Drop, starknet::Event)]
+    #[derive(Copy, Drop, Serde, starknet::Event)]
     enum Event {
         Transfer: Transfer
     }
 
-    #[derive(Drop, Serde, starknet::Event)]
+    #[derive(Copy, Drop, Serde, starknet::Event)]
     struct Transfer {
         from: ContractAddress,
         to: ContractAddress,
@@ -109,8 +109,10 @@ mod ERC20BalanceComponent {
             assert(!recipient.is_zero(), Errors::TRANSFER_TO_ZERO);
             self._update_balance(sender, amount, 0);
             self._update_balance(recipient, 0, amount);
-        // self.emit(Transfer { from: sender, to: recipient, value: amount });
-        // emit!(self.get_contract().world(), Transfer { from: sender, to: recipient, value: amount });
+
+            let transfer_event = Transfer { from: sender, to: recipient, value: amount };
+            self.emit(transfer_event.clone());
+            emit!(self.get_contract().world(), transfer_event);
         }
     }
 }

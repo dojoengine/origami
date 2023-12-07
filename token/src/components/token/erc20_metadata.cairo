@@ -25,6 +25,11 @@ trait IERC20Metadata<TState> {
     fn decimals(self: @TState) -> u8;
 }
 
+#[starknet::interface]
+trait IERC20MetadataTotalSupply<TState> {
+    fn total_supply(self: @TState) -> u256;
+}
+
 
 /// ERC20Metadata Component
 ///
@@ -33,6 +38,7 @@ trait IERC20Metadata<TState> {
 mod ERC20MetadataComponent {
     use super::ERC20MetadataModel;
     use super::IERC20Metadata;
+    use super::IERC20MetadataTotalSupply;
 
 
     use starknet::get_contract_address;
@@ -58,10 +64,24 @@ mod ERC20MetadataComponent {
         }
     }
 
+    #[embeddable_as(ERC20MetadataTotalSupplyImpl)]
+    impl ERC20MetadataTotalSupply<
+        TContractState, +HasComponent<TContractState>, +IWorldProvider<TContractState>,
+    > of IERC20MetadataTotalSupply<ComponentState<TContractState>> {
+        fn total_supply(self: @ComponentState<TContractState>) -> u256 {
+            self.get_metadata().total_supply
+        }
+    }
+
+
     #[generate_trait]
     impl InternalImpl<
         TContractState, +HasComponent<TContractState>, +IWorldProvider<TContractState>
     > of InternalTrait<TContractState> {
+        fn get_metadata(self: @ComponentState<TContractState>) -> ERC20MetadataModel {
+            get!(self.get_contract().world(), get_contract_address(), (ERC20MetadataModel))
+        }
+
         fn _initialize(
             ref self: ComponentState<TContractState>, name: felt252, symbol: felt252, decimals: u8
         ) {
@@ -71,14 +91,6 @@ mod ERC20MetadataComponent {
                     token: get_contract_address(), name, symbol, decimals, total_supply: 0
                 }
             )
-        }
-
-        fn get_metadata(self: @ComponentState<TContractState>) -> ERC20MetadataModel {
-            get!(self.get_contract().world(), get_contract_address(), (ERC20MetadataModel))
-        }
-
-        fn total_supply(self: @ComponentState<TContractState>) -> u256 {
-            self.get_metadata().total_supply
         }
 
         // Helper function to update total_supply model

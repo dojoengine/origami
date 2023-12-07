@@ -60,7 +60,7 @@ mod ERC20AllowanceComponent {
     struct Storage {}
 
     #[event]
-    #[derive(Drop, starknet::Event)]
+    #[derive(Copy, Drop, Serde, starknet::Event)]
     enum Event {
         Approval: Approval
     }
@@ -176,12 +176,12 @@ mod ERC20AllowanceComponent {
             assert(!allowance.owner.is_zero(), Errors::APPROVE_FROM_ZERO);
             assert(!allowance.spender.is_zero(), Errors::APPROVE_TO_ZERO);
             set!(self.get_contract().world(), (allowance));
-        // self
-        //     .emit_event(
-        //         Approval {
-        //             owner: allowance.owner, spender: allowance.spender, value: allowance.amount
-        //         }
-        //     );
+
+            let approval_event = Approval {
+                owner: allowance.owner, spender: allowance.spender, value: allowance.amount
+            };
+            self.emit(approval_event.clone());
+            emit!(self.get_contract().world(), approval_event);
         }
 
         fn _approve(

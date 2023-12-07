@@ -5,7 +5,7 @@ use token::tests::constants::{NAME, SYMBOL, DECIMALS};
 
 use token::components::token::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
 use token::components::token::erc20_metadata::ERC20MetadataComponent::{
-    ERC20MetadataImpl, InternalImpl
+    ERC20MetadataImpl, ERC20MetadataTotalSupplyImpl, InternalImpl
 };
 use token::components::tests::mocks::erc20_metadata_mock::ERC20MetadataMock;
 use token::components::tests::mocks::erc20_metadata_mock::ERC20MetadataMock::world_dispatcherContractMemberStateTrait;

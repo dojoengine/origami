@@ -18,7 +18,6 @@ mod ERC20BalanceMock {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        #[flat]
         ERC20BalanceEvent: ERC20BalanceComponent::Event
     }
 }

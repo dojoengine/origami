@@ -7,6 +7,8 @@ mod components {
         mod erc20_allowance;
         mod erc20_balance;
         mod erc20_metadata;
+        mod erc20_mintable;
+        mod erc20_burnable;
     }
 
     // mod utility {
@@ -45,6 +47,8 @@ mod erc1155 {
 
 mod preset {
     mod erc20;
+    #[cfg(test)]
+    mod tests;
 }
 
 #[cfg(test)]

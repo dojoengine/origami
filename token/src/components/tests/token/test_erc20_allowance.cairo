@@ -1,7 +1,7 @@
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{ADMIN, OWNER, SPENDER};
+use token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, VALUE};
 
 use token::components::token::erc20_allowance::{erc_20_allowance_model, ERC20AllowanceModel,};
 use token::components::token::erc20_allowance::ERC20AllowanceComponent::{
