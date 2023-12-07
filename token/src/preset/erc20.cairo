@@ -58,9 +58,6 @@ mod ERC20Preset {
     mod Errors {
         const ALREADY_INITIALIZED: felt252 = 'ERC20: already initialized';
         const CALLER_IS_NOT_OWNER: felt252 = 'ERC20: caller is not owner';
-
-        const BURN_FROM_ZERO: felt252 = 'ERC20: burn from 0';
-        const MINT_TO_ZERO: felt252 = 'ERC20: mint to 0';
     }
 
 
