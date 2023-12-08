@@ -23,10 +23,9 @@ trait IERC20Balance<TState> {
     fn transfer(ref self: TState, recipient: ContractAddress, amount: u256) -> bool;
 }
 
-
+///
 /// ERC20Balance Component
 ///
-/// TODO: desc
 #[starknet::component]
 mod ERC20BalanceComponent {
     use super::ERC20BalanceModel;
@@ -60,7 +59,10 @@ mod ERC20BalanceComponent {
 
     #[embeddable_as(ERC20BalanceImpl)]
     impl ERC20Balance<
-        TContractState, +HasComponent<TContractState>, +IWorldProvider<TContractState>,
+        TContractState,
+        +HasComponent<TContractState>,
+        +IWorldProvider<TContractState>,
+        +Drop<TContractState>,
     > of IERC20Balance<ComponentState<TContractState>> {
         fn balance_of(self: @ComponentState<TContractState>, account: ContractAddress) -> u256 {
             self.get_balance(account).amount
@@ -76,7 +78,10 @@ mod ERC20BalanceComponent {
 
     #[generate_trait]
     impl InternalImpl<
-        TContractState, +HasComponent<TContractState>, +IWorldProvider<TContractState>,
+        TContractState,
+        +HasComponent<TContractState>,
+        +IWorldProvider<TContractState>,
+        +Drop<TContractState>,
     > of InternalTrait<TContractState> {
         fn get_balance(
             self: @ComponentState<TContractState>, account: ContractAddress

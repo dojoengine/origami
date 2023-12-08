@@ -13,6 +13,7 @@ mod ERC20Preset {
     use token::components::token::erc20_allowance::ERC20AllowanceComponent;
     use token::components::token::erc20_mintable::ERC20MintableComponent;
     use token::components::token::erc20_burnable::ERC20BurnableComponent;
+    use token::components::token::erc20_bridgeable::ERC20BridgeableComponent;
 
     component!(path: InitializableComponent, storage: initializable, event: InitializableEvent);
 
@@ -21,6 +22,9 @@ mod ERC20Preset {
     component!(path: ERC20AllowanceComponent, storage: erc20_allowance, event: ERC20AllowanceEvent);
     component!(path: ERC20MintableComponent, storage: erc20_mintable, event: ERC20MintableEvent);
     component!(path: ERC20BurnableComponent, storage: erc20_burnable, event: ERC20BurnableEvent);
+    component!(
+        path: ERC20BridgeableComponent, storage: erc20_bridgeable, event: ERC20BridgeableEvent
+    );
 
     #[storage]
     struct Storage {
@@ -36,23 +40,20 @@ mod ERC20Preset {
         erc20_mintable: ERC20MintableComponent::Storage,
         #[substorage(v0)]
         erc20_burnable: ERC20BurnableComponent::Storage,
+        #[substorage(v0)]
+        erc20_bridgeable: ERC20BridgeableComponent::Storage,
     }
 
     #[event]
     #[derive(Copy, Drop, starknet::Event)]
     enum Event {
-        // #[flat]
         InitializableEvent: InitializableComponent::Event,
-        // #[flat]
         ERC20MetadataEvent: ERC20MetadataComponent::Event,
-        // #[flat]
         ERC20BalanceEvent: ERC20BalanceComponent::Event,
-        // #[flat]
         ERC20AllowanceEvent: ERC20AllowanceComponent::Event,
-        // #[flat]
         ERC20MintableEvent: ERC20MintableComponent::Event,
-        // #[flat]
         ERC20BurnableEvent: ERC20BurnableComponent::Event,
+        ERC20BridgeableEvent: ERC20BridgeableComponent::Event,
     }
 
     mod Errors {
@@ -79,6 +80,11 @@ mod ERC20Preset {
         ERC20AllowanceComponent::ERC20SafeAllowanceCamelImpl<ContractState>;
 
 
+    #[abi(embed_v0)]
+    impl ERC20BridgeableImpl =
+        ERC20BridgeableComponent::ERC20BridgeableImpl<ContractState>;
+
+
     //
     // Internal Impls
     //
@@ -89,6 +95,7 @@ mod ERC20Preset {
     impl ERC20AllowanceInternalImpl = ERC20AllowanceComponent::InternalImpl<ContractState>;
     impl ERC20MintableInternalImpl = ERC20MintableComponent::InternalImpl<ContractState>;
     impl ERC20BurnableInternalImpl = ERC20BurnableComponent::InternalImpl<ContractState>;
+    impl ERC20BridgeableInternalImpl = ERC20BridgeableComponent::InternalImpl<ContractState>;
 
     //
     // Initializer
@@ -103,6 +110,7 @@ mod ERC20Preset {
             symbol: felt252,
             initial_supply: u256,
             recipient: ContractAddress,
+            l2_bridge_address: ContractAddress,
         ) {
             assert(!self.initializable.is_initialized(), Errors::ALREADY_INITIALIZED);
             assert(
@@ -112,6 +120,7 @@ mod ERC20Preset {
 
             self.erc20_metadata._initialize(name, symbol, 18);
             self.erc20_mintable._mint(recipient, initial_supply);
+            self.erc20_bridgeable._initialize(l2_bridge_address);
 
             self.initializable.initialize();
         }

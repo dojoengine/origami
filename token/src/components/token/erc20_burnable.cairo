@@ -1,6 +1,6 @@
+///
 /// ERC20Burnable Component
 ///
-/// TODO: desc
 #[starknet::component]
 mod ERC20BurnableComponent {
     use starknet::ContractAddress;
@@ -29,7 +29,7 @@ mod ERC20BurnableComponent {
         +IWorldProvider<TContractState>,
         impl ERC20Balance: erc20_balance_comp::HasComponent<TContractState>,
         impl ERC20Metadata: erc20_metadata_comp::HasComponent<TContractState>,
-        +Drop<TContractState>
+        +Drop<TContractState>,
     > of InternalTrait<TContractState> {
         fn _burn(ref self: ComponentState<TContractState>, account: ContractAddress, amount: u256) {
             assert(!account.is_zero(), Errors::BURN_FROM_ZERO);

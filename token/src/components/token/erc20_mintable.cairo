@@ -1,6 +1,6 @@
+///
 /// ERC20Mintable Component
 ///
-/// TODO: desc
 #[starknet::component]
 mod ERC20MintableComponent {
     use starknet::ContractAddress;
@@ -30,7 +30,7 @@ mod ERC20MintableComponent {
         +IWorldProvider<TContractState>,
         impl ERC20Balance: erc20_balance_comp::HasComponent<TContractState>,
         impl ERC20Metadata: erc20_metadata_comp::HasComponent<TContractState>,
-        +Drop<TContractState>
+        +Drop<TContractState>,
     > of InternalTrait<TContractState> {
         fn _mint(
             ref self: ComponentState<TContractState>, recipient: ContractAddress, amount: u256

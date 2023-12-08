@@ -4,6 +4,7 @@ mod mocks {
     mod erc20_balance_mock;
     mod erc20_metadata_mock;
     mod erc20_mintable_burnable_mock;
+    mod erc20_bridgeable_mock;
 }
 
 mod security {
@@ -20,4 +21,6 @@ mod token {
     mod test_erc20_metadata;
     #[cfg(test)]
     mod test_erc20_mintable_burnable;
+    #[cfg(test)]
+    mod test_erc20_bridgeable;
 }

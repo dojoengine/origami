@@ -9,6 +9,8 @@ mod components {
         mod erc20_metadata;
         mod erc20_mintable;
         mod erc20_burnable;
+
+        mod erc20_bridgeable;
     }
 
     mod tests;
@@ -41,7 +43,7 @@ mod erc1155 {
     mod tests;
 }
 
-mod preset {
+mod presets {
     mod erc20;
     #[cfg(test)]
     mod tests;

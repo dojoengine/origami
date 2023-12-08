@@ -39,10 +39,9 @@ trait IERC20SafeAllowanceCamel<TState> {
     fn decreaseAllowance(ref self: TState, spender: ContractAddress, subtractedValue: u256) -> bool;
 }
 
-
+///
 /// ERC20Allowance Component
 ///
-/// TODO: desc
 #[starknet::component]
 mod ERC20AllowanceComponent {
     use super::ERC20AllowanceModel;
@@ -169,7 +168,6 @@ mod ERC20AllowanceComponent {
             )
         }
 
-
         fn update_allowance(
             ref self: ComponentState<TContractState>,
             owner: ContractAddress,
@@ -219,7 +217,7 @@ mod ERC20AllowanceComponent {
             }
         }
 
-         fn _emit_approval(ref self: ComponentState<TContractState>, event: Approval) {
+        fn _emit_approval(ref self: ComponentState<TContractState>, event: Approval) {
             self.emit(event.clone());
             emit!(self.get_contract().world(), event);
         }

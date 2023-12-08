@@ -30,10 +30,9 @@ trait IERC20MetadataTotalSupply<TState> {
     fn total_supply(self: @TState) -> u256;
 }
 
-
+///
 /// ERC20Metadata Component
 ///
-/// TODO: desc
 #[starknet::component]
 mod ERC20MetadataComponent {
     use super::ERC20MetadataModel;
@@ -51,7 +50,10 @@ mod ERC20MetadataComponent {
 
     #[embeddable_as(ERC20MetadataImpl)]
     impl ERC20Metadata<
-        TContractState, +HasComponent<TContractState>, +IWorldProvider<TContractState>,
+        TContractState,
+        +HasComponent<TContractState>,
+        +IWorldProvider<TContractState>,
+        +Drop<TContractState>,
     > of IERC20Metadata<ComponentState<TContractState>> {
         fn name(self: @ComponentState<TContractState>) -> felt252 {
             self.get_metadata().name
@@ -66,7 +68,10 @@ mod ERC20MetadataComponent {
 
     #[embeddable_as(ERC20MetadataTotalSupplyImpl)]
     impl ERC20MetadataTotalSupply<
-        TContractState, +HasComponent<TContractState>, +IWorldProvider<TContractState>,
+        TContractState,
+        +HasComponent<TContractState>,
+        +IWorldProvider<TContractState>,
+        +Drop<TContractState>,
     > of IERC20MetadataTotalSupply<ComponentState<TContractState>> {
         fn total_supply(self: @ComponentState<TContractState>) -> u256 {
             self.get_metadata().total_supply
@@ -76,7 +81,10 @@ mod ERC20MetadataComponent {
 
     #[generate_trait]
     impl InternalImpl<
-        TContractState, +HasComponent<TContractState>, +IWorldProvider<TContractState>
+        TContractState,
+        +HasComponent<TContractState>,
+        +IWorldProvider<TContractState>,
+        +Drop<TContractState>,
     > of InternalTrait<TContractState> {
         fn get_metadata(self: @ComponentState<TContractState>) -> ERC20MetadataModel {
             get!(self.get_contract().world(), get_contract_address(), (ERC20MetadataModel))

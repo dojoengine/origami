@@ -58,3 +58,7 @@ fn RECIPIENT() -> ContractAddress {
 fn OPERATOR() -> ContractAddress {
     contract_address_const::<'OPERATOR'>()
 }
+
+fn BRIDGE() -> ContractAddress {
+    contract_address_const::<'BRIDGE'>()
+}

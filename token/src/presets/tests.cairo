@@ -1,5 +1,3 @@
-// use integer::u256_from_felt252;
-
 use starknet::ContractAddress;
 use starknet::testing;
 use zeroable::Zeroable;
@@ -8,7 +6,7 @@ use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
 use token::tests::constants::{
-    ZERO, OWNER, SPENDER, RECIPIENT, NAME, SYMBOL, DECIMALS, SUPPLY, VALUE
+    ZERO, OWNER, SPENDER, RECIPIENT, BRIDGE, NAME, SYMBOL, DECIMALS, SUPPLY, VALUE
 };
 
 use token::tests::utils;
@@ -29,12 +27,17 @@ use token::components::token::erc20_allowance::ERC20AllowanceComponent::{
     ERC20SafeAllowanceCamelImpl
 };
 
+use token::components::token::erc20_bridgeable::{erc_20_bridgeable_model, ERC20BridgeableModel};
+use token::components::token::erc20_bridgeable::ERC20BridgeableComponent::{ERC20BridgeableImpl};
+
 use token::components::token::erc20_mintable::ERC20MintableComponent::InternalImpl as ERC20MintableInternalImpl;
 use token::components::token::erc20_burnable::ERC20BurnableComponent::InternalImpl as ERC20BurnableInternalImpl;
 
-use token::preset::erc20::ERC20Preset;
-use token::preset::erc20::ERC20Preset::{ERC20Impl, ERC20InitializerImpl};
-use token::preset::erc20::ERC20Preset::world_dispatcherContractMemberStateTrait;
+use token::presets::erc20::ERC20Preset;
+use token::presets::erc20::ERC20Preset::{ERC20Impl, ERC20InitializerImpl};
+use token::presets::erc20::ERC20Preset::world_dispatcherContractMemberStateTrait;
+
+use debug::PrintTrait;
 
 //
 // Setup
@@ -46,6 +49,7 @@ fn STATE() -> (IWorldDispatcher, ERC20Preset::ContractState) {
             erc_20_allowance_model::TEST_CLASS_HASH,
             erc_20_balance_model::TEST_CLASS_HASH,
             erc_20_metadata_model::TEST_CLASS_HASH,
+            erc_20_bridgeable_model::TEST_CLASS_HASH,
         ]
     );
     let mut state = ERC20Preset::contract_state_for_testing();
@@ -56,7 +60,7 @@ fn STATE() -> (IWorldDispatcher, ERC20Preset::ContractState) {
 fn setup() -> ERC20Preset::ContractState {
     let (world, mut state) = STATE();
 
-    state.initializer(NAME, SYMBOL, SUPPLY, OWNER());
+    state.initializer(NAME, SYMBOL, SUPPLY, OWNER(), BRIDGE());
 
     utils::drop_event(ZERO());
     state
@@ -70,7 +74,7 @@ fn setup() -> ERC20Preset::ContractState {
 #[available_gas(25000000)]
 fn test_initializer() {
     let (world, mut state) = STATE();
-    state.initializer(NAME, SYMBOL, SUPPLY, OWNER());
+    state.initializer(NAME, SYMBOL, SUPPLY, OWNER(), BRIDGE());
 
     assert_only_event_transfer(ZERO(), OWNER(), SUPPLY);
 
@@ -79,6 +83,7 @@ fn test_initializer() {
     assert(state.name() == NAME, 'Name should be NAME');
     assert(state.symbol() == SYMBOL, 'Symbol should be SYMBOL');
     assert(state.decimals() == DECIMALS, 'Decimals should be 18');
+    assert(state.l2_bridge_address() == BRIDGE(), 'Decimals should be BRIDGE');
 }
 
 //
@@ -518,6 +523,63 @@ fn test__burn_from_zero() {
     let mut state = setup();
     state.erc20_burnable._burn(Zeroable::zero(), VALUE);
 }
+
+
+//
+//  bridgeable
+//
+
+#[test]
+#[available_gas(30000000)]
+fn test_bridge_can_mint() {
+    let mut state = setup();
+
+    testing::set_caller_address(BRIDGE());
+    state.mint(RECIPIENT(), VALUE);
+
+    assert_only_event_transfer(ZERO(), RECIPIENT(), VALUE);
+
+    assert(ERC20Impl::balance_of(@state, RECIPIENT()) == VALUE, 'Should eq VALUE');
+}
+
+#[test]
+#[available_gas(30000000)]
+#[should_panic(expected: ('ERC20: caller not bridge',))]
+fn test_bridge_only_can_mint() {
+    let mut state = setup();
+
+    testing::set_caller_address(RECIPIENT());
+    state.erc20_bridgeable.mint(RECIPIENT(), VALUE);
+}
+
+#[test]
+#[available_gas(30000000)]
+fn test_bridge_can_burn() {
+    let mut state = setup();
+
+    testing::set_caller_address(BRIDGE());
+    state.mint(RECIPIENT(), VALUE);
+    assert_only_event_transfer(ZERO(), RECIPIENT(), VALUE);
+
+    state.burn(RECIPIENT(), 1);
+    assert_only_event_transfer(RECIPIENT(), ZERO(), 1);
+
+    assert(ERC20Impl::balance_of(@state, RECIPIENT()) == VALUE - 1, 'Should eq VALUE-1');
+}
+
+#[test]
+#[available_gas(30000000)]
+#[should_panic(expected: ('ERC20: caller not bridge',))]
+fn test_bridge_only_can_burn() {
+    let mut state = setup();
+
+    testing::set_caller_address(BRIDGE());
+    state.mint(RECIPIENT(), VALUE);
+
+    testing::set_caller_address(RECIPIENT());
+    state.burn(RECIPIENT(), VALUE);
+}
+
 
 //
 // Helpers
