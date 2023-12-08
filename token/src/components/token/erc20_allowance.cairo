@@ -79,7 +79,10 @@ mod ERC20AllowanceComponent {
 
     #[embeddable_as(ERC20AllowanceImpl)]
     impl ERC20Allowance<
-        TContractState, +HasComponent<TContractState>, +IWorldProvider<TContractState>,
+        TContractState,
+        +HasComponent<TContractState>,
+        +IWorldProvider<TContractState>,
+        +Drop<TContractState>
     > of IERC20Allowance<ComponentState<TContractState>> {
         fn allowance(
             self: @ComponentState<TContractState>, owner: ContractAddress, spender: ContractAddress
@@ -100,7 +103,10 @@ mod ERC20AllowanceComponent {
 
     #[embeddable_as(ERC20SafeAllowanceImpl)]
     impl ERC20SafeAllowance<
-        TContractState, +HasComponent<TContractState>, +IWorldProvider<TContractState>,
+        TContractState,
+        +HasComponent<TContractState>,
+        +IWorldProvider<TContractState>,
+        +Drop<TContractState>
     > of IERC20SafeAllowance<ComponentState<TContractState>> {
         fn increase_allowance(
             ref self: ComponentState<TContractState>, spender: ContractAddress, added_value: u256
@@ -121,7 +127,10 @@ mod ERC20AllowanceComponent {
 
     #[embeddable_as(ERC20SafeAllowanceCamelImpl)]
     impl ERC20SafeAllowanceCamel<
-        TContractState, +HasComponent<TContractState>, +IWorldProvider<TContractState>,
+        TContractState,
+        +HasComponent<TContractState>,
+        +IWorldProvider<TContractState>,
+        +Drop<TContractState>
     > of IERC20SafeAllowanceCamel<ComponentState<TContractState>> {
         fn increaseAllowance(
             ref self: ComponentState<TContractState>, spender: ContractAddress, addedValue: u256
@@ -144,7 +153,10 @@ mod ERC20AllowanceComponent {
 
     #[generate_trait]
     impl InternalImpl<
-        TContractState, +HasComponent<TContractState>, +IWorldProvider<TContractState>,
+        TContractState,
+        +HasComponent<TContractState>,
+        +IWorldProvider<TContractState>,
+        +Drop<TContractState>
     > of InternalTrait<TContractState> {
         // Helper function for allowance model
         fn get_allowance(
@@ -180,8 +192,7 @@ mod ERC20AllowanceComponent {
             let approval_event = Approval {
                 owner: allowance.owner, spender: allowance.spender, value: allowance.amount
             };
-            self.emit(approval_event.clone());
-            emit!(self.get_contract().world(), approval_event);
+            self._emit_approval(approval_event);
         }
 
         fn _approve(
@@ -206,6 +217,11 @@ mod ERC20AllowanceComponent {
             if current_allowance != BoundedInt::max() {
                 self.update_allowance(owner, spender, amount, 0);
             }
+        }
+
+         fn _emit_approval(ref self: ComponentState<TContractState>, event: Approval) {
+            self.emit(event.clone());
+            emit!(self.get_contract().world(), event);
         }
     }
 }

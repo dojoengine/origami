@@ -11,10 +11,6 @@ mod components {
         mod erc20_burnable;
     }
 
-    // mod utility {
-    //     mod event_emitter;
-    // }
-
     mod tests;
 }
 

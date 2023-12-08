@@ -48,8 +48,7 @@ mod ERC20BurnableComponent {
             let transfer_event = erc20_balance_comp::Transfer {
                 from: account, to: Zeroable::zero(), value: amount
             };
-            erc20_balance.emit(transfer_event.clone());
-        // emit!(self.get_contract().world(), transfer_event);
+            erc20_balance._emit_transfer(transfer_event);
         }
     }
 }

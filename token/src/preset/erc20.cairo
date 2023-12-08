@@ -173,13 +173,4 @@ mod ERC20Preset {
             ERC20Impl::transfer_from(ref self, sender, recipient, amount)
         }
     }
-// #[generate_trait]
-// impl WorldInteractionsImpl of WorldInteractionsTrait {
-//     fn emit_event<S, +traits::Into<S, Event>, +Drop<S>, +Copy<S>>(
-//         ref self: ContractState, event: S
-//     ) {
-//         self.emit(event.clone());
-//         emit!(self.world(), event);
-//     }
-// }
 }

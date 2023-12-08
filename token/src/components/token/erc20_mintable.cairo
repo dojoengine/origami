@@ -15,6 +15,7 @@ mod ERC20MintableComponent {
     use erc20_balance_comp::InternalImpl as ERC20BalanceInternal;
     use erc20_metadata_comp::InternalImpl as ERC20MetadataInternal;
 
+
     #[storage]
     struct Storage {}
 
@@ -47,17 +48,10 @@ mod ERC20MintableComponent {
             erc20_metadata._update_total_supply(0, amount);
             erc20_balance._update_balance(recipient, 0, amount);
 
-            // let transfer_event = erc20_balance_comp::Event::Transfer(
-            //     erc20_balance_comp::Transfer {
-            //         from: Zeroable::zero(), to: recipient, value: amount
-            //     }
-            // );
-
             let transfer_event = erc20_balance_comp::Transfer {
                 from: Zeroable::zero(), to: recipient, value: amount
             };
-            erc20_balance.emit(transfer_event.clone());
-        // emit!(self.get_contract().world(), transfer_event);
+            erc20_balance._emit_transfer(transfer_event);
         }
     }
 }
