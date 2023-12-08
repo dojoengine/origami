@@ -31,7 +31,7 @@ mod actions {
                 world,
                 (
                     Game {
-                        game_id: game_id,
+                       game_id,
                         winner: Color::None(()),
                         white: white_address,
                         black: black_address,
