@@ -36,7 +36,7 @@ mod actions {
                         white: white_address,
                         black: black_address,
                     },
-                    GameTurn { game_id, turn: Color::White(()), },
+                    GameTurn { game_id, turn: Color::White(()) }
                 )
             );
 
