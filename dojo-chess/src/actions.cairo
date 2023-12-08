@@ -41,7 +41,7 @@ mod actions {
             );
 
             set!(world, (Square { game_id, x: 0, y: 0, piece: PieceType::WhiteRook }));
-            set!(world, (Square { game_id: game_id, x: 0, y: 1, piece: PieceType::WhitePawn }));
+            set!(world, (Square { game_id, x: 0, y: 1, piece: PieceType::WhitePawn }));
             set!(world, (Square { game_id, x: 1, y: 6, piece: PieceType::BlackPawn }));
             set!(world, (Square { game_id, x: 1, y: 0, piece: PieceType::WhiteKnight }));
 
