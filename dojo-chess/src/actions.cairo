@@ -31,12 +31,12 @@ mod actions {
                 world,
                 (
                     Game {
-                       game_id,
+                        game_id,
                         winner: Color::None(()),
                         white: white_address,
                         black: black_address,
                     },
-                    GameTurn { game_id: game_id, turn: Color::White(()), },
+                    GameTurn { game_id, turn: Color::White(()), },
                 )
             );
 
