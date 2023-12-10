@@ -16,9 +16,9 @@ trait IActions<ContractState> {
 
 #[dojo::contract]
 mod actions {
-    use dojo_chess::models::{Color, Square, PieceType, Game, GameTurn};
+    use dojo_chess::models::{Color, Piece, PieceType, Game, GameTurn};
     use super::{ContractAddress, IActions};
-    use dojo_chess::utils::{is_out_of_board, is_right_piece_move, is_piece_is_mine};
+    use dojo_chess::utils::PieceTrait;
 
     #[external(v0)]
     impl IActionsImpl of IActions<ContractState> {
@@ -31,25 +31,20 @@ mod actions {
                 world,
                 (
                     Game {
-                        game_id,
-                        winner: Color::None(()),
-                        white: white_address,
-                        black: black_address,
+                        game_id, winner: Color::None(()), white: white_address, black: black_address
                     },
-                    GameTurn { game_id, turn: Color::White(()) }
+                    GameTurn { game_id, turn: Color::White(()) },
                 )
             );
-
-            set!(world, (Square { game_id, x: 0, y: 0, piece: PieceType::WhiteRook }));
-            set!(world, (Square { game_id, x: 0, y: 1, piece: PieceType::WhitePawn }));
-            set!(world, (Square { game_id, x: 1, y: 6, piece: PieceType::BlackPawn }));
-            set!(world, (Square { game_id, x: 1, y: 0, piece: PieceType::WhiteKnight }));
+            set!(world, (Piece { game_id, x: 0, y: 0, piece_type: PieceType::WhiteRook }));
+            set!(world, (Piece { game_id, x: 0, y: 1, piece_type: PieceType::WhitePawn }));
+            set!(world, (Piece { game_id, x: 1, y: 6, piece_type: PieceType::BlackPawn }));
+            set!(world, (Piece { game_id, x: 1, y: 0, piece_type: PieceType::WhiteKnight }));
 
             //the rest of the positions on the board goes here....
 
             game_id
         }
-
         fn move(
             self: @ContractState,
             curr_position: (u32, u32),
@@ -58,40 +53,35 @@ mod actions {
             game_id: u32
         ) {
             let world = self.world_dispatcher.read();
-
             let (current_x, current_y) = curr_position;
             let (next_x, next_y) = next_position;
-
-            let mut current_square = get!(world, (game_id, current_x, current_y), (Square));
+            let mut current_piece = get!(world, (game_id, current_x, current_y), (Piece));
 
             // check if next_position is out of board or not
-            assert(is_out_of_board(next_position), 'Should be inside board');
+            assert(PieceTrait::is_out_of_board(next_position), 'Should be inside board');
 
             // check if this is the right piece type move
             assert(
-                is_right_piece_move(current_square.piece, curr_position, next_position),
+                current_piece.is_right_piece_move(curr_position, next_position),
                 'Should be right piece move'
             );
-            let target_piece = current_square.piece;
-            // make current_square piece none and move piece to next_square
-            current_square.piece = PieceType::None(());
-            let mut next_square = get!(world, (game_id, next_x, next_y), (Square));
+            let target_piece = current_piece.piece_type;
+            // make current_piece piece none and move piece to next_position
+            current_piece.piece_type = PieceType::None(());
+            let mut piece_next_position = get!(world, (game_id, next_x, next_y), (Piece));
 
             // check the piece already in next_suqare
-            let maybe_next_square_piece = next_square.piece;
-
-            if maybe_next_square_piece == PieceType::None(()) {
-                next_square.piece = target_piece;
+            if piece_next_position.piece_type == PieceType::None(()) {
+                piece_next_position.piece_type = target_piece;
             } else {
-                if is_piece_is_mine(maybe_next_square_piece) {
+                if piece_next_position.is_mine() {
                     panic(array!['Already same color piece exist'])
                 } else {
-                    next_square.piece = target_piece;
+                    piece_next_position.piece_type = target_piece;
                 }
             }
-
-            set!(world, (next_square));
-            set!(world, (current_square));
+            set!(world, (piece_next_position));
+            set!(world, (current_piece));
         }
     }
 }
@@ -101,7 +91,7 @@ mod tests {
     use starknet::ContractAddress;
     use dojo::test_utils::{spawn_test_world, deploy_contract};
     use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-    use dojo_chess::models::{Game, game, GameTurn, game_turn, Square, square, PieceType};
+    use dojo_chess::models::{Game, game, GameTurn, game_turn, Piece, piece, PieceType};
     use dojo_chess::actions::actions;
     use dojo_chess::actions::{IActionsDispatcher, IActionsDispatcherTrait};
 
@@ -109,7 +99,7 @@ mod tests {
     fn setup_world() -> (IWorldDispatcher, IActionsDispatcher) {
         // models
         let mut models = array![
-            game::TEST_CLASS_HASH, game_turn::TEST_CLASS_HASH, square::TEST_CLASS_HASH
+            game::TEST_CLASS_HASH, game_turn::TEST_CLASS_HASH, piece::TEST_CLASS_HASH
         ];
         // deploy world with models
         let world = spawn_test_world(models);
@@ -138,10 +128,10 @@ mod tests {
         assert(game.white == white, 'white address is incorrect');
         assert(game.black == black, 'black address is incorrect');
 
-        //get a1 square
-        let a1 = get!(world, (game_id, 0, 0), (Square));
-        assert(a1.piece == PieceType::WhiteRook, 'should be White Rook');
-        assert(a1.piece != PieceType::None, 'should have piece');
+        //get a1 piece
+        let a1 = get!(world, (game_id, 0, 0), (Piece));
+        assert(a1.piece_type == PieceType::WhiteRook, 'should be White Rook');
+        assert(a1.piece_type != PieceType::None, 'should have piece');
     }
 
 
@@ -155,16 +145,14 @@ mod tests {
         actions_system.spawn(white, black);
 
         let game_id = world.uuid();
-
-        let a2 = get!(world, (game_id, 0, 1), (Square));
-        assert(a2.piece == PieceType::WhitePawn, 'should be White Pawn');
-        assert(a2.piece != PieceType::None, 'should have piece');
+        let a2 = get!(world, (game_id, 0, 1), (Piece));
+        assert(a2.piece_type == PieceType::WhitePawn, 'should be White Pawn');
+        assert(a2.piece_type != PieceType::None, 'should have piece');
 
         actions_system.move((0, 1), (0, 2), white.into(), game_id);
 
-        let c3 = get!(world, (game_id, 0, 2), (Square));
-        assert(c3.piece == PieceType::WhitePawn, 'should be White Pawn');
-        assert(c3.piece != PieceType::None, 'should have piece');
+        let c3 = get!(world, (game_id, 0, 2), (Piece));
+        assert(c3.piece_type == PieceType::WhitePawn, 'should be White Pawn');
+        assert(c3.piece_type != PieceType::None, 'should have piece');
     }
 }
-
