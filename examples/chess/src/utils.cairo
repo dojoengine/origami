@@ -1,4 +1,4 @@
-use dojo_chess::models::{PieceType, Piece};
+use chess::models::{PieceType, Piece};
 use starknet::ContractAddress;
 
 trait PieceTrait {

@@ -16,9 +16,9 @@ trait IActions<ContractState> {
 
 #[dojo::contract]
 mod actions {
-    use dojo_chess::models::{Color, Piece, PieceType, Game, GameTurn};
+    use chess::models::{Color, Piece, PieceType, Game, GameTurn};
     use super::{ContractAddress, IActions};
-    use dojo_chess::utils::PieceTrait;
+    use chess::utils::PieceTrait;
 
     #[external(v0)]
     impl IActionsImpl of IActions<ContractState> {
@@ -70,16 +70,13 @@ mod actions {
             current_piece.piece_type = PieceType::None(());
             let mut piece_next_position = get!(world, (game_id, next_x, next_y), (Piece));
 
-            // check the piece already in next_suqare
-            if piece_next_position.piece_type == PieceType::None(()) {
-                piece_next_position.piece_type = target_piece;
-            } else {
-                if piece_next_position.is_mine() {
-                    panic(array!['Already same color piece exist'])
-                } else {
-                    piece_next_position.piece_type = target_piece;
-                }
-            }
+            // check the piece already in next_position
+            assert(
+                piece_next_position.piece_type == PieceType::None(())
+                    || !piece_next_position.is_mine(),
+                'Already same color piece exist'
+            );
+            piece_next_position.piece_type = target_piece;
             set!(world, (piece_next_position));
             set!(world, (current_piece));
         }
@@ -91,9 +88,9 @@ mod tests {
     use starknet::ContractAddress;
     use dojo::test_utils::{spawn_test_world, deploy_contract};
     use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-    use dojo_chess::models::{Game, game, GameTurn, game_turn, Piece, piece, PieceType};
-    use dojo_chess::actions::actions;
-    use dojo_chess::actions::{IActionsDispatcher, IActionsDispatcherTrait};
+    use chess::models::{Game, game, GameTurn, game_turn, Piece, piece, PieceType};
+    use chess::actions::actions;
+    use chess::actions::{IActionsDispatcher, IActionsDispatcherTrait};
 
     // helper setup function
     fn setup_world() -> (IWorldDispatcher, IActionsDispatcher) {

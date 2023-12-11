@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod tests {
-    use dojo_chess::models::{Piece, PieceType};
+    use chess::models::{Piece, PieceType};
     use dojo::world::IWorldDispatcherTrait;
-    use dojo_chess::actions::tests::setup_world;
-    use dojo_chess::actions::{IActionsDispatcher, IActionsDispatcherTrait};
+    use chess::actions::tests::setup_world;
+    use chess::actions::{IActionsDispatcher, IActionsDispatcherTrait};
 
     #[test]
     #[available_gas(3000000000000000)]
