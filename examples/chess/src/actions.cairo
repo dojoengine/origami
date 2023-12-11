@@ -60,10 +60,10 @@ mod actions {
             // check if next_position is out of board or not
             assert(PieceTrait::is_out_of_board(next_position), 'Should be inside board');
 
-            // check if this is the right piece type move
+            // check if this is the right move for this piece type
             assert(
                 current_piece.is_right_piece_move(curr_position, next_position),
-                'Should be right piece move'
+                'Illegal move for type of piece'
             );
             let target_piece = current_piece.piece_type;
             // make current_piece piece none and move piece to next_position
