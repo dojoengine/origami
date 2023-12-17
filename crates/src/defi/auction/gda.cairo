@@ -1,6 +1,6 @@
 // External imports
 
-use cubit::f128::math::core::{exp, pow};
+use cubit::f128::math::ops::{exp, pow};
 use cubit::f128::types::fixed::{Fixed, FixedTrait};
 
 /// A Gradual Dutch Auction represented using discrete time steps.

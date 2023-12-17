@@ -8,6 +8,6 @@ homepage = "https://github.com/dojoengine/origami"
 authors = ["bal7hazar@proton.me"]
 
 [workspace.dependencies]
-cubit = { git = "https://github.com/influenceth/cubit", rev = "b459053" }
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.3.15" }
+cubit = { git = "https://github.com/akhercha/cubit.git", rev = "d3869a3" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.4.0" }
 origami = { path = "crates" }
