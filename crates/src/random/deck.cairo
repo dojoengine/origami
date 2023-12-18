@@ -7,6 +7,12 @@ use hash::HashStateTrait;
 use poseidon::PoseidonTrait;
 use traits::{Into, Drop};
 
+// Constants
+
+const TWO_POW_1: u128 = 0x2;
+const MASK_1: u128 = 0x1;
+
+
 /// Deck struct.
 #[derive(Destruct)]
 struct Deck {
@@ -20,6 +26,7 @@ struct Deck {
 /// Errors module.
 mod errors {
     const NO_CARD_LEFT: felt252 = 'Deck: no card left';
+    const TOO_MUCH_CARD: felt252 = 'Deck: too much cards';
 }
 
 /// Trait to initialize, draw and discard a card from the Deck.
@@ -31,6 +38,14 @@ trait DeckTrait {
     /// # Returns
     /// * The initialized `Deck`.
     fn new(seed: felt252, number: u32) -> Deck;
+    /// Returns a new `Deck` struct setup with a bitmap.
+    /// # Arguments
+    /// * `seed` - A seed to initialize the deck.
+    /// * `number` - The initial number of cards (must be below u128).
+    /// * `bitmap` - The bitmap, each bit is a card with: 0/1 is in/out (so a null bitmap will create a `new` deck).
+    /// # Returns
+    /// * The initialized `Deck`.
+    fn from_bitmap(seed: felt252, number: u32, bitmap: u128) -> Deck;
     /// Returns a card type after a draw.
     /// # Arguments
     /// * `self` - The Deck.
@@ -61,6 +76,23 @@ impl DeckImpl of DeckTrait {
         Deck {
             seed, cards: Default::default(), keys: Default::default(), remaining: number, nonce: 0
         }
+    }
+
+    fn from_bitmap(seed: felt252, number: u32, mut bitmap: u128) -> Deck {
+        assert(number <= 128, errors::TOO_MUCH_CARD);
+        let mut deck = DeckTrait::new(seed, number);
+        let mut card: u8 = 1;
+        loop {
+            if bitmap == 0 || card.into() > number {
+                break;
+            };
+            if bitmap & MASK_1 == 1 {
+                deck.withdraw(card);
+            }
+            bitmap /= TWO_POW_1;
+            card += 1;
+        };
+        deck
     }
 
     #[inline(always)]
@@ -145,6 +177,19 @@ mod tests {
         assert(deck.draw() == 0x1, 'Wrong card 03');
         assert(deck.draw() == 0x5, 'Wrong card 04');
         assert(deck.draw() == 0x3, 'Wrong card 05');
+        assert(deck.remaining == 0, 'Wrong remaining');
+    }
+
+    #[test]
+    #[available_gas(1_000_000)]
+    fn test_deck_from_bitmap() {
+        let bitmap: u128 = 0 * 0x10 + 0 * 0x8 + 1 * 0x4 + 0 * 0x2 + 0 * 0x1;
+        let mut deck = DeckTrait::from_bitmap(DECK_SEED, DECK_CARDS_NUMBER, bitmap);
+        assert(deck.remaining == DECK_CARDS_NUMBER - 1, 'Wrong remaining');
+        assert(deck.draw() == 0x5, 'Wrong card 01');
+        assert(deck.draw() == 0x1, 'Wrong card 02');
+        assert(deck.draw() == 0x2, 'Wrong card 03');
+        assert(deck.draw() == 0x4, 'Wrong card 04');
         assert(deck.remaining == 0, 'Wrong remaining');
     }
 
