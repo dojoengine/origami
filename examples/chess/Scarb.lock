@@ -3,15 +3,15 @@ version = 1
 
 [[package]]
 name = "chess"
-version = "0.3.15"
+version = "0.4.0"
 dependencies = [
  "dojo",
 ]
 
 [[package]]
 name = "dojo"
-version = "0.3.15"
-source = "git+https://github.com/dojoengine/dojo#48d04d1ecb5e97567d4dfa70f018efa94802a45f"
+version = "0.4.1"
+source = "git+https://github.com/dojoengine/dojo#570f2d0c74073366084c337398b212aa648bade6"
 dependencies = [
  "dojo_plugin",
 ]
