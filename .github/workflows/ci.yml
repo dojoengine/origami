@@ -3,8 +3,8 @@ name: Origami CI
 on: [push, pull_request]
 
 env:
-  DOJO_VERSION: v0.3.15
-  SCARB_VERSION: v2.3.1
+  DOJO_VERSION: v0.4.1
+  SCARB_VERSION: v2.4.0
 
 jobs:
   check:
