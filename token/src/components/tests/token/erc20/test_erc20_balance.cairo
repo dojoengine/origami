@@ -3,12 +3,15 @@ use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
 use token::tests::constants::{ADMIN, ZERO, OWNER, OTHER};
 
-use token::components::token::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
-use token::components::token::erc20_balance::ERC20BalanceComponent::{
+use token::tests::utils;
+
+use token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
+use token::components::token::erc20::erc20_balance::ERC20BalanceComponent::{
     ERC20BalanceImpl, InternalImpl
 };
-use token::components::tests::mocks::erc20_balance_mock::ERC20BalanceMock;
-use token::components::tests::mocks::erc20_balance_mock::ERC20BalanceMock::world_dispatcherContractMemberStateTrait;
+use token::components::tests::mocks::erc20::erc20_balance_mock::ERC20BalanceMock;
+use token::components::tests::mocks::erc20::erc20_balance_mock::ERC20BalanceMock::world_dispatcherContractMemberStateTrait;
+
 
 
 fn STATE() -> (IWorldDispatcher, ERC20BalanceMock::ContractState) {
@@ -16,6 +19,8 @@ fn STATE() -> (IWorldDispatcher, ERC20BalanceMock::ContractState) {
 
     let mut state = ERC20BalanceMock::contract_state_for_testing();
     state.world_dispatcher.write(world);
+
+    utils::drop_event(ZERO());
 
     (world, state)
 }

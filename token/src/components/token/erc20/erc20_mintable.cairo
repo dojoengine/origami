@@ -9,8 +9,8 @@ mod ERC20MintableComponent {
         IWorldProvider, IWorldProviderDispatcher, IWorldDispatcher, IWorldDispatcherTrait
     };
 
-    use token::components::token::erc20_balance::ERC20BalanceComponent as erc20_balance_comp;
-    use token::components::token::erc20_metadata::ERC20MetadataComponent as erc20_metadata_comp;
+    use token::components::token::erc20::erc20_balance::ERC20BalanceComponent as erc20_balance_comp;
+    use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent as erc20_metadata_comp;
 
     use erc20_balance_comp::InternalImpl as ERC20BalanceInternal;
     use erc20_metadata_comp::InternalImpl as ERC20MetadataInternal;
@@ -37,21 +37,16 @@ mod ERC20MintableComponent {
         ) {
             assert(!recipient.is_zero(), Errors::MINT_TO_ZERO);
 
-            // macro is not support yet
-            // let mut erc20_balance = get_dep_component_mut!(ref self, ERC20Balance);
-            // let mut erc20_metadata = get_dep_component_mut!(ref self, ERC20Metadata);
-
-            let mut contract = self.get_contract_mut();
-            let mut erc20_balance = ERC20Balance::get_component_mut(ref contract);
-            let mut erc20_metadata = ERC20Metadata::get_component_mut(ref contract);
-
+            let mut erc20_balance = get_dep_component_mut!(ref self, ERC20Balance);
+            let mut erc20_metadata = get_dep_component_mut!(ref self, ERC20Metadata);
+           
             erc20_metadata._update_total_supply(0, amount);
             erc20_balance._update_balance(recipient, 0, amount);
 
             let transfer_event = erc20_balance_comp::Transfer {
                 from: Zeroable::zero(), to: recipient, value: amount
             };
-            erc20_balance._emit_transfer(transfer_event);
+            erc20_balance._emit_event(transfer_event);
         }
     }
 }

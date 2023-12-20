@@ -8,27 +8,27 @@ use token::tests::constants::{
      ZERO, OWNER, SPENDER, RECIPIENT, BRIDGE, NAME, SYMBOL, DECIMALS, SUPPLY, VALUE
 };
 
-use token::components::token::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
-use token::components::token::erc20_metadata::ERC20MetadataComponent::{
+use token::components::token::erc20::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
+use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent::{
     ERC20MetadataImpl, ERC20MetadataTotalSupplyImpl, InternalImpl as ERC20MetadataInternalImpl
 };
 
-use token::components::token::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
-use token::components::token::erc20_balance::ERC20BalanceComponent::{
+use token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
+use token::components::token::erc20::erc20_balance::ERC20BalanceComponent::{
     ERC20BalanceImpl, InternalImpl as ERC20BalanceInternalImpl
 };
 
-use token::components::token::erc20_mintable::ERC20MintableComponent::InternalImpl as ERC20MintableInternalImpl;
-use token::components::token::erc20_burnable::ERC20BurnableComponent::InternalImpl as ERC20BurnableInternalImpl;
+use token::components::token::erc20::erc20_mintable::ERC20MintableComponent::InternalImpl as ERC20MintableInternalImpl;
+use token::components::token::erc20::erc20_burnable::ERC20BurnableComponent::InternalImpl as ERC20BurnableInternalImpl;
 
-use token::components::token::erc20_bridgeable::{erc_20_bridgeable_model, ERC20BridgeableModel};
-use token::components::token::erc20_bridgeable::ERC20BridgeableComponent::{ERC20BridgeableImpl};
+use token::components::token::erc20::erc20_bridgeable::{erc_20_bridgeable_model, ERC20BridgeableModel};
+use token::components::token::erc20::erc20_bridgeable::ERC20BridgeableComponent::{ERC20BridgeableImpl};
 
-use token::components::tests::mocks::erc20_bridgeable_mock::ERC20BridgeableMock;
-use token::components::tests::mocks::erc20_bridgeable_mock::ERC20BridgeableMock::{
+use token::components::tests::mocks::erc20::erc20_bridgeable_mock::ERC20BridgeableMock;
+use token::components::tests::mocks::erc20::erc20_bridgeable_mock::ERC20BridgeableMock::{
     ERC20InitializerImpl
 };
-use token::components::tests::mocks::erc20_bridgeable_mock::ERC20BridgeableMock::world_dispatcherContractMemberStateTrait;
+use token::components::tests::mocks::erc20::erc20_bridgeable_mock::ERC20BridgeableMock::world_dispatcherContractMemberStateTrait;
 
 
 fn STATE() -> (IWorldDispatcher, ERC20BridgeableMock::ContractState) {
@@ -56,11 +56,11 @@ fn setup() -> ERC20BridgeableMock::ContractState {
 
 #[test]
 #[available_gas(25000000)]
-fn test_initializer() {
+fn test_erc20_bridgeable_initializer() {
     let (world, mut state) = STATE();
     state.initializer(NAME, SYMBOL, SUPPLY, OWNER(), BRIDGE());
 
-    assert(state.l2_bridge_address() == BRIDGE(), 'Decimals should be BRIDGE');
+    assert(state.l2_bridge_address() == BRIDGE(), 'should be BRIDGE');
 }
 
 //

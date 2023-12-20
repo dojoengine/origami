@@ -1,16 +1,26 @@
 mod components {
+
+    mod introspection {
+        mod src5;
+    }
+
     mod security {
         mod initializable;
     }
 
     mod token {
-        mod erc20_allowance;
-        mod erc20_balance;
-        mod erc20_metadata;
-        mod erc20_mintable;
-        mod erc20_burnable;
+        mod erc20 {
+            mod erc20_allowance;
+            mod erc20_balance;
+            mod erc20_bridgeable;
+            mod erc20_burnable;
+            mod erc20_metadata;
+            mod erc20_mintable;
+        }
+        
+        mod erc721 {
 
-        mod erc20_bridgeable;
+        }
     }
 
     mod tests;
@@ -44,9 +54,11 @@ mod erc1155 {
 }
 
 mod presets {
-    mod erc20;
-    #[cfg(test)]
-    mod tests;
+    mod erc20 {
+        mod bridgeable;
+        #[cfg(test)]
+        mod tests_bridgeable;
+    }
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 #[dojo::contract]
 mod ERC20MetadataMock {
-    use token::components::token::erc20_metadata::ERC20MetadataComponent;
+    use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent;
 
     component!(path: ERC20MetadataComponent, storage: erc20_metadata, event: ERC20MetadataEvent);
 

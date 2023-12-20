@@ -168,6 +168,17 @@ mod ERC20AllowanceComponent {
             )
         }
 
+        fn set_allowance(ref self: ComponentState<TContractState>, allowance: ERC20AllowanceModel) {
+            assert(!allowance.owner.is_zero(), Errors::APPROVE_FROM_ZERO);
+            assert(!allowance.spender.is_zero(), Errors::APPROVE_TO_ZERO);
+            set!(self.get_contract().world(), (allowance));
+
+            let approval_event = Approval {
+                owner: allowance.owner, spender: allowance.spender, value: allowance.amount
+            };
+            self._emit_event(approval_event);
+        }
+
         fn update_allowance(
             ref self: ComponentState<TContractState>,
             owner: ContractAddress,
@@ -182,29 +193,7 @@ mod ERC20AllowanceComponent {
             self.set_allowance(allowance);
         }
 
-        fn set_allowance(ref self: ComponentState<TContractState>, allowance: ERC20AllowanceModel) {
-            assert(!allowance.owner.is_zero(), Errors::APPROVE_FROM_ZERO);
-            assert(!allowance.spender.is_zero(), Errors::APPROVE_TO_ZERO);
-            set!(self.get_contract().world(), (allowance));
-
-            let approval_event = Approval {
-                owner: allowance.owner, spender: allowance.spender, value: allowance.amount
-            };
-            self._emit_approval(approval_event);
-        }
-
-        fn _approve(
-            ref self: ComponentState<TContractState>,
-            owner: ContractAddress,
-            spender: ContractAddress,
-            amount: u256
-        ) {
-            self
-                .set_allowance(
-                    ERC20AllowanceModel { token: get_contract_address(), owner, spender, amount }
-                );
-        }
-
+        // use in transfer_from
         fn _spend_allowance(
             ref self: ComponentState<TContractState>,
             owner: ContractAddress,
@@ -217,7 +206,9 @@ mod ERC20AllowanceComponent {
             }
         }
 
-        fn _emit_approval(ref self: ComponentState<TContractState>, event: Approval) {
+        fn _emit_event<S, +traits::Into<S, Event>, +Drop<S>, +Clone<S>>(
+            ref self: ComponentState<TContractState>, event: S
+        ) {
             self.emit(event.clone());
             emit!(self.get_contract().world(), event);
         }

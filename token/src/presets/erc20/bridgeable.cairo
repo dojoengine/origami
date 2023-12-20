@@ -1,5 +1,50 @@
+use starknet::{ContractAddress, ClassHash};
+use dojo::world::IWorldDispatcher;
+
+#[starknet::interface]
+trait IERC20BridgeablePreset<TState> {
+    // IERC20
+    fn total_supply(self: @TState, ) -> u256;
+    fn balance_of(self: @TState, account: ContractAddress) -> u256;
+    fn allowance(self: @TState, owner: ContractAddress, spender: ContractAddress) -> u256;
+    fn transfer(ref self: TState, recipient: ContractAddress, amount: u256) -> bool;
+    fn transfer_from(ref self: TState, sender: ContractAddress, recipient: ContractAddress, amount: u256) -> bool;
+    fn approve(ref self: TState, spender: ContractAddress, amount: u256) -> bool;
+
+    // IERC20CamelOnly
+    fn totalSupply(self: @TState, ) -> u256;
+    fn balanceOf(self: @TState, account: ContractAddress) -> u256;
+    fn transferFrom(ref self: TState, sender: ContractAddress, recipient: ContractAddress, amount: u256) -> bool;
+   
+    // IERC20Metadata
+    fn name(self: @TState, ) -> felt252;
+    fn symbol(self: @TState, ) -> felt252;
+    fn decimals(self: @TState, ) -> u8;
+
+    // IERC20SafeAllowance
+    fn increase_allowance(ref self: TState, spender: ContractAddress, added_value: u256) -> bool;
+    fn decrease_allowance(ref self: TState, spender: ContractAddress, subtracted_value: u256) -> bool;
+
+    // IERC20SafeAllowanceCamel
+    fn increaseAllowance(ref self: TState, spender: ContractAddress, addedValue: u256) -> bool;
+    fn decreaseAllowance(ref self: TState, spender: ContractAddress, subtractedValue: u256) -> bool;
+
+    // IERC20Bridgeable
+    fn l2_bridge_address(self: @TState, ) -> ContractAddress;
+    fn mint(ref self: TState, recipient: ContractAddress, amount: u256);
+    fn burn(ref self: TState, account: ContractAddress, amount: u256);
+
+    // IWorldProvider
+    fn world(self: @TState, ) -> IWorldDispatcher;
+
+    // IUpgradeable
+    fn upgrade(ref self: TState, new_class_hash: ClassHash);
+
+}
+
+
 #[dojo::contract]
-mod ERC20Preset {
+mod ERC20Bridgeable {
     use token::erc20::interface;
     use integer::BoundedInt;
     use starknet::ContractAddress;
@@ -8,12 +53,12 @@ mod ERC20Preset {
 
     use token::components::security::initializable::InitializableComponent;
 
-    use token::components::token::erc20_metadata::ERC20MetadataComponent;
-    use token::components::token::erc20_balance::ERC20BalanceComponent;
-    use token::components::token::erc20_allowance::ERC20AllowanceComponent;
-    use token::components::token::erc20_mintable::ERC20MintableComponent;
-    use token::components::token::erc20_burnable::ERC20BurnableComponent;
-    use token::components::token::erc20_bridgeable::ERC20BridgeableComponent;
+    use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent;
+    use token::components::token::erc20::erc20_balance::ERC20BalanceComponent;
+    use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent;
+    use token::components::token::erc20::erc20_mintable::ERC20MintableComponent;
+    use token::components::token::erc20::erc20_burnable::ERC20BurnableComponent;
+    use token::components::token::erc20::erc20_bridgeable::ERC20BridgeableComponent;
 
     component!(path: InitializableComponent, storage: initializable, event: InitializableEvent);
 

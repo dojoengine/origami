@@ -1,6 +1,6 @@
 #[dojo::contract]
 mod ERC20BalanceMock {
-    use token::components::token::erc20_balance::ERC20BalanceComponent;
+    use token::components::token::erc20::erc20_balance::ERC20BalanceComponent;
 
     component!(path: ERC20BalanceComponent, storage: erc20_balance, event: ERC20BalanceEvent);
 

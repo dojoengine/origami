@@ -36,10 +36,10 @@ mod ERC20BridgeableComponent {
         IWorldProvider, IWorldProviderDispatcher, IWorldDispatcher, IWorldDispatcherTrait
     };
 
-    use token::components::token::erc20_balance::ERC20BalanceComponent as erc20_balance_comp;
-    use token::components::token::erc20_metadata::ERC20MetadataComponent as erc20_metadata_comp;
-    use token::components::token::erc20_mintable::ERC20MintableComponent as erc20_mintable_comp;
-    use token::components::token::erc20_burnable::ERC20BurnableComponent as erc20_burnable_comp;
+    use token::components::token::erc20::erc20_balance::ERC20BalanceComponent as erc20_balance_comp;
+    use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent as erc20_metadata_comp;
+    use token::components::token::erc20::erc20_mintable::ERC20MintableComponent as erc20_mintable_comp;
+    use token::components::token::erc20::erc20_burnable::ERC20BurnableComponent as erc20_burnable_comp;
 
     use erc20_balance_comp::InternalImpl as ERC20BalanceInternal;
     use erc20_metadata_comp::InternalImpl as ERC20MetadataInternal;

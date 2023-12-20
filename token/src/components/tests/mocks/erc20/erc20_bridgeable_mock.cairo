@@ -5,11 +5,11 @@ mod ERC20BridgeableMock {
 
     use token::components::security::initializable::InitializableComponent;
 
-    use token::components::token::erc20_balance::ERC20BalanceComponent;
-    use token::components::token::erc20_metadata::ERC20MetadataComponent;
-    use token::components::token::erc20_mintable::ERC20MintableComponent;
-    use token::components::token::erc20_burnable::ERC20BurnableComponent;
-    use token::components::token::erc20_bridgeable::ERC20BridgeableComponent;
+    use token::components::token::erc20::erc20_balance::ERC20BalanceComponent;
+    use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent;
+    use token::components::token::erc20::erc20_mintable::ERC20MintableComponent;
+    use token::components::token::erc20::erc20_burnable::ERC20BurnableComponent;
+    use token::components::token::erc20::erc20_bridgeable::ERC20BridgeableComponent;
 
     component!(path: InitializableComponent, storage: initializable, event: InitializableEvent);
 

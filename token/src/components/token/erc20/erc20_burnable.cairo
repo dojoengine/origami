@@ -9,8 +9,8 @@ mod ERC20BurnableComponent {
         IWorldProvider, IWorldProviderDispatcher, IWorldDispatcher, IWorldDispatcherTrait
     };
 
-    use token::components::token::erc20_balance::ERC20BalanceComponent as erc20_balance_comp;
-    use token::components::token::erc20_metadata::ERC20MetadataComponent as erc20_metadata_comp;
+    use token::components::token::erc20::erc20_balance::ERC20BalanceComponent as erc20_balance_comp;
+    use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent as erc20_metadata_comp;
 
     use erc20_balance_comp::InternalImpl as ERC20BalanceInternal;
     use erc20_metadata_comp::InternalImpl as ERC20MetadataInternal;
@@ -34,13 +34,8 @@ mod ERC20BurnableComponent {
         fn _burn(ref self: ComponentState<TContractState>, account: ContractAddress, amount: u256) {
             assert(!account.is_zero(), Errors::BURN_FROM_ZERO);
 
-            // macro is not supported yet
-            // let mut erc20_balance = get_dep_component_mut!(ref self, ERC20Balance);
-            // let mut erc20_metadata = get_dep_component_mut!(ref self, ERC20Metadata);
-
-            let mut contract = self.get_contract_mut();
-            let mut erc20_balance = ERC20Balance::get_component_mut(ref contract);
-            let mut erc20_metadata = ERC20Metadata::get_component_mut(ref contract);
+            let mut erc20_balance = get_dep_component_mut!(ref self, ERC20Balance);
+            let mut erc20_metadata = get_dep_component_mut!(ref self, ERC20Metadata);
 
             erc20_metadata._update_total_supply(amount, 0);
             erc20_balance._update_balance(account, amount, 0);
@@ -48,7 +43,7 @@ mod ERC20BurnableComponent {
             let transfer_event = erc20_balance_comp::Transfer {
                 from: account, to: Zeroable::zero(), value: amount
             };
-            erc20_balance._emit_transfer(transfer_event);
+            erc20_balance._emit_event(transfer_event);
         }
     }
 }

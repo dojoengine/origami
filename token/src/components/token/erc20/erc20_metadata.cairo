@@ -39,7 +39,6 @@ mod ERC20MetadataComponent {
     use super::IERC20Metadata;
     use super::IERC20MetadataTotalSupply;
 
-
     use starknet::get_contract_address;
     use dojo::world::{
         IWorldProvider, IWorldProviderDispatcher, IWorldDispatcher, IWorldDispatcherTrait

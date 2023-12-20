@@ -116,12 +116,15 @@ mod ERC20BalanceComponent {
             self._update_balance(recipient, 0, amount);
 
             let transfer_event = Transfer { from: sender, to: recipient, value: amount };
-            self._emit_transfer(transfer_event);
+            self._emit_event(transfer_event);
         }
 
-        fn _emit_transfer(ref self: ComponentState<TContractState>, event: Transfer) {
+        fn _emit_event<S, +traits::Into<S, Event>, +Drop<S>, +Clone<S>>(
+            ref self: ComponentState<TContractState>, event: S
+        ) {
             self.emit(event.clone());
             emit!(self.get_contract().world(), event);
         }
+        
     }
 }

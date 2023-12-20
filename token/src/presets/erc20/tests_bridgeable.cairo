@@ -11,31 +11,31 @@ use token::tests::constants::{
 
 use token::tests::utils;
 
-use token::components::token::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
-use token::components::token::erc20_metadata::ERC20MetadataComponent::{
+use token::components::token::erc20::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
+use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent::{
     ERC20MetadataImpl, ERC20MetadataTotalSupplyImpl, InternalImpl as ERC20MetadataInternalImpl
 };
 
-use token::components::token::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
-use token::components::token::erc20_balance::ERC20BalanceComponent::{
+use token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
+use token::components::token::erc20::erc20_balance::ERC20BalanceComponent::{
     Transfer, ERC20BalanceImpl, InternalImpl as ERC20BalanceInternalImpl
 };
 
-use token::components::token::erc20_allowance::{erc_20_allowance_model, ERC20AllowanceModel,};
-use token::components::token::erc20_allowance::ERC20AllowanceComponent::{
+use token::components::token::erc20::erc20_allowance::{erc_20_allowance_model, ERC20AllowanceModel,};
+use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent::{
     Approval, ERC20AllowanceImpl, InternalImpl as ERC20AllownceInternalImpl, ERC20SafeAllowanceImpl,
     ERC20SafeAllowanceCamelImpl
 };
 
-use token::components::token::erc20_bridgeable::{erc_20_bridgeable_model, ERC20BridgeableModel};
-use token::components::token::erc20_bridgeable::ERC20BridgeableComponent::{ERC20BridgeableImpl};
+use token::components::token::erc20::erc20_bridgeable::{erc_20_bridgeable_model, ERC20BridgeableModel};
+use token::components::token::erc20::erc20_bridgeable::ERC20BridgeableComponent::{ERC20BridgeableImpl};
 
-use token::components::token::erc20_mintable::ERC20MintableComponent::InternalImpl as ERC20MintableInternalImpl;
-use token::components::token::erc20_burnable::ERC20BurnableComponent::InternalImpl as ERC20BurnableInternalImpl;
+use token::components::token::erc20::erc20_mintable::ERC20MintableComponent::InternalImpl as ERC20MintableInternalImpl;
+use token::components::token::erc20::erc20_burnable::ERC20BurnableComponent::InternalImpl as ERC20BurnableInternalImpl;
 
-use token::presets::erc20::ERC20Preset;
-use token::presets::erc20::ERC20Preset::{ERC20Impl, ERC20InitializerImpl};
-use token::presets::erc20::ERC20Preset::world_dispatcherContractMemberStateTrait;
+use token::presets::erc20::bridgeable::ERC20Bridgeable;
+use token::presets::erc20::bridgeable::ERC20Bridgeable::{ERC20Impl, ERC20InitializerImpl};
+use token::presets::erc20::bridgeable::ERC20Bridgeable::world_dispatcherContractMemberStateTrait;
 
 use debug::PrintTrait;
 
@@ -43,7 +43,7 @@ use debug::PrintTrait;
 // Setup
 //
 
-fn STATE() -> (IWorldDispatcher, ERC20Preset::ContractState) {
+fn STATE() -> (IWorldDispatcher, ERC20Bridgeable::ContractState) {
     let world = spawn_test_world(
         array![
             erc_20_allowance_model::TEST_CLASS_HASH,
@@ -52,12 +52,12 @@ fn STATE() -> (IWorldDispatcher, ERC20Preset::ContractState) {
             erc_20_bridgeable_model::TEST_CLASS_HASH,
         ]
     );
-    let mut state = ERC20Preset::contract_state_for_testing();
+    let mut state = ERC20Bridgeable::contract_state_for_testing();
     state.world_dispatcher.write(world);
     (world, state)
 }
 
-fn setup() -> ERC20Preset::ContractState {
+fn setup() -> ERC20Bridgeable::ContractState {
     let (world, mut state) = STATE();
 
     state.initializer(NAME, SYMBOL, SUPPLY, OWNER(), BRIDGE());
@@ -148,7 +148,7 @@ fn test_approve_from_zero() {
 fn test_approve_to_zero() {
     let mut state = setup();
     testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, Zeroable::zero(), VALUE);
+    ERC20Impl::approve(ref state, ZERO(), VALUE);
 }
 
 #[test]
@@ -156,7 +156,7 @@ fn test_approve_to_zero() {
 fn test__approve() {
     let mut state = setup();
     testing::set_caller_address(OWNER());
-    state.erc20_allowance._approve(OWNER(), SPENDER(), VALUE);
+    state.erc20_allowance.approve( SPENDER(), VALUE);
 
     assert_only_event_approval(OWNER(), SPENDER(), VALUE);
     assert(
@@ -169,7 +169,8 @@ fn test__approve() {
 #[should_panic(expected: ('ERC20: approve from 0',))]
 fn test__approve_from_zero() {
     let mut state = setup();
-    state.erc20_allowance._approve(Zeroable::zero(), SPENDER(), VALUE);
+    testing::set_caller_address(ZERO());
+    state.erc20_allowance.approve(SPENDER(), VALUE);
 }
 
 #[test]
@@ -178,7 +179,7 @@ fn test__approve_from_zero() {
 fn test__approve_to_zero() {
     let mut state = setup();
     testing::set_caller_address(OWNER());
-    state.erc20_allowance._approve(OWNER(), Zeroable::zero(), VALUE);
+    state.erc20_allowance.approve(ZERO(), VALUE);
 }
 
 //
@@ -227,7 +228,7 @@ fn test__transfer_not_enough_balance() {
 #[should_panic(expected: ('ERC20: transfer from 0',))]
 fn test__transfer_from_zero() {
     let mut state = setup();
-    state.erc20_balance._transfer(Zeroable::zero(), RECIPIENT(), VALUE);
+    state.erc20_balance._transfer(ZERO(), RECIPIENT(), VALUE);
 }
 
 #[test]
@@ -235,7 +236,7 @@ fn test__transfer_from_zero() {
 #[should_panic(expected: ('ERC20: transfer to 0',))]
 fn test__transfer_to_zero() {
     let mut state = setup();
-    state.erc20_balance._transfer(OWNER(), Zeroable::zero(), VALUE);
+    state.erc20_balance._transfer(OWNER(), ZERO(), VALUE);
 }
 
 //
@@ -300,7 +301,7 @@ fn test_transfer_from_to_zero_address() {
     ERC20Impl::approve(ref state, SPENDER(), VALUE);
 
     testing::set_caller_address(SPENDER());
-    ERC20Impl::transfer_from(ref state, OWNER(), Zeroable::zero(), VALUE);
+    ERC20Impl::transfer_from(ref state, OWNER(), ZERO(), VALUE);
 }
 
 #[test]
@@ -308,7 +309,7 @@ fn test_transfer_from_to_zero_address() {
 #[should_panic(expected: ('u256_sub Overflow',))]
 fn test_transfer_from_from_zero_address() {
     let mut state = setup();
-    ERC20Impl::transfer_from(ref state, Zeroable::zero(), RECIPIENT(), VALUE);
+    ERC20Impl::transfer_from(ref state, ZERO(), RECIPIENT(), VALUE);
 }
 
 //
@@ -335,7 +336,7 @@ fn test_increase_allowance() {
 fn test_increase_allowance_to_zero_address() {
     let mut state = setup();
     testing::set_caller_address(OWNER());
-    state.increase_allowance(Zeroable::zero(), VALUE);
+    state.increase_allowance(ZERO(), VALUE);
 }
 
 #[test]
@@ -366,7 +367,7 @@ fn test_increaseAllowance() {
 fn test_increaseAllowance_to_zero_address() {
     let mut state = setup();
     testing::set_caller_address(OWNER());
-    state.increaseAllowance(Zeroable::zero(), VALUE);
+    state.increaseAllowance(ZERO(), VALUE);
 }
 
 #[test]
@@ -401,7 +402,7 @@ fn test_decrease_allowance() {
 fn test_decrease_allowance_to_zero_address() {
     let mut state = setup();
     testing::set_caller_address(OWNER());
-    state.decrease_allowance(Zeroable::zero(), VALUE);
+    state.decrease_allowance(ZERO(), VALUE);
 }
 
 #[test]
@@ -432,7 +433,7 @@ fn test_decreaseAllowance() {
 fn test_decreaseAllowance_to_zero_address() {
     let mut state = setup();
     testing::set_caller_address(OWNER());
-    state.decreaseAllowance(Zeroable::zero(), VALUE);
+    state.decreaseAllowance(ZERO(), VALUE);
 }
 
 #[test]
@@ -452,7 +453,8 @@ fn test_decreaseAllowance_from_zero_address() {
 fn test__spend_allowance_not_unlimited() {
     let mut state = setup();
 
-    state.erc20_allowance._approve(OWNER(), SPENDER(), SUPPLY);
+    testing::set_caller_address(OWNER());
+    state.erc20_allowance.approve( SPENDER(), SUPPLY);
     utils::drop_event(ZERO());
 
     state.erc20_allowance._spend_allowance(OWNER(), SPENDER(), VALUE);
@@ -468,7 +470,9 @@ fn test__spend_allowance_not_unlimited() {
 #[available_gas(25000000)]
 fn test__spend_allowance_unlimited() {
     let mut state = setup();
-    state.erc20_allowance._approve(OWNER(), SPENDER(), BoundedInt::max());
+   
+    testing::set_caller_address(OWNER());
+    state.erc20_allowance.approve( SPENDER(), BoundedInt::max());
 
     let max_minus_one: u256 = BoundedInt::max() - 1;
     state.erc20_allowance._spend_allowance(OWNER(), SPENDER(), max_minus_one);
@@ -498,7 +502,7 @@ fn test__mint() {
 #[should_panic(expected: ('ERC20: mint to 0',))]
 fn test__mint_to_zero() {
     let (world, mut state) = STATE();
-    state.erc20_mintable._mint(Zeroable::zero(), VALUE);
+    state.erc20_mintable._mint(ZERO(), VALUE);
 }
 
 //
@@ -521,7 +525,7 @@ fn test__burn() {
 #[should_panic(expected: ('ERC20: burn from 0',))]
 fn test__burn_from_zero() {
     let mut state = setup();
-    state.erc20_burnable._burn(Zeroable::zero(), VALUE);
+    state.erc20_burnable._burn(ZERO(), VALUE);
 }
 
 

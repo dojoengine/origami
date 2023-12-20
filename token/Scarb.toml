@@ -2,10 +2,12 @@
 name = "token"
 version = "0.0.0"
 description = "Implementations of ERC standards for the Dojo framework."
-homepage = "https://github.com/dojoengine/origami/tree/presets"
+homepage = "https://github.com/dojoengine/origami/tree/token"
 
 [dependencies]
 # dojo.workspace = true
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.3.15" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.4.1" }
+
+[lib]
 
 [[target.dojo]]

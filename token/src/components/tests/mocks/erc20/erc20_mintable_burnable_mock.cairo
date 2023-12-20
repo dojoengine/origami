@@ -1,9 +1,9 @@
 #[dojo::contract]
 mod ERC20MintableBurnableMock {
-    use token::components::token::erc20_balance::ERC20BalanceComponent;
-    use token::components::token::erc20_metadata::ERC20MetadataComponent;
-    use token::components::token::erc20_mintable::ERC20MintableComponent;
-    use token::components::token::erc20_burnable::ERC20BurnableComponent;
+    use token::components::token::erc20::erc20_balance::ERC20BalanceComponent;
+    use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent;
+    use token::components::token::erc20::erc20_mintable::ERC20MintableComponent;
+    use token::components::token::erc20::erc20_burnable::ERC20BurnableComponent;
 
     component!(path: ERC20BalanceComponent, storage: erc20_balance, event: ERC20BalanceEvent);
     component!(path: ERC20MetadataComponent, storage: erc20_metadata, event: ERC20MetadataEvent);

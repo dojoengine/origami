@@ -1,6 +1,6 @@
 #[dojo::contract]
 mod ERC20AllowanceMock {
-    use token::components::token::erc20_allowance::ERC20AllowanceComponent;
+    use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent;
 
     component!(path: ERC20AllowanceComponent, storage: erc20_allowance, event: ERC20AllowanceEvent);
 
