@@ -21,14 +21,20 @@ use token::components::token::erc20::erc20_balance::ERC20BalanceComponent::{
     Transfer, ERC20BalanceImpl, InternalImpl as ERC20BalanceInternalImpl
 };
 
-use token::components::token::erc20::erc20_allowance::{erc_20_allowance_model, ERC20AllowanceModel,};
+use token::components::token::erc20::erc20_allowance::{
+    erc_20_allowance_model, ERC20AllowanceModel,
+};
 use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent::{
     Approval, ERC20AllowanceImpl, InternalImpl as ERC20AllownceInternalImpl, ERC20SafeAllowanceImpl,
     ERC20SafeAllowanceCamelImpl
 };
 
-use token::components::token::erc20::erc20_bridgeable::{erc_20_bridgeable_model, ERC20BridgeableModel};
-use token::components::token::erc20::erc20_bridgeable::ERC20BridgeableComponent::{ERC20BridgeableImpl};
+use token::components::token::erc20::erc20_bridgeable::{
+    erc_20_bridgeable_model, ERC20BridgeableModel
+};
+use token::components::token::erc20::erc20_bridgeable::ERC20BridgeableComponent::{
+    ERC20BridgeableImpl
+};
 
 use token::components::token::erc20::erc20_mintable::ERC20MintableComponent::InternalImpl as ERC20MintableInternalImpl;
 use token::components::token::erc20::erc20_burnable::ERC20BurnableComponent::InternalImpl as ERC20BurnableInternalImpl;
@@ -156,7 +162,7 @@ fn test_approve_to_zero() {
 fn test__approve() {
     let mut state = setup();
     testing::set_caller_address(OWNER());
-    state.erc20_allowance.approve( SPENDER(), VALUE);
+    state.erc20_allowance.approve(SPENDER(), VALUE);
 
     assert_only_event_approval(OWNER(), SPENDER(), VALUE);
     assert(
@@ -454,7 +460,7 @@ fn test__spend_allowance_not_unlimited() {
     let mut state = setup();
 
     testing::set_caller_address(OWNER());
-    state.erc20_allowance.approve( SPENDER(), SUPPLY);
+    state.erc20_allowance.approve(SPENDER(), SUPPLY);
     utils::drop_event(ZERO());
 
     state.erc20_allowance._spend_allowance(OWNER(), SPENDER(), VALUE);
@@ -470,9 +476,9 @@ fn test__spend_allowance_not_unlimited() {
 #[available_gas(25000000)]
 fn test__spend_allowance_unlimited() {
     let mut state = setup();
-   
+
     testing::set_caller_address(OWNER());
-    state.erc20_allowance.approve( SPENDER(), BoundedInt::max());
+    state.erc20_allowance.approve(SPENDER(), BoundedInt::max());
 
     let max_minus_one: u256 = BoundedInt::max() - 1;
     state.erc20_allowance._spend_allowance(OWNER(), SPENDER(), max_minus_one);

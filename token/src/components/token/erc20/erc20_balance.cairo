@@ -125,6 +125,5 @@ mod ERC20BalanceComponent {
             self.emit(event.clone());
             emit!(self.get_contract().world(), event);
         }
-        
     }
 }

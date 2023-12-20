@@ -5,7 +5,7 @@ use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
 use token::tests::constants::{
-     ZERO, OWNER, SPENDER, RECIPIENT, BRIDGE, NAME, SYMBOL, DECIMALS, SUPPLY, VALUE
+    ZERO, OWNER, SPENDER, RECIPIENT, BRIDGE, NAME, SYMBOL, DECIMALS, SUPPLY, VALUE
 };
 
 use token::components::token::erc20::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
@@ -21,8 +21,12 @@ use token::components::token::erc20::erc20_balance::ERC20BalanceComponent::{
 use token::components::token::erc20::erc20_mintable::ERC20MintableComponent::InternalImpl as ERC20MintableInternalImpl;
 use token::components::token::erc20::erc20_burnable::ERC20BurnableComponent::InternalImpl as ERC20BurnableInternalImpl;
 
-use token::components::token::erc20::erc20_bridgeable::{erc_20_bridgeable_model, ERC20BridgeableModel};
-use token::components::token::erc20::erc20_bridgeable::ERC20BridgeableComponent::{ERC20BridgeableImpl};
+use token::components::token::erc20::erc20_bridgeable::{
+    erc_20_bridgeable_model, ERC20BridgeableModel
+};
+use token::components::token::erc20::erc20_bridgeable::ERC20BridgeableComponent::{
+    ERC20BridgeableImpl
+};
 
 use token::components::tests::mocks::erc20::erc20_bridgeable_mock::ERC20BridgeableMock;
 use token::components::tests::mocks::erc20::erc20_bridgeable_mock::ERC20BridgeableMock::{
@@ -33,8 +37,11 @@ use token::components::tests::mocks::erc20::erc20_bridgeable_mock::ERC20Bridgeab
 
 fn STATE() -> (IWorldDispatcher, ERC20BridgeableMock::ContractState) {
     let world = spawn_test_world(
-        array![erc_20_metadata_model::TEST_CLASS_HASH, erc_20_balance_model::TEST_CLASS_HASH,
-        erc_20_bridgeable_model::TEST_CLASS_HASH]
+        array![
+            erc_20_metadata_model::TEST_CLASS_HASH,
+            erc_20_balance_model::TEST_CLASS_HASH,
+            erc_20_bridgeable_model::TEST_CLASS_HASH
+        ]
     );
 
     let mut state = ERC20BridgeableMock::contract_state_for_testing();

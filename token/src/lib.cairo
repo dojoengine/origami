@@ -1,5 +1,4 @@
 mod components {
-
     mod introspection {
         mod src5;
     }
@@ -17,10 +16,8 @@ mod components {
             mod erc20_metadata;
             mod erc20_mintable;
         }
-        
-        mod erc721 {
 
-        }
+        mod erc721 {}
     }
 
     mod tests;

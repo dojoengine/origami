@@ -13,7 +13,6 @@ use token::components::tests::mocks::erc20::erc20_balance_mock::ERC20BalanceMock
 use token::components::tests::mocks::erc20::erc20_balance_mock::ERC20BalanceMock::world_dispatcherContractMemberStateTrait;
 
 
-
 fn STATE() -> (IWorldDispatcher, ERC20BalanceMock::ContractState) {
     let world = spawn_test_world(array![erc_20_balance_model::TEST_CLASS_HASH,]);
 

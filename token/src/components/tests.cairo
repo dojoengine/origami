@@ -1,7 +1,7 @@
 mod mocks {
     mod initializable_mock;
     mod src5_mock;
-   
+
     mod erc20 {
         mod erc20_allowance_mock;
         mod erc20_balance_mock;
@@ -9,7 +9,6 @@ mod mocks {
         mod erc20_mintable_burnable_mock;
         mod erc20_bridgeable_mock;
     }
-    
 }
 
 mod introspection {
@@ -37,7 +36,5 @@ mod token {
         mod test_erc20_bridgeable;
     }
 
-    mod erc711{
-
-    }
+    mod erc711 {}
 }

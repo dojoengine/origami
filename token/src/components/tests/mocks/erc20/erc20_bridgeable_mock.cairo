@@ -64,7 +64,7 @@ mod ERC20BridgeableMock {
 
     #[abi(embed_v0)]
     impl ERC20BalanceImpl = ERC20BalanceComponent::ERC20BalanceImpl<ContractState>;
-    
+
     #[abi(embed_v0)]
     impl ERC20MetadataImpl =
         ERC20MetadataComponent::ERC20MetadataImpl<ContractState>;
@@ -101,5 +101,4 @@ mod ERC20BridgeableMock {
             self.initializable.initialize();
         }
     }
-
 }

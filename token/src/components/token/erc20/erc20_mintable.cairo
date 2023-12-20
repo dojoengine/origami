@@ -39,7 +39,7 @@ mod ERC20MintableComponent {
 
             let mut erc20_balance = get_dep_component_mut!(ref self, ERC20Balance);
             let mut erc20_metadata = get_dep_component_mut!(ref self, ERC20Metadata);
-           
+
             erc20_metadata._update_total_supply(0, amount);
             erc20_balance._update_balance(recipient, 0, amount);
 

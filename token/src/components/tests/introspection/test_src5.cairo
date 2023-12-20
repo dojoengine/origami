@@ -2,14 +2,11 @@ use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
 
 use token::components::introspection::src5::{src_5_model, SRC5Model, ISRC5, ISRC5_ID};
-use token::components::introspection::src5::SRC5Component::{
-     InternalImpl
-};
+use token::components::introspection::src5::SRC5Component::{InternalImpl};
 use token::components::tests::mocks::src5_mock::SRC5Mock;
 use token::components::tests::mocks::src5_mock::SRC5Mock::world_dispatcherContractMemberStateTrait;
 
 use token::tests::constants::{OTHER_ID};
-
 
 
 fn STATE() -> (IWorldDispatcher, SRC5Mock::ContractState) {

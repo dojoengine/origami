@@ -100,7 +100,8 @@ mod SRC5Component {
         fn _supports_interface(
             self: @ComponentState<TContractState>, interface_id: felt252
         ) -> bool {
-            get!(self.get_contract().world(), (get_contract_address(), interface_id), (SRC5Model)).supports
+            get!(self.get_contract().world(), (get_contract_address(), interface_id), (SRC5Model))
+                .supports
         }
     }
 }
