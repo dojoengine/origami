@@ -64,7 +64,7 @@ mod tests {
 
     // Constants
 
-    const DICE_SEED: felt252 = 'SEED';
+    const SEED: felt252 = 'SEED';
     const INTERVAL_START: u256 = 0;
     const INTERVAL_END: u256 = 100;
 
