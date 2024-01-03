@@ -207,7 +207,7 @@ mod tests {
 
     #[test]
     #[available_gas(100_000)]
-    #[should_panic(expected: ('Deck: no card left',))]
+    #[should_panic(expected: ('Deck: no cards left',))]
     fn test_deck_new_draw_revert_no_card_left() {
         let mut deck = DeckTrait::new(DECK_SEED, DECK_CARDS_NUMBER);
         deck.remaining = 0;
