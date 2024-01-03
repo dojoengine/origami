@@ -25,8 +25,8 @@ struct Deck {
 
 /// Errors module.
 mod errors {
-    const NO_CARD_LEFT: felt252 = 'Deck: no card left';
-    const TOO_MUCH_CARD: felt252 = 'Deck: too much cards';
+    const NO_CARDS_LEFT: felt252 = 'Deck: no cards left';
+    const TOO_MANY_CARDS: felt252 = 'Deck: too many cards';
 }
 
 /// Trait to initialize, draw and discard a card from the Deck.
@@ -79,7 +79,7 @@ impl DeckImpl of DeckTrait {
     }
 
     fn from_bitmap(seed: felt252, number: u32, mut bitmap: u128) -> Deck {
-        assert(number <= 128, errors::TOO_MUCH_CARD);
+        assert(number <= 128, errors::TOO_MANY_CARDS);
         let mut deck = DeckTrait::new(seed, number);
         let mut card: u8 = 1;
         loop {
@@ -98,7 +98,7 @@ impl DeckImpl of DeckTrait {
     #[inline(always)]
     fn draw(ref self: Deck) -> u8 {
         // [Check] Enough cards left.
-        assert(self.remaining > 0, errors::NO_CARD_LEFT);
+        assert(self.remaining > 0, errors::NO_CARDS_LEFT);
         // [Compute] Draw a random card from remainingcs cards.
         let mut state = PoseidonTrait::new();
         state = state.update(self.seed);
@@ -207,7 +207,7 @@ mod tests {
 
     #[test]
     #[available_gas(100_000)]
-    #[should_panic(expected: ('Deck: no card left',))]
+    #[should_panic(expected: ('Deck: no cards left',))]
     fn test_deck_new_draw_revert_no_card_left() {
         let mut deck = DeckTrait::new(DECK_SEED, DECK_CARDS_NUMBER);
         deck.remaining = 0;
