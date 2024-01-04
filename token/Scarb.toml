@@ -6,7 +6,7 @@ homepage = "https://github.com/dojoengine/origami/tree/token"
 
 [dependencies]
 # dojo.workspace = true
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.4.1" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.4.4" }
 
 [lib]
 
