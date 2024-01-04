@@ -210,7 +210,7 @@ fn test_transfer_from_doesnt_consume_infinite_allowance() {
     erc20_bridgeable.transfer_from(OWNER(), RECIPIENT(), VALUE);
 
     assert_only_event_transfer(erc20_bridgeable.contract_address, OWNER(), RECIPIENT(), VALUE);
-   
+
     // drop StoreSetRecord ERC20BalanceModel x2
     utils::drop_event(world.contract_address);
     utils::drop_event(world.contract_address);
@@ -269,14 +269,14 @@ fn test_increase_allowance() {
 
     utils::impersonate(OWNER());
     erc20_bridgeable.approve(SPENDER(), VALUE);
-  
+
     utils::drop_all_events(erc20_bridgeable.contract_address);
     utils::drop_all_events(world.contract_address);
 
     assert(erc20_bridgeable.increase_allowance(SPENDER(), VALUE), 'Should return true');
 
     assert_only_event_approval(erc20_bridgeable.contract_address, OWNER(), SPENDER(), VALUE * 2);
-   
+
     // drop StoreSetRecord ERC20AllowanceModel 
     utils::drop_event(world.contract_address);
     assert_only_event_approval(world.contract_address, OWNER(), SPENDER(), VALUE * 2);
@@ -295,7 +295,7 @@ fn test_decrease_allowance() {
 
     utils::impersonate(OWNER());
     erc20_bridgeable.approve(SPENDER(), VALUE);
-   
+
     utils::drop_all_events(erc20_bridgeable.contract_address);
     utils::drop_all_events(world.contract_address);
 
