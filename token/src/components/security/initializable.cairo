@@ -1,3 +1,5 @@
+/// adaptation of https://github.com/OpenZeppelin/cairo-contracts/blob/main/src/security/initializable.cairo for dojo
+
 use starknet::ContractAddress;
 
 ///

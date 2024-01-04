@@ -45,6 +45,15 @@ trait IERC20BridgeablePreset<TState> {
 
     // IUpgradeable
     fn upgrade(ref self: TState, new_class_hash: ClassHash);
+
+    fn initializer(
+        ref self: TState,
+        name: felt252,
+        symbol: felt252,
+        initial_supply: u256,
+        recipient: ContractAddress,
+        l2_bridge_address: ContractAddress
+    );
 }
 
 
@@ -176,6 +185,7 @@ mod ERC20Bridgeable {
         }
     }
 
+    // TODO : remove all impl except initializer & use #[abi(embed_v0)]
     #[external(v0)]
     impl ERC20Impl of interface::IERC20<ContractState> {
         fn total_supply(self: @ContractState) -> u256 {

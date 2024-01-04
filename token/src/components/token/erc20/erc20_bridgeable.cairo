@@ -74,16 +74,14 @@ mod ERC20BridgeableComponent {
         ) {
             self.assert_is_bridge(get_caller_address());
 
-            let mut contract = self.get_contract_mut();
-            let mut erc20_mintable = ERC20Mintable::get_component_mut(ref contract);
+            let mut erc20_mintable = get_dep_component_mut!(ref self, ERC20Mintable);
             erc20_mintable._mint(recipient, amount);
         }
 
         fn burn(ref self: ComponentState<TContractState>, account: ContractAddress, amount: u256) {
             self.assert_is_bridge(get_caller_address());
 
-            let mut contract = self.get_contract_mut();
-            let mut erc20_burnable = ERC20Burnable::get_component_mut(ref contract);
+            let mut erc20_burnable = get_dep_component_mut!(ref self, ERC20Burnable);
             erc20_burnable._burn(account, amount);
         }
     }

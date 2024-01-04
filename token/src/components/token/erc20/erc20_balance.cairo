@@ -74,6 +74,8 @@ mod ERC20BalanceComponent {
             self._transfer(sender, recipient, amount);
             true
         }
+        // TODO : add dep on erc20_allowance
+        // TODO : transfer_from
     }
 
     #[generate_trait]

@@ -1,4 +1,5 @@
 use integer::BoundedInt;
+use starknet::ContractAddress;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
 use token::tests::constants::{ADMIN, ZERO, OWNER, OTHER};
@@ -7,11 +8,35 @@ use token::tests::utils;
 
 use token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
 use token::components::token::erc20::erc20_balance::ERC20BalanceComponent::{
-    ERC20BalanceImpl, InternalImpl
+    Transfer, ERC20BalanceImpl, InternalImpl
 };
 use token::components::tests::mocks::erc20::erc20_balance_mock::ERC20BalanceMock;
 use token::components::tests::mocks::erc20::erc20_balance_mock::ERC20BalanceMock::world_dispatcherContractMemberStateTrait;
 
+use debug::PrintTrait;
+//
+// events helpers
+//
+
+fn assert_event_transfer(
+    emitter: ContractAddress, from: ContractAddress, to: ContractAddress, value: u256
+) {
+    let event = utils::pop_log::<Transfer>(emitter).unwrap();
+    assert(event.from == from, 'Invalid `from`');
+    assert(event.to == to, 'Invalid `to`');
+    assert(event.value == value, 'Invalid `value`');
+}
+
+fn assert_only_event_transfer(
+    emitter: ContractAddress, from: ContractAddress, to: ContractAddress, value: u256
+) {
+    assert_event_transfer(emitter, from, to, value);
+    utils::assert_no_events_left(emitter);
+}
+
+//
+// initialize STATE
+//
 
 fn STATE() -> (IWorldDispatcher, ERC20BalanceMock::ContractState) {
     let world = spawn_test_world(array![erc_20_balance_model::TEST_CLASS_HASH,]);
@@ -33,6 +58,10 @@ fn test_erc20_balance_initialize() {
     assert(state.erc20_balance.balance_of(OWNER()) == 0, 'Should be 0');
     assert(state.erc20_balance.balance_of(OTHER()) == 0, 'Should be 0');
 }
+
+//
+// _update_balance
+//
 
 #[test]
 #[available_gas(100000000)]
@@ -68,6 +97,9 @@ fn test_erc20_balance__update_balance_add_overflow() {
     state.erc20_balance._update_balance(ZERO(), 0, 1);
 }
 
+//
+//  _transfer
+//
 
 #[test]
 #[available_gas(100000000)]
@@ -80,10 +112,12 @@ fn test_erc20_balance__transfer() {
     state.erc20_balance._transfer(ADMIN(), OTHER(), 100);
     assert(state.erc20_balance.balance_of(ADMIN()) == 320, 'Should be 320');
     assert(state.erc20_balance.balance_of(OTHER()) == 1100, 'Should be 1100');
+    assert_only_event_transfer(ZERO(), ADMIN(), OTHER(), 100);
 
     state.erc20_balance._transfer(OTHER(), ADMIN(), 1000);
     assert(state.erc20_balance.balance_of(ADMIN()) == 1320, 'Should be 1320');
     assert(state.erc20_balance.balance_of(OTHER()) == 100, 'Should be 100');
+    assert_only_event_transfer(ZERO(), OTHER(), ADMIN(), 1000);
 }
 
 #[test]

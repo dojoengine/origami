@@ -1,3 +1,4 @@
+use core::array::SpanTrait;
 use starknet::ContractAddress;
 use starknet::testing;
 use zeroable::Zeroable;
@@ -39,17 +40,25 @@ use token::components::token::erc20::erc20_bridgeable::ERC20BridgeableComponent:
 use token::components::token::erc20::erc20_mintable::ERC20MintableComponent::InternalImpl as ERC20MintableInternalImpl;
 use token::components::token::erc20::erc20_burnable::ERC20BurnableComponent::InternalImpl as ERC20BurnableInternalImpl;
 
-use token::presets::erc20::bridgeable::ERC20Bridgeable;
+use token::presets::erc20::bridgeable::{
+    ERC20Bridgeable, IERC20BridgeablePresetDispatcher, IERC20BridgeablePresetDispatcherTrait
+};
 use token::presets::erc20::bridgeable::ERC20Bridgeable::{ERC20Impl, ERC20InitializerImpl};
 use token::presets::erc20::bridgeable::ERC20Bridgeable::world_dispatcherContractMemberStateTrait;
 
-use debug::PrintTrait;
+use token::components::tests::token::erc20::test_erc20_allowance::{
+    assert_event_approval, assert_only_event_approval
+};
+use token::components::tests::token::erc20::test_erc20_balance::{
+    assert_event_transfer, assert_only_event_transfer
+};
+
 
 //
 // Setup
 //
 
-fn STATE() -> (IWorldDispatcher, ERC20Bridgeable::ContractState) {
+fn setup() -> (IWorldDispatcher, IERC20BridgeablePresetDispatcher) {
     let world = spawn_test_world(
         array![
             erc_20_allowance_model::TEST_CLASS_HASH,
@@ -58,482 +67,248 @@ fn STATE() -> (IWorldDispatcher, ERC20Bridgeable::ContractState) {
             erc_20_bridgeable_model::TEST_CLASS_HASH,
         ]
     );
-    let mut state = ERC20Bridgeable::contract_state_for_testing();
-    state.world_dispatcher.write(world);
-    (world, state)
+
+    // deploy contract
+    let mut erc20_bridgeable_dispatcher = IERC20BridgeablePresetDispatcher {
+        contract_address: world
+            .deploy_contract('salt', ERC20Bridgeable::TEST_CLASS_HASH.try_into().unwrap())
+    };
+
+    // setup auth
+    world.grant_writer('ERC20AllowanceModel', erc20_bridgeable_dispatcher.contract_address);
+    world.grant_writer('ERC20BalanceModel', erc20_bridgeable_dispatcher.contract_address);
+    world.grant_writer('ERC20MetadataModel', erc20_bridgeable_dispatcher.contract_address);
+    world.grant_writer('ERC20BridgeableModel', erc20_bridgeable_dispatcher.contract_address);
+
+    // initialize contracts
+    erc20_bridgeable_dispatcher.initializer(NAME, SYMBOL, SUPPLY, OWNER(), BRIDGE());
+
+    // drop all events
+    utils::drop_all_events(erc20_bridgeable_dispatcher.contract_address);
+    utils::drop_all_events(world.contract_address);
+
+    (world, erc20_bridgeable_dispatcher)
 }
 
-fn setup() -> ERC20Bridgeable::ContractState {
-    let (world, mut state) = STATE();
-
-    state.initializer(NAME, SYMBOL, SUPPLY, OWNER(), BRIDGE());
-
-    utils::drop_event(ZERO());
-    state
-}
 
 //
 // initializer 
 //
 
 #[test]
-#[available_gas(25000000)]
+#[available_gas(30000000)]
 fn test_initializer() {
-    let (world, mut state) = STATE();
-    state.initializer(NAME, SYMBOL, SUPPLY, OWNER(), BRIDGE());
+    let (world, mut erc20_bridgeable) = setup();
 
-    assert_only_event_transfer(ZERO(), OWNER(), SUPPLY);
-
-    assert(ERC20Impl::balance_of(@state, OWNER()) == SUPPLY, 'Should eq inital_supply');
-    assert(ERC20Impl::total_supply(@state) == SUPPLY, 'Should eq inital_supply');
-    assert(state.name() == NAME, 'Name should be NAME');
-    assert(state.symbol() == SYMBOL, 'Symbol should be SYMBOL');
-    assert(state.decimals() == DECIMALS, 'Decimals should be 18');
-    assert(state.l2_bridge_address() == BRIDGE(), 'Decimals should be BRIDGE');
+    assert(erc20_bridgeable.balance_of(OWNER()) == SUPPLY, 'Should eq inital_supply');
+    assert(erc20_bridgeable.total_supply() == SUPPLY, 'Should eq inital_supply');
+    assert(erc20_bridgeable.name() == NAME, 'Name should be NAME');
+    assert(erc20_bridgeable.symbol() == SYMBOL, 'Symbol should be SYMBOL');
+    assert(erc20_bridgeable.decimals() == DECIMALS, 'Decimals should be 18');
+    assert(erc20_bridgeable.l2_bridge_address() == BRIDGE(), 'Decimals should be BRIDGE');
 }
+
 
 //
-// Getters
-//
-
-#[test]
-#[available_gas(25000000)]
-fn test_total_supply() {
-    let (world, mut state) = STATE();
-    state.erc20_mintable._mint(OWNER(), SUPPLY);
-    assert(ERC20Impl::total_supply(@state) == SUPPLY, 'Should eq SUPPLY');
-}
-
-#[test]
-#[available_gas(25000000)]
-fn test_balance_of() {
-    let (world, mut state) = STATE();
-    state.erc20_mintable._mint(OWNER(), SUPPLY);
-    assert(ERC20Impl::balance_of(@state, OWNER()) == SUPPLY, 'Should eq SUPPLY');
-}
-
-
-#[test]
-#[available_gas(25000000)]
-fn test_allowance() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, SPENDER(), VALUE);
-
-    assert(ERC20Impl::allowance(@state, OWNER(), SPENDER()) == VALUE, 'Should eq VALUE');
-}
-
-//
-// approve & _approve
+// approve
 //
 
 #[test]
 #[available_gas(25000000)]
 fn test_approve() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    assert(ERC20Impl::approve(ref state, SPENDER(), VALUE), 'Should return true');
+    let (world, mut erc20_bridgeable) = setup();
 
-    assert_only_event_approval(OWNER(), SPENDER(), VALUE);
+    utils::impersonate(OWNER());
+
+    assert(erc20_bridgeable.approve(SPENDER(), VALUE), 'Should eq VALUE');
     assert(
-        ERC20Impl::allowance(@state, OWNER(), SPENDER()) == VALUE, 'Spender not approved correctly'
+        erc20_bridgeable.allowance(OWNER(), SPENDER()) == VALUE, 'Spender not approved correctly'
     );
+
+    // drop StoreSetRecord ERC20AllowanceModel
+    utils::drop_event(world.contract_address);
+
+    assert_only_event_approval(erc20_bridgeable.contract_address, OWNER(), SPENDER(), VALUE);
+    assert_only_event_approval(world.contract_address, OWNER(), SPENDER(), VALUE);
 }
 
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: approve from 0',))]
-fn test_approve_from_zero() {
-    let mut state = setup();
-    ERC20Impl::approve(ref state, SPENDER(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: approve to 0',))]
-fn test_approve_to_zero() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, ZERO(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-fn test__approve() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    state.erc20_allowance.approve(SPENDER(), VALUE);
-
-    assert_only_event_approval(OWNER(), SPENDER(), VALUE);
-    assert(
-        ERC20Impl::allowance(@state, OWNER(), SPENDER()) == VALUE, 'Spender not approved correctly'
-    );
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: approve from 0',))]
-fn test__approve_from_zero() {
-    let mut state = setup();
-    testing::set_caller_address(ZERO());
-    state.erc20_allowance.approve(SPENDER(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: approve to 0',))]
-fn test__approve_to_zero() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    state.erc20_allowance.approve(ZERO(), VALUE);
-}
 
 //
-// transfer & _transfer
+// transfer 
 //
 
 #[test]
-#[available_gas(25000000)]
+#[available_gas(30000000)]
 fn test_transfer() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    assert(ERC20Impl::transfer(ref state, RECIPIENT(), VALUE), 'Should return true');
+    let (world, mut erc20_bridgeable) = setup();
 
-    assert_only_event_transfer(OWNER(), RECIPIENT(), VALUE);
-    assert(ERC20Impl::balance_of(@state, RECIPIENT()) == VALUE, 'Balance should eq VALUE');
-    assert(ERC20Impl::balance_of(@state, OWNER()) == SUPPLY - VALUE, 'Should eq supply - VALUE');
-    assert(ERC20Impl::total_supply(@state) == SUPPLY, 'Total supply should not change');
+    utils::impersonate(OWNER());
+
+    assert(erc20_bridgeable.transfer(RECIPIENT(), VALUE), 'Should return true');
+
+    assert(erc20_bridgeable.balance_of(RECIPIENT()) == VALUE, 'Balance should eq VALUE');
+    assert(erc20_bridgeable.balance_of(OWNER()) == SUPPLY - VALUE, 'Should eq supply - VALUE');
+    assert(erc20_bridgeable.total_supply() == SUPPLY, 'Total supply should not change');
+
+    // drop StoreSetRecord ERC20BalanceModel x2
+    utils::drop_event(world.contract_address);
+    utils::drop_event(world.contract_address);
+
+    assert_only_event_transfer(erc20_bridgeable.contract_address, OWNER(), RECIPIENT(), VALUE);
+    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), VALUE);
 }
 
-#[test]
-#[available_gas(25000000)]
-fn test__transfer() {
-    let mut state = setup();
-
-    state.erc20_balance._transfer(OWNER(), RECIPIENT(), VALUE);
-
-    assert_only_event_transfer(OWNER(), RECIPIENT(), VALUE);
-    assert(ERC20Impl::balance_of(@state, RECIPIENT()) == VALUE, 'Balance should eq amount');
-    assert(ERC20Impl::balance_of(@state, OWNER()) == SUPPLY - VALUE, 'Should eq supply - amount');
-    assert(ERC20Impl::total_supply(@state) == SUPPLY, 'Total supply should not change');
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow',))]
-fn test__transfer_not_enough_balance() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-
-    let balance_plus_one = SUPPLY + 1;
-    state.erc20_balance._transfer(OWNER(), RECIPIENT(), balance_plus_one);
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: transfer from 0',))]
-fn test__transfer_from_zero() {
-    let mut state = setup();
-    state.erc20_balance._transfer(ZERO(), RECIPIENT(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: transfer to 0',))]
-fn test__transfer_to_zero() {
-    let mut state = setup();
-    state.erc20_balance._transfer(OWNER(), ZERO(), VALUE);
-}
 
 //
 // transfer_from
 //
 
 #[test]
-#[available_gas(30000000)]
+#[available_gas(40000000)]
 fn test_transfer_from() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, SPENDER(), VALUE);
-    utils::drop_event(ZERO());
+    let (world, mut erc20_bridgeable) = setup();
 
-    testing::set_caller_address(SPENDER());
-    assert(state.transfer_from(OWNER(), RECIPIENT(), VALUE), 'Should return true');
+    utils::impersonate(OWNER());
 
-    assert_event_approval(OWNER(), SPENDER(), 0);
-    assert_only_event_transfer(OWNER(), RECIPIENT(), VALUE);
+    erc20_bridgeable.approve(SPENDER(), VALUE);
 
-    assert(ERC20Impl::balance_of(@state, RECIPIENT()) == VALUE, 'Should eq amount');
-    assert(ERC20Impl::balance_of(@state, OWNER()) == SUPPLY - VALUE, 'Should eq suppy - amount');
-    assert(ERC20Impl::allowance(@state, OWNER(), SPENDER()) == 0, 'Should eq 0');
-    assert(ERC20Impl::total_supply(@state) == SUPPLY, 'Total supply should not change');
+    utils::drop_all_events(erc20_bridgeable.contract_address);
+    utils::drop_all_events(world.contract_address);
+
+    utils::impersonate(SPENDER());
+    assert(erc20_bridgeable.transfer_from(OWNER(), RECIPIENT(), VALUE), 'Should return true');
+
+    assert_event_approval(erc20_bridgeable.contract_address, OWNER(), SPENDER(), 0);
+    assert_only_event_transfer(erc20_bridgeable.contract_address, OWNER(), RECIPIENT(), VALUE);
+
+    // drop StoreSetRecord ERC20AllowanceModel 
+    utils::drop_event(world.contract_address);
+    assert_event_approval(world.contract_address, OWNER(), SPENDER(), 0);
+    // drop StoreSetRecord ERC20BalanceModel x2
+    utils::drop_event(world.contract_address);
+    utils::drop_event(world.contract_address);
+    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), VALUE);
+
+    assert(erc20_bridgeable.balance_of(RECIPIENT()) == VALUE, 'Should eq amount');
+    assert(erc20_bridgeable.balance_of(OWNER()) == SUPPLY - VALUE, 'Should eq suppy - amount');
+    assert(erc20_bridgeable.allowance(OWNER(), SPENDER()) == 0, 'Should eq 0');
+    assert(erc20_bridgeable.total_supply() == SUPPLY, 'Total supply should not change');
 }
 
 #[test]
 #[available_gas(25000000)]
 fn test_transfer_from_doesnt_consume_infinite_allowance() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, SPENDER(), BoundedInt::max());
+    let (world, mut erc20_bridgeable) = setup();
 
-    testing::set_caller_address(SPENDER());
-    ERC20Impl::transfer_from(ref state, OWNER(), RECIPIENT(), VALUE);
+    utils::impersonate(OWNER());
+    erc20_bridgeable.approve(SPENDER(), BoundedInt::max());
+
+    utils::drop_all_events(erc20_bridgeable.contract_address);
+    utils::drop_all_events(world.contract_address);
+
+    utils::impersonate(SPENDER());
+    erc20_bridgeable.transfer_from(OWNER(), RECIPIENT(), VALUE);
+
+    assert_only_event_transfer(erc20_bridgeable.contract_address, OWNER(), RECIPIENT(), VALUE);
+   
+    // drop StoreSetRecord ERC20BalanceModel x2
+    utils::drop_event(world.contract_address);
+    utils::drop_event(world.contract_address);
+    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), VALUE);
 
     assert(
-        ERC20Impl::allowance(@state, OWNER(), SPENDER()) == BoundedInt::max(),
+        erc20_bridgeable.allowance(OWNER(), SPENDER()) == BoundedInt::max(),
         'Allowance should not change'
     );
 }
 
 #[test]
 #[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow',))]
+#[should_panic(expected: ('u256_sub Overflow', 'ENTRYPOINT_FAILED'))]
 fn test_transfer_from_greater_than_allowance() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, SPENDER(), VALUE);
+    let (world, mut erc20_bridgeable) = setup();
 
-    testing::set_caller_address(SPENDER());
+    utils::impersonate(OWNER());
+    erc20_bridgeable.approve(SPENDER(), VALUE);
+
+    utils::impersonate(SPENDER());
     let allowance_plus_one = VALUE + 1;
-    ERC20Impl::transfer_from(ref state, OWNER(), RECIPIENT(), allowance_plus_one);
+
+    erc20_bridgeable.transfer_from(OWNER(), RECIPIENT(), allowance_plus_one);
 }
 
 #[test]
 #[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: transfer to 0',))]
+#[should_panic(expected: ('ERC20: transfer to 0', 'ENTRYPOINT_FAILED'))]
 fn test_transfer_from_to_zero_address() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, SPENDER(), VALUE);
+    let (world, mut erc20_bridgeable) = setup();
 
-    testing::set_caller_address(SPENDER());
-    ERC20Impl::transfer_from(ref state, OWNER(), ZERO(), VALUE);
+    utils::impersonate(OWNER());
+    erc20_bridgeable.approve(SPENDER(), VALUE);
+
+    utils::impersonate(SPENDER());
+    erc20_bridgeable.transfer_from(OWNER(), ZERO(), VALUE);
 }
 
 #[test]
 #[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow',))]
+#[should_panic(expected: ('u256_sub Overflow', 'ENTRYPOINT_FAILED'))]
 fn test_transfer_from_from_zero_address() {
-    let mut state = setup();
-    ERC20Impl::transfer_from(ref state, ZERO(), RECIPIENT(), VALUE);
+    let (world, mut erc20_bridgeable) = setup();
+    erc20_bridgeable.transfer_from(ZERO(), RECIPIENT(), VALUE);
 }
 
 //
-// increase_allowance & increaseAllowance
+// increase_allowance 
 //
 
 #[test]
 #[available_gas(25000000)]
 fn test_increase_allowance() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, SPENDER(), VALUE);
-    utils::drop_event(ZERO());
+    let (world, mut erc20_bridgeable) = setup();
 
-    assert(state.increase_allowance(SPENDER(), VALUE), 'Should return true');
+    utils::impersonate(OWNER());
+    erc20_bridgeable.approve(SPENDER(), VALUE);
+  
+    utils::drop_all_events(erc20_bridgeable.contract_address);
+    utils::drop_all_events(world.contract_address);
 
-    assert_only_event_approval(OWNER(), SPENDER(), VALUE * 2);
-    assert(ERC20Impl::allowance(@state, OWNER(), SPENDER()) == VALUE * 2, 'Should be amount * 2');
-}
+    assert(erc20_bridgeable.increase_allowance(SPENDER(), VALUE), 'Should return true');
 
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: approve to 0',))]
-fn test_increase_allowance_to_zero_address() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    state.increase_allowance(ZERO(), VALUE);
-}
+    assert_only_event_approval(erc20_bridgeable.contract_address, OWNER(), SPENDER(), VALUE * 2);
+   
+    // drop StoreSetRecord ERC20AllowanceModel 
+    utils::drop_event(world.contract_address);
+    assert_only_event_approval(world.contract_address, OWNER(), SPENDER(), VALUE * 2);
 
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: approve from 0',))]
-fn test_increase_allowance_from_zero_address() {
-    let mut state = setup();
-    state.increase_allowance(SPENDER(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-fn test_increaseAllowance() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, SPENDER(), VALUE);
-    utils::drop_event(ZERO());
-
-    assert(state.increaseAllowance(SPENDER(), VALUE), 'Should return true');
-
-    assert_only_event_approval(OWNER(), SPENDER(), 2 * VALUE);
-    assert(ERC20Impl::allowance(@state, OWNER(), SPENDER()) == VALUE * 2, 'Should be amount * 2');
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: approve to 0',))]
-fn test_increaseAllowance_to_zero_address() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    state.increaseAllowance(ZERO(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: approve from 0',))]
-fn test_increaseAllowance_from_zero_address() {
-    let mut state = setup();
-    state.increaseAllowance(SPENDER(), VALUE);
+    assert(erc20_bridgeable.allowance(OWNER(), SPENDER()) == VALUE * 2, 'Should be amount * 2');
 }
 
 //
-// decrease_allowance & decreaseAllowance
+// decrease_allowance &
 //
 
 #[test]
 #[available_gas(25000000)]
 fn test_decrease_allowance() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, SPENDER(), VALUE);
-    utils::drop_event(ZERO());
+    let (world, mut erc20_bridgeable) = setup();
 
-    assert(state.decrease_allowance(SPENDER(), VALUE), 'Should return true');
+    utils::impersonate(OWNER());
+    erc20_bridgeable.approve(SPENDER(), VALUE);
+   
+    utils::drop_all_events(erc20_bridgeable.contract_address);
+    utils::drop_all_events(world.contract_address);
 
-    assert_only_event_approval(OWNER(), SPENDER(), 0);
-    assert(ERC20Impl::allowance(@state, OWNER(), SPENDER()) == VALUE - VALUE, 'Should be 0');
+    assert(erc20_bridgeable.decrease_allowance(SPENDER(), VALUE), 'Should return true');
+
+    assert_only_event_approval(erc20_bridgeable.contract_address, OWNER(), SPENDER(), 0);
+
+    // drop StoreSetRecord ERC20AllowanceModel 
+    utils::drop_event(world.contract_address);
+    assert_only_event_approval(world.contract_address, OWNER(), SPENDER(), 0);
+
+    assert(erc20_bridgeable.allowance(OWNER(), SPENDER()) == VALUE - VALUE, 'Should be 0');
 }
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow',))]
-fn test_decrease_allowance_to_zero_address() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    state.decrease_allowance(ZERO(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow',))]
-fn test_decrease_allowance_from_zero_address() {
-    let mut state = setup();
-    state.decrease_allowance(SPENDER(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-fn test_decreaseAllowance() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, SPENDER(), VALUE);
-    utils::drop_event(ZERO());
-
-    assert(state.decreaseAllowance(SPENDER(), VALUE), 'Should return true');
-
-    assert_only_event_approval(OWNER(), SPENDER(), 0);
-    assert(ERC20Impl::allowance(@state, OWNER(), SPENDER()) == VALUE - VALUE, 'Should be 0');
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow',))]
-fn test_decreaseAllowance_to_zero_address() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    state.decreaseAllowance(ZERO(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow',))]
-fn test_decreaseAllowance_from_zero_address() {
-    let mut state = setup();
-    state.decreaseAllowance(SPENDER(), VALUE);
-}
-
-//
-// _spend_allowance
-//
-
-#[test]
-#[available_gas(25000000)]
-fn test__spend_allowance_not_unlimited() {
-    let mut state = setup();
-
-    testing::set_caller_address(OWNER());
-    state.erc20_allowance.approve(SPENDER(), SUPPLY);
-    utils::drop_event(ZERO());
-
-    state.erc20_allowance._spend_allowance(OWNER(), SPENDER(), VALUE);
-
-    assert_only_event_approval(OWNER(), SPENDER(), SUPPLY - VALUE);
-    assert(
-        ERC20Impl::allowance(@state, OWNER(), SPENDER()) == SUPPLY - VALUE,
-        'Should eq supply - amount'
-    );
-}
-
-#[test]
-#[available_gas(25000000)]
-fn test__spend_allowance_unlimited() {
-    let mut state = setup();
-
-    testing::set_caller_address(OWNER());
-    state.erc20_allowance.approve(SPENDER(), BoundedInt::max());
-
-    let max_minus_one: u256 = BoundedInt::max() - 1;
-    state.erc20_allowance._spend_allowance(OWNER(), SPENDER(), max_minus_one);
-
-    assert(
-        ERC20Impl::allowance(@state, OWNER(), SPENDER()) == BoundedInt::max(),
-        'Allowance should not change'
-    );
-}
-
-//
-// _mint
-//
-
-#[test]
-#[available_gas(25000000)]
-fn test__mint() {
-    let (world, mut state) = STATE();
-    state.erc20_mintable._mint(OWNER(), VALUE);
-    assert_only_event_transfer(ZERO(), OWNER(), VALUE);
-    assert(ERC20Impl::balance_of(@state, OWNER()) == VALUE, 'Should eq amount');
-    assert(ERC20Impl::total_supply(@state) == VALUE, 'Should eq total supply');
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: mint to 0',))]
-fn test__mint_to_zero() {
-    let (world, mut state) = STATE();
-    state.erc20_mintable._mint(ZERO(), VALUE);
-}
-
-//
-// _burn
-//
-
-#[test]
-#[available_gas(25000000)]
-fn test__burn() {
-    let mut state = setup();
-    state.erc20_burnable._burn(OWNER(), VALUE);
-
-    assert_only_event_transfer(OWNER(), ZERO(), VALUE);
-    assert(ERC20Impl::total_supply(@state) == SUPPLY - VALUE, 'Should eq supply - amount');
-    assert(ERC20Impl::balance_of(@state, OWNER()) == SUPPLY - VALUE, 'Should eq supply - amount');
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: burn from 0',))]
-fn test__burn_from_zero() {
-    let mut state = setup();
-    state.erc20_burnable._burn(ZERO(), VALUE);
-}
-
 
 //
 //  bridgeable
@@ -542,79 +317,66 @@ fn test__burn_from_zero() {
 #[test]
 #[available_gas(30000000)]
 fn test_bridge_can_mint() {
-    let mut state = setup();
+    let (world, mut erc20_bridgeable) = setup();
 
-    testing::set_caller_address(BRIDGE());
-    state.mint(RECIPIENT(), VALUE);
+    utils::impersonate(BRIDGE());
+    erc20_bridgeable.mint(RECIPIENT(), VALUE);
 
-    assert_only_event_transfer(ZERO(), RECIPIENT(), VALUE);
+    assert_only_event_transfer(erc20_bridgeable.contract_address, ZERO(), RECIPIENT(), VALUE);
 
-    assert(ERC20Impl::balance_of(@state, RECIPIENT()) == VALUE, 'Should eq VALUE');
+    // drop StoreSetRecord ERC20BalanceModel x2
+    utils::drop_event(world.contract_address);
+    utils::drop_event(world.contract_address);
+
+    assert_only_event_transfer(world.contract_address, ZERO(), RECIPIENT(), VALUE);
+
+    assert(erc20_bridgeable.balance_of(RECIPIENT()) == VALUE, 'Should eq VALUE');
 }
 
 #[test]
 #[available_gas(30000000)]
-#[should_panic(expected: ('ERC20: caller not bridge',))]
+#[should_panic(expected: ('ERC20: caller not bridge', 'ENTRYPOINT_FAILED'))]
 fn test_bridge_only_can_mint() {
-    let mut state = setup();
+    let (world, mut erc20_bridgeable) = setup();
 
-    testing::set_caller_address(RECIPIENT());
-    state.erc20_bridgeable.mint(RECIPIENT(), VALUE);
+    utils::impersonate(RECIPIENT());
+    erc20_bridgeable.mint(RECIPIENT(), VALUE);
 }
 
 #[test]
 #[available_gas(30000000)]
 fn test_bridge_can_burn() {
-    let mut state = setup();
+    let (world, mut erc20_bridgeable) = setup();
 
-    testing::set_caller_address(BRIDGE());
-    state.mint(RECIPIENT(), VALUE);
-    assert_only_event_transfer(ZERO(), RECIPIENT(), VALUE);
+    utils::impersonate(BRIDGE());
+    erc20_bridgeable.mint(RECIPIENT(), VALUE);
+    assert_only_event_transfer(erc20_bridgeable.contract_address, ZERO(), RECIPIENT(), VALUE);
 
-    state.burn(RECIPIENT(), 1);
-    assert_only_event_transfer(RECIPIENT(), ZERO(), 1);
+    utils::drop_all_events(erc20_bridgeable.contract_address);
+    utils::drop_all_events(world.contract_address);
 
-    assert(ERC20Impl::balance_of(@state, RECIPIENT()) == VALUE - 1, 'Should eq VALUE-1');
+    erc20_bridgeable.burn(RECIPIENT(), 1);
+
+    assert_only_event_transfer(erc20_bridgeable.contract_address, RECIPIENT(), ZERO(), 1);
+
+    // drop StoreSetRecord ERC20BalanceModel x2
+    utils::drop_event(world.contract_address);
+    utils::drop_event(world.contract_address);
+    assert_only_event_transfer(world.contract_address, RECIPIENT(), ZERO(), 1);
+
+    assert(erc20_bridgeable.balance_of(RECIPIENT()) == VALUE - 1, 'Should eq VALUE-1');
 }
 
 #[test]
 #[available_gas(30000000)]
-#[should_panic(expected: ('ERC20: caller not bridge',))]
+#[should_panic(expected: ('ERC20: caller not bridge', 'ENTRYPOINT_FAILED'))]
 fn test_bridge_only_can_burn() {
-    let mut state = setup();
+    let (world, mut erc20_bridgeable) = setup();
 
-    testing::set_caller_address(BRIDGE());
-    state.mint(RECIPIENT(), VALUE);
+    utils::impersonate(BRIDGE());
+    erc20_bridgeable.mint(RECIPIENT(), VALUE);
 
-    testing::set_caller_address(RECIPIENT());
-    state.burn(RECIPIENT(), VALUE);
+    utils::impersonate(RECIPIENT());
+    erc20_bridgeable.burn(RECIPIENT(), VALUE);
 }
 
-
-//
-// Helpers
-//
-
-fn assert_event_approval(owner: ContractAddress, spender: ContractAddress, value: u256) {
-    let event = utils::pop_log::<Approval>(ZERO()).unwrap();
-    assert(event.owner == owner, 'Invalid `owner`');
-    assert(event.spender == spender, 'Invalid `spender`');
-    assert(event.value == value, 'Invalid `value`');
-}
-
-fn assert_only_event_approval(owner: ContractAddress, spender: ContractAddress, value: u256) {
-    assert_event_approval(owner, spender, value);
-    utils::assert_no_events_left(ZERO());
-}
-
-fn assert_event_transfer(from: ContractAddress, to: ContractAddress, value: u256) {
-    let event = utils::pop_log::<Transfer>(ZERO()).unwrap();
-    assert(event.from == from, 'Invalid `from`');
-    assert(event.to == to, 'Invalid `to`');
-    assert(event.value == value, 'Invalid `value`');
-}
-
-fn assert_only_event_transfer(from: ContractAddress, to: ContractAddress, value: u256) {
-    assert_event_transfer(from, to, value);
-    utils::assert_no_events_left(ZERO());
-}

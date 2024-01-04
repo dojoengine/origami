@@ -1,3 +1,5 @@
+/// adaptation of https://github.com/OpenZeppelin/cairo-contracts/blob/main/src/introspection/src5.cairo for dojo
+
 use starknet::ContractAddress;
 
 const ISRC5_ID: felt252 = 0x3f918d17e5ee77373b56385708f855659a07f75997f365cf87748628532a055;
