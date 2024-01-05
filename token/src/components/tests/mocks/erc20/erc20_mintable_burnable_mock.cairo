@@ -1,15 +1,18 @@
 #[dojo::contract]
 mod ERC20MintableBurnableMock {
+    use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent;
     use token::components::token::erc20::erc20_balance::ERC20BalanceComponent;
     use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent;
     use token::components::token::erc20::erc20_mintable::ERC20MintableComponent;
     use token::components::token::erc20::erc20_burnable::ERC20BurnableComponent;
 
+    component!(path: ERC20AllowanceComponent, storage: erc20_allowance, event: ERC20AllowanceEvent);
     component!(path: ERC20BalanceComponent, storage: erc20_balance, event: ERC20BalanceEvent);
     component!(path: ERC20MetadataComponent, storage: erc20_metadata, event: ERC20MetadataEvent);
     component!(path: ERC20MintableComponent, storage: erc20_mintable, event: ERC20MintableEvent);
     component!(path: ERC20BurnableComponent, storage: erc20_burnable, event: ERC20BurnableEvent);
 
+    impl ERC20AllowanceInternalImpl = ERC20AllowanceComponent::InternalImpl<ContractState>;
     impl ERC20BalanceInternalImpl = ERC20BalanceComponent::InternalImpl<ContractState>;
     impl ERC20MetadataInternalImpl = ERC20MetadataComponent::InternalImpl<ContractState>;
     impl ERC20MintableInternalImpl = ERC20MintableComponent::InternalImpl<ContractState>;
@@ -17,6 +20,8 @@ mod ERC20MintableBurnableMock {
 
     #[storage]
     struct Storage {
+        #[substorage(v0)]
+        erc20_allowance: ERC20AllowanceComponent::Storage,
         #[substorage(v0)]
         erc20_balance: ERC20BalanceComponent::Storage,
         #[substorage(v0)]
@@ -30,6 +35,7 @@ mod ERC20MintableBurnableMock {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
+        ERC20AllowanceEvent: ERC20AllowanceComponent::Event,
         ERC20BalanceEvent: ERC20BalanceComponent::Event,
         ERC20MetadataEvent: ERC20MetadataComponent::Event,
         ERC20MintableEvent: ERC20MintableComponent::Event,

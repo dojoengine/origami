@@ -5,6 +5,7 @@ mod ERC20BridgeableMock {
 
     use token::components::security::initializable::InitializableComponent;
 
+    use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent;
     use token::components::token::erc20::erc20_balance::ERC20BalanceComponent;
     use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent;
     use token::components::token::erc20::erc20_mintable::ERC20MintableComponent;
@@ -13,6 +14,7 @@ mod ERC20BridgeableMock {
 
     component!(path: InitializableComponent, storage: initializable, event: InitializableEvent);
 
+    component!(path: ERC20AllowanceComponent, storage: erc20_allowance, event: ERC20AllowanceEvent);
     component!(path: ERC20BalanceComponent, storage: erc20_balance, event: ERC20BalanceEvent);
     component!(path: ERC20MetadataComponent, storage: erc20_metadata, event: ERC20MetadataEvent);
     component!(path: ERC20MintableComponent, storage: erc20_mintable, event: ERC20MintableEvent);
@@ -22,6 +24,8 @@ mod ERC20BridgeableMock {
     );
 
     impl InitializableInternalImpl = InitializableComponent::InternalImpl<ContractState>;
+    
+    impl ERC20AllowanceInternalImpl = ERC20AllowanceComponent::InternalImpl<ContractState>;
     impl ERC20BalanceInternalImpl = ERC20BalanceComponent::InternalImpl<ContractState>;
     impl ERC20MetadataInternalImpl = ERC20MetadataComponent::InternalImpl<ContractState>;
     impl ERC20MintableInternalImpl = ERC20MintableComponent::InternalImpl<ContractState>;
@@ -32,6 +36,8 @@ mod ERC20BridgeableMock {
     struct Storage {
         #[substorage(v0)]
         initializable: InitializableComponent::Storage,
+        #[substorage(v0)]
+        erc20_allowance: ERC20AllowanceComponent::Storage,
         #[substorage(v0)]
         erc20_balance: ERC20BalanceComponent::Storage,
         #[substorage(v0)]
@@ -48,6 +54,7 @@ mod ERC20BridgeableMock {
     #[derive(Drop, starknet::Event)]
     enum Event {
         InitializableEvent: InitializableComponent::Event,
+        ERC20AllowanceEvent: ERC20AllowanceComponent::Event,
         ERC20BalanceEvent: ERC20BalanceComponent::Event,
         ERC20MetadataEvent: ERC20MetadataComponent::Event,
         ERC20MintableEvent: ERC20MintableComponent::Event,
@@ -63,6 +70,9 @@ mod ERC20BridgeableMock {
     impl InitializableImpl = InitializableComponent::InitializableImpl<ContractState>;
 
     #[abi(embed_v0)]
+    impl ERC20AllowanceImpl = ERC20AllowanceComponent::ERC20AllowanceImpl<ContractState>;
+
+     #[abi(embed_v0)]
     impl ERC20BalanceImpl = ERC20BalanceComponent::ERC20BalanceImpl<ContractState>;
 
     #[abi(embed_v0)]

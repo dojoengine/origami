@@ -21,6 +21,7 @@ struct ERC20BalanceModel {
 trait IERC20Balance<TState> {
     fn balance_of(self: @TState, account: ContractAddress) -> u256;
     fn transfer(ref self: TState, recipient: ContractAddress, amount: u256) -> bool;
+    fn transfer_from(ref self: TState,sender: ContractAddress,recipient: ContractAddress,amount: u256) -> bool;
 }
 
 ///
@@ -35,6 +36,9 @@ mod ERC20BalanceComponent {
     use dojo::world::{
         IWorldProvider, IWorldProviderDispatcher, IWorldDispatcher, IWorldDispatcherTrait
     };
+
+    use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent as erc20_allowance_comp;
+    use erc20_allowance_comp::InternalImpl as ERC20AllowanceInternal;
 
     #[storage]
     struct Storage {}
@@ -62,11 +66,13 @@ mod ERC20BalanceComponent {
         TContractState,
         +HasComponent<TContractState>,
         +IWorldProvider<TContractState>,
+        impl ERC20Allowance: erc20_allowance_comp::HasComponent<TContractState>,
         +Drop<TContractState>,
     > of IERC20Balance<ComponentState<TContractState>> {
         fn balance_of(self: @ComponentState<TContractState>, account: ContractAddress) -> u256 {
             self.get_balance(account).amount
         }
+
         fn transfer(
             ref self: ComponentState<TContractState>, recipient: ContractAddress, amount: u256
         ) -> bool {
@@ -74,8 +80,19 @@ mod ERC20BalanceComponent {
             self._transfer(sender, recipient, amount);
             true
         }
-    // TODO : add dep on erc20_allowance
-    // TODO : transfer_from
+
+        fn transfer_from(
+            ref self: ComponentState<TContractState>,
+            sender: ContractAddress,
+            recipient: ContractAddress,
+            amount: u256
+        ) -> bool {
+            let caller = get_caller_address();
+            let mut erc20_allowance = get_dep_component_mut!(ref self, ERC20Allowance);
+            erc20_allowance._spend_allowance(sender, caller, amount);
+            self._transfer(sender, recipient, amount);
+            true
+        }
     }
 
     #[generate_trait]

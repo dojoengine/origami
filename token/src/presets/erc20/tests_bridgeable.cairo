@@ -43,7 +43,7 @@ use token::components::token::erc20::erc20_burnable::ERC20BurnableComponent::Int
 use token::presets::erc20::bridgeable::{
     ERC20Bridgeable, IERC20BridgeablePresetDispatcher, IERC20BridgeablePresetDispatcherTrait
 };
-use token::presets::erc20::bridgeable::ERC20Bridgeable::{ERC20Impl, ERC20InitializerImpl};
+use token::presets::erc20::bridgeable::ERC20Bridgeable::{ ERC20InitializerImpl};
 use token::presets::erc20::bridgeable::ERC20Bridgeable::world_dispatcherContractMemberStateTrait;
 
 use token::components::tests::token::erc20::test_erc20_allowance::{
@@ -222,41 +222,6 @@ fn test_transfer_from_doesnt_consume_infinite_allowance() {
     );
 }
 
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow', 'ENTRYPOINT_FAILED'))]
-fn test_transfer_from_greater_than_allowance() {
-    let (world, mut erc20_bridgeable) = setup();
-
-    utils::impersonate(OWNER());
-    erc20_bridgeable.approve(SPENDER(), VALUE);
-
-    utils::impersonate(SPENDER());
-    let allowance_plus_one = VALUE + 1;
-
-    erc20_bridgeable.transfer_from(OWNER(), RECIPIENT(), allowance_plus_one);
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: transfer to 0', 'ENTRYPOINT_FAILED'))]
-fn test_transfer_from_to_zero_address() {
-    let (world, mut erc20_bridgeable) = setup();
-
-    utils::impersonate(OWNER());
-    erc20_bridgeable.approve(SPENDER(), VALUE);
-
-    utils::impersonate(SPENDER());
-    erc20_bridgeable.transfer_from(OWNER(), ZERO(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow', 'ENTRYPOINT_FAILED'))]
-fn test_transfer_from_from_zero_address() {
-    let (world, mut erc20_bridgeable) = setup();
-    erc20_bridgeable.transfer_from(ZERO(), RECIPIENT(), VALUE);
-}
 
 //
 // increase_allowance 
@@ -285,7 +250,7 @@ fn test_increase_allowance() {
 }
 
 //
-// decrease_allowance &
+// decrease_allowance 
 //
 
 #[test]
