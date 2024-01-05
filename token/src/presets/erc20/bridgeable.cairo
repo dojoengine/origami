@@ -3,49 +3,56 @@ use dojo::world::IWorldDispatcher;
 
 #[starknet::interface]
 trait IERC20BridgeablePreset<TState> {
-    // IERC20
-    fn total_supply(self: @TState,) -> u256;
-    fn balance_of(self: @TState, account: ContractAddress) -> u256;
-    fn allowance(self: @TState, owner: ContractAddress, spender: ContractAddress) -> u256;
-    fn transfer(ref self: TState, recipient: ContractAddress, amount: u256) -> bool;
-    fn transfer_from(
-        ref self: TState, sender: ContractAddress, recipient: ContractAddress, amount: u256
-    ) -> bool;
-    fn approve(ref self: TState, spender: ContractAddress, amount: u256) -> bool;
-
-    // IERC20CamelOnly
-    fn totalSupply(self: @TState,) -> u256;
-    fn balanceOf(self: @TState, account: ContractAddress) -> u256;
-    fn transferFrom(
-        ref self: TState, sender: ContractAddress, recipient: ContractAddress, amount: u256
-    ) -> bool;
-
-    // IERC20Metadata
-    fn name(self: @TState,) -> felt252;
-    fn symbol(self: @TState,) -> felt252;
-    fn decimals(self: @TState,) -> u8;
-
-    // IERC20SafeAllowance
-    fn increase_allowance(ref self: TState, spender: ContractAddress, added_value: u256) -> bool;
-    fn decrease_allowance(
-        ref self: TState, spender: ContractAddress, subtracted_value: u256
-    ) -> bool;
-
-    // IERC20SafeAllowanceCamel
-    fn increaseAllowance(ref self: TState, spender: ContractAddress, addedValue: u256) -> bool;
-    fn decreaseAllowance(ref self: TState, spender: ContractAddress, subtractedValue: u256) -> bool;
-
-    // IERC20Bridgeable
-    fn l2_bridge_address(self: @TState,) -> ContractAddress;
-    fn mint(ref self: TState, recipient: ContractAddress, amount: u256);
-    fn burn(ref self: TState, account: ContractAddress, amount: u256);
-
     // IWorldProvider
     fn world(self: @TState,) -> IWorldDispatcher;
 
     // IUpgradeable
     fn upgrade(ref self: TState, new_class_hash: ClassHash);
 
+    // IERC20Metadata
+    fn decimals(self: @TState,) -> u8;
+    fn name(self: @TState,) -> felt252;
+    fn symbol(self: @TState,) -> felt252;
+
+    // IERC20MetadataTotalSupply
+    fn total_supply(self: @TState,) -> u256;
+
+    // IERC20MetadataTotalSupplyCamel
+    fn totalSupply(self: @TState,) -> u256;
+
+    // IERC20Balance
+    fn balance_of(self: @TState, account: ContractAddress) -> u256;
+    fn transfer(ref self: TState, recipient: ContractAddress, amount: u256) -> bool;
+    fn transfer_from(
+        ref self: TState, sender: ContractAddress, recipient: ContractAddress, amount: u256
+    ) -> bool;
+
+    // IERC20BalanceCamel
+    fn balanceOf(self: @TState, account: ContractAddress) -> u256;
+    fn transferFrom(
+        ref self: TState, sender: ContractAddress, recipient: ContractAddress, amount: u256
+    ) -> bool;
+
+    // IERC20Allowance
+    fn allowance(self: @TState, owner: ContractAddress, spender: ContractAddress) -> u256;
+    fn approve(ref self: TState, spender: ContractAddress, amount: u256) -> bool;
+
+    // IERC20SafeAllowance
+    fn decrease_allowance(
+        ref self: TState, spender: ContractAddress, subtracted_value: u256
+    ) -> bool;
+    fn increase_allowance(ref self: TState, spender: ContractAddress, added_value: u256) -> bool;
+
+    // IERC20SafeAllowanceCamel
+    fn decreaseAllowance(ref self: TState, spender: ContractAddress, subtractedValue: u256) -> bool;
+    fn increaseAllowance(ref self: TState, spender: ContractAddress, addedValue: u256) -> bool;
+
+    // IERC20Bridgeable
+    fn burn(ref self: TState, account: ContractAddress, amount: u256);
+    fn l2_bridge_address(self: @TState,) -> ContractAddress;
+    fn mint(ref self: TState, recipient: ContractAddress, amount: u256);
+
+    // WITHOUT INTERFACE !!!
     fn initializer(
         ref self: TState,
         name: felt252,
@@ -54,6 +61,7 @@ trait IERC20BridgeablePreset<TState> {
         recipient: ContractAddress,
         l2_bridge_address: ContractAddress
     );
+    fn dojo_resource(self: @TState,) -> felt252;
 }
 
 
@@ -133,8 +141,16 @@ mod ERC20Bridgeable {
         erc20_metadata_component::ERC20MetadataTotalSupplyImpl<ContractState>;
 
     #[abi(embed_v0)]
+    impl ERC20MetadataTotalSupplyCamelImpl =
+        erc20_metadata_component::ERC20MetadataTotalSupplyCamelImpl<ContractState>;
+
+    #[abi(embed_v0)]
     impl ERC20BalanceImpl =
         erc20_balance_component::ERC20BalanceImpl<ContractState>;
+
+    #[abi(embed_v0)]
+    impl ERC20BalanceCamelImpl =
+        erc20_balance_component::ERC20BalanceCamelImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl ERC20AllowanceImpl =

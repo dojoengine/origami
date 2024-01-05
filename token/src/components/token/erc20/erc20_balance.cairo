@@ -26,6 +26,14 @@ trait IERC20Balance<TState> {
     ) -> bool;
 }
 
+#[starknet::interface]
+trait IERC20BalanceCamel<TState> {
+    fn balanceOf(self: @TState, account: ContractAddress) -> u256;
+    fn transferFrom(
+        ref self: TState, sender: ContractAddress, recipient: ContractAddress, amount: u256
+    ) -> bool;
+}
+
 ///
 /// ERC20Balance Component
 ///
@@ -33,6 +41,8 @@ trait IERC20Balance<TState> {
 mod erc20_balance_component {
     use super::ERC20BalanceModel;
     use super::IERC20Balance;
+    use super::IERC20BalanceCamel;
+
     use starknet::ContractAddress;
     use starknet::{get_contract_address, get_caller_address};
     use dojo::world::{
@@ -96,6 +106,29 @@ mod erc20_balance_component {
             true
         }
     }
+
+    #[embeddable_as(ERC20BalanceCamelImpl)]
+    impl ERC20BalanceCamel<
+        TContractState,
+        +HasComponent<TContractState>,
+        +IWorldProvider<TContractState>,
+        impl ERC20Allowance: erc20_allowance_comp::HasComponent<TContractState>,
+        +Drop<TContractState>,
+    > of IERC20BalanceCamel<ComponentState<TContractState>> {
+        fn balanceOf(self: @ComponentState<TContractState>, account: ContractAddress) -> u256 {
+            self.balance_of(account)
+        }
+
+        fn transferFrom(
+            ref self: ComponentState<TContractState>,
+            sender: ContractAddress,
+            recipient: ContractAddress,
+            amount: u256
+        ) -> bool {
+            self.transfer_from(sender, recipient, amount)
+        }
+    }
+
 
     #[generate_trait]
     impl InternalImpl<

@@ -46,6 +46,10 @@ mod erc20_balance_mock {
     impl ERC20BalanceImpl =
         erc20_balance_component::ERC20BalanceImpl<ContractState>;
 
+    #[abi(embed_v0)]
+    impl ERC20BalanceCamelImpl =
+        erc20_balance_component::ERC20BalanceCamelImpl<ContractState>;
+
     impl ERC20AllowanceInternalImpl = erc20_allowance_component::InternalImpl<ContractState>;
     impl ERC20BalanceInternalImpl = erc20_balance_component::InternalImpl<ContractState>;
 

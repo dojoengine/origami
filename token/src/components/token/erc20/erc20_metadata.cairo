@@ -30,6 +30,11 @@ trait IERC20MetadataTotalSupply<TState> {
     fn total_supply(self: @TState) -> u256;
 }
 
+#[starknet::interface]
+trait IERC20MetadataTotalSupplyCamel<TState> {
+    fn totalSupply(self: @TState) -> u256;
+}
+
 ///
 /// ERC20Metadata Component
 ///
@@ -38,6 +43,7 @@ mod erc20_metadata_component {
     use super::ERC20MetadataModel;
     use super::IERC20Metadata;
     use super::IERC20MetadataTotalSupply;
+    use super::IERC20MetadataTotalSupplyCamel;
 
     use starknet::get_contract_address;
     use dojo::world::{
@@ -74,6 +80,18 @@ mod erc20_metadata_component {
     > of IERC20MetadataTotalSupply<ComponentState<TContractState>> {
         fn total_supply(self: @ComponentState<TContractState>) -> u256 {
             self.get_metadata().total_supply
+        }
+    }
+
+    #[embeddable_as(ERC20MetadataTotalSupplyCamelImpl)]
+    impl ERC20MetadataTotalSupplyCamel<
+        TContractState,
+        +HasComponent<TContractState>,
+        +IWorldProvider<TContractState>,
+        +Drop<TContractState>,
+    > of IERC20MetadataTotalSupplyCamel<ComponentState<TContractState>> {
+        fn totalSupply(self: @ComponentState<TContractState>) -> u256 {
+            self.total_supply()
         }
     }
 

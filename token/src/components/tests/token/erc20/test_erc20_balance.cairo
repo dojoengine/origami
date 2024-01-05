@@ -14,7 +14,7 @@ use token::components::token::erc20::erc20_allowance::erc20_allowance_component:
 };
 use token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
 use token::components::token::erc20::erc20_balance::erc20_balance_component::{
-    Transfer, ERC20BalanceImpl, InternalImpl as ERC20BalanceInternalImpl
+    Transfer, ERC20BalanceImpl, ERC20BalanceCamelImpl, InternalImpl as ERC20BalanceInternalImpl
 };
 use token::components::tests::mocks::erc20::erc20_balance_mock::{
     erc20_balance_mock, IERC20BalanceMockDispatcher, IERC20BalanceMockDispatcherTrait
@@ -30,7 +30,7 @@ use debug::PrintTrait;
 // events helpers
 //
 
-fn assert_eventtransfer_internal(
+fn assert_event_transfer(
     emitter: ContractAddress, from: ContractAddress, to: ContractAddress, value: u256
 ) {
     let event = utils::pop_log::<Transfer>(emitter).unwrap();
@@ -39,10 +39,10 @@ fn assert_eventtransfer_internal(
     assert(event.value == value, 'Invalid `value`');
 }
 
-fn assert_only_eventtransfer_internal(
+fn assert_only_event_transfer(
     emitter: ContractAddress, from: ContractAddress, to: ContractAddress, value: u256
 ) {
-    assert_eventtransfer_internal(emitter, from, to, value);
+    assert_event_transfer(emitter, from, to, value);
     utils::assert_no_events_left(emitter);
 }
 
@@ -71,6 +71,10 @@ fn test_erc20_balance_initialize() {
     assert(state.erc20_balance.balance_of(ADMIN()) == 0, 'Should be 0');
     assert(state.erc20_balance.balance_of(OWNER()) == 0, 'Should be 0');
     assert(state.erc20_balance.balance_of(OTHER()) == 0, 'Should be 0');
+
+    assert(state.erc20_balance.balanceOf(ADMIN()) == 0, 'Should be 0');
+    assert(state.erc20_balance.balanceOf(OWNER()) == 0, 'Should be 0');
+    assert(state.erc20_balance.balanceOf(OTHER()) == 0, 'Should be 0');
 }
 
 //
@@ -126,12 +130,12 @@ fn test_erc20_balance_transfer_internal() {
     state.erc20_balance.transfer_internal(ADMIN(), OTHER(), 100);
     assert(state.erc20_balance.balance_of(ADMIN()) == 320, 'Should be 320');
     assert(state.erc20_balance.balance_of(OTHER()) == 1100, 'Should be 1100');
-    assert_only_eventtransfer_internal(ZERO(), ADMIN(), OTHER(), 100);
+    assert_only_event_transfer(ZERO(), ADMIN(), OTHER(), 100);
 
     state.erc20_balance.transfer_internal(OTHER(), ADMIN(), 1000);
     assert(state.erc20_balance.balance_of(ADMIN()) == 1320, 'Should be 1320');
     assert(state.erc20_balance.balance_of(OTHER()) == 100, 'Should be 100');
-    assert_only_eventtransfer_internal(ZERO(), OTHER(), ADMIN(), 1000);
+    assert_only_event_transfer(ZERO(), OTHER(), ADMIN(), 1000);
 }
 
 #[test]
@@ -189,7 +193,7 @@ fn setup() -> (IWorldDispatcher, IERC20BalanceMockDispatcher) {
 
 #[test]
 #[available_gas(40000000)]
-fn test_transfer_internal_from() {
+fn test_transfer_from() {
     let (world, mut erc20_balance_mock) = setup();
 
     utils::impersonate(OWNER());
@@ -202,9 +206,7 @@ fn test_transfer_internal_from() {
     assert(erc20_balance_mock.transfer_from(OWNER(), RECIPIENT(), VALUE), 'Should return true');
 
     assert_event_approval(erc20_balance_mock.contract_address, OWNER(), SPENDER(), 0);
-    assert_only_eventtransfer_internal(
-        erc20_balance_mock.contract_address, OWNER(), RECIPIENT(), VALUE
-    );
+    assert_only_event_transfer(erc20_balance_mock.contract_address, OWNER(), RECIPIENT(), VALUE);
 
     // drop StoreSetRecord ERC20AllowanceModel 
     utils::drop_event(world.contract_address);
@@ -212,7 +214,7 @@ fn test_transfer_internal_from() {
     // drop StoreSetRecord ERC20BalanceModel x2
     utils::drop_event(world.contract_address);
     utils::drop_event(world.contract_address);
-    assert_only_eventtransfer_internal(world.contract_address, OWNER(), RECIPIENT(), VALUE);
+    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), VALUE);
 
     assert(erc20_balance_mock.balance_of(RECIPIENT()) == VALUE, 'Should eq amount');
     assert(erc20_balance_mock.balance_of(OWNER()) == SUPPLY - VALUE, 'Should eq suppy - amount');
@@ -222,7 +224,7 @@ fn test_transfer_internal_from() {
 
 #[test]
 #[available_gas(25000000)]
-fn test_transfer_internal_from_doesnt_consume_infinite_allowance() {
+fn test_transfer_from_doesnt_consume_infinite_allowance() {
     let (world, mut erc20_balance_mock) = setup();
 
     utils::impersonate(OWNER());
@@ -234,14 +236,12 @@ fn test_transfer_internal_from_doesnt_consume_infinite_allowance() {
     utils::impersonate(SPENDER());
     erc20_balance_mock.transfer_from(OWNER(), RECIPIENT(), VALUE);
 
-    assert_only_eventtransfer_internal(
-        erc20_balance_mock.contract_address, OWNER(), RECIPIENT(), VALUE
-    );
+    assert_only_event_transfer(erc20_balance_mock.contract_address, OWNER(), RECIPIENT(), VALUE);
 
     // drop StoreSetRecord ERC20BalanceModel x2
     utils::drop_event(world.contract_address);
     utils::drop_event(world.contract_address);
-    assert_only_eventtransfer_internal(world.contract_address, OWNER(), RECIPIENT(), VALUE);
+    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), VALUE);
 
     assert(
         erc20_balance_mock.allowance(OWNER(), SPENDER()) == BoundedInt::max(),
@@ -253,7 +253,7 @@ fn test_transfer_internal_from_doesnt_consume_infinite_allowance() {
 #[test]
 #[available_gas(25000000)]
 #[should_panic(expected: ('u256_sub Overflow', 'ENTRYPOINT_FAILED'))]
-fn test_transfer_internal_from_greater_than_allowance() {
+fn test_transfer_from_greater_than_allowance() {
     let (world, mut erc20_balance_mock) = setup();
 
     utils::impersonate(OWNER());
@@ -268,7 +268,7 @@ fn test_transfer_internal_from_greater_than_allowance() {
 #[test]
 #[available_gas(25000000)]
 #[should_panic(expected: ('ERC20: transfer to 0', 'ENTRYPOINT_FAILED'))]
-fn test_transfer_internal_from_to_zero_address() {
+fn test_transfer_from_to_zero_address() {
     let (world, mut erc20_balance_mock) = setup();
 
     utils::impersonate(OWNER());
@@ -281,8 +281,44 @@ fn test_transfer_internal_from_to_zero_address() {
 #[test]
 #[available_gas(25000000)]
 #[should_panic(expected: ('u256_sub Overflow', 'ENTRYPOINT_FAILED'))]
-fn test_transfer_internal_from_from_zero_address() {
+fn test_transfer_from_from_zero_address() {
     let (world, mut erc20_balance_mock) = setup();
 
     erc20_balance_mock.transfer_from(ZERO(), RECIPIENT(), VALUE);
+}
+
+
+//
+// transferFrom 
+//
+
+#[test]
+#[available_gas(40000000)]
+fn test_transferFrom() {
+    let (world, mut erc20_balance_mock) = setup();
+
+    utils::impersonate(OWNER());
+    erc20_balance_mock.approve(SPENDER(), VALUE);
+
+    utils::drop_all_events(erc20_balance_mock.contract_address);
+    utils::drop_all_events(world.contract_address);
+
+    utils::impersonate(SPENDER());
+    assert(erc20_balance_mock.transferFrom(OWNER(), RECIPIENT(), VALUE), 'Should return true');
+
+    assert_event_approval(erc20_balance_mock.contract_address, OWNER(), SPENDER(), 0);
+    assert_only_event_transfer(erc20_balance_mock.contract_address, OWNER(), RECIPIENT(), VALUE);
+
+    // drop StoreSetRecord ERC20AllowanceModel 
+    utils::drop_event(world.contract_address);
+    assert_event_approval(world.contract_address, OWNER(), SPENDER(), 0);
+    // drop StoreSetRecord ERC20BalanceModel x2
+    utils::drop_event(world.contract_address);
+    utils::drop_event(world.contract_address);
+    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), VALUE);
+
+    assert(erc20_balance_mock.balance_of(RECIPIENT()) == VALUE, 'Should eq amount');
+    assert(erc20_balance_mock.balance_of(OWNER()) == SUPPLY - VALUE, 'Should eq suppy - amount');
+    assert(erc20_balance_mock.allowance(OWNER(), SPENDER()) == 0, 'Should eq 0');
+// assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
 }

@@ -5,7 +5,7 @@ use token::tests::constants::{NAME, SYMBOL, DECIMALS};
 
 use token::components::token::erc20::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
 use token::components::token::erc20::erc20_metadata::erc20_metadata_component::{
-    ERC20MetadataImpl, ERC20MetadataTotalSupplyImpl, InternalImpl
+    ERC20MetadataImpl, ERC20MetadataTotalSupplyImpl, ERC20MetadataTotalSupplyCamelImpl, InternalImpl
 };
 use token::components::tests::mocks::erc20::erc20_metadata_mock::erc20_metadata_mock;
 use token::components::tests::mocks::erc20::erc20_metadata_mock::erc20_metadata_mock::world_dispatcherContractMemberStateTrait;
@@ -31,6 +31,7 @@ fn test_erc20_metadata_initialize() {
     assert(state.erc20_metadata.symbol() == SYMBOL, 'Should be SYMBOL');
     assert(state.erc20_metadata.decimals() == DECIMALS, 'Should be 18');
     assert(state.erc20_metadata.total_supply() == 0, 'Should be 0');
+    assert(state.erc20_metadata.totalSupply() == 0, 'Should be 0');
 }
 
 #[test]
