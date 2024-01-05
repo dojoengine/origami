@@ -69,7 +69,7 @@ mod ERC20BalanceMock {
     impl InitializerImpl of InitializerTrait {
         fn initializer( ref self: ContractState, initial_supply: u256, recipient: ContractAddress, ) {
             // set balance for recipient
-            self.erc20_balance._update_balance(recipient,0,initial_supply);
+            self.erc20_balance.update_balance(recipient,0,initial_supply);
         }
     }
 

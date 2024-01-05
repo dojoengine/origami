@@ -33,11 +33,11 @@ fn STATE() -> (IWorldDispatcher, ERC20MintableBurnableMock::ContractState) {
 
 #[test]
 #[available_gas(100000000)]
-fn test_erc20_mintable__mint() {
+fn test_erc20_mintable_mint() {
     let (world, mut state) = STATE();
 
     let total_supply = state.total_supply();
-    state.erc20_mintable._mint(RECIPIENT(), VALUE);
+    state.erc20_mintable.mint(RECIPIENT(), VALUE);
     let total_supply_after = state.total_supply();
 
     assert(state.balance_of(RECIPIENT()) == VALUE, 'invalid balance_of');
@@ -47,22 +47,22 @@ fn test_erc20_mintable__mint() {
 #[test]
 #[available_gas(100000000)]
 #[should_panic(expected: ('ERC20: mint to 0',))]
-fn test_erc20_mintable__mint_to_zero() {
+fn test_erc20_mintable_mint_to_zero() {
     let (world, mut state) = STATE();
-    state.erc20_mintable._mint(ZERO(), VALUE);
+    state.erc20_mintable.mint(ZERO(), VALUE);
 }
 
 
 #[test]
 #[available_gas(100000000)]
-fn test_erc20_burnable__burn() {
+fn test_erc20_burnable_burn() {
     let (world, mut state) = STATE();
 
     let total_supply = state.total_supply();
-    state.erc20_mintable._mint(RECIPIENT(), VALUE);
+    state.erc20_mintable.mint(RECIPIENT(), VALUE);
     let total_supply_after_mint = state.total_supply();
 
-    state.erc20_burnable._burn(RECIPIENT(), VALUE);
+    state.erc20_burnable.burn(RECIPIENT(), VALUE);
     let total_supply_after_burn = state.total_supply();
 
     assert(state.balance_of(RECIPIENT()) == 0, 'invalid balance_of');
@@ -74,10 +74,9 @@ fn test_erc20_burnable__burn() {
 #[test]
 #[available_gas(100000000)]
 #[should_panic(expected: ('ERC20: burn from 0',))]
-fn test_erc20_burnable__burn_from_zero() {
+fn test_erc20_burnable_burn_from_zero() {
     let (world, mut state) = STATE();
-    state.erc20_burnable._burn(ZERO(), VALUE);
+    state.erc20_burnable.burn(ZERO(), VALUE);
 }
-// TODO test events
 
 

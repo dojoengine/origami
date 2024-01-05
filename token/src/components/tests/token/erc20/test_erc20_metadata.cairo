@@ -22,10 +22,10 @@ fn STATE() -> (IWorldDispatcher, ERC20MetadataMock::ContractState) {
 
 #[test]
 #[available_gas(100000000)]
-fn test_erc20_metadata__initialize() {
+fn test_erc20_metadata_initialize() {
     let (world, mut state) = STATE();
 
-    state.erc20_metadata._initialize(NAME, SYMBOL, DECIMALS);
+    state.erc20_metadata.initialize(NAME, SYMBOL, DECIMALS);
 
     assert(state.erc20_metadata.name() == NAME, 'Should be NAME');
     assert(state.erc20_metadata.symbol() == SYMBOL, 'Should be SYMBOL');
@@ -35,16 +35,16 @@ fn test_erc20_metadata__initialize() {
 
 #[test]
 #[available_gas(100000000)]
-fn test_erc20_metadata__update_total_supply() {
+fn test_erc20_metadata_update_total_supply() {
     let (world, mut state) = STATE();
 
-    state.erc20_metadata._update_total_supply(0, 420);
+    state.erc20_metadata.update_total_supply(0, 420);
     assert(state.erc20_metadata.total_supply() == 420, 'Should be 420');
 
-    state.erc20_metadata._update_total_supply(0, 1000);
+    state.erc20_metadata.update_total_supply(0, 1000);
     assert(state.erc20_metadata.total_supply() == 1420, 'Should be 1420');
 
-    state.erc20_metadata._update_total_supply(420, 0);
+    state.erc20_metadata.update_total_supply(420, 0);
     assert(state.erc20_metadata.total_supply() == 1000, 'Should be 1000');
 }
 
@@ -52,19 +52,19 @@ fn test_erc20_metadata__update_total_supply() {
 #[test]
 #[available_gas(10000000)]
 #[should_panic(expected: ('u256_sub Overflow',))]
-fn test_erc20_metadata__update_total_supply_sub_overflow() {
+fn test_erc20_metadata_update_total_supply_sub_overflow() {
     let (world, mut state) = STATE();
 
-    state.erc20_metadata._update_total_supply(1, 0);
+    state.erc20_metadata.update_total_supply(1, 0);
 }
 
 
 #[test]
 #[available_gas(10000000)]
 #[should_panic(expected: ('u256_add Overflow',))]
-fn test_erc20_metadata__update_total_supply_add_overflow() {
+fn test_erc20_metadata_update_total_supply_add_overflow() {
     let (world, mut state) = STATE();
 
-    state.erc20_metadata._update_total_supply(0, BoundedInt::max());
-    state.erc20_metadata._update_total_supply(0, 1);
+    state.erc20_metadata.update_total_supply(0, BoundedInt::max());
+    state.erc20_metadata.update_total_supply(0, 1);
 }

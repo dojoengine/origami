@@ -176,7 +176,7 @@ mod ERC20AllowanceComponent {
             let approval_event = Approval {
                 owner: allowance.owner, spender: allowance.spender, value: allowance.amount
             };
-            self._emit_event(approval_event);
+            self.emit_event(approval_event);
         }
 
         fn update_allowance(
@@ -194,7 +194,7 @@ mod ERC20AllowanceComponent {
         }
 
         // use in transfer_from
-        fn _spend_allowance(
+        fn spend_allowance(
             ref self: ComponentState<TContractState>,
             owner: ContractAddress,
             spender: ContractAddress,
@@ -206,7 +206,7 @@ mod ERC20AllowanceComponent {
             }
         }
 
-        fn _emit_event<S, +traits::Into<S, Event>, +Drop<S>, +Clone<S>>(
+        fn emit_event<S, +traits::Into<S, Event>, +Drop<S>, +Clone<S>>(
             ref self: ComponentState<TContractState>, event: S
         ) {
             self.emit(event.clone());

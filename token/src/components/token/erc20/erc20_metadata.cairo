@@ -89,7 +89,7 @@ mod ERC20MetadataComponent {
             get!(self.get_contract().world(), get_contract_address(), (ERC20MetadataModel))
         }
 
-        fn _initialize(
+        fn initialize(
             ref self: ComponentState<TContractState>, name: felt252, symbol: felt252, decimals: u8
         ) {
             set!(
@@ -101,7 +101,7 @@ mod ERC20MetadataComponent {
         }
 
         // Helper function to update total_supply model
-        fn _update_total_supply(
+        fn update_total_supply(
             ref self: ComponentState<TContractState>, subtract: u256, add: u256
         ) {
             let mut meta = self.get_metadata();

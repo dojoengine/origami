@@ -60,7 +60,7 @@ mod SRC5Component {
             if interface_id == ISRC5_ID {
                 return true;
             }
-            self._supports_interface(interface_id)
+            self.supports_interface_internal(interface_id)
         }
     }
 
@@ -99,7 +99,7 @@ mod SRC5Component {
             );
         }
 
-        fn _supports_interface(
+        fn supports_interface_internal(
             self: @ComponentState<TContractState>, interface_id: felt252
         ) -> bool {
             get!(self.get_contract().world(), (get_contract_address(), interface_id), (SRC5Model))

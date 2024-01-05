@@ -32,7 +32,7 @@ mod ERC20MintableComponent {
         impl ERC20Metadata: erc20_metadata_comp::HasComponent<TContractState>,
         +Drop<TContractState>,
     > of InternalTrait<TContractState> {
-        fn _mint(
+        fn mint(
             ref self: ComponentState<TContractState>, recipient: ContractAddress, amount: u256
         ) {
             assert(!recipient.is_zero(), Errors::MINT_TO_ZERO);
@@ -40,13 +40,13 @@ mod ERC20MintableComponent {
             let mut erc20_balance = get_dep_component_mut!(ref self, ERC20Balance);
             let mut erc20_metadata = get_dep_component_mut!(ref self, ERC20Metadata);
 
-            erc20_metadata._update_total_supply(0, amount);
-            erc20_balance._update_balance(recipient, 0, amount);
+            erc20_metadata.update_total_supply(0, amount);
+            erc20_balance.update_balance(recipient, 0, amount);
 
             let transfer_event = erc20_balance_comp::Transfer {
                 from: Zeroable::zero(), to: recipient, value: amount
             };
-            erc20_balance._emit_event(transfer_event);
+            erc20_balance.emit_event(transfer_event);
         }
     }
 }

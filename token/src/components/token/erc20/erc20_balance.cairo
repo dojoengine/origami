@@ -77,7 +77,7 @@ mod ERC20BalanceComponent {
             ref self: ComponentState<TContractState>, recipient: ContractAddress, amount: u256
         ) -> bool {
             let sender = get_caller_address();
-            self._transfer(sender, recipient, amount);
+            self.transfer_internal(sender, recipient, amount);
             true
         }
 
@@ -89,8 +89,8 @@ mod ERC20BalanceComponent {
         ) -> bool {
             let caller = get_caller_address();
             let mut erc20_allowance = get_dep_component_mut!(ref self, ERC20Allowance);
-            erc20_allowance._spend_allowance(sender, caller, amount);
-            self._transfer(sender, recipient, amount);
+            erc20_allowance.spend_allowance(sender, caller, amount);
+            self.transfer_internal(sender, recipient, amount);
             true
         }
     }
@@ -110,7 +110,7 @@ mod ERC20BalanceComponent {
             )
         }
 
-        fn _update_balance(
+        fn update_balance(
             ref self: ComponentState<TContractState>,
             account: ContractAddress,
             subtract: u256,
@@ -123,7 +123,7 @@ mod ERC20BalanceComponent {
             set!(self.get_contract().world(), (balance));
         }
 
-        fn _transfer(
+        fn transfer_internal(
             ref self: ComponentState<TContractState>,
             sender: ContractAddress,
             recipient: ContractAddress,
@@ -131,14 +131,14 @@ mod ERC20BalanceComponent {
         ) {
             assert(!sender.is_zero(), Errors::TRANSFER_FROM_ZERO);
             assert(!recipient.is_zero(), Errors::TRANSFER_TO_ZERO);
-            self._update_balance(sender, amount, 0);
-            self._update_balance(recipient, 0, amount);
+            self.update_balance(sender, amount, 0);
+            self.update_balance(recipient, 0, amount);
 
             let transfer_event = Transfer { from: sender, to: recipient, value: amount };
-            self._emit_event(transfer_event);
+            self.emit_event(transfer_event);
         }
 
-        fn _emit_event<S, +traits::Into<S, Event>, +Drop<S>, +Clone<S>>(
+        fn emit_event<S, +traits::Into<S, Event>, +Drop<S>, +Clone<S>>(
             ref self: ComponentState<TContractState>, event: S
         ) {
             self.emit(event.clone());

@@ -120,12 +120,12 @@ fn test_erc20_allowance_update_allowance() {
 
 
 //
-//  _spend_allowance 
+//  spend_allowance 
 //
 
 #[test]
 #[available_gas(100000000)]
-fn test_erc20_allowance__spend_allowance() {
+fn test_erc20_allowance_spend_allowance() {
     let (world, mut state) = STATE();
 
     testing::set_caller_address(OWNER());
@@ -133,7 +133,7 @@ fn test_erc20_allowance__spend_allowance() {
     state.erc20_allowance.approve(SPENDER(), SUPPLY);
     utils::drop_event(ZERO());
 
-    state.erc20_allowance._spend_allowance(OWNER(), SPENDER(), VALUE);
+    state.erc20_allowance.spend_allowance(OWNER(), SPENDER(), VALUE);
     assert(
         state.erc20_allowance.allowance(OWNER(), SPENDER()) == SUPPLY - VALUE,
         'should be SUPPLY-VALUE'
@@ -143,7 +143,7 @@ fn test_erc20_allowance__spend_allowance() {
 
 #[test]
 #[available_gas(100000000)]
-fn test_erc20_allowance__spend_allowance_with_max_allowance() {
+fn test_erc20_allowance_spend_allowance_with_max_allowance() {
     let (world, mut state) = STATE();
 
     testing::set_caller_address(OWNER());
@@ -151,7 +151,7 @@ fn test_erc20_allowance__spend_allowance_with_max_allowance() {
     state.erc20_allowance.approve(SPENDER(), BoundedInt::max());
     utils::drop_event(ZERO());
 
-    state.erc20_allowance._spend_allowance(OWNER(), SPENDER(), VALUE);
+    state.erc20_allowance.spend_allowance(OWNER(), SPENDER(), VALUE);
     assert(
         state.erc20_allowance.allowance(OWNER(), SPENDER()) == BoundedInt::max(),
         'should be BoundedInt::max()'

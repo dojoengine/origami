@@ -181,9 +181,9 @@ mod ERC20Bridgeable {
                 Errors::CALLER_IS_NOT_OWNER
             );
 
-            self.erc20_metadata._initialize(name, symbol, 18);
-            self.erc20_mintable._mint(recipient, initial_supply);
-            self.erc20_bridgeable._initialize(l2_bridge_address);
+            self.erc20_metadata.initialize(name, symbol, 18);
+            self.erc20_mintable.mint(recipient, initial_supply);
+            self.erc20_bridgeable.initialize(l2_bridge_address);
 
             self.initializable.initialize();
         }
