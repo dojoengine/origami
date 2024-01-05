@@ -63,7 +63,6 @@ mod ERC20BridgeableMock {
     }
 
     mod Errors {
-        const ALREADY_INITIALIZED: felt252 = 'ERC20: already initialized';
         const CALLER_IS_NOT_OWNER: felt252 = 'ERC20: caller is not owner';
     }
 
@@ -98,7 +97,6 @@ mod ERC20BridgeableMock {
             recipient: ContractAddress,
             l2_bridge_address: ContractAddress,
         ) {
-            assert(!self.initializable.is_initialized(), Errors::ALREADY_INITIALIZED);
             assert(
                 self.world().is_owner(get_caller_address(), get_contract_address().into()),
                 Errors::CALLER_IS_NOT_OWNER

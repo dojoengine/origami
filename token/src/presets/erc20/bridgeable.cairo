@@ -116,7 +116,6 @@ mod ERC20Bridgeable {
     }
 
     mod Errors {
-        const ALREADY_INITIALIZED: felt252 = 'ERC20: already initialized';
         const CALLER_IS_NOT_OWNER: felt252 = 'ERC20: caller is not owner';
     }
 
@@ -177,7 +176,6 @@ mod ERC20Bridgeable {
             recipient: ContractAddress,
             l2_bridge_address: ContractAddress,
         ) {
-            assert(!self.initializable.is_initialized(), Errors::ALREADY_INITIALIZED);
             assert(
                 self.world().is_owner(get_caller_address(), get_contract_address().into()),
                 Errors::CALLER_IS_NOT_OWNER
@@ -191,61 +189,4 @@ mod ERC20Bridgeable {
         }
     }
 
-    // // TODO : remove all impl except initializer & use #[abi(embed_v0)]
-    // #[external(v0)]
-    // impl ERC20Impl of interface::IERC20<ContractState> {
-    //     fn total_supply(self: @ContractState) -> u256 {
-    //         self.erc20_metadata.total_supply()
-    //     }
-
-    //     fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
-    //         self.erc20_balance.balance_of(account)
-    //     }
-
-    //     fn allowance(
-    //         self: @ContractState, owner: ContractAddress, spender: ContractAddress
-    //     ) -> u256 {
-    //         self.erc20_allowance.allowance(owner, spender)
-    //     }
-
-    //     fn transfer(ref self: ContractState, recipient: ContractAddress, amount: u256) -> bool {
-    //         self.erc20_balance.transfer(recipient, amount)
-    //     }
-
-    //     fn transfer_from(
-    //         ref self: ContractState,
-    //         sender: ContractAddress,
-    //         recipient: ContractAddress,
-    //         amount: u256
-    //     ) -> bool {
-    //         let caller = get_caller_address();
-    //         self.erc20_allowance._spend_allowance(sender, caller, amount);
-    //         self.erc20_balance._transfer(sender, recipient, amount);
-    //         true
-    //     }
-
-    //     fn approve(ref self: ContractState, spender: ContractAddress, amount: u256) -> bool {
-    //         self.erc20_allowance.approve(spender, amount)
-    //     }
-    // }
-
-    // #[external(v0)]
-    // impl ERC20CamelOnlyImpl of interface::IERC20CamelOnly<ContractState> {
-    //     fn totalSupply(self: @ContractState) -> u256 {
-    //         ERC20Impl::total_supply(self)
-    //     }
-
-    //     fn balanceOf(self: @ContractState, account: ContractAddress) -> u256 {
-    //         ERC20Impl::balance_of(self, account)
-    //     }
-
-    //     fn transferFrom(
-    //         ref self: ContractState,
-    //         sender: ContractAddress,
-    //         recipient: ContractAddress,
-    //         amount: u256
-    //     ) -> bool {
-    //         ERC20Impl::transfer_from(ref self, sender, recipient, amount)
-    //     }
-    // }
 }
