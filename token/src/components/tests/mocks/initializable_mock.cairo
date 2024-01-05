@@ -1,22 +1,22 @@
 #[dojo::contract]
 mod InitializableMock {
-    use token::components::security::initializable::InitializableComponent;
+    use token::components::security::initializable::initializable_component;
 
-    component!(path: InitializableComponent, storage: initializable, event: InitializableEvent);
+    component!(path: initializable_component, storage: initializable, event: InitializableEvent);
 
     #[abi(embed_v0)]
     impl InitializableImpl =
-        InitializableComponent::InitializableImpl<ContractState>;
+        initializable_component::InitializableImpl<ContractState>;
 
     #[storage]
     struct Storage {
         #[substorage(v0)]
-        initializable: InitializableComponent::Storage
+        initializable: initializable_component::Storage
     }
 
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        InitializableEvent: InitializableComponent::Event
+        InitializableEvent: initializable_component::Event
     }
 }

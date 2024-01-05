@@ -43,7 +43,7 @@ trait IERC20SafeAllowanceCamel<TState> {
 /// ERC20Allowance Component
 ///
 #[starknet::component]
-mod ERC20AllowanceComponent {
+mod erc20_allowance_component {
     use super::ERC20AllowanceModel;
     use super::IERC20Allowance;
     use super::IERC20SafeAllowance;

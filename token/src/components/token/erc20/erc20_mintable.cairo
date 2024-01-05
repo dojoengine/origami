@@ -2,15 +2,15 @@
 /// ERC20Mintable Component
 ///
 #[starknet::component]
-mod ERC20MintableComponent {
+mod erc20_mintable_component {
     use starknet::ContractAddress;
     use starknet::get_contract_address;
     use dojo::world::{
         IWorldProvider, IWorldProviderDispatcher, IWorldDispatcher, IWorldDispatcherTrait
     };
 
-    use token::components::token::erc20::erc20_balance::ERC20BalanceComponent as erc20_balance_comp;
-    use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent as erc20_metadata_comp;
+    use token::components::token::erc20::erc20_balance::erc20_balance_component as erc20_balance_comp;
+    use token::components::token::erc20::erc20_metadata::erc20_metadata_component as erc20_metadata_comp;
 
     use erc20_balance_comp::InternalImpl as ERC20BalanceInternal;
     use erc20_metadata_comp::InternalImpl as ERC20MetadataInternal;

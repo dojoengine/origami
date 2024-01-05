@@ -28,7 +28,7 @@ trait IERC20Balance<TState> {
 /// ERC20Balance Component
 ///
 #[starknet::component]
-mod ERC20BalanceComponent {
+mod erc20_balance_component {
     use super::ERC20BalanceModel;
     use super::IERC20Balance;
     use starknet::ContractAddress;
@@ -37,7 +37,7 @@ mod ERC20BalanceComponent {
         IWorldProvider, IWorldProviderDispatcher, IWorldDispatcher, IWorldDispatcherTrait
     };
 
-    use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent as erc20_allowance_comp;
+    use token::components::token::erc20::erc20_allowance::erc20_allowance_component as erc20_allowance_comp;
     use erc20_allowance_comp::InternalImpl as ERC20AllowanceInternal;
 
     #[storage]

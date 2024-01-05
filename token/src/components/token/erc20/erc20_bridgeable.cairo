@@ -26,7 +26,7 @@ trait IERC20Bridgeable<TState> {
 /// ERC20Bridgeable Component
 ///
 #[starknet::component]
-mod ERC20BridgeableComponent {
+mod erc20_bridgeable_component {
     use super::IERC20Bridgeable;
     use super::ERC20BridgeableModel;
     use starknet::ContractAddress;
@@ -36,10 +36,10 @@ mod ERC20BridgeableComponent {
         IWorldProvider, IWorldProviderDispatcher, IWorldDispatcher, IWorldDispatcherTrait
     };
 
-    use token::components::token::erc20::erc20_balance::ERC20BalanceComponent as erc20_balance_comp;
-    use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent as erc20_metadata_comp;
-    use token::components::token::erc20::erc20_mintable::ERC20MintableComponent as erc20_mintable_comp;
-    use token::components::token::erc20::erc20_burnable::ERC20BurnableComponent as erc20_burnable_comp;
+    use token::components::token::erc20::erc20_balance::erc20_balance_component as erc20_balance_comp;
+    use token::components::token::erc20::erc20_metadata::erc20_metadata_component as erc20_metadata_comp;
+    use token::components::token::erc20::erc20_mintable::erc20_mintable_component as erc20_mintable_comp;
+    use token::components::token::erc20::erc20_burnable::erc20_burnable_component as erc20_burnable_comp;
 
     use erc20_balance_comp::InternalImpl as ERC20BalanceInternal;
     use erc20_metadata_comp::InternalImpl as ERC20MetadataInternal;

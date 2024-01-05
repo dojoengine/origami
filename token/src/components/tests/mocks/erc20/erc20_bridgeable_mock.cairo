@@ -1,86 +1,86 @@
 #[dojo::contract]
-mod ERC20BridgeableMock {
+mod erc20_bridgeable_mock {
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};
 
-    use token::components::security::initializable::InitializableComponent;
+    use token::components::security::initializable::initializable_component;
 
-    use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent;
-    use token::components::token::erc20::erc20_balance::ERC20BalanceComponent;
-    use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent;
-    use token::components::token::erc20::erc20_mintable::ERC20MintableComponent;
-    use token::components::token::erc20::erc20_burnable::ERC20BurnableComponent;
-    use token::components::token::erc20::erc20_bridgeable::ERC20BridgeableComponent;
+    use token::components::token::erc20::erc20_allowance::erc20_allowance_component;
+    use token::components::token::erc20::erc20_balance::erc20_balance_component;
+    use token::components::token::erc20::erc20_metadata::erc20_metadata_component;
+    use token::components::token::erc20::erc20_mintable::erc20_mintable_component;
+    use token::components::token::erc20::erc20_burnable::erc20_burnable_component;
+    use token::components::token::erc20::erc20_bridgeable::erc20_bridgeable_component;
 
-    component!(path: InitializableComponent, storage: initializable, event: InitializableEvent);
+    component!(path: initializable_component, storage: initializable, event: InitializableEvent);
 
-    component!(path: ERC20AllowanceComponent, storage: erc20_allowance, event: ERC20AllowanceEvent);
-    component!(path: ERC20BalanceComponent, storage: erc20_balance, event: ERC20BalanceEvent);
-    component!(path: ERC20MetadataComponent, storage: erc20_metadata, event: ERC20MetadataEvent);
-    component!(path: ERC20MintableComponent, storage: erc20_mintable, event: ERC20MintableEvent);
-    component!(path: ERC20BurnableComponent, storage: erc20_burnable, event: ERC20BurnableEvent);
+    component!(path: erc20_allowance_component, storage: erc20_allowance, event: ERC20AllowanceEvent);
+    component!(path: erc20_balance_component, storage: erc20_balance, event: ERC20BalanceEvent);
+    component!(path: erc20_metadata_component, storage: erc20_metadata, event: ERC20MetadataEvent);
+    component!(path: erc20_mintable_component, storage: erc20_mintable, event: ERC20MintableEvent);
+    component!(path: erc20_burnable_component, storage: erc20_burnable, event: ERC20BurnableEvent);
     component!(
-        path: ERC20BridgeableComponent, storage: erc20_bridgeable, event: ERC20BridgeableEvent
+        path: erc20_bridgeable_component, storage: erc20_bridgeable, event: ERC20BridgeableEvent
     );
 
-    impl InitializableInternalImpl = InitializableComponent::InternalImpl<ContractState>;
+    impl InitializableInternalImpl = initializable_component::InternalImpl<ContractState>;
     
-    impl ERC20AllowanceInternalImpl = ERC20AllowanceComponent::InternalImpl<ContractState>;
-    impl ERC20BalanceInternalImpl = ERC20BalanceComponent::InternalImpl<ContractState>;
-    impl ERC20MetadataInternalImpl = ERC20MetadataComponent::InternalImpl<ContractState>;
-    impl ERC20MintableInternalImpl = ERC20MintableComponent::InternalImpl<ContractState>;
-    impl ERC20BurnableInternalImpl = ERC20BurnableComponent::InternalImpl<ContractState>;
-    impl ERC20BridgeableInternalImpl = ERC20BridgeableComponent::InternalImpl<ContractState>;
+    impl ERC20AllowanceInternalImpl = erc20_allowance_component::InternalImpl<ContractState>;
+    impl ERC20BalanceInternalImpl = erc20_balance_component::InternalImpl<ContractState>;
+    impl ERC20MetadataInternalImpl = erc20_metadata_component::InternalImpl<ContractState>;
+    impl ERC20MintableInternalImpl = erc20_mintable_component::InternalImpl<ContractState>;
+    impl ERC20BurnableInternalImpl = erc20_burnable_component::InternalImpl<ContractState>;
+    impl ERC20BridgeableInternalImpl = erc20_bridgeable_component::InternalImpl<ContractState>;
 
     #[storage]
     struct Storage {
         #[substorage(v0)]
-        initializable: InitializableComponent::Storage,
+        initializable: initializable_component::Storage,
         #[substorage(v0)]
-        erc20_allowance: ERC20AllowanceComponent::Storage,
+        erc20_allowance: erc20_allowance_component::Storage,
         #[substorage(v0)]
-        erc20_balance: ERC20BalanceComponent::Storage,
+        erc20_balance: erc20_balance_component::Storage,
         #[substorage(v0)]
-        erc20_metadata: ERC20MetadataComponent::Storage,
+        erc20_metadata: erc20_metadata_component::Storage,
         #[substorage(v0)]
-        erc20_mintable: ERC20MintableComponent::Storage,
+        erc20_mintable: erc20_mintable_component::Storage,
         #[substorage(v0)]
-        erc20_burnable: ERC20BurnableComponent::Storage,
+        erc20_burnable: erc20_burnable_component::Storage,
         #[substorage(v0)]
-        erc20_bridgeable: ERC20BridgeableComponent::Storage,
+        erc20_bridgeable: erc20_bridgeable_component::Storage,
     }
 
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        InitializableEvent: InitializableComponent::Event,
-        ERC20AllowanceEvent: ERC20AllowanceComponent::Event,
-        ERC20BalanceEvent: ERC20BalanceComponent::Event,
-        ERC20MetadataEvent: ERC20MetadataComponent::Event,
-        ERC20MintableEvent: ERC20MintableComponent::Event,
-        ERC20BurnableEvent: ERC20BurnableComponent::Event,
-        ERC20BridgeableEvent: ERC20BridgeableComponent::Event,
+        InitializableEvent: initializable_component::Event,
+        ERC20AllowanceEvent: erc20_allowance_component::Event,
+        ERC20BalanceEvent: erc20_balance_component::Event,
+        ERC20MetadataEvent: erc20_metadata_component::Event,
+        ERC20MintableEvent: erc20_mintable_component::Event,
+        ERC20BurnableEvent: erc20_burnable_component::Event,
+        ERC20BridgeableEvent: erc20_bridgeable_component::Event,
     }
 
     mod Errors {
         const CALLER_IS_NOT_OWNER: felt252 = 'ERC20: caller is not owner';
     }
 
-    impl InitializableImpl = InitializableComponent::InitializableImpl<ContractState>;
+    impl InitializableImpl = initializable_component::InitializableImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl ERC20AllowanceImpl = ERC20AllowanceComponent::ERC20AllowanceImpl<ContractState>;
+    impl ERC20AllowanceImpl = erc20_allowance_component::ERC20AllowanceImpl<ContractState>;
 
      #[abi(embed_v0)]
-    impl ERC20BalanceImpl = ERC20BalanceComponent::ERC20BalanceImpl<ContractState>;
+    impl ERC20BalanceImpl = erc20_balance_component::ERC20BalanceImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl ERC20MetadataImpl =
-        ERC20MetadataComponent::ERC20MetadataImpl<ContractState>;
+        erc20_metadata_component::ERC20MetadataImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl ERC20BridgeableImpl =
-        ERC20BridgeableComponent::ERC20BridgeableImpl<ContractState>;
+        erc20_bridgeable_component::ERC20BridgeableImpl<ContractState>;
 
     //
     // Initializer

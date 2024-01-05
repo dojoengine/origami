@@ -29,7 +29,7 @@ trait IInitializable<TState> {
 /// logic once and only once. This can be useful for setting a contract's
 /// initial state in scenarios where a constructor cannot be used.
 #[starknet::component]
-mod InitializableComponent {
+mod initializable_component {
     use super::InitializableModel;
     use super::IInitializable;
     use starknet::get_contract_address;

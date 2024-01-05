@@ -1,30 +1,30 @@
 #[dojo::contract]
-mod ERC20AllowanceMock {
-    use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent;
+mod erc20_allowance_mock {
+    use token::components::token::erc20::erc20_allowance::erc20_allowance_component;
 
-    component!(path: ERC20AllowanceComponent, storage: erc20_allowance, event: ERC20AllowanceEvent);
+    component!(path: erc20_allowance_component, storage: erc20_allowance, event: ERC20AllowanceEvent);
 
     #[abi(embed_v0)]
     impl ERC20AllowanceImpl =
-        ERC20AllowanceComponent::ERC20AllowanceImpl<ContractState>;
+        erc20_allowance_component::ERC20AllowanceImpl<ContractState>;
     #[abi(embed_v0)]
     impl ERC20SafeAllowanceImpl =
-        ERC20AllowanceComponent::ERC20SafeAllowanceImpl<ContractState>;
+        erc20_allowance_component::ERC20SafeAllowanceImpl<ContractState>;
     #[abi(embed_v0)]
     impl ERC20SafeAllowanceCamelImpl =
-        ERC20AllowanceComponent::ERC20SafeAllowanceCamelImpl<ContractState>;
+        erc20_allowance_component::ERC20SafeAllowanceCamelImpl<ContractState>;
 
-    impl ERC20AllowanceInternalImpl = ERC20AllowanceComponent::InternalImpl<ContractState>;
+    impl ERC20AllowanceInternalImpl = erc20_allowance_component::InternalImpl<ContractState>;
 
     #[storage]
     struct Storage {
         #[substorage(v0)]
-        erc20_allowance: ERC20AllowanceComponent::Storage
+        erc20_allowance: erc20_allowance_component::Storage
     }
 
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        ERC20AllowanceEvent: ERC20AllowanceComponent::Event
+        ERC20AllowanceEvent: erc20_allowance_component::Event
     }
 }

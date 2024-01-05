@@ -10,12 +10,12 @@ use token::tests::utils;
 use token::components::token::erc20::erc20_allowance::{
     erc_20_allowance_model, ERC20AllowanceModel,
 };
-use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent;
-use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent::{
+use token::components::token::erc20::erc20_allowance::erc20_allowance_component;
+use token::components::token::erc20::erc20_allowance::erc20_allowance_component::{
     Approval, ERC20AllowanceImpl, ERC20SafeAllowanceImpl, ERC20SafeAllowanceCamelImpl, InternalImpl
 };
-use token::components::tests::mocks::erc20::erc20_allowance_mock::ERC20AllowanceMock;
-use token::components::tests::mocks::erc20::erc20_allowance_mock::ERC20AllowanceMock::world_dispatcherContractMemberStateTrait;
+use token::components::tests::mocks::erc20::erc20_allowance_mock::erc20_allowance_mock;
+use token::components::tests::mocks::erc20::erc20_allowance_mock::erc20_allowance_mock::world_dispatcherContractMemberStateTrait;
 
 use debug::PrintTrait;
 
@@ -43,10 +43,10 @@ fn assert_only_event_approval(
 // initialize STATE
 //
 
-fn STATE() -> (IWorldDispatcher, ERC20AllowanceMock::ContractState) {
+fn STATE() -> (IWorldDispatcher, erc20_allowance_mock::ContractState) {
     let world = spawn_test_world(array![erc_20_allowance_model::TEST_CLASS_HASH,]);
 
-    let mut state = ERC20AllowanceMock::contract_state_for_testing();
+    let mut state = erc20_allowance_mock::contract_state_for_testing();
     state.world_dispatcher.write(world);
 
     utils::drop_event(ZERO());

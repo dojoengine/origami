@@ -2,7 +2,7 @@ use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
 
 use token::components::security::initializable::{initializable_model, InitializableModel};
-use token::components::security::initializable::InitializableComponent::{
+use token::components::security::initializable::initializable_component::{
     InitializableImpl, InternalImpl
 };
 use token::components::tests::mocks::initializable_mock::InitializableMock;

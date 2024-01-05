@@ -34,7 +34,7 @@ trait IERC20MetadataTotalSupply<TState> {
 /// ERC20Metadata Component
 ///
 #[starknet::component]
-mod ERC20MetadataComponent {
+mod erc20_metadata_component {
     use super::ERC20MetadataModel;
     use super::IERC20Metadata;
     use super::IERC20MetadataTotalSupply;

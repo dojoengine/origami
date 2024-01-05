@@ -7,15 +7,15 @@ use token::tests::constants::{ADMIN, ZERO, OWNER, OTHER, SPENDER, RECIPIENT, VAL
 use token::tests::utils;
 
 use token::components::token::erc20::erc20_allowance::{erc_20_allowance_model, ERC20AllowanceModel,};
-use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent::{
+use token::components::token::erc20::erc20_allowance::erc20_allowance_component::{
     Approval, ERC20AllowanceImpl, InternalImpl as ERC20AllowanceInternalImpl
 };
 use token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
-use token::components::token::erc20::erc20_balance::ERC20BalanceComponent::{
+use token::components::token::erc20::erc20_balance::erc20_balance_component::{
     Transfer, ERC20BalanceImpl, InternalImpl as ERC20BalanceInternalImpl
 };
-use token::components::tests::mocks::erc20::erc20_balance_mock::{ERC20BalanceMock, IERC20BalanceMockDispatcher,IERC20BalanceMockDispatcherTrait };
-use token::components::tests::mocks::erc20::erc20_balance_mock::ERC20BalanceMock::world_dispatcherContractMemberStateTrait;
+use token::components::tests::mocks::erc20::erc20_balance_mock::{erc20_balance_mock, IERC20BalanceMockDispatcher,IERC20BalanceMockDispatcherTrait };
+use token::components::tests::mocks::erc20::erc20_balance_mock::erc20_balance_mock::world_dispatcherContractMemberStateTrait;
 
 use token::components::tests::token::erc20::test_erc20_allowance::{
     assert_event_approval, assert_only_event_approval
@@ -46,10 +46,10 @@ fn assert_only_eventtransfer_internal(
 // initialize STATE
 //
 
-fn STATE() -> (IWorldDispatcher, ERC20BalanceMock::ContractState) {
+fn STATE() -> (IWorldDispatcher, erc20_balance_mock::ContractState) {
     let world = spawn_test_world(array![erc_20_balance_model::TEST_CLASS_HASH,erc_20_allowance_model::TEST_CLASS_HASH,]);
 
-    let mut state = ERC20BalanceMock::contract_state_for_testing();
+    let mut state = erc20_balance_mock::contract_state_for_testing();
     state.world_dispatcher.write(world);
 
     utils::drop_event(ZERO());
@@ -163,7 +163,7 @@ fn setup() -> (IWorldDispatcher, IERC20BalanceMockDispatcher) {
     // deploy contract
     let mut erc20_balance_mock_dispatcher = IERC20BalanceMockDispatcher {
         contract_address: world
-            .deploy_contract('salt', ERC20BalanceMock::TEST_CLASS_HASH.try_into().unwrap())
+            .deploy_contract('salt', erc20_balance_mock::TEST_CLASS_HASH.try_into().unwrap())
     };
 
     // setup auth
@@ -188,7 +188,7 @@ fn setup() -> (IWorldDispatcher, IERC20BalanceMockDispatcher) {
 
 #[test]
 #[available_gas(40000000)]
-fn testtransfer_internal_from() {
+fn test_transfer_internal_from() {
     let (world, mut erc20_balance_mock) = setup();
 
     utils::impersonate(OWNER());
@@ -219,7 +219,7 @@ fn testtransfer_internal_from() {
 
 #[test]
 #[available_gas(25000000)]
-fn testtransfer_internal_from_doesnt_consume_infinite_allowance() {
+fn test_transfer_internal_from_doesnt_consume_infinite_allowance() {
     let (world, mut erc20_balance_mock) = setup();
 
     utils::impersonate(OWNER());
@@ -248,7 +248,7 @@ fn testtransfer_internal_from_doesnt_consume_infinite_allowance() {
 #[test]
 #[available_gas(25000000)]
 #[should_panic(expected: ('u256_sub Overflow','ENTRYPOINT_FAILED'))]
-fn testtransfer_internal_from_greater_than_allowance() {
+fn test_transfer_internal_from_greater_than_allowance() {
     let (world, mut erc20_balance_mock) = setup();
 
     utils::impersonate(OWNER());
@@ -263,7 +263,7 @@ fn testtransfer_internal_from_greater_than_allowance() {
 #[test]
 #[available_gas(25000000)]
 #[should_panic(expected: ('ERC20: transfer to 0','ENTRYPOINT_FAILED'))]
-fn testtransfer_internal_from_to_zero_address() {
+fn test_transfer_internal_from_to_zero_address() {
     let (world, mut erc20_balance_mock) = setup();
 
     utils::impersonate(OWNER());
@@ -276,7 +276,7 @@ fn testtransfer_internal_from_to_zero_address() {
 #[test]
 #[available_gas(25000000)]
 #[should_panic(expected: ('u256_sub Overflow','ENTRYPOINT_FAILED'))]
-fn testtransfer_internal_from_from_zero_address() {
+fn test_transfer_internal_from_from_zero_address() {
      let (world, mut erc20_balance_mock) = setup();
 
     erc20_balance_mock.transfer_from(ZERO(), RECIPIENT(), VALUE);

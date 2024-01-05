@@ -4,17 +4,17 @@ use dojo::test_utils::spawn_test_world;
 use token::tests::constants::{NAME, SYMBOL, DECIMALS};
 
 use token::components::token::erc20::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
-use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent::{
+use token::components::token::erc20::erc20_metadata::erc20_metadata_component::{
     ERC20MetadataImpl, ERC20MetadataTotalSupplyImpl, InternalImpl
 };
-use token::components::tests::mocks::erc20::erc20_metadata_mock::ERC20MetadataMock;
-use token::components::tests::mocks::erc20::erc20_metadata_mock::ERC20MetadataMock::world_dispatcherContractMemberStateTrait;
+use token::components::tests::mocks::erc20::erc20_metadata_mock::erc20_metadata_mock;
+use token::components::tests::mocks::erc20::erc20_metadata_mock::erc20_metadata_mock::world_dispatcherContractMemberStateTrait;
 
 
-fn STATE() -> (IWorldDispatcher, ERC20MetadataMock::ContractState) {
+fn STATE() -> (IWorldDispatcher, erc20_metadata_mock::ContractState) {
     let world = spawn_test_world(array![erc_20_metadata_model::TEST_CLASS_HASH,]);
 
-    let mut state = ERC20MetadataMock::contract_state_for_testing();
+    let mut state = erc20_metadata_mock::contract_state_for_testing();
     state.world_dispatcher.write(world);
 
     (world, state)

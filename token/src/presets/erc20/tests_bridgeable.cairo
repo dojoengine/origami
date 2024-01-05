@@ -13,19 +13,19 @@ use token::tests::constants::{
 use token::tests::utils;
 
 use token::components::token::erc20::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
-use token::components::token::erc20::erc20_metadata::ERC20MetadataComponent::{
+use token::components::token::erc20::erc20_metadata::erc20_metadata_component::{
     ERC20MetadataImpl, ERC20MetadataTotalSupplyImpl, InternalImpl as ERC20MetadataInternalImpl
 };
 
 use token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
-use token::components::token::erc20::erc20_balance::ERC20BalanceComponent::{
+use token::components::token::erc20::erc20_balance::erc20_balance_component::{
     Transfer, ERC20BalanceImpl, InternalImpl as ERC20BalanceInternalImpl
 };
 
 use token::components::token::erc20::erc20_allowance::{
     erc_20_allowance_model, ERC20AllowanceModel,
 };
-use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent::{
+use token::components::token::erc20::erc20_allowance::erc20_allowance_component::{
     Approval, ERC20AllowanceImpl, InternalImpl as ERC20AllownceInternalImpl, ERC20SafeAllowanceImpl,
     ERC20SafeAllowanceCamelImpl
 };
@@ -33,12 +33,12 @@ use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent::{
 use token::components::token::erc20::erc20_bridgeable::{
     erc_20_bridgeable_model, ERC20BridgeableModel
 };
-use token::components::token::erc20::erc20_bridgeable::ERC20BridgeableComponent::{
+use token::components::token::erc20::erc20_bridgeable::erc20_bridgeable_component::{
     ERC20BridgeableImpl
 };
 
-use token::components::token::erc20::erc20_mintable::ERC20MintableComponent::InternalImpl as ERC20MintableInternalImpl;
-use token::components::token::erc20::erc20_burnable::ERC20BurnableComponent::InternalImpl as ERC20BurnableInternalImpl;
+use token::components::token::erc20::erc20_mintable::erc20_mintable_component::InternalImpl as ERC20MintableInternalImpl;
+use token::components::token::erc20::erc20_burnable::erc20_burnable_component::InternalImpl as ERC20BurnableInternalImpl;
 
 use token::presets::erc20::bridgeable::{
     ERC20Bridgeable, IERC20BridgeablePresetDispatcher, IERC20BridgeablePresetDispatcherTrait
@@ -139,7 +139,7 @@ fn test_approve() {
 
 #[test]
 #[available_gas(30000000)]
-fn testtransfer_internal() {
+fn test_transfer_internal() {
     let (world, mut erc20_bridgeable) = setup();
 
     utils::impersonate(OWNER());
@@ -165,7 +165,7 @@ fn testtransfer_internal() {
 
 #[test]
 #[available_gas(40000000)]
-fn testtransfer_internal_from() {
+fn test_transfer_internal_from() {
     let (world, mut erc20_bridgeable) = setup();
 
     utils::impersonate(OWNER());
@@ -197,7 +197,7 @@ fn testtransfer_internal_from() {
 
 #[test]
 #[available_gas(25000000)]
-fn testtransfer_internal_from_doesnt_consume_infinite_allowance() {
+fn test_transfer_internal_from_doesnt_consume_infinite_allowance() {
     let (world, mut erc20_bridgeable) = setup();
 
     utils::impersonate(OWNER());

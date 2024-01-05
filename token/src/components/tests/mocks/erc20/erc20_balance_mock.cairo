@@ -32,36 +32,36 @@ trait IERC20BalanceMock<TState> {
 
 
 #[dojo::contract]
-mod ERC20BalanceMock {
+mod erc20_balance_mock {
     use starknet::ContractAddress;
-    use token::components::token::erc20::erc20_allowance::ERC20AllowanceComponent;
-    use token::components::token::erc20::erc20_balance::ERC20BalanceComponent;
+    use token::components::token::erc20::erc20_allowance::erc20_allowance_component;
+    use token::components::token::erc20::erc20_balance::erc20_balance_component;
 
-    component!(path: ERC20AllowanceComponent, storage: erc20_allowance, event: ERC20AllowanceEvent);
-    component!(path: ERC20BalanceComponent, storage: erc20_balance, event: ERC20BalanceEvent);
-
-    #[abi(embed_v0)]
-    impl ERC20AllowanceImpl = ERC20AllowanceComponent::ERC20AllowanceImpl<ContractState>;
+    component!(path: erc20_allowance_component, storage: erc20_allowance, event: ERC20AllowanceEvent);
+    component!(path: erc20_balance_component, storage: erc20_balance, event: ERC20BalanceEvent);
 
     #[abi(embed_v0)]
-    impl ERC20BalanceImpl = ERC20BalanceComponent::ERC20BalanceImpl<ContractState>;
+    impl ERC20AllowanceImpl = erc20_allowance_component::ERC20AllowanceImpl<ContractState>;
+
+    #[abi(embed_v0)]
+    impl ERC20BalanceImpl = erc20_balance_component::ERC20BalanceImpl<ContractState>;
    
-    impl ERC20AllowanceInternalImpl = ERC20AllowanceComponent::InternalImpl<ContractState>;
-    impl ERC20BalanceInternalImpl = ERC20BalanceComponent::InternalImpl<ContractState>;
+    impl ERC20AllowanceInternalImpl = erc20_allowance_component::InternalImpl<ContractState>;
+    impl ERC20BalanceInternalImpl = erc20_balance_component::InternalImpl<ContractState>;
 
     #[storage]
     struct Storage {
         #[substorage(v0)]
-        erc20_allowance: ERC20AllowanceComponent::Storage,
+        erc20_allowance: erc20_allowance_component::Storage,
         #[substorage(v0)]
-        erc20_balance: ERC20BalanceComponent::Storage,
+        erc20_balance: erc20_balance_component::Storage,
     }
 
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        ERC20AllowanceEvent: ERC20AllowanceComponent::Event,
-        ERC20BalanceEvent: ERC20BalanceComponent::Event,
+        ERC20AllowanceEvent: erc20_allowance_component::Event,
+        ERC20BalanceEvent: erc20_balance_component::Event,
     }
 
     #[external(v0)]

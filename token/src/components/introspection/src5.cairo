@@ -35,7 +35,7 @@ trait ISRC5Camel<TState> {
 ///
 /// The SRC5 component allows contracts to expose the interfaces they implement.
 #[starknet::component]
-mod SRC5Component {
+mod src5_component {
     use super::{SRC5Model, ISRC5, ISRC5Camel, ISRC5_ID};
     use starknet::get_contract_address;
     use dojo::world::{
