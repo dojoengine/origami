@@ -3,7 +3,7 @@ name: Origami CI
 on: [push, pull_request]
 
 env:
-  DOJO_VERSION: v0.4.1
+  DOJO_VERSION: v0.4.4
   SCARB_VERSION: v2.4.0
 
 jobs:
@@ -84,3 +84,4 @@ jobs:
       - name: Test
         run: sozo test -f hex_map
         shell: bash
+        
