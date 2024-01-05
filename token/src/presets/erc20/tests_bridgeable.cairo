@@ -43,7 +43,7 @@ use token::components::token::erc20::erc20_burnable::erc20_burnable_component::I
 use token::presets::erc20::bridgeable::{
     ERC20Bridgeable, IERC20BridgeablePresetDispatcher, IERC20BridgeablePresetDispatcherTrait
 };
-use token::presets::erc20::bridgeable::ERC20Bridgeable::{ ERC20InitializerImpl};
+use token::presets::erc20::bridgeable::ERC20Bridgeable::{ERC20InitializerImpl};
 use token::presets::erc20::bridgeable::ERC20Bridgeable::world_dispatcherContractMemberStateTrait;
 
 use token::components::tests::token::erc20::test_erc20_allowance::{
@@ -154,7 +154,9 @@ fn test_transfer_internal() {
     utils::drop_event(world.contract_address);
     utils::drop_event(world.contract_address);
 
-    assert_only_eventtransfer_internal(erc20_bridgeable.contract_address, OWNER(), RECIPIENT(), VALUE);
+    assert_only_eventtransfer_internal(
+        erc20_bridgeable.contract_address, OWNER(), RECIPIENT(), VALUE
+    );
     assert_only_eventtransfer_internal(world.contract_address, OWNER(), RECIPIENT(), VALUE);
 }
 
@@ -179,7 +181,9 @@ fn test_transfer_internal_from() {
     assert(erc20_bridgeable.transfer_from(OWNER(), RECIPIENT(), VALUE), 'Should return true');
 
     assert_event_approval(erc20_bridgeable.contract_address, OWNER(), SPENDER(), 0);
-    assert_only_eventtransfer_internal(erc20_bridgeable.contract_address, OWNER(), RECIPIENT(), VALUE);
+    assert_only_eventtransfer_internal(
+        erc20_bridgeable.contract_address, OWNER(), RECIPIENT(), VALUE
+    );
 
     // drop StoreSetRecord ERC20AllowanceModel 
     utils::drop_event(world.contract_address);
@@ -209,7 +213,9 @@ fn test_transfer_internal_from_doesnt_consume_infinite_allowance() {
     utils::impersonate(SPENDER());
     erc20_bridgeable.transfer_from(OWNER(), RECIPIENT(), VALUE);
 
-    assert_only_eventtransfer_internal(erc20_bridgeable.contract_address, OWNER(), RECIPIENT(), VALUE);
+    assert_only_eventtransfer_internal(
+        erc20_bridgeable.contract_address, OWNER(), RECIPIENT(), VALUE
+    );
 
     // drop StoreSetRecord ERC20BalanceModel x2
     utils::drop_event(world.contract_address);
@@ -287,7 +293,9 @@ fn test_bridge_can_mint() {
     utils::impersonate(BRIDGE());
     erc20_bridgeable.mint(RECIPIENT(), VALUE);
 
-    assert_only_eventtransfer_internal(erc20_bridgeable.contract_address, ZERO(), RECIPIENT(), VALUE);
+    assert_only_eventtransfer_internal(
+        erc20_bridgeable.contract_address, ZERO(), RECIPIENT(), VALUE
+    );
 
     // drop StoreSetRecord ERC20BalanceModel x2
     utils::drop_event(world.contract_address);
@@ -315,7 +323,9 @@ fn test_bridge_can_burn() {
 
     utils::impersonate(BRIDGE());
     erc20_bridgeable.mint(RECIPIENT(), VALUE);
-    assert_only_eventtransfer_internal(erc20_bridgeable.contract_address, ZERO(), RECIPIENT(), VALUE);
+    assert_only_eventtransfer_internal(
+        erc20_bridgeable.contract_address, ZERO(), RECIPIENT(), VALUE
+    );
 
     utils::drop_all_events(erc20_bridgeable.contract_address);
     utils::drop_all_events(world.contract_address);

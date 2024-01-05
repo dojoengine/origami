@@ -1,6 +1,5 @@
 [workspace]
 members = ["crates", "examples/*", "token"]
-# members = ["crates", "examples/*"]
 
 [workspace.package]
 version = "0.0.0"
@@ -12,4 +11,4 @@ authors = ["bal7hazar@proton.me"]
 cubit = { git = "https://github.com/akhercha/cubit.git", rev = "d3869a3" }
 dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.4.4" }
 origami = { path = "crates" }
-# token = { path = "token" }
+token = { path = "token" }

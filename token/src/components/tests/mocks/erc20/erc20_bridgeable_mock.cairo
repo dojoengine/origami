@@ -14,7 +14,9 @@ mod erc20_bridgeable_mock {
 
     component!(path: initializable_component, storage: initializable, event: InitializableEvent);
 
-    component!(path: erc20_allowance_component, storage: erc20_allowance, event: ERC20AllowanceEvent);
+    component!(
+        path: erc20_allowance_component, storage: erc20_allowance, event: ERC20AllowanceEvent
+    );
     component!(path: erc20_balance_component, storage: erc20_balance, event: ERC20BalanceEvent);
     component!(path: erc20_metadata_component, storage: erc20_metadata, event: ERC20MetadataEvent);
     component!(path: erc20_mintable_component, storage: erc20_mintable, event: ERC20MintableEvent);
@@ -24,7 +26,7 @@ mod erc20_bridgeable_mock {
     );
 
     impl InitializableInternalImpl = initializable_component::InternalImpl<ContractState>;
-    
+
     impl ERC20AllowanceInternalImpl = erc20_allowance_component::InternalImpl<ContractState>;
     impl ERC20BalanceInternalImpl = erc20_balance_component::InternalImpl<ContractState>;
     impl ERC20MetadataInternalImpl = erc20_metadata_component::InternalImpl<ContractState>;
@@ -69,10 +71,12 @@ mod erc20_bridgeable_mock {
     impl InitializableImpl = initializable_component::InitializableImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl ERC20AllowanceImpl = erc20_allowance_component::ERC20AllowanceImpl<ContractState>;
+    impl ERC20AllowanceImpl =
+        erc20_allowance_component::ERC20AllowanceImpl<ContractState>;
 
-     #[abi(embed_v0)]
-    impl ERC20BalanceImpl = erc20_balance_component::ERC20BalanceImpl<ContractState>;
+    #[abi(embed_v0)]
+    impl ERC20BalanceImpl =
+        erc20_balance_component::ERC20BalanceImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl ERC20MetadataImpl =

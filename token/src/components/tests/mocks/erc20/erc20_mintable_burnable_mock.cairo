@@ -6,7 +6,9 @@ mod erc20_mintable_burnable_mock {
     use token::components::token::erc20::erc20_mintable::erc20_mintable_component;
     use token::components::token::erc20::erc20_burnable::erc20_burnable_component;
 
-    component!(path: erc20_allowance_component, storage: erc20_allowance, event: ERC20AllowanceEvent);
+    component!(
+        path: erc20_allowance_component, storage: erc20_allowance, event: ERC20AllowanceEvent
+    );
     component!(path: erc20_balance_component, storage: erc20_balance, event: ERC20BalanceEvent);
     component!(path: erc20_metadata_component, storage: erc20_metadata, event: ERC20MetadataEvent);
     component!(path: erc20_mintable_component, storage: erc20_mintable, event: ERC20MintableEvent);

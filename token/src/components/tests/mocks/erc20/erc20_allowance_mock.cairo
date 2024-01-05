@@ -2,7 +2,9 @@
 mod erc20_allowance_mock {
     use token::components::token::erc20::erc20_allowance::erc20_allowance_component;
 
-    component!(path: erc20_allowance_component, storage: erc20_allowance, event: ERC20AllowanceEvent);
+    component!(
+        path: erc20_allowance_component, storage: erc20_allowance, event: ERC20AllowanceEvent
+    );
 
     #[abi(embed_v0)]
     impl ERC20AllowanceImpl =

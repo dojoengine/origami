@@ -78,7 +78,9 @@ mod ERC20Bridgeable {
 
     component!(path: erc20_metadata_component, storage: erc20_metadata, event: ERC20MetadataEvent);
     component!(path: erc20_balance_component, storage: erc20_balance, event: ERC20BalanceEvent);
-    component!(path: erc20_allowance_component, storage: erc20_allowance, event: ERC20AllowanceEvent);
+    component!(
+        path: erc20_allowance_component, storage: erc20_allowance, event: ERC20AllowanceEvent
+    );
     component!(path: erc20_mintable_component, storage: erc20_mintable, event: ERC20MintableEvent);
     component!(path: erc20_burnable_component, storage: erc20_burnable, event: ERC20BurnableEvent);
     component!(
@@ -121,20 +123,22 @@ mod ERC20Bridgeable {
 
 
     impl InitializableImpl = initializable_component::InitializableImpl<ContractState>;
-   
+
     #[abi(embed_v0)]
     impl ERC20MetadataImpl =
         erc20_metadata_component::ERC20MetadataImpl<ContractState>;
-    
+
     #[abi(embed_v0)]
     impl ERC20MetadataTotalSupplyImpl =
         erc20_metadata_component::ERC20MetadataTotalSupplyImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl ERC20BalanceImpl = erc20_balance_component::ERC20BalanceImpl<ContractState>;
+    impl ERC20BalanceImpl =
+        erc20_balance_component::ERC20BalanceImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl ERC20AllowanceImpl = erc20_allowance_component::ERC20AllowanceImpl<ContractState>;
+    impl ERC20AllowanceImpl =
+        erc20_allowance_component::ERC20AllowanceImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl ERC20SafeAllowanceImpl =
@@ -188,5 +192,4 @@ mod ERC20Bridgeable {
             self.initializable.initialize();
         }
     }
-
 }

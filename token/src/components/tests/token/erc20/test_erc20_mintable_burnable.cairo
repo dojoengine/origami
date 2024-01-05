@@ -79,4 +79,3 @@ fn test_erc20_burnable_burn_from_zero() {
     state.erc20_burnable.burn(ZERO(), VALUE);
 }
 
-

@@ -6,7 +6,9 @@ use token::tests::constants::{ADMIN, ZERO, OWNER, OTHER, SPENDER, RECIPIENT, VAL
 
 use token::tests::utils;
 
-use token::components::token::erc20::erc20_allowance::{erc_20_allowance_model, ERC20AllowanceModel,};
+use token::components::token::erc20::erc20_allowance::{
+    erc_20_allowance_model, ERC20AllowanceModel,
+};
 use token::components::token::erc20::erc20_allowance::erc20_allowance_component::{
     Approval, ERC20AllowanceImpl, InternalImpl as ERC20AllowanceInternalImpl
 };
@@ -14,7 +16,9 @@ use token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20
 use token::components::token::erc20::erc20_balance::erc20_balance_component::{
     Transfer, ERC20BalanceImpl, InternalImpl as ERC20BalanceInternalImpl
 };
-use token::components::tests::mocks::erc20::erc20_balance_mock::{erc20_balance_mock, IERC20BalanceMockDispatcher,IERC20BalanceMockDispatcherTrait };
+use token::components::tests::mocks::erc20::erc20_balance_mock::{
+    erc20_balance_mock, IERC20BalanceMockDispatcher, IERC20BalanceMockDispatcherTrait
+};
 use token::components::tests::mocks::erc20::erc20_balance_mock::erc20_balance_mock::world_dispatcherContractMemberStateTrait;
 
 use token::components::tests::token::erc20::test_erc20_allowance::{
@@ -47,7 +51,9 @@ fn assert_only_eventtransfer_internal(
 //
 
 fn STATE() -> (IWorldDispatcher, erc20_balance_mock::ContractState) {
-    let world = spawn_test_world(array![erc_20_balance_model::TEST_CLASS_HASH,erc_20_allowance_model::TEST_CLASS_HASH,]);
+    let world = spawn_test_world(
+        array![erc_20_balance_model::TEST_CLASS_HASH, erc_20_allowance_model::TEST_CLASS_HASH,]
+    );
 
     let mut state = erc20_balance_mock::contract_state_for_testing();
     state.world_dispatcher.write(world);
@@ -147,17 +153,13 @@ fn test_erc20_balance_transfer_internal_to_zero() {
 }
 
 
-
 //
 // Setup
 //
 
 fn setup() -> (IWorldDispatcher, IERC20BalanceMockDispatcher) {
     let world = spawn_test_world(
-        array![
-            erc_20_allowance_model::TEST_CLASS_HASH,
-            erc_20_balance_model::TEST_CLASS_HASH,
-        ]
+        array![erc_20_allowance_model::TEST_CLASS_HASH, erc_20_balance_model::TEST_CLASS_HASH,]
     );
 
     // deploy contract
@@ -185,7 +187,6 @@ fn setup() -> (IWorldDispatcher, IERC20BalanceMockDispatcher) {
 // transfer_from  (need deployed contracts)
 //
 
-
 #[test]
 #[available_gas(40000000)]
 fn test_transfer_internal_from() {
@@ -201,7 +202,9 @@ fn test_transfer_internal_from() {
     assert(erc20_balance_mock.transfer_from(OWNER(), RECIPIENT(), VALUE), 'Should return true');
 
     assert_event_approval(erc20_balance_mock.contract_address, OWNER(), SPENDER(), 0);
-    assert_only_eventtransfer_internal(erc20_balance_mock.contract_address, OWNER(), RECIPIENT(), VALUE);
+    assert_only_eventtransfer_internal(
+        erc20_balance_mock.contract_address, OWNER(), RECIPIENT(), VALUE
+    );
 
     // drop StoreSetRecord ERC20AllowanceModel 
     utils::drop_event(world.contract_address);
@@ -214,7 +217,7 @@ fn test_transfer_internal_from() {
     assert(erc20_balance_mock.balance_of(RECIPIENT()) == VALUE, 'Should eq amount');
     assert(erc20_balance_mock.balance_of(OWNER()) == SUPPLY - VALUE, 'Should eq suppy - amount');
     assert(erc20_balance_mock.allowance(OWNER(), SPENDER()) == 0, 'Should eq 0');
-    // assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
+// assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
 }
 
 #[test]
@@ -231,7 +234,9 @@ fn test_transfer_internal_from_doesnt_consume_infinite_allowance() {
     utils::impersonate(SPENDER());
     erc20_balance_mock.transfer_from(OWNER(), RECIPIENT(), VALUE);
 
-    assert_only_eventtransfer_internal(erc20_balance_mock.contract_address, OWNER(), RECIPIENT(), VALUE);
+    assert_only_eventtransfer_internal(
+        erc20_balance_mock.contract_address, OWNER(), RECIPIENT(), VALUE
+    );
 
     // drop StoreSetRecord ERC20BalanceModel x2
     utils::drop_event(world.contract_address);
@@ -247,7 +252,7 @@ fn test_transfer_internal_from_doesnt_consume_infinite_allowance() {
 
 #[test]
 #[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow','ENTRYPOINT_FAILED'))]
+#[should_panic(expected: ('u256_sub Overflow', 'ENTRYPOINT_FAILED'))]
 fn test_transfer_internal_from_greater_than_allowance() {
     let (world, mut erc20_balance_mock) = setup();
 
@@ -262,7 +267,7 @@ fn test_transfer_internal_from_greater_than_allowance() {
 
 #[test]
 #[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: transfer to 0','ENTRYPOINT_FAILED'))]
+#[should_panic(expected: ('ERC20: transfer to 0', 'ENTRYPOINT_FAILED'))]
 fn test_transfer_internal_from_to_zero_address() {
     let (world, mut erc20_balance_mock) = setup();
 
@@ -275,9 +280,9 @@ fn test_transfer_internal_from_to_zero_address() {
 
 #[test]
 #[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow','ENTRYPOINT_FAILED'))]
+#[should_panic(expected: ('u256_sub Overflow', 'ENTRYPOINT_FAILED'))]
 fn test_transfer_internal_from_from_zero_address() {
-     let (world, mut erc20_balance_mock) = setup();
+    let (world, mut erc20_balance_mock) = setup();
 
     erc20_balance_mock.transfer_from(ZERO(), RECIPIENT(), VALUE);
 }

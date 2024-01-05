@@ -20,14 +20,10 @@ trait IERC20BalanceMock<TState> {
         ref self: TState, sender: ContractAddress, recipient: ContractAddress, amount: u256
     ) -> bool;
 
-     // IWorldProvider
+    // IWorldProvider
     fn world(self: @TState,) -> IWorldDispatcher;
 
-    fn initializer(
-        ref self: TState,
-        initial_supply: u256,
-        recipient: ContractAddress,
-    );
+    fn initializer(ref self: TState, initial_supply: u256, recipient: ContractAddress,);
 }
 
 
@@ -37,15 +33,19 @@ mod erc20_balance_mock {
     use token::components::token::erc20::erc20_allowance::erc20_allowance_component;
     use token::components::token::erc20::erc20_balance::erc20_balance_component;
 
-    component!(path: erc20_allowance_component, storage: erc20_allowance, event: ERC20AllowanceEvent);
+    component!(
+        path: erc20_allowance_component, storage: erc20_allowance, event: ERC20AllowanceEvent
+    );
     component!(path: erc20_balance_component, storage: erc20_balance, event: ERC20BalanceEvent);
 
     #[abi(embed_v0)]
-    impl ERC20AllowanceImpl = erc20_allowance_component::ERC20AllowanceImpl<ContractState>;
+    impl ERC20AllowanceImpl =
+        erc20_allowance_component::ERC20AllowanceImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl ERC20BalanceImpl = erc20_balance_component::ERC20BalanceImpl<ContractState>;
-   
+    impl ERC20BalanceImpl =
+        erc20_balance_component::ERC20BalanceImpl<ContractState>;
+
     impl ERC20AllowanceInternalImpl = erc20_allowance_component::InternalImpl<ContractState>;
     impl ERC20BalanceInternalImpl = erc20_balance_component::InternalImpl<ContractState>;
 
@@ -67,10 +67,9 @@ mod erc20_balance_mock {
     #[external(v0)]
     #[generate_trait]
     impl InitializerImpl of InitializerTrait {
-        fn initializer( ref self: ContractState, initial_supply: u256, recipient: ContractAddress, ) {
+        fn initializer(ref self: ContractState, initial_supply: u256, recipient: ContractAddress,) {
             // set balance for recipient
-            self.erc20_balance.update_balance(recipient,0,initial_supply);
+            self.erc20_balance.update_balance(recipient, 0, initial_supply);
         }
     }
-
 }
