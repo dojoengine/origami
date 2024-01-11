@@ -14,6 +14,7 @@ const TOKEN_AMOUNT: u256 = 42;
 const TOKEN_ID_2: u256 = 2;
 const TOKEN_AMOUNT_2: u256 = 69;
 const PUBKEY: felt252 = 'PUBKEY';
+const OTHER_ID: felt252 = 'OTHER_ID';
 
 fn ADMIN() -> ContractAddress {
     contract_address_const::<'ADMIN'>()
@@ -57,4 +58,8 @@ fn RECIPIENT() -> ContractAddress {
 
 fn OPERATOR() -> ContractAddress {
     contract_address_const::<'OPERATOR'>()
+}
+
+fn BRIDGE() -> ContractAddress {
+    contract_address_const::<'BRIDGE'>()
 }
