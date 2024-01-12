@@ -73,7 +73,7 @@ mod ERC1155 {
         self.initializer(name, symbol, base_uri);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ERC1155MetadataImpl of interface::IERC1155Metadata<ContractState> {
         fn name(self: @ContractState) -> felt252 {
             self.get_meta().name
@@ -91,7 +91,7 @@ mod ERC1155 {
     }
 
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ERC1155Impl of interface::IERC1155<ContractState> {
         fn balance_of(self: @ContractState, account: ContractAddress, id: u256) -> u256 {
             assert(account.is_non_zero(), Errors::INVALID_ACCOUNT);
@@ -161,7 +161,7 @@ mod ERC1155 {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ERC1155CamelOnlyImpl of interface::IERC1155CamelOnly<ContractState> {
         fn balanceOf(self: @ContractState, account: ContractAddress, id: u256) -> u256 {
             ERC1155Impl::balance_of(self, account, id)
