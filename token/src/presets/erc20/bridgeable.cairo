@@ -185,7 +185,7 @@ mod ERC20Bridgeable {
     // Initializer
     //
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     #[generate_trait]
     impl ERC20InitializerImpl of ERC20InitializerTrait {
         fn initializer(

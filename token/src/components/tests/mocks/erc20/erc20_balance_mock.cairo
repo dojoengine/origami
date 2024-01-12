@@ -68,7 +68,7 @@ mod erc20_balance_mock {
         ERC20BalanceEvent: erc20_balance_component::Event,
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     #[generate_trait]
     impl InitializerImpl of InitializerTrait {
         fn initializer(ref self: ContractState, initial_supply: u256, recipient: ContractAddress,) {

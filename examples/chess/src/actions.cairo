@@ -21,7 +21,7 @@ mod actions {
     use chess::models::game::{Game, GameTurn, GameTurnTrait};
     use super::{ContractAddress, IActions, Vec2};
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IActionsImpl of IActions<ContractState> {
         fn spawn(
             self: @ContractState, white_address: ContractAddress, black_address: ContractAddress

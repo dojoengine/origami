@@ -73,7 +73,7 @@ mod ERC721 {
         self._mint(recipient, token_id);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ERC721MetadataImpl of interface::IERC721Metadata<ContractState> {
         fn name(self: @ContractState) -> felt252 {
             self.get_meta().name
@@ -90,7 +90,7 @@ mod ERC721 {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ERC721MetadataCamelOnlyImpl of interface::IERC721MetadataCamelOnly<ContractState> {
         fn tokenURI(self: @ContractState, tokenId: u256) -> felt252 {
             assert(self._exists(tokenId), Errors::INVALID_TOKEN_ID);
@@ -98,7 +98,7 @@ mod ERC721 {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ERC721Impl of interface::IERC721<ContractState> {
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
             assert(account.is_non_zero(), Errors::INVALID_ACCOUNT);
@@ -160,7 +160,7 @@ mod ERC721 {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ERC721CamelOnlyImpl of interface::IERC721CamelOnly<ContractState> {
         fn balanceOf(self: @ContractState, account: ContractAddress) -> u256 {
             ERC721Impl::balance_of(self, account)

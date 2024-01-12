@@ -17,7 +17,7 @@ mod Trade {
 
     use super::ITrade;
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl TradeImpl of ITrade<ContractState> {
         fn buy(self: @ContractState, world: IWorldDispatcher, item_id: u32, quantity: u128) {
             let player = starknet::get_caller_address();

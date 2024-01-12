@@ -52,7 +52,7 @@ mod actions {
         new_position
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ActionsImpl of IActions<ContractState> {
         // ContractState is defined by system decorator expansion
         fn spawn(self: @ContractState) { // Access the world dispatcher for reading.

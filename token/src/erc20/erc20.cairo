@@ -62,7 +62,7 @@ mod ERC20 {
     // External
     //
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ERC20MetadataImpl of interface::IERC20Metadata<ContractState> {
         fn name(self: @ContractState) -> felt252 {
             self.get_meta().name
@@ -77,7 +77,7 @@ mod ERC20 {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ERC20Impl of interface::IERC20<ContractState> {
         fn total_supply(self: @ContractState) -> u256 {
             self.get_meta().total_supply
@@ -121,7 +121,7 @@ mod ERC20 {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ERC20CamelOnlyImpl of interface::IERC20CamelOnly<ContractState> {
         fn totalSupply(self: @ContractState) -> u256 {
             ERC20Impl::total_supply(self)
@@ -141,7 +141,7 @@ mod ERC20 {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn increase_allowance(
         ref self: ContractState, spender: ContractAddress, added_value: u256
     ) -> bool {
@@ -149,14 +149,14 @@ mod ERC20 {
         true
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn increaseAllowance(
         ref self: ContractState, spender: ContractAddress, addedValue: u256
     ) -> bool {
         increase_allowance(ref self, spender, addedValue)
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn decrease_allowance(
         ref self: ContractState, spender: ContractAddress, subtracted_value: u256
     ) -> bool {
@@ -164,7 +164,7 @@ mod ERC20 {
         true
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn decreaseAllowance(
         ref self: ContractState, spender: ContractAddress, subtractedValue: u256
     ) -> bool {
