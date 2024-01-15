@@ -1,5 +1,12 @@
 [workspace]
-members = ["crates", "examples/*", "token"]
+members = [
+    "crates",
+    "examples/chess",
+    "examples/hex_map",
+    "examples/market",
+    "examples/projectile",
+    "token",
+]
 
 [workspace.package]
 version = "0.5.0"
