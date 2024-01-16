@@ -15,8 +15,8 @@ source = "git+https://github.com/akhercha/cubit.git?rev=d3869a3#d3869a3f0c47e5ed
 
 [[package]]
 name = "dojo"
-version = "0.4.4"
-source = "git+https://github.com/dojoengine/dojo?tag=v0.4.4#8afd8c903d71083b8487a5b4a0cfc9360dee0772"
+version = "0.5.0"
+source = "git+https://github.com/dojoengine/dojo?tag=v0.5.0#41a48b8082456e29d35913c0b81d71382c020b35"
 dependencies = [
  "dojo_plugin",
 ]
@@ -45,7 +45,7 @@ dependencies = [
 
 [[package]]
 name = "origami"
-version = "0.0.0"
+version = "0.5.0"
 dependencies = [
  "cubit",
  "dojo",
