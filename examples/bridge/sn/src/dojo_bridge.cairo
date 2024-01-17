@@ -24,7 +24,7 @@ trait IDojoBridge<TState> {
 #[derive(Model, Copy, Drop, Serde)]
 struct DojoBridgeModel {
     #[key]
-    token: ContractAddress,
+    bridge: ContractAddress,
     // address L1 bridge contract address, the L1 counterpart to this contract
     l1_bridge: felt252,
     // Dojo ERC20 token on Starknet
@@ -108,7 +108,7 @@ mod dojo_bridge {
 
             // one time bridge initialization
             set!(
-                self.world(), DojoBridgeModel { token: get_contract_address(), l1_bridge, l2_token }
+                self.world(), DojoBridgeModel { bridge: get_contract_address(), l1_bridge, l2_token }
             );
 
             // reverts if already initialized
