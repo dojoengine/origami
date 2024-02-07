@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Extract version from tag
+        id: tag-version
+        run: |
+          echo "::set-output name=version::${GITHUB_REF#refs/tags/v}"
+
+      - name: Create GitHub Release
+        run: |
+          curl -s \
+            -X POST \
+            -H "Authorization: token $GIT_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/releases \
+            -d '{
+              "tag_name": "v${{ steps.tag-version.outputs.version }}",
+              "name": "Release v${{ steps.tag-version.outputs.version }}",
+              "body": "Release of version ${{ steps.tag-version.outputs.version }}",
+              "draft": false,
+              "prerelease": false
+            }'
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
