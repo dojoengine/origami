@@ -141,36 +141,6 @@ mod ERC20 {
         }
     }
 
-    #[abi(embed_v0)]
-    fn increase_allowance(
-        ref self: ContractState, spender: ContractAddress, added_value: u256
-    ) -> bool {
-        self.update_allowance(get_caller_address(), spender, 0, added_value);
-        true
-    }
-
-    #[abi(embed_v0)]
-    fn increaseAllowance(
-        ref self: ContractState, spender: ContractAddress, addedValue: u256
-    ) -> bool {
-        increase_allowance(ref self, spender, addedValue)
-    }
-
-    #[abi(embed_v0)]
-    fn decrease_allowance(
-        ref self: ContractState, spender: ContractAddress, subtracted_value: u256
-    ) -> bool {
-        self.update_allowance(get_caller_address(), spender, subtracted_value, 0);
-        true
-    }
-
-    #[abi(embed_v0)]
-    fn decreaseAllowance(
-        ref self: ContractState, spender: ContractAddress, subtractedValue: u256
-    ) -> bool {
-        decrease_allowance(ref self, spender, subtractedValue)
-    }
-
     //
     // Internal
     //
@@ -214,20 +184,6 @@ mod ERC20 {
             self: @ContractState, owner: ContractAddress, spender: ContractAddress,
         ) -> ERC20Allowance {
             get!(self.world(), (get_contract_address(), owner, spender), ERC20Allowance)
-        }
-
-        fn update_allowance(
-            ref self: ContractState,
-            owner: ContractAddress,
-            spender: ContractAddress,
-            subtract: u256,
-            add: u256
-        ) {
-            let mut allowance = self.get_allowance(owner, spender);
-            // adding and subtracting is fewer steps than if
-            allowance.amount = allowance.amount - subtract;
-            allowance.amount = allowance.amount + add;
-            self.set_allowance(allowance);
         }
 
         fn set_allowance(ref self: ContractState, allowance: ERC20Allowance) {
@@ -298,10 +254,9 @@ mod ERC20 {
         fn _spend_allowance(
             ref self: ContractState, owner: ContractAddress, spender: ContractAddress, amount: u256
         ) {
-            let current_allowance = self.get_allowance(owner, spender).amount;
-            if current_allowance != BoundedInt::max() {
-                self.update_allowance(owner, spender, amount, 0);
-            }
+            let mut allowance = self.get_allowance(owner, spender);
+            allowance.amount = allowance.amount - amount;
+            self.set_allowance(allowance);
         }
     }
 }

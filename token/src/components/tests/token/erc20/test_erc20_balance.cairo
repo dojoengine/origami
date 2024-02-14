@@ -224,34 +224,6 @@ fn test_transfer_from() {
 
 #[test]
 #[available_gas(25000000)]
-fn test_transfer_from_doesnt_consume_infinite_allowance() {
-    let (world, mut erc20_balance_mock) = setup();
-
-    utils::impersonate(OWNER());
-    erc20_balance_mock.approve(SPENDER(), BoundedInt::max());
-
-    utils::drop_all_events(erc20_balance_mock.contract_address);
-    utils::drop_all_events(world.contract_address);
-
-    utils::impersonate(SPENDER());
-    erc20_balance_mock.transfer_from(OWNER(), RECIPIENT(), VALUE);
-
-    assert_only_event_transfer(erc20_balance_mock.contract_address, OWNER(), RECIPIENT(), VALUE);
-
-    // drop StoreSetRecord ERC20BalanceModel x2
-    utils::drop_event(world.contract_address);
-    utils::drop_event(world.contract_address);
-    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), VALUE);
-
-    assert(
-        erc20_balance_mock.allowance(OWNER(), SPENDER()) == BoundedInt::max(),
-        'Allowance should not change'
-    );
-}
-
-
-#[test]
-#[available_gas(25000000)]
 #[should_panic(expected: ('u256_sub Overflow', 'ENTRYPOINT_FAILED'))]
 fn test_transfer_from_greater_than_allowance() {
     let (world, mut erc20_balance_mock) = setup();

@@ -9,12 +9,6 @@ mod erc20_allowance_mock {
     #[abi(embed_v0)]
     impl ERC20AllowanceImpl =
         erc20_allowance_component::ERC20AllowanceImpl<ContractState>;
-    #[abi(embed_v0)]
-    impl ERC20SafeAllowanceImpl =
-        erc20_allowance_component::ERC20SafeAllowanceImpl<ContractState>;
-    #[abi(embed_v0)]
-    impl ERC20SafeAllowanceCamelImpl =
-        erc20_allowance_component::ERC20SafeAllowanceCamelImpl<ContractState>;
 
     impl ERC20AllowanceInternalImpl = erc20_allowance_component::InternalImpl<ContractState>;
 
