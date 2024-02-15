@@ -258,22 +258,6 @@ fn test_transfer_from() {
 
 #[test]
 #[available_gas(25000000)]
-fn test_transfer_from_doesnt_consume_infinite_allowance() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, SPENDER(), BoundedInt::max());
-
-    testing::set_caller_address(SPENDER());
-    ERC20Impl::transfer_from(ref state, OWNER(), RECIPIENT(), VALUE);
-
-    assert(
-        ERC20Impl::allowance(@state, OWNER(), SPENDER()) == BoundedInt::max(),
-        'Allowance should not change'
-    );
-}
-
-#[test]
-#[available_gas(25000000)]
 #[should_panic(expected: ('u256_sub Overflow',))]
 fn test_transfer_from_greater_than_allowance() {
     let mut state = setup();
@@ -306,138 +290,6 @@ fn test_transfer_from_from_zero_address() {
 }
 
 //
-// increase_allowance & increaseAllowance
-//
-
-#[test]
-#[available_gas(25000000)]
-fn test_increase_allowance() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, SPENDER(), VALUE);
-    utils::drop_event(ZERO());
-
-    assert(ERC20::increase_allowance(ref state, SPENDER(), VALUE), 'Should return true');
-
-    assert_only_event_approval(OWNER(), SPENDER(), VALUE * 2);
-    assert(ERC20Impl::allowance(@state, OWNER(), SPENDER()) == VALUE * 2, 'Should be amount * 2');
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: approve to 0',))]
-fn test_increase_allowance_to_zero_address() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20::increase_allowance(ref state, Zeroable::zero(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: approve from 0',))]
-fn test_increase_allowance_from_zero_address() {
-    let mut state = setup();
-    ERC20::increase_allowance(ref state, SPENDER(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-fn test_increaseAllowance() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, SPENDER(), VALUE);
-    utils::drop_event(ZERO());
-
-    assert(ERC20::increaseAllowance(ref state, SPENDER(), VALUE), 'Should return true');
-
-    assert_only_event_approval(OWNER(), SPENDER(), 2 * VALUE);
-    assert(ERC20Impl::allowance(@state, OWNER(), SPENDER()) == VALUE * 2, 'Should be amount * 2');
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: approve to 0',))]
-fn test_increaseAllowance_to_zero_address() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20::increaseAllowance(ref state, Zeroable::zero(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('ERC20: approve from 0',))]
-fn test_increaseAllowance_from_zero_address() {
-    let mut state = setup();
-    ERC20::increaseAllowance(ref state, SPENDER(), VALUE);
-}
-
-//
-// decrease_allowance & decreaseAllowance
-//
-
-#[test]
-#[available_gas(25000000)]
-fn test_decrease_allowance() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, SPENDER(), VALUE);
-    utils::drop_event(ZERO());
-
-    assert(ERC20::decrease_allowance(ref state, SPENDER(), VALUE), 'Should return true');
-
-    assert_only_event_approval(OWNER(), SPENDER(), 0);
-    assert(ERC20Impl::allowance(@state, OWNER(), SPENDER()) == VALUE - VALUE, 'Should be 0');
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow',))]
-fn test_decrease_allowance_to_zero_address() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20::decrease_allowance(ref state, Zeroable::zero(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow',))]
-fn test_decrease_allowance_from_zero_address() {
-    let mut state = setup();
-    ERC20::decrease_allowance(ref state, SPENDER(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-fn test_decreaseAllowance() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20Impl::approve(ref state, SPENDER(), VALUE);
-    utils::drop_event(ZERO());
-
-    assert(ERC20::decreaseAllowance(ref state, SPENDER(), VALUE), 'Should return true');
-
-    assert_only_event_approval(OWNER(), SPENDER(), 0);
-    assert(ERC20Impl::allowance(@state, OWNER(), SPENDER()) == VALUE - VALUE, 'Should be 0');
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow',))]
-fn test_decreaseAllowance_to_zero_address() {
-    let mut state = setup();
-    testing::set_caller_address(OWNER());
-    ERC20::decreaseAllowance(ref state, Zeroable::zero(), VALUE);
-}
-
-#[test]
-#[available_gas(25000000)]
-#[should_panic(expected: ('u256_sub Overflow',))]
-fn test_decreaseAllowance_from_zero_address() {
-    let mut state = setup();
-    ERC20::decreaseAllowance(ref state, SPENDER(), VALUE);
-}
-
-//
 // _spend_allowance
 //
 
@@ -455,21 +307,6 @@ fn test__spend_allowance_not_unlimited() {
     assert(
         ERC20Impl::allowance(@state, OWNER(), SPENDER()) == SUPPLY - VALUE,
         'Should eq supply - amount'
-    );
-}
-
-#[test]
-#[available_gas(25000000)]
-fn test__spend_allowance_unlimited() {
-    let mut state = setup();
-    InternalImpl::_approve(ref state, OWNER(), SPENDER(), BoundedInt::max());
-
-    let max_minus_one: u256 = BoundedInt::max() - 1;
-    InternalImpl::_spend_allowance(ref state, OWNER(), SPENDER(), max_minus_one);
-
-    assert(
-        ERC20Impl::allowance(@state, OWNER(), SPENDER()) == BoundedInt::max(),
-        'Allowance should not change'
     );
 }
 

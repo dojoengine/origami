@@ -37,16 +37,6 @@ trait IERC20BridgeablePreset<TState> {
     fn allowance(self: @TState, owner: ContractAddress, spender: ContractAddress) -> u256;
     fn approve(ref self: TState, spender: ContractAddress, amount: u256) -> bool;
 
-    // IERC20SafeAllowance
-    fn decrease_allowance(
-        ref self: TState, spender: ContractAddress, subtracted_value: u256
-    ) -> bool;
-    fn increase_allowance(ref self: TState, spender: ContractAddress, added_value: u256) -> bool;
-
-    // IERC20SafeAllowanceCamel
-    fn decreaseAllowance(ref self: TState, spender: ContractAddress, subtractedValue: u256) -> bool;
-    fn increaseAllowance(ref self: TState, spender: ContractAddress, addedValue: u256) -> bool;
-
     // IERC20Bridgeable
     fn burn(ref self: TState, account: ContractAddress, amount: u256);
     fn l2_bridge_address(self: @TState,) -> ContractAddress;
@@ -155,14 +145,6 @@ mod ERC20Bridgeable {
     #[abi(embed_v0)]
     impl ERC20AllowanceImpl =
         erc20_allowance_component::ERC20AllowanceImpl<ContractState>;
-
-    #[abi(embed_v0)]
-    impl ERC20SafeAllowanceImpl =
-        erc20_allowance_component::ERC20SafeAllowanceImpl<ContractState>;
-
-    #[abi(embed_v0)]
-    impl ERC20SafeAllowanceCamelImpl =
-        erc20_allowance_component::ERC20SafeAllowanceCamelImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl ERC20BridgeableImpl =

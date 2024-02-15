@@ -25,20 +25,6 @@ trait IERC20Allowance<TState> {
     fn approve(ref self: TState, spender: ContractAddress, amount: u256) -> bool;
 }
 
-#[starknet::interface]
-trait IERC20SafeAllowance<TState> {
-    fn increase_allowance(ref self: TState, spender: ContractAddress, added_value: u256) -> bool;
-    fn decrease_allowance(
-        ref self: TState, spender: ContractAddress, subtracted_value: u256
-    ) -> bool;
-}
-
-#[starknet::interface]
-trait IERC20SafeAllowanceCamel<TState> {
-    fn increaseAllowance(ref self: TState, spender: ContractAddress, addedValue: u256) -> bool;
-    fn decreaseAllowance(ref self: TState, spender: ContractAddress, subtractedValue: u256) -> bool;
-}
-
 ///
 /// ERC20Allowance Component
 ///
@@ -46,8 +32,6 @@ trait IERC20SafeAllowanceCamel<TState> {
 mod erc20_allowance_component {
     use super::ERC20AllowanceModel;
     use super::IERC20Allowance;
-    use super::IERC20SafeAllowance;
-    use super::IERC20SafeAllowanceCamel;
     use integer::BoundedInt;
     use starknet::ContractAddress;
     use starknet::{get_contract_address, get_caller_address};
@@ -100,52 +84,6 @@ mod erc20_allowance_component {
         }
     }
 
-    #[embeddable_as(ERC20SafeAllowanceImpl)]
-    impl ERC20SafeAllowance<
-        TContractState,
-        +HasComponent<TContractState>,
-        +IWorldProvider<TContractState>,
-        +Drop<TContractState>
-    > of IERC20SafeAllowance<ComponentState<TContractState>> {
-        fn increase_allowance(
-            ref self: ComponentState<TContractState>, spender: ContractAddress, added_value: u256
-        ) -> bool {
-            self.update_allowance(get_caller_address(), spender, 0, added_value);
-            true
-        }
-
-        fn decrease_allowance(
-            ref self: ComponentState<TContractState>,
-            spender: ContractAddress,
-            subtracted_value: u256
-        ) -> bool {
-            self.update_allowance(get_caller_address(), spender, subtracted_value, 0);
-            true
-        }
-    }
-
-    #[embeddable_as(ERC20SafeAllowanceCamelImpl)]
-    impl ERC20SafeAllowanceCamel<
-        TContractState,
-        +HasComponent<TContractState>,
-        +IWorldProvider<TContractState>,
-        +Drop<TContractState>
-    > of IERC20SafeAllowanceCamel<ComponentState<TContractState>> {
-        fn increaseAllowance(
-            ref self: ComponentState<TContractState>, spender: ContractAddress, addedValue: u256
-        ) -> bool {
-            self.increase_allowance(spender, addedValue)
-        }
-
-        fn decreaseAllowance(
-            ref self: ComponentState<TContractState>,
-            spender: ContractAddress,
-            subtractedValue: u256
-        ) -> bool {
-            self.decrease_allowance(spender, subtractedValue)
-        }
-    }
-
     ///
     /// Internal
     ///
@@ -179,20 +117,6 @@ mod erc20_allowance_component {
             self.emit_event(approval_event);
         }
 
-        fn update_allowance(
-            ref self: ComponentState<TContractState>,
-            owner: ContractAddress,
-            spender: ContractAddress,
-            subtract: u256,
-            add: u256
-        ) {
-            let mut allowance = self.get_allowance(owner, spender);
-            // adding and subtracting is fewer steps than if
-            allowance.amount = allowance.amount - subtract;
-            allowance.amount = allowance.amount + add;
-            self.set_allowance(allowance);
-        }
-
         // use in transfer_from
         fn spend_allowance(
             ref self: ComponentState<TContractState>,
@@ -200,10 +124,9 @@ mod erc20_allowance_component {
             spender: ContractAddress,
             amount: u256
         ) {
-            let current_allowance = self.get_allowance(owner, spender).amount;
-            if current_allowance != BoundedInt::max() {
-                self.update_allowance(owner, spender, amount, 0);
-            }
+            let mut allowance = self.get_allowance(owner, spender);
+            allowance.amount = allowance.amount - amount;
+            self.set_allowance(allowance);
         }
 
         fn emit_event<S, +traits::Into<S, Event>, +Drop<S>, +Clone<S>>(
