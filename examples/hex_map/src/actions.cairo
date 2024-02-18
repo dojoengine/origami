@@ -144,19 +144,13 @@ mod tests {
     #[should_panic(expected: ('Cannot walk on water', 'ENTRYPOINT_FAILED'))]
     #[available_gas(30000000)]
     fn test_south_east() {
-        // caller
-        let caller = starknet::contract_address_const::<0x0>();
-
-        let (world, actions_system) = setup_world();
+        let (_world, actions_system) = setup_world();
 
         // call spawn()
         actions_system.spawn();
 
         // call move with direction right
         actions_system.move(Direction::SouthEast(()));
-
-        // get new_position
-        let new_position = get!(world, caller, Position);
     }
 
     #[test]
@@ -186,19 +180,13 @@ mod tests {
     #[should_panic(expected: ('Cannot walk on water', 'ENTRYPOINT_FAILED'))]
     #[available_gas(30000000)]
     fn test_north() {
-        // caller
-        let caller = starknet::contract_address_const::<0x0>();
-
-        let (world, actions_system) = setup_world();
+        let (_world, actions_system) = setup_world();
 
         // call spawn()
         actions_system.spawn();
 
         // call move with direction right
         actions_system.move(Direction::West(()));
-
-        // get new_position
-        let new_position = get!(world, caller, Position);
     }
 
     #[test]
@@ -229,19 +217,13 @@ mod tests {
     #[should_panic(expected: ('Cannot walk on water', 'ENTRYPOINT_FAILED'))]
     #[available_gas(30000000)]
     fn test_north_east() {
-        // caller
-        let caller = starknet::contract_address_const::<0x0>();
-
-        let (world, actions_system) = setup_world();
+        let (_world, actions_system) = setup_world();
 
         // call spawn()
         actions_system.spawn();
 
         // call move with direction right
         actions_system.move(Direction::NorthEast(()));
-
-        // get new_position
-        let new_position = get!(world, caller, Position);
     }
 }
 

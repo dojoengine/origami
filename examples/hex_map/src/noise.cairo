@@ -56,9 +56,12 @@ mod tests {
     use debug::PrintTrait;
     use super::{Direction, HexTile, ImplHexTile, ITile};
 
+
     #[test]
     #[available_gas(500000000)]
     fn test_gradient() {
+        // seems inconsistent 
+        
         let mut i = 5;
 
         let mut tile = ImplHexTile::new(7, 5);
@@ -70,7 +73,7 @@ mod tests {
             if (j >= neighbors.len()) {
                 break;
             }
-            let n = *neighbors.at(j);
+            let _n = *neighbors.at(j);
 
             j += 1;
         };

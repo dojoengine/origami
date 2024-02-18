@@ -61,8 +61,6 @@ mod tests {
     #[should_panic(expected: ('Commitment: can not commit zero',))]
     fn test_security_commit_revert_zero() {
         let mut commitment = CommitmentTrait::new();
-        let value = array!['ohayo'].span();
-        let hash = poseidon_hash_span(value);
         commitment.commit(0);
     }
 }
