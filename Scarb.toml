@@ -2,13 +2,13 @@
 members = ["crates", "examples/*", "token"]
 
 [workspace.package]
-version = "0.5.1"
+version = "0.6.0-alpha.0"
 description = "Community-maintained libraries for Cairo"
 homepage = "https://github.com/dojoengine/origami"
 authors = ["bal7hazar@proton.me"]
 
 [workspace.dependencies]
 cubit = { git = "https://github.com/influenceth/cubit.git" }
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.5.1" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.6.0-alpha.0" }
 origami = { path = "crates" }
 token = { path = "token" }

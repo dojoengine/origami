@@ -35,7 +35,6 @@ impl VectorImpl<T, +Mul<T>, +AddEq<T>, +Zeroable<T>, +Copy<T>, +Drop<T>,> of Vec
         // [Check] Dimesions are compatible
         assert(self.size() == vector.size(), errors::INVALID_SIZE);
         // [Compute] Dot product in a loop
-        let mut index = 0;
         let mut value = Zeroable::zero();
         loop {
             match self.data.pop_front() {

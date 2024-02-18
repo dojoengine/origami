@@ -2,6 +2,7 @@
 
 use dojo::world::IWorldDispatcher;
 
+#[starknet::interface]
 trait ITrade<TContractState> {
     fn buy(self: @TContractState, world: IWorldDispatcher, item_id: u32, quantity: u128);
     fn sell(self: @TContractState, world: IWorldDispatcher, item_id: u32, quantity: u128);
