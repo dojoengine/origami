@@ -136,7 +136,6 @@ impl ImplHexTile of IHexTile {
 mod tests {
     use super::{IHexTile, ImplHexTile, Direction, HexTile};
     #[test]
-    #[available_gas(500000)]
     fn test_row_col() {
         let mut hex_tile = ImplHexTile::new(5, 5);
 
@@ -146,7 +145,6 @@ mod tests {
 
 
     #[test]
-    #[available_gas(500000)]
     fn test_hex_tile_neighbors() {
         let mut hex_tile = ImplHexTile::new(5, 5);
 
@@ -182,7 +180,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(501230000)]
     fn test_is_neighbor() {
         let mut hex_tile = ImplHexTile::new(5, 5);
 
@@ -209,7 +206,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(5012300000000000000)]
     fn test_tiles_within_range() {
         let mut hex_tile = ImplHexTile::new(5, 5);
 

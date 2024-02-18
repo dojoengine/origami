@@ -95,7 +95,6 @@ fn setup() -> (IWorldDispatcher, IERC20BridgeablePresetDispatcher) {
 //
 
 #[test]
-#[available_gas(30000000)]
 fn test_initializer() {
     let (world, mut erc20_bridgeable) = setup();
 
@@ -113,7 +112,6 @@ fn test_initializer() {
 //
 
 #[test]
-#[available_gas(25000000)]
 fn test_approve() {
     let (world, mut erc20_bridgeable) = setup();
 
@@ -137,7 +135,6 @@ fn test_approve() {
 //
 
 #[test]
-#[available_gas(30000000)]
 fn test_transfer() {
     let (world, mut erc20_bridgeable) = setup();
 
@@ -163,7 +160,6 @@ fn test_transfer() {
 //
 
 #[test]
-#[available_gas(40000000)]
 fn test_transfer_from() {
     let (world, mut erc20_bridgeable) = setup();
 
@@ -199,7 +195,6 @@ fn test_transfer_from() {
 //
 
 #[test]
-#[available_gas(30000000)]
 fn test_bridge_can_mint() {
     let (world, mut erc20_bridgeable) = setup();
 
@@ -218,7 +213,6 @@ fn test_bridge_can_mint() {
 }
 
 #[test]
-#[available_gas(30000000)]
 #[should_panic(expected: ('ERC20: caller not bridge', 'ENTRYPOINT_FAILED'))]
 fn test_bridge_only_can_mint() {
     let (world, mut erc20_bridgeable) = setup();
@@ -228,7 +222,6 @@ fn test_bridge_only_can_mint() {
 }
 
 #[test]
-#[available_gas(30000000)]
 fn test_bridge_can_burn() {
     let (world, mut erc20_bridgeable) = setup();
 
@@ -252,7 +245,6 @@ fn test_bridge_can_burn() {
 }
 
 #[test]
-#[available_gas(30000000)]
 #[should_panic(expected: ('ERC20: caller not bridge', 'ENTRYPOINT_FAILED'))]
 fn test_bridge_only_can_burn() {
     let (world, mut erc20_bridgeable) = setup();

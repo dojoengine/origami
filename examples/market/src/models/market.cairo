@@ -249,7 +249,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(100000)]
     fn test_market_buy() {
         let market = Market {
             item_id: 1, cash_amount: SCALING_FACTOR * 1, item_quantity: 10
@@ -259,7 +258,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(100000)]
     fn test_market_sell() {
         let market = Market {
             item_id: 1, cash_amount: SCALING_FACTOR * 1, item_quantity: 10
@@ -269,7 +267,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(500000)]
     fn test_market_add_liquidity_no_initial() {
         // Without initial liquidity
         let market = Market { item_id: 1, cash_amount: 0, item_quantity: 0 };
@@ -291,7 +288,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(600000)]
     fn test_market_add_liquidity_optimal() {
         // With initial liquidity
         let market = Market {
@@ -319,7 +315,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(1000000)]
     fn test_market_add_liquidity_not_optimal() {
         // With initial liquidity
         let market = Market {
@@ -363,7 +358,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(1000000)]
     fn test_market_remove_liquidity() {
         // With initial liquidity
         let market = Market {

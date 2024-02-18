@@ -111,7 +111,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(1_000_000)]
     fn test_vector_get() {
         let mut vector: Vector = VectorTrait::new(array![1, 2, 3, 4].span());
         assert(vector.get(0) == 1, 'Vector: get failed');
@@ -119,7 +118,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(1_000_000)]
     fn test_vector_dot_product() {
         let vector1: Vector = VectorTrait::new(array![1, 2, 3].span());
         let vector2: Vector = VectorTrait::new(array![4, 5, 6].span());

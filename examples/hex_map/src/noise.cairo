@@ -58,7 +58,6 @@ mod tests {
 
 
     #[test]
-    #[available_gas(500000000)]
     fn test_gradient() {
         // seems inconsistent 
         

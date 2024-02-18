@@ -64,7 +64,6 @@ fn STATE() -> (IWorldDispatcher, erc20_balance_mock::ContractState) {
 }
 
 #[test]
-#[available_gas(100000000)]
 fn test_erc20_balance_initialize() {
     let (world, mut state) = STATE();
 
@@ -82,7 +81,6 @@ fn test_erc20_balance_initialize() {
 //
 
 #[test]
-#[available_gas(100000000)]
 fn test_erc20_balance_update_balance() {
     let (world, mut state) = STATE();
 
@@ -97,7 +95,6 @@ fn test_erc20_balance_update_balance() {
 }
 
 #[test]
-#[available_gas(10000000)]
 #[should_panic(expected: ('u256_sub Overflow',))]
 fn test_erc20_balance_update_balance_sub_overflow() {
     let (world, mut state) = STATE();
@@ -106,7 +103,6 @@ fn test_erc20_balance_update_balance_sub_overflow() {
 }
 
 #[test]
-#[available_gas(10000000)]
 #[should_panic(expected: ('u256_add Overflow',))]
 fn test_erc20_balance_update_balance_add_overflow() {
     let (world, mut state) = STATE();
@@ -120,7 +116,6 @@ fn test_erc20_balance_update_balance_add_overflow() {
 //
 
 #[test]
-#[available_gas(100000000)]
 fn test_erc20_balance_transfer_internal() {
     let (world, mut state) = STATE();
 
@@ -139,7 +134,6 @@ fn test_erc20_balance_transfer_internal() {
 }
 
 #[test]
-#[available_gas(100000000)]
 #[should_panic(expected: ('ERC20: transfer from 0',))]
 fn test_erc20_balance_transfer_internal_from_zero() {
     let (world, mut state) = STATE();
@@ -148,7 +142,6 @@ fn test_erc20_balance_transfer_internal_from_zero() {
 }
 
 #[test]
-#[available_gas(100000000)]
 #[should_panic(expected: ('ERC20: transfer to 0',))]
 fn test_erc20_balance_transfer_internal_to_zero() {
     let (world, mut state) = STATE();
@@ -192,7 +185,6 @@ fn setup() -> (IWorldDispatcher, IERC20BalanceMockDispatcher) {
 //
 
 #[test]
-#[available_gas(40000000)]
 fn test_transfer_from() {
     let (world, mut erc20_balance_mock) = setup();
 
@@ -223,7 +215,6 @@ fn test_transfer_from() {
 }
 
 #[test]
-#[available_gas(25000000)]
 #[should_panic(expected: ('u256_sub Overflow', 'ENTRYPOINT_FAILED'))]
 fn test_transfer_from_greater_than_allowance() {
     let (world, mut erc20_balance_mock) = setup();
@@ -238,7 +229,6 @@ fn test_transfer_from_greater_than_allowance() {
 }
 
 #[test]
-#[available_gas(25000000)]
 #[should_panic(expected: ('ERC20: transfer to 0', 'ENTRYPOINT_FAILED'))]
 fn test_transfer_from_to_zero_address() {
     let (world, mut erc20_balance_mock) = setup();
@@ -251,7 +241,6 @@ fn test_transfer_from_to_zero_address() {
 }
 
 #[test]
-#[available_gas(25000000)]
 #[should_panic(expected: ('u256_sub Overflow', 'ENTRYPOINT_FAILED'))]
 fn test_transfer_from_from_zero_address() {
     let (world, mut erc20_balance_mock) = setup();
@@ -265,7 +254,6 @@ fn test_transfer_from_from_zero_address() {
 //
 
 #[test]
-#[available_gas(40000000)]
 fn test_transferFrom() {
     let (world, mut erc20_balance_mock) = setup();
 

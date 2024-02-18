@@ -59,7 +59,6 @@ fn STATE() -> (IWorldDispatcher, erc20_allowance_mock::ContractState) {
 //
 
 #[test]
-#[available_gas(100000000)]
 fn test_erc20_allowance_approve() {
     let (world, mut state) = STATE();
 
@@ -72,7 +71,6 @@ fn test_erc20_allowance_approve() {
 }
 
 #[test]
-#[available_gas(100000000)]
 #[should_panic(expected: ('ERC20: approve from 0',))]
 fn test_erc20_allowance_approve_from_zero() {
     let (world, mut state) = STATE();
@@ -82,7 +80,6 @@ fn test_erc20_allowance_approve_from_zero() {
 }
 
 #[test]
-#[available_gas(100000000)]
 #[should_panic(expected: ('ERC20: approve to 0',))]
 fn test_erc20_allowance_approve_to_zero() {
     let (world, mut state) = STATE();
@@ -96,7 +93,6 @@ fn test_erc20_allowance_approve_to_zero() {
 //
 
 #[test]
-#[available_gas(100000000)]
 fn test_erc20_allowance_spend_allowance() {
     let (world, mut state) = STATE();
 

@@ -7,7 +7,6 @@ mod tests {
     use chess::models::player::{Color};
 
     #[test]
-    #[available_gas(3000000000000000)]
     fn integration() {
         let white = starknet::contract_address_const::<0x01>();
         let black = starknet::contract_address_const::<0x02>();

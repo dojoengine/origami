@@ -61,7 +61,6 @@ fn setup() -> ERC1155::ContractState {
 //
 
 #[test]
-#[available_gas(20000000)]
 fn test_constructor() {
     let (world, mut state) = STATE();
     ERC1155::constructor(ref state, world.contract_address, NAME, SYMBOL, URI);
@@ -83,7 +82,6 @@ fn test_constructor() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test_initializer() {
     let (world, mut state) = STATE();
     InternalImpl::initializer(ref state, NAME, SYMBOL, URI);
@@ -107,7 +105,6 @@ fn test_initializer() {
 //
 
 #[test]
-#[available_gas(20000000)]
 fn test_balance_of() {
     let mut state = setup();
 
@@ -117,7 +114,6 @@ fn test_balance_of() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: invalid account',))]
 fn test_balance_of_zero() {
     let state = setup();
@@ -126,7 +122,6 @@ fn test_balance_of_zero() {
 
 
 #[test]
-#[available_gas(20000000)]
 fn test_balance_of_batch() {
     let mut state = setup();
 
@@ -141,7 +136,6 @@ fn test_balance_of_batch() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: invalid account',))]
 fn test_balance_of_batch_zero() {
     let state = setup();
@@ -154,7 +148,6 @@ fn test_balance_of_batch_zero() {
 //
 
 #[test]
-#[available_gas(20000000)]
 fn test_set_approval_for_all() {
     let (world, mut state) = STATE();
     testing::set_caller_address(OWNER());
@@ -179,7 +172,6 @@ fn test_set_approval_for_all() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: self approval',))]
 fn test_set_approval_for_all_owner_equal_operator_true() {
     let (world, mut state) = STATE();
@@ -188,7 +180,6 @@ fn test_set_approval_for_all_owner_equal_operator_true() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: self approval',))]
 fn test_set_approval_for_all_owner_equal_operator_false() {
     let (world, mut state) = STATE();
@@ -197,7 +188,6 @@ fn test_set_approval_for_all_owner_equal_operator_false() {
 }
 
 #[test]
-#[available_gas(20000000)]
 fn test__set_approval_for_all() {
     let (world, mut state) = STATE();
     assert(!ERC1155Impl::is_approved_for_all(@state, OWNER(), OPERATOR()), 'Invalid default value');
@@ -220,7 +210,6 @@ fn test__set_approval_for_all() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: self approval',))]
 fn test__set_approval_for_all_owner_equal_operator_true() {
     let (world, mut state) = STATE();
@@ -228,7 +217,6 @@ fn test__set_approval_for_all_owner_equal_operator_true() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: self approval',))]
 fn test__set_approval_for_all_owner_equal_operator_false() {
     let (world, mut state) = STATE();
@@ -241,7 +229,6 @@ fn test__set_approval_for_all_owner_equal_operator_false() {
 //
 
 #[test]
-#[available_gas(50000000)]
 fn test_safe_transfer_from_owner() {
     let mut state = setup();
     let id = TOKEN_ID;
@@ -259,7 +246,6 @@ fn test_safe_transfer_from_owner() {
 }
 
 #[test]
-#[available_gas(50000000)]
 fn test_transferFrom_owner() {
     let mut state = setup();
     let id = TOKEN_ID;
@@ -277,7 +263,6 @@ fn test_transferFrom_owner() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: wrong sender',))]
 fn test_safe_transfer_from_zero() {
     let (world, mut state) = STATE();
@@ -287,7 +272,6 @@ fn test_safe_transfer_from_zero() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: wrong sender',))]
 fn test_safeTransferFrom_zero() {
     let (world, mut state) = STATE();
@@ -297,7 +281,6 @@ fn test_safeTransferFrom_zero() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: invalid receiver',))]
 fn test_safe_transfer_from_to_zero() {
     let mut state = setup();
@@ -306,7 +289,6 @@ fn test_safe_transfer_from_to_zero() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: invalid receiver',))]
 fn test_safeTransferFrom_to_zero() {
     let mut state = setup();
@@ -317,7 +299,6 @@ fn test_safeTransferFrom_to_zero() {
 }
 
 #[test]
-#[available_gas(50000000)]
 fn test_safe_transfer_from_to_owner() {
     let mut state = setup();
 
@@ -336,7 +317,6 @@ fn test_safe_transfer_from_to_owner() {
 }
 
 #[test]
-#[available_gas(50000000)]
 fn test_safeTransferFrom_to_owner() {
     let mut state = setup();
 
@@ -357,7 +337,6 @@ fn test_safeTransferFrom_to_owner() {
 }
 
 #[test]
-#[available_gas(50000000)]
 fn test_transfer_from_approved_for_all() {
     let mut state = setup();
     let id = TOKEN_ID;
@@ -379,7 +358,6 @@ fn test_transfer_from_approved_for_all() {
 }
 
 #[test]
-#[available_gas(50000000)]
 fn test_safeTransferFrom_approved_for_all() {
     let mut state = setup();
     let id = TOKEN_ID;
@@ -401,7 +379,6 @@ fn test_safeTransferFrom_approved_for_all() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: unauthorized caller',))]
 fn test_safe_transfer_from_unauthorized() {
     let mut state = setup();
@@ -412,7 +389,6 @@ fn test_safe_transfer_from_unauthorized() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: unauthorized caller',))]
 fn test_safeTransferFrom_unauthorized() {
     let mut state = setup();
@@ -428,7 +404,6 @@ fn test_safeTransferFrom_unauthorized() {
 //
 
 #[test]
-#[available_gas(50000000)]
 fn test_safe_batch_transfer_from_owner() {
     let mut state = setup();
     let owner = OWNER();
@@ -449,7 +424,6 @@ fn test_safe_batch_transfer_from_owner() {
 }
 
 #[test]
-#[available_gas(50000000)]
 fn test_safeBatchTransferFrom_owner() {
     let mut state = setup();
     let owner = OWNER();
@@ -470,7 +444,6 @@ fn test_safeBatchTransferFrom_owner() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: wrong sender',))]
 fn test_safe_batch_transfer_from_zero() {
     let (world, mut state) = STATE();
@@ -482,7 +455,6 @@ fn test_safe_batch_transfer_from_zero() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: wrong sender',))]
 fn test_safeBatchTransferFrom_zero() {
     let (world, mut state) = STATE();
@@ -496,7 +468,6 @@ fn test_safeBatchTransferFrom_zero() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: invalid receiver',))]
 fn test_safe_batch_transfer_from_to_zero() {
     let (world, mut state) = STATE();
@@ -508,7 +479,6 @@ fn test_safe_batch_transfer_from_to_zero() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: invalid receiver',))]
 fn test_safeBatchTransferFrom_to_zero() {
     let (world, mut state) = STATE();
@@ -520,7 +490,6 @@ fn test_safeBatchTransferFrom_to_zero() {
 }
 
 #[test]
-#[available_gas(50000000)]
 fn test_safe_batch_transfer_from_to_owner() {
     let mut state = setup();
 
@@ -553,7 +522,6 @@ fn test_safe_batch_transfer_from_to_owner() {
 }
 
 #[test]
-#[available_gas(50000000)]
 fn test_safeBatchTransferFrom_to_owner() {
     let mut state = setup();
 
@@ -586,7 +554,6 @@ fn test_safeBatchTransferFrom_to_owner() {
 }
 
 #[test]
-#[available_gas(50000000)]
 fn test_batch_transfer_from_approved_for_all() {
     let mut state = setup();
     let owner = OWNER();
@@ -611,7 +578,6 @@ fn test_batch_transfer_from_approved_for_all() {
 }
 
 #[test]
-#[available_gas(50000000)]
 fn test_safeBatchTransferFrom_approved_for_all() {
     let mut state = setup();
     let owner = OWNER();
@@ -636,7 +602,6 @@ fn test_safeBatchTransferFrom_approved_for_all() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: unauthorized caller',))]
 fn test_safe_batch_transfer_from_unauthorized() {
     let mut state = setup();
@@ -648,7 +613,6 @@ fn test_safe_batch_transfer_from_unauthorized() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: unauthorized caller',))]
 fn test_safeBatchTransferFrom_unauthorized() {
     let mut state = setup();
@@ -666,7 +630,6 @@ fn test_safeBatchTransferFrom_unauthorized() {
 //
 
 #[test]
-#[available_gas(20000000)]
 fn test__mint() {
     let (world, mut state) = STATE();
     let recipient = RECIPIENT();
@@ -685,7 +648,6 @@ fn test__mint() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: invalid receiver',))]
 fn test__mint_to_zero() {
     let (world, mut state) = STATE();
@@ -698,7 +660,6 @@ fn test__mint_to_zero() {
 //
 
 #[test]
-#[available_gas(20000000)]
 fn test__burn() {
     let mut state = setup();
 
@@ -718,7 +679,6 @@ fn test__burn() {
 }
 
 #[test]
-#[available_gas(20000000)]
 #[should_panic(expected: ('ERC1155: insufficient balance',))]
 fn test__burn_more_than_balance() {
     let mut state = setup();

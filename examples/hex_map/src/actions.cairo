@@ -116,7 +116,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_east() {
         // caller
         let caller = starknet::contract_address_const::<0x0>();
@@ -142,7 +141,6 @@ mod tests {
 
     #[test]
     #[should_panic(expected: ('Cannot walk on water', 'ENTRYPOINT_FAILED'))]
-    #[available_gas(30000000)]
     fn test_south_east() {
         let (_world, actions_system) = setup_world();
 
@@ -154,7 +152,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_south() {
         // caller
         let caller = starknet::contract_address_const::<0x0>();
@@ -178,7 +175,6 @@ mod tests {
     }
     #[test]
     #[should_panic(expected: ('Cannot walk on water', 'ENTRYPOINT_FAILED'))]
-    #[available_gas(30000000)]
     fn test_north() {
         let (_world, actions_system) = setup_world();
 
@@ -190,7 +186,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(30000000)]
     fn test_north_west() {
         // caller
         let caller = starknet::contract_address_const::<0x0>();
@@ -215,7 +210,6 @@ mod tests {
 
     #[test]
     #[should_panic(expected: ('Cannot walk on water', 'ENTRYPOINT_FAILED'))]
-    #[available_gas(30000000)]
     fn test_north_east() {
         let (_world, actions_system) = setup_world();
 

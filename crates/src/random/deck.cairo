@@ -168,7 +168,6 @@ mod tests {
     const DECK_SEED: felt252 = 'SEED';
 
     #[test]
-    #[available_gas(500_000)]
     fn test_deck_new_draw() {
         let mut deck = DeckTrait::new(DECK_SEED, DECK_CARDS_NUMBER);
         assert(deck.remaining == DECK_CARDS_NUMBER, 'Wrong remaining');
@@ -181,7 +180,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(1_000_000)]
     fn test_deck_from_bitmap() {
         let bitmap: u128 = 0 * 0x10 + 0 * 0x8 + 1 * 0x4 + 0 * 0x2 + 0 * 0x1;
         let mut deck = DeckTrait::from_bitmap(DECK_SEED, DECK_CARDS_NUMBER, bitmap);
@@ -194,7 +192,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(500_000)]
     fn test_deck_new_withdraw() {
         let mut deck = DeckTrait::new(DECK_SEED, DECK_CARDS_NUMBER);
         deck.withdraw(0x2);
@@ -206,7 +203,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(100_000)]
     #[should_panic(expected: ('Deck: no cards left',))]
     fn test_deck_new_draw_revert_no_card_left() {
         let mut deck = DeckTrait::new(DECK_SEED, DECK_CARDS_NUMBER);
@@ -215,7 +211,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(600_000)]
     fn test_deck_new_discard() {
         let mut deck = DeckTrait::new(DECK_SEED, DECK_CARDS_NUMBER);
         loop {
@@ -230,7 +225,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(400_000)]
     fn test_deck_new_remove() {
         let mut deck = DeckTrait::new(DECK_SEED, DECK_CARDS_NUMBER);
         let mut cards: Array<u8> = array![];
