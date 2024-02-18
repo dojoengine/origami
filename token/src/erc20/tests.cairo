@@ -54,7 +54,7 @@ fn setup() -> ERC20::ContractState {
 
 #[test]
 fn test_initializer() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::initializer(ref state, NAME, SYMBOL);
 
     assert(ERC20MetadataImpl::name(@state) == NAME, 'Name should be NAME');
@@ -84,14 +84,14 @@ fn test_constructor() {
 
 #[test]
 fn test_total_supply() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::_mint(ref state, OWNER(), SUPPLY);
     assert(ERC20Impl::total_supply(@state) == SUPPLY, 'Should eq SUPPLY');
 }
 
 #[test]
 fn test_balance_of() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::_mint(ref state, OWNER(), SUPPLY);
     assert(ERC20Impl::balance_of(@state, OWNER()) == SUPPLY, 'Should eq SUPPLY');
 }
@@ -295,7 +295,7 @@ fn test__spend_allowance_not_unlimited() {
 
 #[test]
 fn test__mint() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::_mint(ref state, OWNER(), VALUE);
     assert_only_event_transfer(ZERO(), OWNER(), VALUE);
     assert(ERC20Impl::balance_of(@state, OWNER()) == VALUE, 'Should eq amount');
@@ -305,7 +305,7 @@ fn test__mint() {
 #[test]
 #[should_panic(expected: ('ERC20: mint to 0',))]
 fn test__mint_to_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::_mint(ref state, Zeroable::zero(), VALUE);
 }
 

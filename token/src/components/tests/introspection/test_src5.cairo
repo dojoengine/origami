@@ -21,21 +21,21 @@ fn STATE() -> (IWorldDispatcher, SRC5Mock::ContractState) {
 
 #[test]
 fn test_src5_default_behavior() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     let supports_default_interface = state.supports_interface(ISRC5_ID);
     assert(supports_default_interface, 'Should support base interface');
 }
 
 #[test]
 fn test_src5_not_registered_interface() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     let supports_unregistered_interface = state.supports_interface(OTHER_ID);
     assert(!supports_unregistered_interface, 'Should not support unregistered');
 }
 
 #[test]
 fn test_src5_register_interface() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     state.src5.register_interface(OTHER_ID);
     let supports_new_interface = state.supports_interface(OTHER_ID);
     assert(supports_new_interface, 'Should support new interface');
@@ -43,7 +43,7 @@ fn test_src5_register_interface() {
 
 #[test]
 fn test_src5_deregister_interface() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     state.src5.register_interface(OTHER_ID);
     state.src5.deregister_interface(OTHER_ID);
     let supports_old_interface = state.supports_interface(OTHER_ID);
@@ -53,6 +53,6 @@ fn test_src5_deregister_interface() {
 #[test]
 #[should_panic(expected: ('SRC5: invalid id',))]
 fn test_src5_deregister_default_interface() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     state.src5.deregister_interface(ISRC5_ID);
 }

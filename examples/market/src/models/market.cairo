@@ -245,7 +245,7 @@ mod tests {
         let market = Market {
             item_id: 1, cash_amount: SCALING_FACTOR * 1, item_quantity: 1
         }; // pool 1:1
-        let cost = market.buy(10);
+        let _cost = market.buy(10);
     }
 
     #[test]
@@ -339,9 +339,9 @@ mod tests {
         let expected_quantity = FixedTrait::new_unscaled(expected_quantity, false);
 
         // Get expecteed liquidity
-        let expected_liquidity = FixedTrait::sqrt(expected_amount * expected_quantity);
+        let _expected_liquidity = FixedTrait::sqrt(expected_amount * expected_quantity);
 
-        let final_liquidity = initial_liquidity + liquidity_add;
+        let _final_liquidity = initial_liquidity + liquidity_add;
     // assert_precise(expected_liquidity, final_liquidity.into(), 'wrong liquidity', Option::None(()));
     }
 
@@ -353,7 +353,7 @@ mod tests {
         }; // pool 1:10
         // Adding 20 items requires (SCALING_FACTOR * 2) cash amount to maintain the ratio
         // Therefore this should fail
-        let (amount_add, quantity_add, liquidity_add) = market
+        let (_amount_add, _quantity_add, _liquidity_add) = market
             .add_liquidity(SCALING_FACTOR * 1, 20);
     }
 
@@ -381,9 +381,9 @@ mod tests {
         let expected_quantity = FixedTrait::new_unscaled(expected_quantity, false);
 
         // Get expecteed liquidity
-        let expected_liquidity = FixedTrait::sqrt(expected_amount * expected_quantity);
+        let _expected_liquidity = FixedTrait::sqrt(expected_amount * expected_quantity);
 
-        let final_liquidity = initial_liquidity - liquidity_remove;
+        let _final_liquidity = initial_liquidity - liquidity_remove;
     // assert_precise(expected_liquidity, final_liquidity.into(), 'wrong liquidity', Option::None(()));
     }
 
@@ -396,7 +396,7 @@ mod tests {
         // Remove liquidity
         let one = FixedTrait::new_unscaled(1, false);
 
-        let (amount_remove, quantity_remove) = market.remove_liquidity(one);
+        let (_amount_remove, _quantity_remove) = market.remove_liquidity(one);
     }
 
     #[test]
@@ -412,6 +412,6 @@ mod tests {
         let two = FixedTrait::new_unscaled(2, false);
         let liquidity_remove = initial_liquidity * two;
 
-        let (amount_remove, quantity_remove) = market.remove_liquidity(liquidity_remove);
+        let (_amount_remove, _quantity_remove) = market.remove_liquidity(liquidity_remove);
     }
 }

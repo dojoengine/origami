@@ -65,7 +65,7 @@ fn STATE() -> (IWorldDispatcher, erc20_balance_mock::ContractState) {
 
 #[test]
 fn test_erc20_balance_initialize() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     assert(state.erc20_balance.balance_of(ADMIN()) == 0, 'Should be 0');
     assert(state.erc20_balance.balance_of(OWNER()) == 0, 'Should be 0');
@@ -82,7 +82,7 @@ fn test_erc20_balance_initialize() {
 
 #[test]
 fn test_erc20_balance_update_balance() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     state.erc20_balance.update_balance(ZERO(), 0, 420);
     assert(state.erc20_balance.balance_of(ZERO()) == 420, 'Should be 420');
@@ -97,7 +97,7 @@ fn test_erc20_balance_update_balance() {
 #[test]
 #[should_panic(expected: ('u256_sub Overflow',))]
 fn test_erc20_balance_update_balance_sub_overflow() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     state.erc20_balance.update_balance(ZERO(), 1, 0);
 }
@@ -105,7 +105,7 @@ fn test_erc20_balance_update_balance_sub_overflow() {
 #[test]
 #[should_panic(expected: ('u256_add Overflow',))]
 fn test_erc20_balance_update_balance_add_overflow() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     state.erc20_balance.update_balance(ZERO(), 0, BoundedInt::max());
     state.erc20_balance.update_balance(ZERO(), 0, 1);
@@ -117,7 +117,7 @@ fn test_erc20_balance_update_balance_add_overflow() {
 
 #[test]
 fn test_erc20_balance_transfer_internal() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     state.erc20_balance.update_balance(ADMIN(), 0, 420);
     state.erc20_balance.update_balance(OTHER(), 0, 1000);
@@ -136,7 +136,7 @@ fn test_erc20_balance_transfer_internal() {
 #[test]
 #[should_panic(expected: ('ERC20: transfer from 0',))]
 fn test_erc20_balance_transfer_internal_from_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     state.erc20_balance.transfer_internal(ZERO(), ADMIN(), 420);
 }
@@ -144,7 +144,7 @@ fn test_erc20_balance_transfer_internal_from_zero() {
 #[test]
 #[should_panic(expected: ('ERC20: transfer to 0',))]
 fn test_erc20_balance_transfer_internal_to_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     state.erc20_balance.transfer_internal(ADMIN(), ZERO(), 420);
 }
@@ -217,7 +217,7 @@ fn test_transfer_from() {
 #[test]
 #[should_panic(expected: ('u256_sub Overflow', 'ENTRYPOINT_FAILED'))]
 fn test_transfer_from_greater_than_allowance() {
-    let (world, mut erc20_balance_mock) = setup();
+    let (_world, mut erc20_balance_mock) = setup();
 
     utils::impersonate(OWNER());
     erc20_balance_mock.approve(SPENDER(), VALUE);
@@ -231,7 +231,7 @@ fn test_transfer_from_greater_than_allowance() {
 #[test]
 #[should_panic(expected: ('ERC20: transfer to 0', 'ENTRYPOINT_FAILED'))]
 fn test_transfer_from_to_zero_address() {
-    let (world, mut erc20_balance_mock) = setup();
+    let (_world, mut erc20_balance_mock) = setup();
 
     utils::impersonate(OWNER());
     erc20_balance_mock.approve(SPENDER(), VALUE);
@@ -243,7 +243,7 @@ fn test_transfer_from_to_zero_address() {
 #[test]
 #[should_panic(expected: ('u256_sub Overflow', 'ENTRYPOINT_FAILED'))]
 fn test_transfer_from_from_zero_address() {
-    let (world, mut erc20_balance_mock) = setup();
+    let (_world, mut erc20_balance_mock) = setup();
 
     erc20_balance_mock.transfer_from(ZERO(), RECIPIENT(), VALUE);
 }

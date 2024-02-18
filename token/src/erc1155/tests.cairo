@@ -83,7 +83,7 @@ fn test_constructor() {
 
 #[test]
 fn test_initializer() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::initializer(ref state, NAME, SYMBOL, URI);
 
     assert(ERC1155MetadataImpl::name(@state) == NAME, 'Name should be NAME');
@@ -149,7 +149,7 @@ fn test_balance_of_batch_zero() {
 
 #[test]
 fn test_set_approval_for_all() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     testing::set_caller_address(OWNER());
 
     assert(!ERC1155Impl::is_approved_for_all(@state, OWNER(), OPERATOR()), 'Invalid default value');
@@ -174,7 +174,7 @@ fn test_set_approval_for_all() {
 #[test]
 #[should_panic(expected: ('ERC1155: self approval',))]
 fn test_set_approval_for_all_owner_equal_operator_true() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     testing::set_caller_address(OWNER());
     ERC1155Impl::set_approval_for_all(ref state, OWNER(), true);
 }
@@ -182,14 +182,14 @@ fn test_set_approval_for_all_owner_equal_operator_true() {
 #[test]
 #[should_panic(expected: ('ERC1155: self approval',))]
 fn test_set_approval_for_all_owner_equal_operator_false() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     testing::set_caller_address(OWNER());
     ERC1155Impl::set_approval_for_all(ref state, OWNER(), false);
 }
 
 #[test]
 fn test__set_approval_for_all() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     assert(!ERC1155Impl::is_approved_for_all(@state, OWNER(), OPERATOR()), 'Invalid default value');
 
     InternalImpl::_set_approval_for_all(ref state, OWNER(), OPERATOR(), true);
@@ -212,14 +212,14 @@ fn test__set_approval_for_all() {
 #[test]
 #[should_panic(expected: ('ERC1155: self approval',))]
 fn test__set_approval_for_all_owner_equal_operator_true() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::_set_approval_for_all(ref state, OWNER(), OWNER(), true);
 }
 
 #[test]
 #[should_panic(expected: ('ERC1155: self approval',))]
 fn test__set_approval_for_all_owner_equal_operator_false() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::_set_approval_for_all(ref state, OWNER(), OWNER(), false);
 }
 
@@ -265,7 +265,7 @@ fn test_transferFrom_owner() {
 #[test]
 #[should_panic(expected: ('ERC1155: wrong sender',))]
 fn test_safe_transfer_from_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     ERC1155Impl::safe_transfer_from(
         ref state, ZERO(), RECIPIENT(), TOKEN_ID, TOKEN_AMOUNT, array![]
     );
@@ -274,7 +274,7 @@ fn test_safe_transfer_from_zero() {
 #[test]
 #[should_panic(expected: ('ERC1155: wrong sender',))]
 fn test_safeTransferFrom_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     ERC1155CamelOnlyImpl::safeTransferFrom(
         ref state, ZERO(), RECIPIENT(), TOKEN_ID, TOKEN_AMOUNT, array![]
     );
@@ -446,7 +446,7 @@ fn test_safeBatchTransferFrom_owner() {
 #[test]
 #[should_panic(expected: ('ERC1155: wrong sender',))]
 fn test_safe_batch_transfer_from_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     let ids = array![TOKEN_ID, TOKEN_ID_2];
     let amounts = array![TOKEN_AMOUNT, TOKEN_AMOUNT_2];
@@ -457,7 +457,7 @@ fn test_safe_batch_transfer_from_zero() {
 #[test]
 #[should_panic(expected: ('ERC1155: wrong sender',))]
 fn test_safeBatchTransferFrom_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     let ids = array![TOKEN_ID, TOKEN_ID_2];
     let amounts = array![TOKEN_AMOUNT, TOKEN_AMOUNT_2];
@@ -470,7 +470,7 @@ fn test_safeBatchTransferFrom_zero() {
 #[test]
 #[should_panic(expected: ('ERC1155: invalid receiver',))]
 fn test_safe_batch_transfer_from_to_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     let ids = array![TOKEN_ID, TOKEN_ID_2];
     let amounts = array![TOKEN_AMOUNT, TOKEN_AMOUNT_2];
@@ -481,7 +481,7 @@ fn test_safe_batch_transfer_from_to_zero() {
 #[test]
 #[should_panic(expected: ('ERC1155: invalid receiver',))]
 fn test_safeBatchTransferFrom_to_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     let ids = array![TOKEN_ID, TOKEN_ID_2];
     let amounts = array![TOKEN_AMOUNT, TOKEN_AMOUNT_2];
@@ -631,7 +631,7 @@ fn test_safeBatchTransferFrom_unauthorized() {
 
 #[test]
 fn test__mint() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     let recipient = RECIPIENT();
 
     assert(
@@ -650,7 +650,7 @@ fn test__mint() {
 #[test]
 #[should_panic(expected: ('ERC1155: invalid receiver',))]
 fn test__mint_to_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::_mint(ref state, ZERO(), TOKEN_ID, TOKEN_AMOUNT);
 }
 

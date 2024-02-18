@@ -60,7 +60,7 @@ fn STATE() -> (IWorldDispatcher, erc20_allowance_mock::ContractState) {
 
 #[test]
 fn test_erc20_allowance_approve() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     testing::set_caller_address(OWNER());
 
@@ -73,7 +73,7 @@ fn test_erc20_allowance_approve() {
 #[test]
 #[should_panic(expected: ('ERC20: approve from 0',))]
 fn test_erc20_allowance_approve_from_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     testing::set_caller_address(ZERO());
     state.erc20_allowance.approve(SPENDER(), VALUE);
@@ -82,7 +82,7 @@ fn test_erc20_allowance_approve_from_zero() {
 #[test]
 #[should_panic(expected: ('ERC20: approve to 0',))]
 fn test_erc20_allowance_approve_to_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     testing::set_caller_address(OWNER());
     state.erc20_allowance.approve(ZERO(), VALUE);
@@ -94,7 +94,7 @@ fn test_erc20_allowance_approve_to_zero() {
 
 #[test]
 fn test_erc20_allowance_spend_allowance() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     testing::set_caller_address(OWNER());
 

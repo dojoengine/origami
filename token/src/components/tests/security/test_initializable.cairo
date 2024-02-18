@@ -20,7 +20,7 @@ fn STATE() -> (IWorldDispatcher, InitializableMock::ContractState) {
 
 #[test]
 fn test_initializable_initialize() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     assert(!state.initializable.is_initialized(), 'Should not be initialized');
     state.initializable.initialize();
     assert(state.initializable.is_initialized(), 'Should be initialized');
@@ -29,7 +29,7 @@ fn test_initializable_initialize() {
 #[test]
 #[should_panic(expected: ('Initializable: is initialized',))]
 fn test_initializable_initialize_when_initialized() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     state.initializable.initialize();
     state.initializable.initialize();
 }

@@ -96,7 +96,7 @@ fn setup() -> (IWorldDispatcher, IERC20BridgeablePresetDispatcher) {
 
 #[test]
 fn test_initializer() {
-    let (world, mut erc20_bridgeable) = setup();
+    let (_world, mut erc20_bridgeable) = setup();
 
     assert(erc20_bridgeable.balance_of(OWNER()) == SUPPLY, 'Should eq inital_supply');
     assert(erc20_bridgeable.total_supply() == SUPPLY, 'Should eq inital_supply');
@@ -215,7 +215,7 @@ fn test_bridge_can_mint() {
 #[test]
 #[should_panic(expected: ('ERC20: caller not bridge', 'ENTRYPOINT_FAILED'))]
 fn test_bridge_only_can_mint() {
-    let (world, mut erc20_bridgeable) = setup();
+    let (_world, mut erc20_bridgeable) = setup();
 
     utils::impersonate(RECIPIENT());
     erc20_bridgeable.mint(RECIPIENT(), VALUE);
@@ -247,7 +247,7 @@ fn test_bridge_can_burn() {
 #[test]
 #[should_panic(expected: ('ERC20: caller not bridge', 'ENTRYPOINT_FAILED'))]
 fn test_bridge_only_can_burn() {
-    let (world, mut erc20_bridgeable) = setup();
+    let (_world, mut erc20_bridgeable) = setup();
 
     utils::impersonate(BRIDGE());
     erc20_bridgeable.mint(RECIPIENT(), VALUE);

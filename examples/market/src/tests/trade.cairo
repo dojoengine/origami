@@ -17,5 +17,5 @@ use market::tests::{setup, setup::Systems};
 #[test]
 fn test_market_spawn() {
     // [Setup]
-    let (world, systems) = setup::spawn_market();
+    let (_world, _systems) = setup::spawn_market();
 }

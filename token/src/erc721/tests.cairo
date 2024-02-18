@@ -109,7 +109,7 @@ fn test_constructor() {
 
 #[test]
 fn test_initializer() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::initializer(ref state, NAME, SYMBOL, URI);
 
     assert(ERC721MetadataImpl::name(@state) == NAME, 'Name should be NAME');
@@ -187,7 +187,7 @@ fn test_get_approved_nonexistent() {
 
 #[test]
 fn test__exists() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     let token_id = TOKEN_ID;
 
     assert(!InternalImpl::_exists(@state, token_id), 'Token should not exist');
@@ -268,7 +268,7 @@ fn test_approve_to_owner() {
 #[should_panic(expected: ('ERC721: invalid token ID',))]
 fn test_approve_nonexistent() {
     // let mut state = STATE();
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     ERC721Impl::approve(ref state, SPENDER(), TOKEN_ID);
 }
 
@@ -294,7 +294,7 @@ fn test__approve_to_owner() {
 #[should_panic(expected: ('ERC721: invalid token ID',))]
 fn test__approve_nonexistent() {
     //let mut state = STATE();
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::_approve(ref state, SPENDER(), TOKEN_ID);
 }
 
@@ -305,7 +305,7 @@ fn test__approve_nonexistent() {
 #[test]
 fn test_set_approval_for_all() {
     //let mut state = STATE();
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     testing::set_caller_address(OWNER());
 
     assert(!ERC721Impl::is_approved_for_all(@state, OWNER(), OPERATOR()), 'Invalid default value');
@@ -331,7 +331,7 @@ fn test_set_approval_for_all() {
 #[should_panic(expected: ('ERC721: self approval',))]
 fn test_set_approval_for_all_owner_equal_operator_true() {
     //let mut state = STATE();
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     testing::set_caller_address(OWNER());
     ERC721Impl::set_approval_for_all(ref state, OWNER(), true);
 }
@@ -340,7 +340,7 @@ fn test_set_approval_for_all_owner_equal_operator_true() {
 #[should_panic(expected: ('ERC721: self approval',))]
 fn test_set_approval_for_all_owner_equal_operator_false() {
     //let mut state = STATE();
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     testing::set_caller_address(OWNER());
     ERC721Impl::set_approval_for_all(ref state, OWNER(), false);
 }
@@ -348,7 +348,7 @@ fn test_set_approval_for_all_owner_equal_operator_false() {
 #[test]
 fn test__set_approval_for_all() {
     //let mut state = STATE();
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     assert(!ERC721Impl::is_approved_for_all(@state, OWNER(), OPERATOR()), 'Invalid default value');
 
     InternalImpl::_set_approval_for_all(ref state, OWNER(), OPERATOR(), true);
@@ -372,7 +372,7 @@ fn test__set_approval_for_all() {
 #[should_panic(expected: ('ERC721: self approval',))]
 fn test__set_approval_for_all_owner_equal_operator_true() {
     //let mut state = STATE();
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::_set_approval_for_all(ref state, OWNER(), OWNER(), true);
 }
 
@@ -380,7 +380,7 @@ fn test__set_approval_for_all_owner_equal_operator_true() {
 #[should_panic(expected: ('ERC721: self approval',))]
 fn test__set_approval_for_all_owner_equal_operator_false() {
     // let mut state = STATE();
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::_set_approval_for_all(ref state, OWNER(), OWNER(), false);
 }
 
@@ -433,7 +433,7 @@ fn test_transferFrom_owner() {
 #[should_panic(expected: ('ERC721: invalid token ID',))]
 fn test_transfer_from_nonexistent() {
     //let mut state = STATE();
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     ERC721Impl::transfer_from(ref state, ZERO(), RECIPIENT(), TOKEN_ID);
 }
 
@@ -441,7 +441,7 @@ fn test_transfer_from_nonexistent() {
 #[should_panic(expected: ('ERC721: invalid token ID',))]
 fn test_transferFrom_nonexistent() {
     //let mut state = STATE();
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     ERC721CamelOnlyImpl::transferFrom(ref state, ZERO(), RECIPIENT(), TOKEN_ID);
 }
 
@@ -1098,7 +1098,7 @@ fn test__transfer() {
 #[test]
 #[should_panic(expected: ('ERC721: invalid token ID',))]
 fn test__transfer_nonexistent() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::_transfer(ref state, ZERO(), RECIPIENT(), TOKEN_ID);
 }
 
@@ -1122,7 +1122,7 @@ fn test__transfer_from_invalid_owner() {
 
 #[test]
 fn test__mint() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     let recipient = RECIPIENT();
     let token_id = TOKEN_ID;
 
@@ -1136,7 +1136,7 @@ fn test__mint() {
 #[test]
 #[should_panic(expected: ('ERC721: invalid receiver',))]
 fn test__mint_to_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     InternalImpl::_mint(ref state, ZERO(), TOKEN_ID);
 }
 
@@ -1284,7 +1284,7 @@ fn test__burn() {
 #[test]
 #[should_panic(expected: ('ERC721: invalid token ID',))]
 fn test__burn_nonexistent() {
-    let (mut world, mut state) = STATE();
+    let (mut _world, mut state) = STATE();
     InternalImpl::_burn(ref state, TOKEN_ID);
 }
 
