@@ -60,7 +60,7 @@ mod tests {
     #[test]
     fn test_gradient() {
         // seems inconsistent 
-        
+
         let mut i = 5;
 
         let mut tile = ImplHexTile::new(7, 5);
