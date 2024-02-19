@@ -25,7 +25,6 @@ mod tests {
     const TOLERANCE: u128 = 18446744073709550; // 0.001
 
     #[test]
-    #[available_gas(20000000)]
     fn test_days_convertions() {
         let days = FixedTrait::new(2, false);
         let actual = to_days_fp(from_days_fp(days));

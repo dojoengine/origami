@@ -292,7 +292,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(1_000_000)]
     fn test_matrix_get() {
         let rows: u8 = 3;
         let cols: u8 = 4;
@@ -303,7 +302,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(1_000_000)]
     fn test_matrix_transpose() {
         let rows: u8 = 2;
         let cols: u8 = 3;
@@ -315,7 +313,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(1_000_000)]
     fn test_matrix_addition() {
         let rows: u8 = 2;
         let cols: u8 = 3;
@@ -328,7 +325,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(1_000_000)]
     fn test_matrix_subtraction() {
         let rows: u8 = 2;
         let cols: u8 = 3;
@@ -342,7 +338,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(10_000_000)]
     fn test_matrix_square_multiplication() {
         let size: u8 = 2;
         let values: Array<i128> = array![1, 2, 3, 4];
@@ -356,7 +351,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(10_000_000)]
     fn test_matrix_rectangle_multiplication() {
         let values: Array<i128> = array![1, 2, 3, 4, 5, 6];
         let mut matrix1 = MatrixTrait::new(values.span(), 2, 3);
@@ -369,7 +363,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(5_000_000)]
     fn test_matrix_determinant_2x2() {
         let values: Array<i128> = array![4, 3, 1, 2];
         let mut matrix = MatrixTrait::new(values.span(), 2, 2);
@@ -377,7 +370,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(10_000_000)]
     fn test_matrix_determinant_3x3() {
         let values: Array<i128> = array![6, 1, 1, 4, -2, 5, 2, 8, 7];
         let mut matrix = MatrixTrait::new(values.span(), 3, 3);
@@ -385,7 +377,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(10_000_000)]
     fn test_matrix_inverse_2x2() {
         let values: Array<i128> = array![1, 2, 0, 1];
         let mut matrix = MatrixTrait::new(values.span(), 2, 2);
@@ -397,7 +388,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(10_000_000)]
     fn test_matrix_inverse_3x3() {
         let values: Array<i128> = array![1, 1, 0, 0, 1, 0, 0, 1, 1];
         let mut matrix = MatrixTrait::new(values.span(), 3, 3);

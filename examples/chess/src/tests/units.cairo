@@ -28,7 +28,6 @@ mod tests {
         (world, actions_system)
     }
     #[test]
-    #[available_gas(3000000000000000)]
     fn test_spawn() {
         let white = starknet::contract_address_const::<0x01>();
         let black = starknet::contract_address_const::<0x02>();
@@ -52,7 +51,6 @@ mod tests {
         assert(a1.piece_type != PieceType::None, 'should have piece');
     }
     #[test]
-    #[available_gas(3000000000000000)]
     fn test_move() {
         let white = starknet::contract_address_const::<0x01>();
         let black = starknet::contract_address_const::<0x02>();

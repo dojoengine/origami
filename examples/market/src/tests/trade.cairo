@@ -15,8 +15,7 @@ use market::models::market::{Market, MarketTrait};
 use market::tests::{setup, setup::Systems};
 
 #[test]
-#[available_gas(1_000_000_000)]
 fn test_market_spawn() {
     // [Setup]
-    let (world, systems) = setup::spawn_market();
+    let (_world, _systems) = setup::spawn_market();
 }

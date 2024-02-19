@@ -52,7 +52,7 @@ fn STATE() -> (IWorldDispatcher, erc20_bridgeable_mock::ContractState) {
 
 
 fn setup() -> erc20_bridgeable_mock::ContractState {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     state.initializer(NAME, SYMBOL, SUPPLY, OWNER(), BRIDGE());
     state
 }
@@ -62,9 +62,8 @@ fn setup() -> erc20_bridgeable_mock::ContractState {
 //
 
 #[test]
-#[available_gas(25000000)]
 fn test_erc20_bridgeable_initializer() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     state.initializer(NAME, SYMBOL, SUPPLY, OWNER(), BRIDGE());
 
     assert(state.l2_bridge_address() == BRIDGE(), 'should be BRIDGE');
@@ -75,7 +74,6 @@ fn test_erc20_bridgeable_initializer() {
 //
 
 #[test]
-#[available_gas(30000000)]
 fn test_erc20_bridgeable_bridge_can_mint() {
     let mut state = setup();
 
@@ -86,7 +84,6 @@ fn test_erc20_bridgeable_bridge_can_mint() {
 }
 
 #[test]
-#[available_gas(30000000)]
 #[should_panic(expected: ('ERC20: caller not bridge',))]
 fn test_erc20_bridgeable_bridge_only_can_mint() {
     let mut state = setup();
@@ -96,7 +93,6 @@ fn test_erc20_bridgeable_bridge_only_can_mint() {
 }
 
 #[test]
-#[available_gas(30000000)]
 fn test_erc20_bridgeable_bridge_can_burn() {
     let mut state = setup();
 
@@ -108,7 +104,6 @@ fn test_erc20_bridgeable_bridge_can_burn() {
 }
 
 #[test]
-#[available_gas(30000000)]
 #[should_panic(expected: ('ERC20: caller not bridge',))]
 fn test_erc20_bridgeable_bridge_only_can_burn() {
     let mut state = setup();

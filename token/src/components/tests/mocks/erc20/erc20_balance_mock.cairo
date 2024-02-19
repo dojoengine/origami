@@ -26,6 +26,10 @@ trait IERC20BalanceMock<TState> {
     fn initializer(ref self: TState, initial_supply: u256, recipient: ContractAddress,);
 }
 
+#[starknet::interface]
+trait IERC20BalanceMockInit<TState> {
+    fn initializer(ref self: TState, initial_supply: u256, recipient: ContractAddress,);
+}
 
 #[dojo::contract]
 mod erc20_balance_mock {
@@ -69,8 +73,7 @@ mod erc20_balance_mock {
     }
 
     #[abi(embed_v0)]
-    #[generate_trait]
-    impl InitializerImpl of InitializerTrait {
+    impl InitializerImpl of super::IERC20BalanceMockInit<ContractState> {
         fn initializer(ref self: ContractState, initial_supply: u256, recipient: ContractAddress,) {
             // set balance for recipient
             self.erc20_balance.update_balance(recipient, 0, initial_supply);

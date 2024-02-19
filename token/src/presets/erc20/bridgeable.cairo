@@ -55,6 +55,22 @@ trait IERC20BridgeablePreset<TState> {
 }
 
 
+///
+/// Interface required to remove compiler warnings and future
+/// deprecation.
+///
+#[starknet::interface]
+trait IERC20BridgeableInitializer<TState> {
+    fn initializer(
+        ref self: TState,
+        name: felt252,
+        symbol: felt252,
+        initial_supply: u256,
+        recipient: ContractAddress,
+        l2_bridge_address: ContractAddress
+    );
+}
+
 #[dojo::contract]
 mod ERC20Bridgeable {
     use token::erc20::interface;
@@ -168,8 +184,7 @@ mod ERC20Bridgeable {
     //
 
     #[abi(embed_v0)]
-    #[generate_trait]
-    impl ERC20InitializerImpl of ERC20InitializerTrait {
+    impl ERC20InitializerImpl of super::IERC20BridgeableInitializer<ContractState> {
         fn initializer(
             ref self: ContractState,
             name: felt252,

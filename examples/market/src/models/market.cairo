@@ -245,11 +245,10 @@ mod tests {
         let market = Market {
             item_id: 1, cash_amount: SCALING_FACTOR * 1, item_quantity: 1
         }; // pool 1:1
-        let cost = market.buy(10);
+        let _cost = market.buy(10);
     }
 
     #[test]
-    #[available_gas(100000)]
     fn test_market_buy() {
         let market = Market {
             item_id: 1, cash_amount: SCALING_FACTOR * 1, item_quantity: 10
@@ -259,7 +258,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(100000)]
     fn test_market_sell() {
         let market = Market {
             item_id: 1, cash_amount: SCALING_FACTOR * 1, item_quantity: 10
@@ -269,7 +267,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(500000)]
     fn test_market_add_liquidity_no_initial() {
         // Without initial liquidity
         let market = Market { item_id: 1, cash_amount: 0, item_quantity: 0 };
@@ -291,7 +288,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(600000)]
     fn test_market_add_liquidity_optimal() {
         // With initial liquidity
         let market = Market {
@@ -319,7 +315,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(1000000)]
     fn test_market_add_liquidity_not_optimal() {
         // With initial liquidity
         let market = Market {
@@ -344,9 +339,9 @@ mod tests {
         let expected_quantity = FixedTrait::new_unscaled(expected_quantity, false);
 
         // Get expecteed liquidity
-        let expected_liquidity = FixedTrait::sqrt(expected_amount * expected_quantity);
+        let _expected_liquidity = FixedTrait::sqrt(expected_amount * expected_quantity);
 
-        let final_liquidity = initial_liquidity + liquidity_add;
+        let _final_liquidity = initial_liquidity + liquidity_add;
     // assert_precise(expected_liquidity, final_liquidity.into(), 'wrong liquidity', Option::None(()));
     }
 
@@ -358,12 +353,11 @@ mod tests {
         }; // pool 1:10
         // Adding 20 items requires (SCALING_FACTOR * 2) cash amount to maintain the ratio
         // Therefore this should fail
-        let (amount_add, quantity_add, liquidity_add) = market
+        let (_amount_add, _quantity_add, _liquidity_add) = market
             .add_liquidity(SCALING_FACTOR * 1, 20);
     }
 
     #[test]
-    #[available_gas(1000000)]
     fn test_market_remove_liquidity() {
         // With initial liquidity
         let market = Market {
@@ -387,9 +381,9 @@ mod tests {
         let expected_quantity = FixedTrait::new_unscaled(expected_quantity, false);
 
         // Get expecteed liquidity
-        let expected_liquidity = FixedTrait::sqrt(expected_amount * expected_quantity);
+        let _expected_liquidity = FixedTrait::sqrt(expected_amount * expected_quantity);
 
-        let final_liquidity = initial_liquidity - liquidity_remove;
+        let _final_liquidity = initial_liquidity - liquidity_remove;
     // assert_precise(expected_liquidity, final_liquidity.into(), 'wrong liquidity', Option::None(()));
     }
 
@@ -402,7 +396,7 @@ mod tests {
         // Remove liquidity
         let one = FixedTrait::new_unscaled(1, false);
 
-        let (amount_remove, quantity_remove) = market.remove_liquidity(one);
+        let (_amount_remove, _quantity_remove) = market.remove_liquidity(one);
     }
 
     #[test]
@@ -418,6 +412,6 @@ mod tests {
         let two = FixedTrait::new_unscaled(2, false);
         let liquidity_remove = initial_liquidity * two;
 
-        let (amount_remove, quantity_remove) = market.remove_liquidity(liquidity_remove);
+        let (_amount_remove, _quantity_remove) = market.remove_liquidity(liquidity_remove);
     }
 }

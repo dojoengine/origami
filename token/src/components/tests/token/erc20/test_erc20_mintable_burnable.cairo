@@ -32,9 +32,8 @@ fn STATE() -> (IWorldDispatcher, erc20_mintable_burnable_mock::ContractState) {
 }
 
 #[test]
-#[available_gas(100000000)]
 fn test_erc20_mintable_mint() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     let total_supply = state.total_supply();
     state.erc20_mintable.mint(RECIPIENT(), VALUE);
@@ -45,18 +44,16 @@ fn test_erc20_mintable_mint() {
 }
 
 #[test]
-#[available_gas(100000000)]
 #[should_panic(expected: ('ERC20: mint to 0',))]
 fn test_erc20_mintable_mint_to_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     state.erc20_mintable.mint(ZERO(), VALUE);
 }
 
 
 #[test]
-#[available_gas(100000000)]
 fn test_erc20_burnable_burn() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     let total_supply = state.total_supply();
     state.erc20_mintable.mint(RECIPIENT(), VALUE);
@@ -72,10 +69,9 @@ fn test_erc20_burnable_burn() {
 
 
 #[test]
-#[available_gas(100000000)]
 #[should_panic(expected: ('ERC20: burn from 0',))]
 fn test_erc20_burnable_burn_from_zero() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
     state.erc20_burnable.burn(ZERO(), VALUE);
 }
 

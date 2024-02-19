@@ -1,3 +1,17 @@
+use starknet::ContractAddress;
+
+#[starknet::interface]
+trait IERC20BridgeableMockInit<TState> {
+    fn initializer(
+        ref self: TState,
+        name: felt252,
+        symbol: felt252,
+        initial_supply: u256,
+        recipient: ContractAddress,
+        l2_bridge_address: ContractAddress,
+    );
+}
+
 #[dojo::contract]
 mod erc20_bridgeable_mock {
     use starknet::ContractAddress;
@@ -91,8 +105,7 @@ mod erc20_bridgeable_mock {
     //
 
     #[abi(embed_v0)]
-    #[generate_trait]
-    impl ERC20InitializerImpl of ERC20InitializerTrait {
+    impl ERC20InitializerImpl of super::IERC20BridgeableMockInit<ContractState> {
         fn initializer(
             ref self: ContractState,
             name: felt252,

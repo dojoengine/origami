@@ -33,7 +33,10 @@ fn assert_no_events_left(address: ContractAddress) {
 }
 
 fn drop_event(address: ContractAddress) {
-    testing::pop_log_raw(address);
+    match testing::pop_log_raw(address) {
+        option::Option::Some(_) => {},
+        option::Option::None => {},
+    };
 }
 
 fn drop_all_events(address: ContractAddress) {

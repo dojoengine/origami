@@ -168,7 +168,6 @@ mod tests {
         const DELTA: u128 = 184467440737095;
 
         #[test]
-        #[available_gas(2000000)]
         fn test_target_price() {
             let auction = LinearVRGDA {
                 target_price: FixedTrait::new(_69_42, false),
@@ -182,7 +181,6 @@ mod tests {
         }
 
         #[test]
-        #[available_gas(20000000)]
         fn test_pricing_basic() {
             let auction = LinearVRGDA {
                 target_price: FixedTrait::new(_69_42, false),
@@ -196,7 +194,6 @@ mod tests {
         }
 
         #[test]
-        #[available_gas(20000000)]
         fn test_pricing_basic_reverse() {
             let auction = LinearVRGDA {
                 target_price: FixedTrait::new(_69_42, false),
@@ -228,7 +225,6 @@ mod tests {
         const _0_0023: u128 = 42427511369531970;
 
         #[test]
-        #[available_gas(200000000)]
         fn test_target_price() {
             let auction = LogisticVRGDA {
                 target_price: FixedTrait::new(_69_42, false),
@@ -244,7 +240,6 @@ mod tests {
         }
 
         #[test]
-        #[available_gas(200000000)]
         fn test_pricing_basic() {
             let auction = LogisticVRGDA {
                 target_price: FixedTrait::new(_69_42, false),
@@ -260,7 +255,6 @@ mod tests {
         }
 
         #[test]
-        #[available_gas(200000000)]
         fn test_pricing_basic_reverse() {
             let auction = LogisticVRGDA {
                 target_price: FixedTrait::new(_69_42, false),

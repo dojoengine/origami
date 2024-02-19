@@ -65,7 +65,6 @@ mod tests {
     const DICE_SEED: felt252 = 'SEED';
 
     #[test]
-    #[available_gas(2000000)]
     fn test_dice_new_roll() {
         let mut dice = DiceTrait::new(DICE_FACE_COUNT, DICE_SEED);
         assert(dice.roll() == 1, 'Wrong dice value');
@@ -77,7 +76,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
     fn test_dice_new_roll_overflow() {
         let mut dice = DiceTrait::new(DICE_FACE_COUNT, DICE_SEED);
         dice.nonce = 0x800000000000011000000000000000000000000000000000000000000000000; // PRIME - 1

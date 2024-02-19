@@ -142,7 +142,6 @@ mod tests {
     use super::{deg_to_rad, fill_position_s, vec2_from_mag_theta, calc_x, calc_y};
     use super::{Vec2Trait, Fixed, FixedTrait, ONE_u128};
     #[test]
-    #[available_gas(2000000)]
     fn test_deg_to_rad() {
         let sixty = FixedTrait::new(60 * ONE_u128, false);
         let theta = deg_to_rad(sixty);
@@ -156,7 +155,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(20000000)]
     fn test_vec2_from_mag_theta() {
         let mag = FixedTrait::new(100 * ONE_u128, false);
         let sixty = FixedTrait::new(60 * ONE_u128, false);
@@ -183,7 +181,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(20000000)]
     fn test_fill_position_s() {
         let v_0_mag = FixedTrait::from_unscaled_felt(100);
         let theta_0_deg = FixedTrait::from_unscaled_felt(65);
@@ -232,7 +229,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
     fn test_calc_x() {
         let x_0 = FixedTrait::new(100 * ONE_u128, false);
         let v_0x = FixedTrait::new(50 * ONE_u128, false);
@@ -243,7 +239,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
     fn test_calc_y() {
         let y_0 = FixedTrait::new(100 * ONE_u128, false);
         let v_0y = FixedTrait::new(50 * ONE_u128, false);

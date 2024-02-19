@@ -105,7 +105,6 @@ mod tests {
     use super::{FixedTrait, ONE_u128, Vec2Trait};
 
     #[test]
-    #[available_gas(2000000)]
     fn test_new() {
         let var1_pos = FixedTrait::new(ONE_u128, false);
         let var2_neg = FixedTrait::new(2 * ONE_u128, true);
@@ -124,7 +123,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
     fn test_splat() {
         let var = FixedTrait::new(ONE_u128, false);
 
@@ -142,7 +140,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
     fn test_select() {
         let var1_pos = FixedTrait::new(ONE_u128, false);
         let var2_neg = FixedTrait::new(2 * ONE_u128, true);
@@ -168,7 +165,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
     fn test_dot() {
         let var1_pos = FixedTrait::new(ONE_u128, false);
         let var2_neg = FixedTrait::new(2 * ONE_u128, true);
@@ -188,7 +184,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
     fn test_dot_into_vec() {
         let var1_pos = FixedTrait::new(ONE_u128, false);
         let var2_neg = FixedTrait::new(2 * ONE_u128, true);
@@ -212,7 +207,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
     fn test_xx() {
         let var1_pos = FixedTrait::new(ONE_u128, false);
         let var2_neg = FixedTrait::new(2 * ONE_u128, true);
@@ -226,7 +220,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
     fn test_xy() {
         let var1_pos = FixedTrait::new(ONE_u128, false);
         let var2_neg = FixedTrait::new(2 * ONE_u128, true);
@@ -240,7 +233,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
     fn test_yx() {
         let var1_pos = FixedTrait::new(ONE_u128, false);
         let var2_neg = FixedTrait::new(2 * ONE_u128, true);
@@ -254,7 +246,6 @@ mod tests {
     }
 
     #[test]
-    #[available_gas(2000000)]
     fn test_yy() {
         let var1_pos = FixedTrait::new(ONE_u128, false);
         let var2_neg = FixedTrait::new(2 * ONE_u128, true);

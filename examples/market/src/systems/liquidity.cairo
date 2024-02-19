@@ -6,6 +6,7 @@ use dojo::world::IWorldDispatcher;
 
 use cubit::f128::types::fixed::Fixed;
 
+#[starknet::interface]
 trait ILiquidity<TContractState> {
     fn add(
         self: @TContractState, world: IWorldDispatcher, item_id: u32, amount: u128, quantity: u128

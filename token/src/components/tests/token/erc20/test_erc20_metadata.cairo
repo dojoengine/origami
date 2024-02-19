@@ -21,9 +21,8 @@ fn STATE() -> (IWorldDispatcher, erc20_metadata_mock::ContractState) {
 }
 
 #[test]
-#[available_gas(100000000)]
 fn test_erc20_metadata_initialize() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     state.erc20_metadata.initialize(NAME, SYMBOL, DECIMALS);
 
@@ -35,9 +34,8 @@ fn test_erc20_metadata_initialize() {
 }
 
 #[test]
-#[available_gas(100000000)]
 fn test_erc20_metadata_update_total_supply() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     state.erc20_metadata.update_total_supply(0, 420);
     assert(state.erc20_metadata.total_supply() == 420, 'Should be 420');
@@ -51,20 +49,18 @@ fn test_erc20_metadata_update_total_supply() {
 
 
 #[test]
-#[available_gas(10000000)]
 #[should_panic(expected: ('u256_sub Overflow',))]
 fn test_erc20_metadata_update_total_supply_sub_overflow() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     state.erc20_metadata.update_total_supply(1, 0);
 }
 
 
 #[test]
-#[available_gas(10000000)]
 #[should_panic(expected: ('u256_add Overflow',))]
 fn test_erc20_metadata_update_total_supply_add_overflow() {
-    let (world, mut state) = STATE();
+    let (_world, mut state) = STATE();
 
     state.erc20_metadata.update_total_supply(0, BoundedInt::max());
     state.erc20_metadata.update_total_supply(0, 1);

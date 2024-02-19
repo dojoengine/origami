@@ -93,7 +93,6 @@ mod tests {
 
         // ipynb with calculations at https://colab.research.google.com/drive/14elIFRXdG3_gyiI43tP47lUC_aClDHfB?usp=sharing
         #[test]
-        #[available_gas(2000000)]
         fn test_price_1() {
             let auction = ContinuousGDA {
                 initial_price: FixedTrait::new_unscaled(1000, false),
@@ -110,7 +109,6 @@ mod tests {
 
 
         #[test]
-        #[available_gas(2000000)]
         fn test_price_2() {
             let auction = ContinuousGDA {
                 initial_price: FixedTrait::new_unscaled(1000, false),
@@ -126,7 +124,6 @@ mod tests {
         }
 
         #[test]
-        #[available_gas(2000000)]
         fn test_price_3() {
             let auction = ContinuousGDA {
                 initial_price: FixedTrait::new_unscaled(1000, false),
@@ -142,7 +139,6 @@ mod tests {
         }
 
         #[test]
-        #[available_gas(2000000)]
         fn test_price_4() {
             let auction = ContinuousGDA {
                 initial_price: FixedTrait::new_unscaled(1000, false),
@@ -166,7 +162,6 @@ mod tests {
         use super::super::{DiscreteGDA, DiscreteGDATrait};
 
         #[test]
-        #[available_gas(2000000)]
         fn test_initial_price() {
             let auction = DiscreteGDA {
                 sold: FixedTrait::new_unscaled(0, false),
@@ -182,7 +177,6 @@ mod tests {
 
         // ipynb with calculations at https://colab.research.google.com/drive/14elIFRXdG3_gyiI43tP47lUC_aClDHfB?usp=sharing
         #[test]
-        #[available_gas(2000000)]
         fn test_price_1() {
             let auction = DiscreteGDA {
                 sold: FixedTrait::new_unscaled(1, false),
@@ -201,7 +195,6 @@ mod tests {
         }
 
         #[test]
-        #[available_gas(2000000)]
         fn test_price_2() {
             let auction = DiscreteGDA {
                 sold: FixedTrait::new_unscaled(2, false),
@@ -219,7 +212,6 @@ mod tests {
         }
 
         #[test]
-        #[available_gas(2000000)]
         fn test_price_3() {
             let auction = DiscreteGDA {
                 sold: FixedTrait::new_unscaled(4, false),
@@ -238,7 +230,6 @@ mod tests {
         }
 
         #[test]
-        #[available_gas(2000000)]
         fn test_price_4() {
             let auction = DiscreteGDA {
                 sold: FixedTrait::new_unscaled(20, false),
