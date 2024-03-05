@@ -64,7 +64,7 @@ struct LogisticVRGDA {
     target_price: Fixed,
     decay_constant: Fixed,
     max_sellable: Fixed,
-    time_units: Fixed, // target time to sell 46% of units
+    time_scale: Fixed, // target time to sell 46% of units
 }
 
 // A Logistic Variable Rate Gradual Dutch Auction (VRGDA) struct.
@@ -83,7 +83,7 @@ impl LogisticVRGDAImpl of VRGDATrait<LogisticVRGDA> {
     fn get_target_sale_time(self: @LogisticVRGDA, sold: Fixed) -> Fixed {
         let logistic_limit = *self.max_sellable + FixedTrait::ONE();
         let logistic_limit_double = logistic_limit + logistic_limit;
-        -*self.time_units
+        -*self.time_scale
             * ln((logistic_limit_double / (sold + logistic_limit)) - FixedTrait::ONE())
     }
 
@@ -211,7 +211,7 @@ mod tests {
                 target_price: FixedTrait::new(_69_42, false),
                 decay_constant: FixedTrait::new(_0_31, false),
                 max_sellable: FixedTrait::new_unscaled(MAX_SELLABLE, false),
-                time_units: one_hundred,
+                time_scale: one_hundred,
             };
 
             let cost = auction
@@ -227,7 +227,7 @@ mod tests {
                 target_price: FixedTrait::new(_69_42, false),
                 decay_constant: FixedTrait::new(_0_31, false),
                 max_sellable: FixedTrait::new_unscaled(MAX_SELLABLE, false),
-                time_units: hundred_days,
+                time_scale: hundred_days,
             };
             let time_delta = FixedTrait::new(HUNDRED_DAYS_MAG / 2, false);
             let num_mint = FixedTrait::new_unscaled(244918, false);
@@ -243,7 +243,7 @@ mod tests {
                 target_price: FixedTrait::new(_69_42, false),
                 decay_constant: FixedTrait::new(_0_31, false),
                 max_sellable: FixedTrait::new_unscaled(MAX_SELLABLE, false),
-                time_units: FixedTrait::new(_0_0023, false),
+                time_scale: FixedTrait::new(_0_0023, false),
             };
             let time_delta = FixedTrait::new(10368001, false);
             let num_mint = FixedTrait::new(876, false);
