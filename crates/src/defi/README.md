@@ -97,7 +97,7 @@ GDAs present a powerful tool for selling both fungible and non-fungible tokens i
 
 ## Overview
 
-Variable Rate GDAs (VRGDAs) enable the selling of tokens according to a custom schedule, raising or lowering prices based on the sales pace. VRGDA is a generalization of the GDA mechanism.
+Variable Rate GDAs ([VRGDAs](https://www.paradigm.xyz/2022/08/vrgda)) enable the selling of tokens according to a custom schedule, raising or lowering prices based on the sales pace. VRGDA is a generalization of the GDA mechanism. 
 
 ## How to Use
 
@@ -114,7 +114,7 @@ const _0_31: u128 = 5718490662849961000;
 let auction = LinearVRGDA {
     target_price: FixedTrait::new(_69_42, false),
     decay_constant: FixedTrait::new(_0_31, false),
-    per_time_unit: FixedTrait::new_unscaled(2, false),
+    target_units_per_time: FixedTrait::new_unscaled(2, false),
 };
 ```
 
