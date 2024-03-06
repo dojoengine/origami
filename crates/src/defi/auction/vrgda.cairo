@@ -5,6 +5,44 @@ use cubit::f128::types::fixed::{Fixed, FixedTrait};
 
 // Based on https://www.paradigm.xyz/2022/08/vrgda
 
+trait VRGDAVarsTrait<T> {
+    fn get_target_price(self: @T) -> Fixed;
+    fn get_decay_constant(self: @T) -> Fixed;
+}
+
+trait VRGDATrait<T> {
+    fn get_vrgda_price(self: @T, time_since_start: Fixed, sold: Fixed) -> Fixed;
+    fn get_reverse_vrgda_price(self: @T, time_since_start: Fixed, sold: Fixed) -> Fixed;
+}
+
+trait VRGDATargetTimeTrait<T> {
+    fn get_target_sale_time(self: @T, sold: Fixed) -> Fixed;
+}
+
+impl TVRGDATrait<T, +VRGDAVarsTrait<T>, +VRGDATargetTimeTrait<T>> of VRGDATrait<T> {
+    /// Calculates the VRGDA price at a specific time since the auction started.
+    ///
+    /// # Arguments
+    ///
+    /// * `time_since_start`: Time since the auction started.
+    /// * `sold`: Quantity sold. (Not including this unit) eg if this the price for the first unit sold  is 0.
+    ///
+    /// # Returns
+    ///
+    /// * A `Fixed` representing the price.
+    fn get_vrgda_price(self: @T, time_since_start: Fixed, sold: Fixed) -> Fixed {
+        self.get_target_price()
+            * (FixedTrait::ONE() - self.get_decay_constant())
+                .pow(time_since_start - self.get_target_sale_time(sold + FixedTrait::ONE()))
+    }
+
+    fn get_reverse_vrgda_price(self: @T, time_since_start: Fixed, sold: Fixed) -> Fixed {
+        self.get_target_price()
+            * (FixedTrait::ONE() - self.get_decay_constant())
+                .pow(self.get_target_sale_time(sold + FixedTrait::ONE()) - time_since_start)
+    }
+}
+
 /// A Linear Variable Rate Gradual Dutch Auction (VRGDA) struct.
 /// Represents an auction where the price decays linearly based on the target price,
 /// decay constant, and per-time-unit rate.
@@ -15,13 +53,18 @@ struct LinearVRGDA {
     target_units_per_time: Fixed,
 }
 
-trait VRGDATrait<T> {
-    fn get_target_sale_time(self: @T, sold: Fixed) -> Fixed;
-    fn get_vrgda_price(self: @T, time_since_start: Fixed, sold: Fixed) -> Fixed;
-    fn get_reverse_vrgda_price(self: @T, time_since_start: Fixed, sold: Fixed) -> Fixed;
+
+impl LinearVRGDAVarsImpl of VRGDAVarsTrait<LinearVRGDA> {
+    fn get_target_price(self: @LinearVRGDA) -> Fixed {
+        *self.target_price
+    }
+    fn get_decay_constant(self: @LinearVRGDA) -> Fixed {
+        *self.decay_constant
+    }
 }
 
-impl LinearVRGDAImpl of VRGDATrait<LinearVRGDA> {
+
+impl LinearVRGDATargetTimeImpl of VRGDATargetTimeTrait<LinearVRGDA> {
     /// Calculates the target sale time based on the quantity sold.
     ///
     /// # Arguments
@@ -34,30 +77,9 @@ impl LinearVRGDAImpl of VRGDATrait<LinearVRGDA> {
     fn get_target_sale_time(self: @LinearVRGDA, sold: Fixed) -> Fixed {
         sold / *self.target_units_per_time
     }
-
-    /// Calculates the VRGDA price at a specific time since the auction started.
-    ///
-    /// # Arguments
-    ///
-    /// * `time_since_start`: Time since the auction started.
-    /// * `sold`: Quantity sold. (Not including this unit) eg if this the price for the first unit sold  is 0.
-    ///
-    /// # Returns
-    ///
-    /// * A `Fixed` representing the price.
-    fn get_vrgda_price(self: @LinearVRGDA, time_since_start: Fixed, sold: Fixed) -> Fixed {
-        *self.target_price
-            * (FixedTrait::ONE() - *self.decay_constant)
-                .pow(time_since_start - self.get_target_sale_time(sold + FixedTrait::ONE()))
-    }
-
-    fn get_reverse_vrgda_price(self: @LinearVRGDA, time_since_start: Fixed, sold: Fixed) -> Fixed {
-        *self.target_price
-            * (FixedTrait::ONE() - *self.decay_constant)
-                .pow(self.get_target_sale_time(sold + FixedTrait::ONE()) - time_since_start)
-    }
 }
 
+impl LinearVRGDAImpl = TVRGDATrait<LinearVRGDA>;
 
 #[derive(Copy, Drop, Serde, starknet::Storage)]
 struct LogisticVRGDA {
@@ -67,10 +89,16 @@ struct LogisticVRGDA {
     time_scale: Fixed, // target time to sell 46% of units
 }
 
-// A Logistic Variable Rate Gradual Dutch Auction (VRGDA) struct.
-/// Represents an auction where the price decays according to a logistic function,
-/// based on the target price, decay constant, max sellable quantity, and time scale.
-impl LogisticVRGDAImpl of VRGDATrait<LogisticVRGDA> {
+impl LogisticVRGDAVarsImpl of VRGDAVarsTrait<LogisticVRGDA> {
+    fn get_target_price(self: @LogisticVRGDA) -> Fixed {
+        *self.target_price
+    }
+    fn get_decay_constant(self: @LogisticVRGDA) -> Fixed {
+        *self.decay_constant
+    }
+}
+
+impl LogisticVRGDATargetTimeImpl of VRGDATargetTimeTrait<LogisticVRGDA> {
     /// Calculates the target sale time using a logistic function based on the quantity sold.
     ///
     /// # Arguments
@@ -86,31 +114,9 @@ impl LogisticVRGDAImpl of VRGDATrait<LogisticVRGDA> {
         -*self.time_scale
             * ln((logistic_limit_double / (sold + logistic_limit)) - FixedTrait::ONE())
     }
-
-    /// Calculates the VRGDA price at a specific time since the auction started.
-    ///
-    /// # Arguments
-    ///
-    /// * `time_since_start`: Time since the auction started.
-    /// * `sold`: Quantity sold. (Not including this unit) eg if this the price for the first unit sold  is 0.
-    ///
-    /// # Returns
-    ///
-    /// * A `Fixed` representing the price.
-    fn get_vrgda_price(self: @LogisticVRGDA, time_since_start: Fixed, sold: Fixed) -> Fixed {
-        *self.target_price
-            * (FixedTrait::ONE() - *self.decay_constant)
-                .pow(time_since_start - self.get_target_sale_time(sold + FixedTrait::ONE()))
-    }
-
-    fn get_reverse_vrgda_price(
-        self: @LogisticVRGDA, time_since_start: Fixed, sold: Fixed
-    ) -> Fixed {
-        *self.target_price
-            * (FixedTrait::ONE() - *self.decay_constant)
-                .pow(self.get_target_sale_time(sold + FixedTrait::ONE()) - time_since_start)
-    }
 }
+impl LogisticVRGDAImpl = TVRGDATrait<LogisticVRGDA>;
+
 
 #[cfg(test)]
 mod tests {
