@@ -1,0 +1,40 @@
+[package]
+name = "bridge"
+version = "0.1.0"
+
+# See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
+
+[dependencies]
+# not using workspace, otherwise all contracts/models get built & included in manifest
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.4.4" }
+token = { path = "../../../token" }
+
+[scripts]
+katana_msg = "katana --messaging anvil.messaging.json --dev"
+migrate = "sozo build && sozo migrate && ./scripts/initialize.sh local"
+
+get_balance = "sozo model get ERC20BalanceModel 0x792b78f74ae3631aa8795da847d57d7a45511f7c4711c4e81f2df2dac0fc177 0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973 --world 0x4f5310a18e23b0d3b20e58156d2a9552c16e6995b30d633911ee85ba5aeeeda --rpc-url http://localhost:5050"
+withdraw = "sozo execute -c 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,0x3635c9adc5dea00000,0 0x2ff2f9994ba7e039f50190cb3b3dc538d9abf7201acbe5a6a7aff686dd40d89 initiate_withdrawal"
+
+[tool.dojo.env]
+# Katana
+account_address = "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973"
+private_key = "0x1800000000300000180000000000030000000000003006001800006600"
+rpc_url = "http://localhost:5050"
+
+[tool.dojo.world]
+name = "Dojo Bridge"
+description = "Dojo Bridge"
+
+[[target.dojo]]
+build-external-contracts = [
+    "token::components::security::initializable::initializable_model",
+    "token::components::token::erc20::erc20_metadata::erc_20_metadata_model",
+    "token::components::token::erc20::erc20_balance::erc_20_balance_model",
+    "token::components::token::erc20::erc20_allowance::erc_20_allowance_model",
+    "token::components::token::erc20::erc20_mintable::erc_20_mintable_model",
+    "token::components::token::erc20::erc20_burnable::erc_20_burnable_model",
+    "token::components::token::erc20::erc20_bridgeable::erc_20_bridgeable_model",
+]
+
+

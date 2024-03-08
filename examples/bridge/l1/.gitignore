@@ -1,0 +1,14 @@
+# Dotenv file
+.env
+
+# Compiler files
+cache/
+out/
+broadcast/
+
+
+lib/forge-std
+
+/logs
+
+.gas-snapshot

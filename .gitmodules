@@ -1,0 +1,6 @@
+[submodule "examples/bridge/l1/lib/forge-std"]
+	path = examples/bridge/l1/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "examples/bridge/l1/lib/create3-factory"]
+	path = examples/bridge/l1/lib/create3-factory
+	url = https://github.com/zeframlou/create3-factory
