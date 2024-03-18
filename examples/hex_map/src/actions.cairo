@@ -1,12 +1,18 @@
 // internal imports
 use core::Into;
 use origami::map::hex::{types::Direction};
+use hex_map::models::Position;
 
 // define the interface
-#[starknet::interface]
-trait IActions<TContractState> {
-    fn spawn(self: @TContractState);
-    fn move(self: @TContractState, direction: Direction);
+#[dojo::interface]
+trait IActions {
+    fn spawn();
+    fn move(direction: Direction);
+}
+
+#[dojo::interface]
+trait IActionsComputed {
+    fn next_position(position: Position, direction: Direction) -> Position;
 }
 
 // dojo decorator
@@ -18,7 +24,7 @@ mod actions {
     use hex_map::models::{Position, Vec2};
     use hex_map::noise::{ITile};
 
-    use super::IActions;
+    use super::{IActions, IActionsComputed};
 
     // declaring custom event struct
     #[event]
@@ -34,34 +40,38 @@ mod actions {
         direction: Direction
     }
 
-    fn next_position(position: Position, direction: Direction) -> Position {
-        let mut new_position = position;
+    #[abi(embed_v0)]
+    impl ActionsComputedImpl of IActionsComputed<ContractState> {
+        #[computed(Position)]
+        fn next_position(position: Position, direction: Direction) -> Position {
+            let mut new_position = position;
 
-        // convert to Hex
-        let hex_tile = IHexTile::new(position.vec.x, position.vec.y);
+            // convert to Hex
+            let hex_tile = IHexTile::new(position.vec.x, position.vec.y);
 
-        // get next next tile
-        let next_hex = hex_tile.neighbor(direction);
+            // get next next tile
+            let next_hex = hex_tile.neighbor(direction);
 
-        // check movable
-        ITile::check_moveable(next_hex);
+            // check movable
+            ITile::check_moveable(next_hex);
 
-        // convert back to Position
-        new_position.vec = Vec2 { x: next_hex.col, y: next_hex.row };
+            // convert back to Position
+            new_position.vec = Vec2 { x: next_hex.col, y: next_hex.row };
 
-        new_position
+            new_position
+        }
     }
 
     #[abi(embed_v0)]
     impl ActionsImpl of IActions<ContractState> {
         // ContractState is defined by system decorator expansion
-        fn spawn(self: @ContractState) { // Access the world dispatcher for reading.
+        fn spawn() { // Access the world dispatcher for reading.
             let world = self.world_dispatcher.read();
 
             set!(world, (Position { player: get_caller_address(), vec: Vec2 { x: 10, y: 10 } }));
         }
         // Moves player in the provided direction.
-        fn move(self: @ContractState, direction: Direction) {
+        fn move(direction: Direction) {
             // Access the world dispatcher for reading.
             let world = self.world_dispatcher.read();
 
@@ -72,7 +82,7 @@ mod actions {
             let mut position = get!(world, player, (Position));
 
             // // Calculate the player's next position based on the provided direction.
-            let next = next_position(position, direction);
+            let next = self.next_position(position, direction);
 
             // Update the world state with the new moves data and position.
             set!(world, (next));

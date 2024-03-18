@@ -6,12 +6,10 @@ use dojo::world::IWorldDispatcher;
 
 use cubit::f128::types::fixed::Fixed;
 
-#[starknet::interface]
-trait ILiquidity<TContractState> {
-    fn add(
-        self: @TContractState, world: IWorldDispatcher, item_id: u32, amount: u128, quantity: u128
-    );
-    fn remove(self: @TContractState, world: IWorldDispatcher, item_id: u32, shares: Fixed);
+#[dojo::interface]
+trait ILiquidity {
+    fn add(item_id: u32, amount: u128, quantity: u128);
+    fn remove(item_id: u32, shares: Fixed);
 }
 
 #[dojo::contract]
@@ -29,13 +27,7 @@ mod Liquidity {
 
     #[abi(embed_v0)]
     impl LiquidityImpl of ILiquidity<ContractState> {
-        fn add(
-            self: @ContractState,
-            world: IWorldDispatcher,
-            item_id: u32,
-            amount: u128,
-            quantity: u128
-        ) {
+        fn add(world: IWorldDispatcher, item_id: u32, amount: u128, quantity: u128) {
             let player = starknet::get_caller_address();
 
             let item = get!(world, (player, item_id), Item);
@@ -83,7 +75,7 @@ mod Liquidity {
         }
 
 
-        fn remove(self: @ContractState, world: IWorldDispatcher, item_id: u32, shares: Fixed) {
+        fn remove(world: IWorldDispatcher, item_id: u32, shares: Fixed) {
             let player = starknet::get_caller_address();
 
             let player_liquidity = get!(world, (player, item_id), Liquidity);
