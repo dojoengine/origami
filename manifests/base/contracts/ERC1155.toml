@@ -1,0 +1,7 @@
+kind = "DojoContract"
+class_hash = "0x4f2c215200e416c5c12e627a291767139ad0df3ef94429398ea917a9683308c"
+abi = "abis/base/contracts/ERC1155.json"
+reads = []
+writes = []
+computed = []
+name = "token::erc1155::erc1155::ERC1155"

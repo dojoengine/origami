@@ -1,0 +1,23 @@
+kind = "DojoModel"
+class_hash = "0x46554c7034b53754cac1e982e5fbf5b6c240ec8fe5a444bb0544b89400ca3f8"
+name = "token::erc20::models::erc_20_meta"
+
+[[members]]
+name = "token"
+type = "ContractAddress"
+key = true
+
+[[members]]
+name = "name"
+type = "felt252"
+key = false
+
+[[members]]
+name = "symbol"
+type = "felt252"
+key = false
+
+[[members]]
+name = "total_supply"
+type = "u256"
+key = false

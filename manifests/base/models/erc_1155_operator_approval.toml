@@ -1,0 +1,23 @@
+kind = "DojoModel"
+class_hash = "0x727d2d5b6396000c9f15f3e14945b989820313b083c28d5c7c726ed48efdc4e"
+name = "token::erc1155::models::erc_1155_operator_approval"
+
+[[members]]
+name = "token"
+type = "ContractAddress"
+key = true
+
+[[members]]
+name = "owner"
+type = "ContractAddress"
+key = true
+
+[[members]]
+name = "operator"
+type = "ContractAddress"
+key = true
+
+[[members]]
+name = "approved"
+type = "bool"
+key = false

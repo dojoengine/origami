@@ -1,0 +1,7 @@
+kind = "DojoContract"
+class_hash = "0x7309620dcac6c1ee3d25d2406174b0109f24fd3b6f7a38d77a1c62b570021b6"
+abi = "abis/base/contracts/ERC20Bridgeable.json"
+reads = []
+writes = []
+computed = []
+name = "token::presets::erc20::bridgeable::ERC20Bridgeable"

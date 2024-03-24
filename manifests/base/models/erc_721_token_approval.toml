@@ -1,0 +1,18 @@
+kind = "DojoModel"
+class_hash = "0x2390f356c891b983b8921310d96f02129ae2e05ec2a92600e8226b88169ef9c"
+name = "token::erc721::models::erc_721_token_approval"
+
+[[members]]
+name = "token"
+type = "ContractAddress"
+key = true
+
+[[members]]
+name = "token_id"
+type = "u256"
+key = true
+
+[[members]]
+name = "address"
+type = "ContractAddress"
+key = false

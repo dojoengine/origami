@@ -1,0 +1,7 @@
+kind = "DojoContract"
+class_hash = "0x150a71fed613e8c10ef40367a7f58a3c80fcc9afc37a30f1f387e3099e71ac5"
+abi = "abis/base/contracts/InitializableMock.json"
+reads = []
+writes = []
+computed = []
+name = "token::components::tests::mocks::initializable_mock::InitializableMock"

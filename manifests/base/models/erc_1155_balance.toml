@@ -1,0 +1,23 @@
+kind = "DojoModel"
+class_hash = "0x5e361c2ef7f5cd634f5acc52249479449747ef11f27ebf0aefda3ec53d9fccf"
+name = "token::erc1155::models::erc_1155_balance"
+
+[[members]]
+name = "token"
+type = "ContractAddress"
+key = true
+
+[[members]]
+name = "account"
+type = "ContractAddress"
+key = true
+
+[[members]]
+name = "id"
+type = "u256"
+key = true
+
+[[members]]
+name = "amount"
+type = "u256"
+key = false

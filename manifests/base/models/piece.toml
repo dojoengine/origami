@@ -1,0 +1,23 @@
+kind = "DojoModel"
+class_hash = "0x1490d0d735f07fbcb30479fb9fb1674ebe2e0489ca8bb788121124be078de4f"
+name = "chess::models::piece::piece"
+
+[[members]]
+name = "game_id"
+type = "u32"
+key = true
+
+[[members]]
+name = "position"
+type = "Vec2"
+key = true
+
+[[members]]
+name = "color"
+type = "Color"
+key = false
+
+[[members]]
+name = "piece_type"
+type = "PieceType"
+key = false

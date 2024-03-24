@@ -1,0 +1,18 @@
+kind = "DojoModel"
+class_hash = "0x1d6bd75d205c34901674c6e42c282b3bfb8d179a4a60de2b2a4d6329ad1766e"
+name = "chess::models::player::player"
+
+[[members]]
+name = "game_id"
+type = "u32"
+key = true
+
+[[members]]
+name = "address"
+type = "ContractAddress"
+key = true
+
+[[members]]
+name = "color"
+type = "Color"
+key = false

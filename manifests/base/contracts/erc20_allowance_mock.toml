@@ -1,0 +1,7 @@
+kind = "DojoContract"
+class_hash = "0x5813a69bc46da8d20fd80af5fcb46aa571fe3a718025d7754434dd603e8f8d1"
+abi = "abis/base/contracts/erc20_allowance_mock.json"
+reads = []
+writes = []
+computed = []
+name = "token::components::tests::mocks::erc20::erc20_allowance_mock::erc20_allowance_mock"

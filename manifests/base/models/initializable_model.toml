@@ -1,0 +1,13 @@
+kind = "DojoModel"
+class_hash = "0x203cf018080b21fc921033ee35af2e1b8811cc7c73e9256fb7a86f794c556ce"
+name = "token::components::security::initializable::initializable_model"
+
+[[members]]
+name = "token"
+type = "ContractAddress"
+key = true
+
+[[members]]
+name = "initialized"
+type = "bool"
+key = false

@@ -1,0 +1,23 @@
+kind = "DojoModel"
+class_hash = "0x162489b499eefcc4ee530e8bbe33fc7c7f3db5d37dc4d6fd02e2c1cb0964ae9"
+name = "token::erc1155::models::erc_1155_meta"
+
+[[members]]
+name = "token"
+type = "ContractAddress"
+key = true
+
+[[members]]
+name = "name"
+type = "felt252"
+key = false
+
+[[members]]
+name = "symbol"
+type = "felt252"
+key = false
+
+[[members]]
+name = "base_uri"
+type = "felt252"
+key = false

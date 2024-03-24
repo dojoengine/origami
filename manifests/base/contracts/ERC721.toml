@@ -1,0 +1,7 @@
+kind = "DojoContract"
+class_hash = "0x3c70eb9190a99ea4d7270aec0a57e01bd4d51fb3cca210c271363d06e047050"
+abi = "abis/base/contracts/ERC721.json"
+reads = []
+writes = []
+computed = []
+name = "token::erc721::erc721::ERC721"

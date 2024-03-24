@@ -1,0 +1,18 @@
+kind = "DojoModel"
+class_hash = "0x3700befaec085d74035a66fb76b54faa8533758af018d7861e89841179e762a"
+name = "token::components::introspection::src5::src_5_model"
+
+[[members]]
+name = "token"
+type = "ContractAddress"
+key = true
+
+[[members]]
+name = "interface_id"
+type = "felt252"
+key = true
+
+[[members]]
+name = "supports"
+type = "bool"
+key = false
