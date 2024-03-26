@@ -25,7 +25,7 @@ impl GameTurnImpl of GameTurnTrait {
         match self.player_color {
             Color::White => Color::Black,
             Color::Black => Color::White,
-            Color::None => panic(array!['Illegal turn']),
+            Color::None => panic(array!['Illegal turn'])
         }
     }
 }
