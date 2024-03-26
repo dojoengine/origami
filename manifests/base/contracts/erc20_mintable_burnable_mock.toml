@@ -1,7 +1,0 @@
-kind = "DojoContract"
-class_hash = "0x78a37bcc1b7408fd7252cfa08ba229ea3239c4e6d53f2d4a32fae41cab6ba91"
-abi = "abis/base/contracts/erc20_mintable_burnable_mock.json"
-reads = []
-writes = []
-computed = []
-name = "token::components::tests::mocks::erc20::erc20_mintable_burnable_mock::erc20_mintable_burnable_mock"

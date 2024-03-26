@@ -1,7 +1,0 @@
-kind = "DojoContract"
-class_hash = "0x6165785ee358a3e5902a5a86e70e48796791d0a56e1ab2f04fbdd9215cb4b00"
-abi = "abis/base/contracts/SRC5Mock.json"
-reads = []
-writes = []
-computed = []
-name = "token::components::tests::mocks::src5_mock::SRC5Mock"

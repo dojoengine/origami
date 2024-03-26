@@ -1,7 +1,0 @@
-kind = "DojoContract"
-class_hash = "0x3fb1401c309a6d2c6dc0f5ef4624ca6d8965f36d240d1641800cca08c94044e"
-abi = "abis/base/contracts/erc20_metadata_mock.json"
-reads = []
-writes = []
-computed = []
-name = "token::components::tests::mocks::erc20::erc20_metadata_mock::erc20_metadata_mock"

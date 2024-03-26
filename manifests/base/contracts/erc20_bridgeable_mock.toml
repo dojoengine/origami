@@ -1,7 +1,0 @@
-kind = "DojoContract"
-class_hash = "0x4068c53163e83f57dfac78fa3430035753247ccebd7ae5128af9f9555d6f13b"
-abi = "abis/base/contracts/erc20_bridgeable_mock.json"
-reads = []
-writes = []
-computed = []
-name = "token::components::tests::mocks::erc20::erc20_bridgeable_mock::erc20_bridgeable_mock"
