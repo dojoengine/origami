@@ -2,10 +2,10 @@
 
 use dojo::world::IWorldDispatcher;
 
-#[starknet::interface]
+#[dojo::interface]
 trait ITrade<TContractState> {
-    fn buy(self: @TContractState, world: IWorldDispatcher, item_id: u32, quantity: u128);
-    fn sell(self: @TContractState, world: IWorldDispatcher, item_id: u32, quantity: u128);
+    fn buy(item_id: u32, quantity: u128);
+    fn sell(item_id: u32, quantity: u128);
 }
 
 #[dojo::contract]
@@ -20,7 +20,7 @@ mod Trade {
 
     #[abi(embed_v0)]
     impl TradeImpl of ITrade<ContractState> {
-        fn buy(self: @ContractState, world: IWorldDispatcher, item_id: u32, quantity: u128) {
+        fn buy(world: IWorldDispatcher, item_id: u32, quantity: u128) {
             let player = starknet::get_caller_address();
 
             let player_cash = get!(world, (player), Cash);
@@ -52,7 +52,7 @@ mod Trade {
         }
 
 
-        fn sell(self: @ContractState, world: IWorldDispatcher, item_id: u32, quantity: u128) {
+        fn sell(world: IWorldDispatcher, item_id: u32, quantity: u128) {
             let player = starknet::get_caller_address();
 
             let item = get!(world, (player, item_id), Item);
