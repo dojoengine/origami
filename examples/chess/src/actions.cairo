@@ -119,21 +119,21 @@ mod actions {
         ) {
             let mut current_piece = get!(world, (game_id, curr_position), (Piece));
             // check if next_position is out of board or not
-            assert(!PieceTrait::is_out_of_board(next_position), 'Should be inside board');
+            assert!(!PieceTrait::is_out_of_board(next_position), "Should be inside board");
 
             // check if this is the right move for this piece type
-            assert(
-                current_piece.is_right_piece_move(next_position), 'Illegal move for type of piece'
+            assert!(
+                current_piece.is_right_piece_move(next_position), "Illegal move for type of piece"
             );
             // Get piece data from to next_position in the board
             let mut next_position_piece = get!(world, (game_id, next_position), (Piece));
 
             let player = get!(world, (game_id, caller), (Player));
             // check if there is already a piece in next_position
-            assert(
+            assert!(
                 next_position_piece.piece_type == PieceType::None
                     || player.is_not_my_piece(next_position_piece.color),
-                'Already same color piece exist'
+                "Already same color piece exist"
             );
 
             next_position_piece.piece_type = current_piece.piece_type;
