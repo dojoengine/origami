@@ -170,14 +170,9 @@ mod erc20_balance_component {
             self.update_balance(recipient, 0, amount);
 
             let transfer_event = Transfer { from: sender, to: recipient, value: amount };
-            self.emit_event(transfer_event);
-        }
 
-        fn emit_event<S, +traits::Into<S, Event>, +Drop<S>, +Clone<S>>(
-            ref self: ComponentState<TContractState>, event: S
-        ) {
-            self.emit(event.clone());
-            emit!(self.get_contract().world(), event);
+            self.emit(transfer_event.clone());
+            emit!(self.get_contract().world(), (Event::Transfer(transfer_event)));
         }
     }
 }

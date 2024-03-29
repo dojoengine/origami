@@ -190,21 +190,13 @@ mod ERC20 {
             assert(!allowance.owner.is_zero(), Errors::APPROVE_FROM_ZERO);
             assert(!allowance.spender.is_zero(), Errors::APPROVE_TO_ZERO);
             set!(self.world(), (allowance));
-            self
-                .emit_event(
-                    Approval {
-                        owner: allowance.owner, spender: allowance.spender, value: allowance.amount
-                    }
-                );
-        }
 
-        fn emit_event<
-            S, impl IntoImp: traits::Into<S, Event>, impl SDrop: Drop<S>, impl SCopy: Copy<S>
-        >(
-            ref self: ContractState, event: S
-        ) {
-            self.emit(event);
-            emit!(self.world(), event);
+            let approval_event = Approval {
+                owner: allowance.owner, spender: allowance.spender, value: allowance.amount
+            };
+
+            self.emit(approval_event.clone());
+            emit!(self.world(), (Event::Approval(approval_event)));
         }
     }
 
@@ -219,14 +211,22 @@ mod ERC20 {
             assert(!recipient.is_zero(), Errors::MINT_TO_ZERO);
             self.update_total_supply(0, amount);
             self.update_balance(recipient, 0, amount);
-            self.emit_event(Transfer { from: Zeroable::zero(), to: recipient, value: amount });
+
+            let transfer_event = Transfer { from: Zeroable::zero(), to: recipient, value: amount };
+
+            self.emit(transfer_event.clone());
+            emit!(self.world(), (Event::Transfer(transfer_event)));
         }
 
         fn _burn(ref self: ContractState, account: ContractAddress, amount: u256) {
             assert(!account.is_zero(), Errors::BURN_FROM_ZERO);
             self.update_total_supply(amount, 0);
             self.update_balance(account, amount, 0);
-            self.emit_event(Transfer { from: account, to: Zeroable::zero(), value: amount });
+
+            let transfer_event = Transfer { from: account, to: Zeroable::zero(), value: amount };
+
+            self.emit(transfer_event.clone());
+            emit!(self.world(), (Event::Transfer(transfer_event)));
         }
 
         fn _approve(
@@ -248,7 +248,11 @@ mod ERC20 {
             assert(!recipient.is_zero(), Errors::TRANSFER_TO_ZERO);
             self.update_balance(sender, amount, 0);
             self.update_balance(recipient, 0, amount);
-            self.emit_event(Transfer { from: sender, to: recipient, value: amount });
+
+            let transfer_event = Transfer { from: sender, to: recipient, value: amount };
+
+            self.emit(transfer_event.clone());
+            emit!(self.world(), (Event::Transfer(transfer_event)));
         }
 
         fn _spend_allowance(

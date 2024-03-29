@@ -250,7 +250,10 @@ mod ERC721 {
                 ERC721TokenApproval { token: get_contract_address(), token_id, address: to, }
             );
             if emit {
-                self.emit_event(Approval { owner, approved: to, token_id });
+                let approval_event = Approval { owner, approved: to, token_id };
+
+                self.emit(approval_event.clone());
+                emit!(self.world(), (Event::Approval(approval_event)));
             }
         }
 
@@ -264,7 +267,11 @@ mod ERC721 {
                 self.world(),
                 ERC721OperatorApproval { token: get_contract_address(), owner, operator, approved }
             );
-            self.emit_event(ApprovalForAll { owner, operator, approved });
+
+            let approval_for_all_event = ApprovalForAll { owner, operator, approved };
+
+            self.emit(approval_for_all_event.clone());
+            emit!(self.world(), (Event::ApprovalForAll(approval_for_all_event)));
         }
 
         fn set_balance(ref self: ContractState, account: ContractAddress, amount: u256) {
@@ -273,15 +280,6 @@ mod ERC721 {
 
         fn set_owner(ref self: ContractState, token_id: u256, address: ContractAddress) {
             set!(self.world(), ERC721Owner { token: get_contract_address(), token_id, address });
-        }
-
-        fn emit_event<
-            S, impl IntoImp: traits::Into<S, Event>, impl SDrop: Drop<S>, impl SCopy: Copy<S>
-        >(
-            ref self: ContractState, event: S
-        ) {
-            self.emit(event);
-            emit!(self.world(), event);
         }
     }
 
@@ -339,7 +337,10 @@ mod ERC721 {
             self.set_balance(to, self.get_balance(to).amount + 1);
             self.set_owner(token_id, to);
 
-            self.emit_event(Transfer { from: Zeroable::zero(), to, token_id });
+            let transfer_event = Transfer { from: Zeroable::zero(), to, token_id };
+
+            self.emit(transfer_event.clone());
+            emit!(self.world(), (Event::Transfer(transfer_event)));
         }
 
         fn _transfer(
@@ -356,7 +357,10 @@ mod ERC721 {
             self.set_balance(to, self.get_balance(to).amount + 1);
             self.set_owner(token_id, to);
 
-            self.emit_event(Transfer { from, to, token_id });
+            let transfer_event = Transfer { from, to, token_id };
+
+            self.emit(transfer_event.clone());
+            emit!(self.world(), (Event::Transfer(transfer_event)));
         }
 
         fn _burn(ref self: ContractState, token_id: u256) {
@@ -368,7 +372,10 @@ mod ERC721 {
             self.set_balance(owner, self.get_balance(owner).amount - 1);
             self.set_owner(token_id, Zeroable::zero());
 
-            self.emit_event(Transfer { from: owner, to: Zeroable::zero(), token_id });
+            let transfer_event = Transfer { from: owner, to: Zeroable::zero(), token_id };
+
+            self.emit(transfer_event.clone());
+            emit!(self.world(), (Event::Transfer(transfer_event)));
         }
 
         fn _safe_mint(

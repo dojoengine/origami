@@ -46,7 +46,11 @@ mod erc20_mintable_component {
             let transfer_event = erc20_balance_comp::Transfer {
                 from: Zeroable::zero(), to: recipient, value: amount
             };
-            erc20_balance.emit_event(transfer_event);
+
+            erc20_balance.emit(transfer_event.clone());
+            emit!(
+                self.get_contract().world(), (erc20_balance_comp::Event::Transfer(transfer_event))
+            );
         }
     }
 }

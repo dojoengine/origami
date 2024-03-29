@@ -15,6 +15,7 @@ mod erc20_burnable_component {
     use erc20_balance_comp::InternalImpl as ERC20BalanceInternal;
     use erc20_metadata_comp::InternalImpl as ERC20MetadataInternal;
 
+
     #[storage]
     struct Storage {}
 
@@ -43,7 +44,11 @@ mod erc20_burnable_component {
             let transfer_event = erc20_balance_comp::Transfer {
                 from: account, to: Zeroable::zero(), value: amount
             };
-            erc20_balance.emit_event(transfer_event);
+
+            erc20_balance.emit(transfer_event.clone());
+            emit!(
+                self.get_contract().world(), (erc20_balance_comp::Event::Transfer(transfer_event))
+            );
         }
     }
 }
