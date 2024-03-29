@@ -8,6 +8,7 @@ sierra-replace-ids = true
 
 [dependencies]
 dojo.workspace = true
+
 [[target.dojo]]
 
 [tool.dojo]
