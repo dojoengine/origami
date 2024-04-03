@@ -84,4 +84,3 @@ jobs:
       - name: Test
         run: sozo test -f hex_map
         shell: bash
-        

@@ -3,7 +3,7 @@ version = 1
 
 [[package]]
 name = "chess"
-version = "0.4.0"
+version = "0.6.0-alpha.6"
 dependencies = [
  "dojo",
 ]
