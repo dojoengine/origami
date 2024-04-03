@@ -242,7 +242,11 @@ mod ERC1155 {
                 self.world(),
                 ERC1155OperatorApproval { token: get_contract_address(), owner, operator, approved }
             );
-            self.emit_event(ApprovalForAll { owner, operator, approved });
+
+            let approval_for_all_event = ApprovalForAll { owner, operator, approved };
+
+            self.emit(approval_for_all_event.clone());
+            emit!(self.world(), (Event::ApprovalForAll(approval_for_all_event)));
         }
 
         fn set_balance(ref self: ContractState, account: ContractAddress, id: u256, amount: u256) {
@@ -260,15 +264,6 @@ mod ERC1155 {
         ) {
             self.set_balance(from, id, self.get_balance(from, id).amount - amount);
             self.set_balance(to, id, self.get_balance(to, id).amount + amount);
-        }
-
-        fn emit_event<
-            S, impl IntoImp: traits::Into<S, Event>, impl SDrop: Drop<S>, impl SClone: Clone<S>
-        >(
-            ref self: ContractState, event: S
-        ) {
-            self.emit(event.clone());
-            emit!(self.world(), event);
         }
     }
 
@@ -305,10 +300,12 @@ mod ERC1155 {
         ) {
             self.update_balances(from, to, id, amount);
 
-            self
-                .emit_event(
-                    TransferSingle { operator: get_caller_address(), from, to, id, value: amount }
-                );
+            let transfer_single_event = TransferSingle {
+                operator: get_caller_address(), from, to, id, value: amount
+            };
+
+            self.emit(transfer_single_event.clone());
+            emit!(self.world(), (Event::TransferSingle(transfer_single_event)));
         }
 
         fn _safe_batch_transfer_from(
@@ -333,10 +330,12 @@ mod ERC1155 {
                 self.update_balances(from, to, id, amount);
             };
 
-            self
-                .emit_event(
-                    TransferBatch { operator: get_caller_address(), from, to, ids, values: amounts }
-                );
+            let transfer_batch_event = TransferBatch {
+                operator: get_caller_address(), from, to, ids, values: amounts
+            };
+
+            self.emit(transfer_batch_event.clone());
+            emit!(self.world(), (Event::TransferBatch(transfer_batch_event)));
         }
 
         fn _mint(ref self: ContractState, to: ContractAddress, id: u256, amount: u256) {
@@ -344,16 +343,12 @@ mod ERC1155 {
 
             self.set_balance(to, id, self.get_balance(to, id).amount + amount);
 
-            self
-                .emit_event(
-                    TransferSingle {
-                        operator: get_caller_address(),
-                        from: Zeroable::zero(),
-                        to,
-                        id,
-                        value: amount
-                    }
-                );
+            let transfer_single_event = TransferSingle {
+                operator: get_caller_address(), from: Zeroable::zero(), to, id, value: amount
+            };
+
+            self.emit(transfer_single_event.clone());
+            emit!(self.world(), (Event::TransferSingle(transfer_single_event)));
         }
 
         fn _burn(ref self: ContractState, id: u256, amount: u256) {
@@ -362,16 +357,16 @@ mod ERC1155 {
 
             self.set_balance(caller, id, self.get_balance(caller, id).amount - amount);
 
-            self
-                .emit_event(
-                    TransferSingle {
-                        operator: get_caller_address(),
-                        from: caller,
-                        to: Zeroable::zero(),
-                        id,
-                        value: amount
-                    }
-                );
+            let transfer_single_event = TransferSingle {
+                operator: get_caller_address(),
+                from: caller,
+                to: Zeroable::zero(),
+                id,
+                value: amount
+            };
+
+            self.emit(transfer_single_event.clone());
+            emit!(self.world(), (Event::TransferSingle(transfer_single_event)));
         }
 
         fn _safe_mint(

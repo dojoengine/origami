@@ -132,7 +132,9 @@ mod dojo_bridge {
         token_dispatcher.mint(recipient, amount);
 
         let event = DepositHandled { recipient, amount };
-        self.emit_event(event);
+
+        self.emit(event.clone());
+        emit!(self.world(), (Event::DepositHandled(event)));
     }
 
     //
@@ -162,7 +164,9 @@ mod dojo_bridge {
             starknet::syscalls::send_message_to_l1_syscall(data.l1_bridge, message.span());
 
             let event = WithdrawalInitiated { sender: caller, recipient: l1_recipient, amount };
-            self.emit_event(event);
+           
+            self.emit(event.clone());
+            emit!(self.world(), (Event::WithdrawalInitiated(event)));
         }
 
         fn get_l1_bridge(self: @ContractState) -> felt252 {
@@ -181,12 +185,6 @@ mod dojo_bridge {
             get!(self.world(), get_contract_address(), (DojoBridgeModel))
         }
 
-        fn emit_event<S, +traits::Into<S, Event>, +Drop<S>, +Clone<S>>(
-            ref self: ContractState, event: S
-        ) {
-            self.emit(event.clone());
-            emit!(self.world(), event);
-        }
     }
 }
 

@@ -88,7 +88,7 @@ mod actions {
             set!(world, (next));
 
             // Emit an event to the world to notify about the player's move.
-            emit!(world, Moved { player, direction });
+            emit!(world, (Event::Moved(Moved { player, direction })));
         }
     }
 }
