@@ -26,8 +26,7 @@ use token::components::token::erc20::erc20_allowance::{
     erc_20_allowance_model, ERC20AllowanceModel,
 };
 use token::components::token::erc20::erc20_allowance::erc20_allowance_component::{
-    Approval, ERC20AllowanceImpl, InternalImpl as ERC20AllownceInternalImpl, ERC20SafeAllowanceImpl,
-    ERC20SafeAllowanceCamelImpl
+    Approval, ERC20AllowanceImpl, InternalImpl as ERC20AllownceInternalImpl
 };
 
 use token::components::token::erc20::erc20_bridgeable::{
@@ -78,7 +77,7 @@ fn setup() -> (IWorldDispatcher, IDojoTokenDispatcher, IDojoBridgeDispatcher) {
             .deploy_contract('salt', dojo_token::TEST_CLASS_HASH.try_into().unwrap())
     };
 
-     // deploy bridge
+    // deploy bridge
     let mut dojo_bridge_dispatcher = IDojoBridgeDispatcher {
         contract_address: world
             .deploy_contract('salt', dojo_bridge::TEST_CLASS_HASH.try_into().unwrap())
@@ -99,7 +98,6 @@ fn setup() -> (IWorldDispatcher, IDojoTokenDispatcher, IDojoBridgeDispatcher) {
     
     // initialize dojo_bridge
     dojo_bridge_dispatcher.initializer( L1BRIDGE, dojo_token_dispatcher.contract_address);
-    dojo_bridge_dispatcher.initializer( L1BRIDGE, dojo_token_dispatcher.contract_address);
 
     // drop all events
     utils::drop_all_events(dojo_token_dispatcher.contract_address);
@@ -115,9 +113,8 @@ fn setup() -> (IWorldDispatcher, IDojoTokenDispatcher, IDojoBridgeDispatcher) {
 //
 
 #[test]
-#[available_gas(30000000)]
 fn test_initializers() {
-    let (world, mut dojo_token, mut dojo_bridge) = setup();
+    let (_world, mut dojo_token, mut dojo_bridge) = setup();
 
     assert(dojo_token.total_supply() == 0, 'Should eq 0');
     assert(dojo_token.name() == NAME, 'Name should be NAME');

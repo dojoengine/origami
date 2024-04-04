@@ -6,7 +6,7 @@ version = "0.1.0"
 
 [dependencies]
 # not using workspace, otherwise all contracts/models get built & included in manifest
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.4.4" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.6.0-alpha.13" }
 token = { path = "../../../token" }
 
 [scripts]

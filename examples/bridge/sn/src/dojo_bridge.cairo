@@ -32,6 +32,19 @@ struct DojoBridgeModel {
 }
 
 
+#[starknet::interface]
+trait IDojoBridgeTrait<TState> { 
+    fn initiate_withdrawal(ref self: TState, l1_recipient: felt252, amount: u256);
+    fn get_l1_bridge(self: @TState, ) -> felt252;
+    fn get_token(self: @TState, ) -> ContractAddress;
+}
+
+#[starknet::interface]
+trait IDojoBridgeInitializerTrait<TState> { 
+    fn initializer(ref self: TState, l1_bridge: felt252, l2_token: ContractAddress);
+}
+
+
 #[dojo::contract]
 mod dojo_bridge {
     use super::DojoBridgeModel;
@@ -97,9 +110,8 @@ mod dojo_bridge {
     // Initializer
     //
 
-    #[external(v0)]
-    #[generate_trait]
-    impl ERC20InitializerImpl of ERC20InitializerTrait {
+    #[abi(embed_v0)]
+    impl DojoBridgeInitializerImpl of super::IDojoBridgeInitializerTrait<ContractState> {
         fn initializer(ref self: ContractState, l1_bridge: felt252, l2_token: ContractAddress) {
             assert(
                 self.world().is_owner(get_caller_address(), get_contract_address().into()),
@@ -141,9 +153,8 @@ mod dojo_bridge {
     // Impls
     //
 
-    #[external(v0)]
-    #[generate_trait]
-    impl DojoBridgeImpl of DojoBridgeTrait {
+    #[abi(embed_v0)]
+    impl DojoBridgeImpl of super::IDojoBridgeTrait<ContractState> {
         fn initiate_withdrawal(ref self: ContractState, l1_recipient: felt252, amount: u256) {
             let data = self.get_data();
             let caller = get_caller_address();
@@ -161,7 +172,7 @@ mod dojo_bridge {
             ];
 
             // send msg to L1
-            starknet::syscalls::send_message_to_l1_syscall(data.l1_bridge, message.span());
+            starknet::syscalls::send_message_to_l1_syscall(data.l1_bridge, message.span()).unwrap();
 
             let event = WithdrawalInitiated { sender: caller, recipient: l1_recipient, amount };
            
