@@ -27,7 +27,7 @@ struct ERC721Owner {
     #[key]
     token: ContractAddress,
     #[key]
-    token_id: u256,
+    token_id: u128,
     address: ContractAddress
 }
 
@@ -45,6 +45,6 @@ struct ERC721TokenApproval {
     #[key]
     token: ContractAddress,
     #[key]
-    token_id: u256,
+    token_id: u128,
     address: ContractAddress,
 }
