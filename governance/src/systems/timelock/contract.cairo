@@ -43,11 +43,11 @@ mod timelock {
             let params = get!(world, get_contract_address(), TimelockParams);
             assert!(
                 get_caller_address() == params.admin,
-                "Timelock::queueTransaction: Call must come from admin."
+                "Timelock::queue_transaction: Call must come from admin."
             );
             assert!(
                 eta >= get_block_timestamp() + params.delay,
-                "Timelock::queueTransaction: Estimated execution block must satisfy delay."
+                "Timelock::queue_transaction: Estimated execution block must satisfy delay."
             );
             set!(
                 world,

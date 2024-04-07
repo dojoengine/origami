@@ -5,12 +5,11 @@ mod governancetoken {
         Allowances, Metadata, TotalSupply, Balances, Delegates, NumCheckpoints, Checkpoints
     };
     use governance::systems::token::interface::IGovernanceToken;
+    use integer::BoundedInt;
     use starknet::{
         ContractAddress, get_caller_address, get_contract_address,
         info::{get_block_number, get_execution_info},
     };
-    use integer::BoundedInt;
-    use poseidon::poseidon_hash_span;
 
     impl GovernanceTokenImpl of IGovernanceToken<ContractState> {
         fn constructor(
