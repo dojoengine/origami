@@ -6,16 +6,16 @@ mod tokenevents {
     struct DelegateChanged {
         #[key]
         delegator: ContractAddress,
-        from_delegate: ContractAddress,
-        to_delegate: ContractAddress,
+        from: ContractAddress,
+        to: ContractAddress,
     }
 
     #[derive(Model, Copy, Drop, Serde)]
     #[dojo::event]
     struct DelegateVotesChanged {
         #[key]
-        delegate: ContractAddress,
-        previous_balance: u128,
+        delegatee: ContractAddress,
+        prev_balance: u128,
         new_balance: u128,
     }
 

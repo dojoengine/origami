@@ -21,7 +21,7 @@ struct Allowances {
     #[key]
     delegator: ContractAddress,
     #[key]
-    delegate: ContractAddress,
+    delegatee: ContractAddress,
     amount: u128,
 }
 
@@ -36,7 +36,7 @@ struct Balances {
 struct Delegates {
     #[key]
     account: ContractAddress,
-    delegate: ContractAddress,
+    delegatee: ContractAddress,
 }
 
 #[derive(Model, Copy, Drop, Serde)]
@@ -44,7 +44,7 @@ struct Checkpoints {
     #[key]
     account: ContractAddress,
     #[key]
-    index: u128,
+    index: u64,
     checkpoint: Checkpoint,
 }
 
@@ -52,7 +52,7 @@ struct Checkpoints {
 struct NumCheckpoints {
     #[key]
     account: ContractAddress,
-    count: u128,
+    count: u64,
 }
 
 #[derive(Model, Copy, Drop, Serde)]
