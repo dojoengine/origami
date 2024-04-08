@@ -14,21 +14,21 @@ mod timelock {
     const MINIMUM_DELAY: u64 = 172_800; // 2 days;
     const MAXIMUM_DELAY: u64 = 2_592_000; // 30 days;
 
+    #[abi(embed_v0)]
     impl TimelockImpl of ITimelock<ContractState> {
         fn initialize(admin: ContractAddress, delay: u64) {
-            assert!(!admin.is_zero(), "Timelock::constructor: Admin address cannot be zero.");
+            assert!(!admin.is_zero(), "Timelock::initialize: Admin address cannot be zero.");
             assert!(
-                delay >= MINIMUM_DELAY, "Timelock::constructor: Delay must exceed minimum delay."
+                delay >= MINIMUM_DELAY, "Timelock::initialize: Delay must exceed minimum delay."
             );
             assert!(
-                delay <= MAXIMUM_DELAY,
-                "Timelock::constructor: Delay must not exceed maximum delay."
+                delay <= MAXIMUM_DELAY, "Timelock::initialize: Delay must not exceed maximum delay."
             );
             let world = self.world_dispatcher.read();
             let contract = get_contract_address();
             let curr_params = get!(world, contract, TimelockParams);
             assert!(
-                curr_params.admin == Zeroable::zero(), "Timelock::constructor: Already initialized."
+                curr_params.admin == Zeroable::zero(), "Timelock::initialize: Already initialized."
             );
             set!(world, TimelockParams { contract, admin, delay });
             emit!(

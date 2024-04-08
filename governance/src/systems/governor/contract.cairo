@@ -17,6 +17,7 @@ mod governor {
         ContractAddress, ClassHash, get_contract_address, get_caller_address, info::get_block_number
     };
 
+    #[abi(embed_v0)]
     impl GovernorImpl of IGovernor<ContractState> {
         fn initialize(
             timelock: ContractAddress, gov_token: ContractAddress, guardian: ContractAddress

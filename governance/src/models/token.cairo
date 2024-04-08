@@ -36,7 +36,7 @@ struct Balances {
 struct Delegates {
     #[key]
     account: ContractAddress,
-    delegatee: ContractAddress,
+    address: ContractAddress,
 }
 
 #[derive(Model, Copy, Drop, Serde)]
@@ -62,7 +62,7 @@ struct Nonces {
     nonce: usize,
 }
 
-#[derive(Copy, Drop, Introspect, Serde)]
+#[derive(Copy, Debug, Drop, Introspect, Serde)]
 struct Checkpoint {
     from_block: u64,
     votes: u128,

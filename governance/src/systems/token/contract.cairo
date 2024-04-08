@@ -2,7 +2,8 @@
 mod governancetoken {
     use governance::libraries::events::tokenevents;
     use governance::models::token::{
-        Allowances, Metadata, TotalSupply, Balances, Delegates, NumCheckpoints, Checkpoints
+        Allowances, Metadata, TotalSupply, Balances, Delegates, NumCheckpoints, Checkpoints,
+        Checkpoint
     };
     use governance::systems::token::interface::IGovernanceToken;
     use integer::BoundedInt;
@@ -11,6 +12,7 @@ mod governancetoken {
         info::{get_block_number, get_execution_info},
     };
 
+    #[abi(embed_v0)]
     impl GovernanceTokenImpl of IGovernanceToken<ContractState> {
         fn initialize(
             name: felt252,
@@ -54,6 +56,7 @@ mod governancetoken {
         }
 
         fn transfer(to: ContractAddress, amount: u128) {
+            println!("caller {:?}", get_caller_address());
             transfer_tokens(self.world_dispatcher.read(), get_caller_address(), to, amount);
         }
 
@@ -126,10 +129,21 @@ mod governancetoken {
         }
     }
 
+
+    // function _delegate(address delegator, address delegatee) internal {
+    //     address currentDelegate = delegates[delegator];
+    //     uint96 delegatorBalance = balances[delegator];
+    //     delegates[delegator] = delegatee;
+
+    //     emit DelegateChanged(delegator, currentDelegate, delegatee);
+
+    //     _moveDelegates(currentDelegate, delegatee, delegatorBalance);
+    // }
+
     fn delegate(world: IWorldDispatcher, delegator: ContractAddress, delegatee: ContractAddress) {
-        let current_delegate = get!(world, delegator, Delegates).delegatee;
+        let current_delegate = get!(world, delegator, Delegates).address;
         let delegator_balance = get!(world, delegator, Balances).amount;
-        set!(world, Delegates { account: delegator, delegatee });
+        set!(world, Delegates { account: delegator, address: delegatee });
         emit!(
             world, tokenevents::DelegateChanged { delegator, from: current_delegate, to: delegatee }
         );
@@ -146,28 +160,48 @@ mod governancetoken {
         assert!(from_balance >= amount, "Governance Token: insufficient balance");
 
         let to_balance = get!(world, to, Balances).amount;
-        set!(world, Balances { account: to, amount: to_balance + amount });
+        set!(
+            world,
+            (
+                Balances { account: to, amount: to_balance + amount },
+                Balances { account: from, amount: from_balance - amount }
+            )
+        );
         emit!(world, tokenevents::Transfer { from, to, amount });
-        let from_rep = get!(world, from, Delegates).delegatee;
-        let to_rep = get!(world, to, Delegates).delegatee;
+        let from_rep = get!(world, from, Delegates).address;
+        let to_rep = get!(world, to, Delegates).address;
 
         move_delegates(world, from_rep, to_rep, amount);
     }
 
     fn move_delegates(
-        world: IWorldDispatcher, from_rep: ContractAddress, to_rep: ContractAddress, amount: u128
+        world: IWorldDispatcher, src_rep: ContractAddress, dst_rep: ContractAddress, amount: u128
     ) {
-        if from_rep != to_rep && !amount.is_zero() {
-            if !from_rep.is_zero() {
-                let from_rep_num = get!(world, from_rep, NumCheckpoints).count;
-                let from_rep_old = if !from_rep_num.is_zero() {
-                    get!(world, (from_rep, from_rep_num - 1), Checkpoints).checkpoint.votes
+        println!("amount {}", amount);
+        println!("src_rep {:?}", src_rep);
+        println!("dst_rep {:?}", dst_rep);
+        if src_rep != dst_rep && !amount.is_zero() {
+            if !src_rep.is_zero() {
+                let src_rep_num = get!(world, src_rep, NumCheckpoints).count;
+                let src_rep_old = if !src_rep_num.is_zero() {
+                    get!(world, (src_rep, src_rep_num - 1), Checkpoints).checkpoint.votes
                 } else {
                     0
                 };
-                assert!(from_rep_old >= amount, "Governance Token: vote amount underflows");
-                let from_rep_new = from_rep_old - amount;
-                write_checkpoint(world, from_rep, from_rep_num, from_rep_old, from_rep_new);
+                assert!(src_rep_old >= amount, "Governance Token: vote amount underflows");
+                let src_rep_new = src_rep_old - amount;
+                write_checkpoint(world, src_rep, src_rep_num, src_rep_old, src_rep_new);
+            }
+
+            if !dst_rep.is_zero() {
+                let dst_rep_num = get!(world, dst_rep, NumCheckpoints).count;
+                let dst_rep_old = if !dst_rep_num.is_zero() {
+                    get!(world, (dst_rep, dst_rep_num - 1), Checkpoints).checkpoint.votes
+                } else {
+                    0
+                };
+                let dst_rep_new = dst_rep_old + amount;
+                write_checkpoint(world, dst_rep, dst_rep_num, dst_rep_old, dst_rep_new);
             }
         }
     }
@@ -179,14 +213,21 @@ mod governancetoken {
         old_votes: u128,
         new_votes: u128
     ) {
+        println!("old_votes {}", old_votes);
+        println!("new_votes {}", new_votes);
+        println!("n_checkpoints {}", n_checkpoints);
         let block_number = get_block_number();
-        let mut checkpoint = get!(world, (delegatee, n_checkpoints - 1), Checkpoints).checkpoint;
-        if !n_checkpoints.is_zero() && checkpoint.from_block == n_checkpoints {
-            checkpoint.votes = new_votes;
-            set!(world, Checkpoints { account: delegatee, index: n_checkpoints - 1, checkpoint });
+        if !n_checkpoints.is_zero() {
+            let mut checkpoint = get!(world, (delegatee, n_checkpoints - 1), Checkpoints)
+                .checkpoint;
+            if checkpoint.from_block == block_number {
+                checkpoint.votes = new_votes;
+                set!(
+                    world, Checkpoints { account: delegatee, index: n_checkpoints - 1, checkpoint }
+                );
+            }
         } else {
-            checkpoint.from_block = block_number;
-            checkpoint.votes = new_votes;
+            let mut checkpoint = Checkpoint { from_block: block_number, votes: new_votes };
             set!(world, Checkpoints { account: delegatee, index: n_checkpoints, checkpoint });
         }
         emit!(
