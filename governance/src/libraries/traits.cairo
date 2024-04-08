@@ -1,4 +1,3 @@
-use governance::models::governor::Support;
 use starknet::{ClassHash, ContractAddress, class_hash_const, contract_address_const};
 
 impl ContractAddressDefault of Default<ContractAddress> {
@@ -15,9 +14,3 @@ impl ClassHashDefault of Default<ClassHash> {
     }
 }
 
-impl SupportDefault of Default<Support> {
-    #[inline(always)]
-    fn default() -> Support nopanic {
-        Support::Abstain(())
-    }
-}

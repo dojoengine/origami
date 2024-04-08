@@ -98,9 +98,6 @@ mod governor {
             new_proposal.target = target;
             new_proposal.start_block = start_block;
             new_proposal.end_block = end_block;
-            // TODO: unsure if default bool is false, hardcoded for now, can remove if is false
-            new_proposal.canceled = false;
-            new_proposal.executed = false;
 
             set!(world, LatestProposalIds { address: caller, id: proposal_id });
 

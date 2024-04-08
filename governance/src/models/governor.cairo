@@ -1,4 +1,4 @@
-use governance::libraries::traits::{ContractAddressDefault, ClassHashDefault, SupportDefault};
+use governance::libraries::traits::{ContractAddressDefault, ClassHashDefault};
 use starknet::{ContractAddress, ClassHash};
 
 #[derive(Model, Copy, Drop, Serde)]
@@ -85,9 +85,10 @@ enum ProposalState {
     Executed
 }
 
-#[derive(Copy, Drop, Introspect, Serde)]
+#[derive(Copy, Default, Drop, Introspect, Serde)]
 enum Support {
     For,
     Against,
+    #[default]
     Abstain,
 }
