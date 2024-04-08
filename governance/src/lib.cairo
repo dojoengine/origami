@@ -1,5 +1,6 @@
 mod libraries {
     mod events;
+    mod traits;
 }
 
 mod models {
