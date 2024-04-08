@@ -1,4 +1,4 @@
-use governance::libraries::traits::{ContractAddressDefault, ClassHashDefault};
+use governance::libraries::traits::{ContractAddressDefault, ClassHashDefault, SupportDefault};
 use starknet::{ContractAddress, ClassHash};
 
 #[derive(Model, Copy, Drop, Serde)]
@@ -60,6 +60,7 @@ struct Proposal {
     start_block: u64,
     end_block: u64,
     for_votes: u128,
+    abstain_votes: u128,
     against_votes: u128,
     canceled: bool,
     executed: bool,
@@ -68,7 +69,7 @@ struct Proposal {
 #[derive(Copy, Default, Drop, Introspect, Serde)]
 struct Receipt {
     has_voted: bool,
-    support: bool,
+    support: Support,
     votes: u128
 }
 
@@ -82,4 +83,11 @@ enum ProposalState {
     Queued,
     Expired,
     Executed
+}
+
+#[derive(Copy, Drop, Introspect, Serde)]
+enum Support {
+    For,
+    Against,
+    Abstain,
 }

@@ -4,7 +4,7 @@ mod governor {
     use governance::models::{
         governor::{
             GovernorParams, ProposalParams, ProposalCount, Proposals, Proposal, Receipt,
-            ProposalState, LatestProposalIds, Receipts
+            ProposalState, LatestProposalIds, Receipts, Support
         },
         timelock::{QueuedTransactions, TimelockParams}
     };
@@ -211,7 +211,7 @@ mod governor {
             }
         }
 
-        fn cast_vote(proposal_id: usize, support: bool) {
+        fn cast_vote(proposal_id: usize, support: Support) {
             let world = self.world_dispatcher.read();
             let state = self.state(proposal_id);
             match state {
@@ -225,10 +225,10 @@ mod governor {
             assert!(!receipt.has_voted, "Governor::cast_vote: voter already voted");
 
             let votes = governancetoken::get_prior_votes(world, caller, proposal.start_block);
-            if support {
-                proposal.for_votes += votes;
-            } else {
-                proposal.against_votes += votes;
+            match support {
+                Support::For => { proposal.for_votes += votes; },
+                Support::Against => { proposal.against_votes += votes; },
+                Support::Abstain => { proposal.abstain_votes += votes; }
             }
 
             receipt.has_voted = true;

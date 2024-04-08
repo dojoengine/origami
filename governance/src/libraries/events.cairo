@@ -86,6 +86,7 @@ mod timelockevents {
 }
 
 mod governorevents {
+    use governance::models::governor::Support;
     use starknet::{ContractAddress, ClassHash};
 
     #[derive(Model, Copy, Drop, Serde)]
@@ -106,7 +107,7 @@ mod governorevents {
         #[key]
         voter: ContractAddress,
         proposal_id: usize,
-        support: bool,
+        support: Support,
         votes: u128,
     }
 

@@ -1,4 +1,4 @@
-use governance::models::governor::{ProposalState, Receipt};
+use governance::models::governor::{ProposalState, Receipt, Support};
 use starknet::{ContractAddress, ClassHash};
 
 #[dojo::interface]
@@ -13,5 +13,5 @@ trait IGovernor {
     fn cancel(proposal_id: usize);
     fn get_action(proposal_id: usize) -> (ContractAddress, ClassHash);
     fn state(proposal_id: usize) -> ProposalState;
-    fn cast_vote(proposal_id: usize, support: bool);
+    fn cast_vote(proposal_id: usize, support: Support);
 }
