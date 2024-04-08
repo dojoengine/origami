@@ -15,7 +15,7 @@ mod timelock {
     const MAXIMUM_DELAY: u64 = 2_592_000; // 30 days;
 
     impl TimelockImpl of ITimelock<ContractState> {
-        fn constructor(admin: ContractAddress, delay: u64) {
+        fn initialize(admin: ContractAddress, delay: u64) {
             assert!(!admin.is_zero(), "Timelock::constructor: Admin address cannot be zero.");
             assert!(
                 delay >= MINIMUM_DELAY, "Timelock::constructor: Delay must exceed minimum delay."

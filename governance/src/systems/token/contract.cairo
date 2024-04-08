@@ -12,7 +12,7 @@ mod governancetoken {
     };
 
     impl GovernanceTokenImpl of IGovernanceToken<ContractState> {
-        fn constructor(
+        fn initialize(
             name: felt252,
             symbol: felt252,
             decimals: u8,

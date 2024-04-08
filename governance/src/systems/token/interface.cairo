@@ -2,7 +2,7 @@ use starknet::ContractAddress;
 
 #[dojo::interface]
 trait IGovernanceToken {
-    fn constructor(
+    fn initialize(
         name: felt252,
         symbol: felt252,
         decimals: u8,
