@@ -89,52 +89,53 @@ mod governancetoken {
                 0
             }
         }
+    }
 
-        fn get_prior_votes(account: ContractAddress, block_number: u64) -> u128 {
-            let block_number = get_block_number();
-            assert!(block_number < block_number, "Governance Token: not yet determined");
-            let world = self.world_dispatcher.read();
-            let n_checkpoints = get!(world, account, NumCheckpoints).count;
-            if n_checkpoints.is_zero() {
-                return 0;
-            }
-            let most_recent_checkpoint = get!(world, (account, n_checkpoints - 1), Checkpoints)
-                .checkpoint;
-            if most_recent_checkpoint.from_block > block_number {
-                return 0;
-            }
-            let mut lower = 0;
-            let mut upper = n_checkpoints - 1;
-            let mut votes = 0;
-            loop {
-                if lower == upper {
-                    votes = get!(world, (account, lower), Checkpoints).checkpoint.votes;
-                    break;
-                }
-                let center = upper - (upper - lower) / 2;
-                let cp = get!(world, (account, center), Checkpoints).checkpoint;
-                if cp.from_block == block_number {
-                    votes = cp.votes;
-                    break;
-                } else if cp.from_block < block_number {
-                    lower = center;
-                } else {
-                    upper = center - 1;
-                }
-            };
-            votes
+    fn get_prior_votes(
+        world: IWorldDispatcher, account: ContractAddress, block_number: u64
+    ) -> u128 {
+        let block_number = get_block_number();
+        assert!(block_number < block_number, "Governance Token: not yet determined");
+        let n_checkpoints = get!(world, account, NumCheckpoints).count;
+        if n_checkpoints.is_zero() {
+            return 0;
         }
+        let most_recent_checkpoint = get!(world, (account, n_checkpoints - 1), Checkpoints)
+            .checkpoint;
+        if most_recent_checkpoint.from_block > block_number {
+            return 0;
+        }
+        let mut lower = 0;
+        let mut upper = n_checkpoints - 1;
+        let mut votes = 0;
+        loop {
+            if lower == upper {
+                votes = get!(world, (account, lower), Checkpoints).checkpoint.votes;
+                break;
+            }
+            let center = upper - (upper - lower) / 2;
+            let cp = get!(world, (account, center), Checkpoints).checkpoint;
+            if cp.from_block == block_number {
+                votes = cp.votes;
+                break;
+            } else if cp.from_block < block_number {
+                lower = center;
+            } else {
+                upper = center - 1;
+            }
+        };
+        votes
     }
 
 
     fn delegate(world: IWorldDispatcher, delegator: ContractAddress, delegatee: ContractAddress) {
-        let currentDelegate = get!(world, delegator, Delegates).delegatee;
-        let delegatorBalance = get!(world, delegator, Balances).amount;
+        let current_delegate = get!(world, delegator, Delegates).delegatee;
+        let delegator_balance = get!(world, delegator, Balances).amount;
         set!(world, Delegates { account: delegator, delegatee });
         emit!(
-            world, tokenevents::DelegateChanged { delegator, from: currentDelegate, to: delegatee }
+            world, tokenevents::DelegateChanged { delegator, from: current_delegate, to: delegatee }
         );
-        move_delegates(world, currentDelegate, delegatee, delegatorBalance);
+        move_delegates(world, current_delegate, delegatee, delegator_balance);
     }
 
     fn transfer_tokens(
