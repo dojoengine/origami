@@ -14,5 +14,5 @@ trait IGovernanceToken {
     fn transfer_from(from: ContractAddress, to: ContractAddress, amount: u128);
     fn delegate(delegatee: ContractAddress);
     fn get_current_votes(account: ContractAddress) -> u128;
-// fn get_prior_votes(account: ContractAddress, block_number: u64) -> u128;
+    fn get_prior_votes(account: ContractAddress, block_number: u64) -> u128;
 }
