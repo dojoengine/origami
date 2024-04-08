@@ -84,3 +84,53 @@ mod timelockevents {
         eta: u64,
     }
 }
+
+mod governorevents {
+    use starknet::{ContractAddress, ClassHash};
+
+    #[derive(Model, Copy, Drop, Serde)]
+    #[dojo::event]
+    struct ProposalCreated {
+        #[key]
+        id: usize,
+        proposer: ContractAddress,
+        target: ContractAddress,
+        class_hash: ClassHash,
+        start_block: u64,
+        end_block: u64,
+    }
+
+    #[derive(Model, Copy, Drop, Serde)]
+    #[dojo::event]
+    struct VoteCast {
+        #[key]
+        voter: ContractAddress,
+        proposal_id: usize,
+        support: bool,
+        votes: u128,
+    }
+
+    #[derive(Model, Copy, Drop, Serde)]
+    #[dojo::event]
+    struct ProposalCanceled {
+        #[key]
+        id: usize,
+        cancelled: bool,
+    }
+
+    #[derive(Model, Copy, Drop, Serde)]
+    #[dojo::event]
+    struct ProposalQueued {
+        #[key]
+        id: usize,
+        eta: u64,
+    }
+
+    #[derive(Model, Copy, Drop, Serde)]
+    #[dojo::event]
+    struct ProposalExecuted {
+        #[key]
+        id: usize,
+        executed: bool,
+    }
+}
