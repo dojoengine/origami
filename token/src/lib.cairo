@@ -2,6 +2,10 @@ mod components {
     mod introspection {
         mod src5;
     }
+mod components {
+    mod introspection {
+        mod src5;
+    }
 
     mod security {
         mod initializable;
@@ -17,7 +21,14 @@ mod components {
             mod erc20_mintable;
         }
 
-        mod erc721 {}
+        mod erc721 {
+            mod erc721_approval;
+            mod erc721_balance;
+            mod erc721_burnable;
+            mod erc721_metadata;
+            mod erc721_mintable;
+            mod erc721_owner;
+        }
     }
 
     mod tests;
