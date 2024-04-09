@@ -9,32 +9,50 @@ mod mocks {
         mod erc20_mintable_burnable_mock;
         mod erc20_bridgeable_mock;
     }
-}
 
-mod introspection {
-    #[cfg(test)]
-    mod test_src5;
-}
-
-mod security {
-    #[cfg(test)]
-    mod test_initializable;
-}
-
-
-mod token {
-    mod erc20 {
-        #[cfg(test)]
-        mod test_erc20_allowance;
-        #[cfg(test)]
-        mod test_erc20_balance;
-        #[cfg(test)]
-        mod test_erc20_metadata;
-        #[cfg(test)]
-        mod test_erc20_mintable_burnable;
-        #[cfg(test)]
-        mod test_erc20_bridgeable;
+    mod erc721 {
+        mod erc721_approval_mock;
+        // mod erc721_balance_mock;
+        // mod erc721_metadata_mock;
+        // mod erc721_mintable_burnable_mock;
     }
-
-    mod erc711 {}
 }
+
+// mod introspection {
+//     #[cfg(test)]
+//     mod test_src5;
+// }
+
+// mod security {
+//     #[cfg(test)]
+//     mod test_initializable;
+// }
+
+
+// mod token {
+//     mod erc20 {
+//         #[cfg(test)]
+//         mod test_erc20_allowance;
+//         #[cfg(test)]
+//         mod test_erc20_balance;
+//         #[cfg(test)]
+//         mod test_erc20_metadata;
+//         #[cfg(test)]
+//         mod test_erc20_mintable_burnable;
+//         #[cfg(test)]
+//         mod test_erc20_bridgeable;
+//     }
+
+//     mod erc721 {
+//         #[cfg(test)]
+//         mod test_erc20_allowance;
+//         #[cfg(test)]
+//         mod test_erc20_balance;
+//         #[cfg(test)]
+//         mod test_erc20_metadata;
+//         #[cfg(test)]
+//         mod test_erc20_mintable_burnable;
+//         #[cfg(test)]
+//         mod test_erc20_bridgeable;
+//     }
+// }
