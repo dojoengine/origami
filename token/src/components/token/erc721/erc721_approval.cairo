@@ -99,7 +99,6 @@ mod erc721_approval_component {
 
     mod Errors {
         const INVALID_TOKEN_ID: felt252 = 'ERC721: invalid token ID';
-        const INVALID_ACCOUNT: felt252 = 'ERC721: invalid account';
         const UNAUTHORIZED: felt252 = 'ERC721: unauthorized caller';
         const APPROVAL_TO_OWNER: felt252 = 'ERC721: approval to owner';
         const SELF_APPROVAL: felt252 = 'ERC721: self approval';
@@ -111,7 +110,6 @@ mod erc721_approval_component {
         TContractState,
         +HasComponent<TContractState>,
         +IWorldProvider<TContractState>,
-        impl ERC721Balance: erc721_balance_comp::HasComponent<TContractState>,
         impl ERC721Owner: erc721_owner_comp::HasComponent<TContractState>,
         +Drop<TContractState>
     > of IERC721Approval<ComponentState<TContractState>> {
@@ -130,7 +128,6 @@ mod erc721_approval_component {
         fn approve(
             ref self: ComponentState<TContractState>, to: ContractAddress, token_id: u128
         ) {
-
             let mut erc721_owner = get_dep_component_mut!(ref self, ERC721Owner);
 
             let owner = erc721_owner.get_owner(token_id).address;
@@ -141,7 +138,7 @@ mod erc721_approval_component {
             );
             self
                 .set_token_approval(
-                    get_contract_address(), to, token_id, true
+                    owner, to, token_id, true
                 )
         }
 
@@ -157,7 +154,6 @@ mod erc721_approval_component {
         TContractState,
         +HasComponent<TContractState>,
         +IWorldProvider<TContractState>,
-        impl ERC721Balance: erc721_balance_comp::HasComponent<TContractState>,
         impl ERC721Owner: erc721_owner_comp::HasComponent<TContractState>,
         +Drop<TContractState>
     > of IERC721ApprovalCamel<ComponentState<TContractState>> {
@@ -218,6 +214,7 @@ mod erc721_approval_component {
             token_id: u128,
             emit: bool
         ) {
+            assert(owner != to, Errors::APPROVAL_TO_OWNER);
             set!(
                 self.get_contract().world(),
                 ERC721TokenApprovalModel { token: get_contract_address(), token_id, address: to, }
