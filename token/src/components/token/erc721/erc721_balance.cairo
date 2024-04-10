@@ -76,16 +76,10 @@ mod erc721_balance_component {
     }
 
     mod Errors {
-        const INVALID_TOKEN_ID: felt252 = 'ERC721: invalid token ID';
         const INVALID_ACCOUNT: felt252 = 'ERC721: invalid account';
         const UNAUTHORIZED: felt252 = 'ERC721: unauthorized caller';
-        const APPROVAL_TO_OWNER: felt252 = 'ERC721: approval to owner';
-        const SELF_APPROVAL: felt252 = 'ERC721: self approval';
         const INVALID_RECEIVER: felt252 = 'ERC721: invalid receiver';
-        const ALREADY_MINTED: felt252 = 'ERC721: token already minted';
         const WRONG_SENDER: felt252 = 'ERC721: wrong sender';
-        const SAFE_MINT_FAILED: felt252 = 'ERC721: safe mint failed';
-        const SAFE_TRANSFER_FAILED: felt252 = 'ERC721: safe transfer failed';
     }
 
     #[embeddable_as(ERC721BalanceImpl)]
@@ -98,7 +92,7 @@ mod erc721_balance_component {
         +Drop<TContractState>
     > of IERC721Balance<ComponentState<TContractState>> {
         fn balance_of(self: @ComponentState<TContractState>, account: ContractAddress) -> u256 {
-            // assert(account.is_non_zero(), Errors::INVALID_ACCOUNT);
+            assert(account.is_non_zero(), Errors::INVALID_ACCOUNT);
             self.get_balance(account).amount
         }
 
@@ -106,8 +100,9 @@ mod erc721_balance_component {
             ref self: ComponentState<TContractState>, from: ContractAddress, to: ContractAddress, token_id: u128
         ) {
             let mut erc721_approval = get_dep_component_mut!(ref self, ERC721Approval);
-            // Implicit clear approvals, no need to emit an event
-            erc721_approval.set_token_approval(from, Zeroable::zero(), token_id, false);
+            assert(
+                erc721_approval.is_approved_or_owner(get_caller_address(), token_id), Errors::UNAUTHORIZED
+            );
             self.transfer_internal(from, to, token_id)
         }
 
@@ -161,6 +156,7 @@ mod erc721_balance_component {
         TContractState,
         +HasComponent<TContractState>,
         +IWorldProvider<TContractState>,
+        impl ERC721Approval: erc721_approval_comp::HasComponent<TContractState>,
         impl ERC721Owner: erc721_owner_comp::HasComponent<TContractState>,
         +Drop<TContractState>
     > of InternalTrait<TContractState> {
@@ -184,10 +180,14 @@ mod erc721_balance_component {
             ref self: ComponentState<TContractState>, from: ContractAddress, to: ContractAddress, token_id: u128
         ) {
             assert(!to.is_zero(), Errors::INVALID_RECEIVER);
+            let mut erc721_approval = get_dep_component_mut!(ref self, ERC721Approval);
             let mut erc721_owner = get_dep_component_mut!(ref self, ERC721Owner);
 
             let owner = erc721_owner.get_owner(token_id).address;
             assert(from == owner, Errors::WRONG_SENDER);
+
+            // Implicit clear approvals, no need to emit an event
+            erc721_approval.set_token_approval(owner, Zeroable::zero(), token_id, false);
 
             self.set_balance(from, self.get_balance(from).amount - 1);
             self.set_balance(to, self.get_balance(to).amount + 1);
@@ -202,20 +202,7 @@ mod erc721_balance_component {
         fn safe_transfer_internal(
             ref self: ComponentState<TContractState>, from: ContractAddress, to: ContractAddress, token_id: u128, data: Span<felt252>
         ) {
-            assert(!to.is_zero(), Errors::INVALID_RECEIVER);
-            let mut erc721_owner = get_dep_component_mut!(ref self, ERC721Owner);
-
-            let owner = erc721_owner.get_owner(token_id).address;
-            assert(from == owner, Errors::WRONG_SENDER);
-
-            self.set_balance(from, self.get_balance(from).amount - 1);
-            self.set_balance(to, self.get_balance(to).amount + 1);
-            erc721_owner.set_owner(token_id, to);
-
-            let transfer_event = Transfer { from, to, token_id };
-
-            self.emit(transfer_event.clone());
-            emit!(self.get_contract().world(), (Event::Transfer(transfer_event)));
+            self.transfer_internal(from, to, token_id);
         }
     }
 }
