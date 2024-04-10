@@ -42,24 +42,8 @@ mod erc721_owner_component {
         IWorldProvider, IWorldProviderDispatcher, IWorldDispatcher, IWorldDispatcherTrait
     };
 
-    use token::components::token::erc721::erc721_approval::erc721_approval_component as erc721_approval_comp;
-    use erc721_approval_comp::InternalImpl as ERC721ApprovalInternal;
-
     #[storage]
     struct Storage {}
-
-    #[event]
-    #[derive(Copy, Drop, Serde, starknet::Event)]
-    enum Event {
-        Transfer: Transfer
-    }
-
-    #[derive(Copy, Drop, Serde, starknet::Event)]
-    struct Transfer {
-        from: ContractAddress,
-        to: ContractAddress,
-        value: u256
-    }
 
     #[embeddable_as(ERC721OwnerImpl)]
     impl ERC721Owner<
@@ -97,7 +81,7 @@ mod erc721_owner_component {
             self: @ComponentState<TContractState>, token_id: u128
         ) -> ERC721OwnerModel {
             get!(
-                self.get_contract().world(), (token_id), (ERC721OwnerModel)
+                self.get_contract().world(), (get_contract_address(), token_id), (ERC721OwnerModel)
             )
         }
 
