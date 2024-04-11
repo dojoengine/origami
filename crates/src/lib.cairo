@@ -26,4 +26,15 @@ mod map {
         mod hex;
         mod types;
     }
+    mod grid {
+        mod grid;
+        mod types;
+    }
 }
+
+// mod maze_generator {
+//     mod grid;
+//     mod algorithms {
+//         mod hunt_and_kill;
+//     }
+// }

@@ -150,7 +150,7 @@ mod tests {
 
         let east_neighbor = hex_tile.neighbor(Direction::East(()));
 
-        assert(east_neighbor.col == 6, 'col should be 7');
+        assert(east_neighbor.col == 6, 'col should be 6');
         assert(east_neighbor.row == 5, 'row should be 5');
 
         let north_east_neighbor = hex_tile.neighbor(Direction::NorthEast(()));
