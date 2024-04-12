@@ -20,22 +20,26 @@ struct ERC721BalanceModel {
 #[starknet::interface]
 trait IERC721Balance<TState> {
     fn balance_of(self: @TState, account: ContractAddress) -> u256;
-    fn transfer_from(
-        ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u128
-    );
+    fn transfer_from(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u128);
     fn safe_transfer_from(
-        ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u128, data: Span<felt252>
+        ref self: TState,
+        from: ContractAddress,
+        to: ContractAddress,
+        token_id: u128,
+        data: Span<felt252>
     );
 }
 
 #[starknet::interface]
 trait IERC721BalanceCamel<TState> {
     fn balanceOf(self: @TState, account: ContractAddress) -> u256;
-    fn transferFrom(
-        ref self: TState, from: ContractAddress, to: ContractAddress, tokenId: u128
-    );
+    fn transferFrom(ref self: TState, from: ContractAddress, to: ContractAddress, tokenId: u128);
     fn safeTransferFrom(
-        ref self: TState, from: ContractAddress, to: ContractAddress, tokenId: u128, data: Span<felt252>
+        ref self: TState,
+        from: ContractAddress,
+        to: ContractAddress,
+        tokenId: u128,
+        data: Span<felt252>
     );
 }
 
@@ -97,11 +101,15 @@ mod erc721_balance_component {
         }
 
         fn transfer_from(
-            ref self: ComponentState<TContractState>, from: ContractAddress, to: ContractAddress, token_id: u128
+            ref self: ComponentState<TContractState>,
+            from: ContractAddress,
+            to: ContractAddress,
+            token_id: u128
         ) {
             let mut erc721_approval = get_dep_component_mut!(ref self, ERC721Approval);
             assert(
-                erc721_approval.is_approved_or_owner(get_caller_address(), token_id), Errors::UNAUTHORIZED
+                erc721_approval.is_approved_or_owner(get_caller_address(), token_id),
+                Errors::UNAUTHORIZED
             );
             self.transfer_internal(from, to, token_id)
         }
@@ -115,7 +123,8 @@ mod erc721_balance_component {
         ) {
             let mut erc721_approval = get_dep_component_mut!(ref self, ERC721Approval);
             assert(
-                erc721_approval.is_approved_or_owner(get_caller_address(), token_id), Errors::UNAUTHORIZED
+                erc721_approval.is_approved_or_owner(get_caller_address(), token_id),
+                Errors::UNAUTHORIZED
             );
             self.safe_transfer_internal(from, to, token_id, data);
         }
@@ -135,7 +144,10 @@ mod erc721_balance_component {
         }
 
         fn transferFrom(
-            ref self: ComponentState<TContractState>, from: ContractAddress, to: ContractAddress, tokenId: u128
+            ref self: ComponentState<TContractState>,
+            from: ContractAddress,
+            to: ContractAddress,
+            tokenId: u128
         ) {
             self.transfer_from(from, to, tokenId)
         }
@@ -169,15 +181,19 @@ mod erc721_balance_component {
         }
 
         fn set_balance(
-            self: @ComponentState<TContractState>,
-            account: ContractAddress, 
-            amount: u256
+            self: @ComponentState<TContractState>, account: ContractAddress, amount: u256
         ) {
-            set!(self.get_contract().world(), ERC721BalanceModel { token: get_contract_address(), account, amount });
+            set!(
+                self.get_contract().world(),
+                ERC721BalanceModel { token: get_contract_address(), account, amount }
+            );
         }
 
         fn transfer_internal(
-            ref self: ComponentState<TContractState>, from: ContractAddress, to: ContractAddress, token_id: u128
+            ref self: ComponentState<TContractState>,
+            from: ContractAddress,
+            to: ContractAddress,
+            token_id: u128
         ) {
             assert(!to.is_zero(), Errors::INVALID_RECEIVER);
             let mut erc721_approval = get_dep_component_mut!(ref self, ERC721Approval);
@@ -200,7 +216,11 @@ mod erc721_balance_component {
         }
 
         fn safe_transfer_internal(
-            ref self: ComponentState<TContractState>, from: ContractAddress, to: ContractAddress, token_id: u128, data: Span<felt252>
+            ref self: ComponentState<TContractState>,
+            from: ContractAddress,
+            to: ContractAddress,
+            token_id: u128,
+            data: Span<felt252>
         ) {
             self.transfer_internal(from, to, token_id);
         }

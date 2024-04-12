@@ -35,9 +35,7 @@ mod erc721_mintable_component {
         impl ERC721Owner: erc721_owner_comp::HasComponent<TContractState>,
         +Drop<TContractState>,
     > of InternalTrait<TContractState> {
-        fn mint(
-            ref self: ComponentState<TContractState>, to: ContractAddress, token_id: u128
-        ) {
+        fn mint(ref self: ComponentState<TContractState>, to: ContractAddress, token_id: u128) {
             assert(!to.is_zero(), Errors::INVALID_RECEIVER);
             let mut erc721_balance = get_dep_component_mut!(ref self, ERC721Balance);
             let mut erc721_owner = get_dep_component_mut!(ref self, ERC721Owner);
@@ -46,10 +44,14 @@ mod erc721_mintable_component {
             erc721_balance.set_balance(to, erc721_balance.get_balance(to).amount + 1);
             erc721_owner.set_owner(token_id, to);
 
-            let transfer_event = erc721_balance_comp::Transfer { from: Zeroable::zero(), to, token_id };
+            let transfer_event = erc721_balance_comp::Transfer {
+                from: Zeroable::zero(), to, token_id
+            };
 
             erc721_balance.emit(transfer_event.clone());
-            emit!(self.get_contract().world(), (erc721_balance_comp::Event::Transfer(transfer_event)));
+            emit!(
+                self.get_contract().world(), (erc721_balance_comp::Event::Transfer(transfer_event))
+            );
         }
     }
 }

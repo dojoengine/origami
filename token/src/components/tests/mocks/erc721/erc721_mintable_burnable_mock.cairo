@@ -11,9 +11,15 @@ mod erc721_mintable_burnable_mock {
         path: erc721_approval_component, storage: erc721_approval, event: ERC721ApprovalEvent
     );
     component!(path: erc721_balance_component, storage: erc721_balance, event: ERC721BalanceEvent);
-    component!(path: erc721_metadata_component, storage: erc721_metadata, event: ERC721MetadataEvent);
-    component!(path: erc721_mintable_component, storage: erc721_mintable, event: ERC721MintableEvent);
-    component!(path: erc721_burnable_component, storage: erc721_burnable, event: ERC721BurnableEvent);
+    component!(
+        path: erc721_metadata_component, storage: erc721_metadata, event: ERC721MetadataEvent
+    );
+    component!(
+        path: erc721_mintable_component, storage: erc721_mintable, event: ERC721MintableEvent
+    );
+    component!(
+        path: erc721_burnable_component, storage: erc721_burnable, event: ERC721BurnableEvent
+    );
     component!(path: erc721_owner_component, storage: erc721_owner, event: ERC721OwnerEvent);
 
     impl ERC721ApprovalInternalImpl = erc721_approval_component::InternalImpl<ContractState>;

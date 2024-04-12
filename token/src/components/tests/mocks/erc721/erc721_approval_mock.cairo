@@ -6,9 +6,7 @@ mod erc721_approval_mock {
     component!(
         path: erc721_approval_component, storage: erc721_approval, event: ERC721ApprovalEvent
     );
-    component!(
-        path: erc721_owner_component, storage: erc721_owner, event: ERC721OwnerEvent
-    );
+    component!(path: erc721_owner_component, storage: erc721_owner, event: ERC721OwnerEvent);
 
     #[abi(embed_v0)]
     impl ERC721ApprovalImpl =
@@ -19,8 +17,7 @@ mod erc721_approval_mock {
         erc721_approval_component::ERC721ApprovalCamelImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl ERC721OwnerImpl =
-        erc721_owner_component::ERC721OwnerImpl<ContractState>;
+    impl ERC721OwnerImpl = erc721_owner_component::ERC721OwnerImpl<ContractState>;
 
     impl ERC721ApprovalInternalImpl = erc721_approval_component::InternalImpl<ContractState>;
     impl ERC721OwnerInternalImpl = erc721_owner_component::InternalImpl<ContractState>;

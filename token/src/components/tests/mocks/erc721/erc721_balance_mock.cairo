@@ -7,16 +7,12 @@ trait IERC721BalanceMock<TState> {
     fn owner_of(self: @TState, account: ContractAddress) -> bool;
     fn balance_of(self: @TState, account: ContractAddress) -> u256;
     fn get_approved(self: @TState, token_id: u128) -> ContractAddress;
-    fn transfer_from(
-        ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u128
-    );
+    fn transfer_from(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u128);
     fn approve(ref self: TState, to: ContractAddress, token_id: u128);
 
     // IERC721CamelOnly
     fn balanceOf(self: @TState, account: ContractAddress) -> u256;
-    fn transferFrom(
-        ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u128
-    );
+    fn transferFrom(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u128);
 
     // IWorldProvider
     fn world(self: @TState,) -> IWorldDispatcher;
@@ -41,7 +37,9 @@ mod erc721_balance_mock {
         path: erc721_approval_component, storage: erc721_approval, event: ERC721ApprovalEvent
     );
     component!(path: erc721_balance_component, storage: erc721_balance, event: ERC721BalanceEvent);
-    component!(path: erc721_mintable_component, storage: erc721_mintable, event: ERC721MintableEvent);
+    component!(
+        path: erc721_mintable_component, storage: erc721_mintable, event: ERC721MintableEvent
+    );
     component!(path: erc721_owner_component, storage: erc721_owner, event: ERC721OwnerEvent);
 
     #[abi(embed_v0)]
@@ -61,8 +59,7 @@ mod erc721_balance_mock {
         erc721_balance_component::ERC721BalanceCamelImpl<ContractState>;
 
     #[abi(embed_v0)]
-    impl ERC721OwnerImpl =
-        erc721_owner_component::ERC721OwnerImpl<ContractState>;
+    impl ERC721OwnerImpl = erc721_owner_component::ERC721OwnerImpl<ContractState>;
 
     impl ERC721ApprovalInternalImpl = erc721_approval_component::InternalImpl<ContractState>;
     impl ERC721BalanceInternalImpl = erc721_balance_component::InternalImpl<ContractState>;
