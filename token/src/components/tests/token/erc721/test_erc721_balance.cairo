@@ -200,21 +200,19 @@ fn test_transfer_from() {
     utils::impersonate(SPENDER());
     erc721_balance_mock.transfer_from(OWNER(), RECIPIENT(), TOKEN_ID);
 
-    // assert_event_approval(erc721_balance_mock.contract_address, OWNER(), ZERO(), TOKEN_ID);
-    // assert_only_event_transfer(erc721_balance_mock.contract_address, OWNER(), RECIPIENT(), TOKEN_ID);
+    assert_only_event_transfer(erc721_balance_mock.contract_address, OWNER(), RECIPIENT(), TOKEN_ID);
 
     // // drop StoreSetRecord ERC721TokenApprovalModel 
-    // utils::drop_event(world.contract_address);
-    // assert_event_approval(world.contract_address, OWNER(), ZERO(), TOKEN_ID);
-    // // drop StoreSetRecord ERC721BalanceModel x2
-    // utils::drop_event(world.contract_address);
-    // utils::drop_event(world.contract_address);
-    // assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), TOKEN_ID);
+    utils::drop_event(world.contract_address);
+    // // drop StoreSetRecord ERC721BalanceModel x3 - incl mint
+    utils::drop_event(world.contract_address);
+    utils::drop_event(world.contract_address);
+    utils::drop_event(world.contract_address);
+    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), TOKEN_ID);
 
     assert(erc721_balance_mock.balance_of(RECIPIENT()) == 1, 'Should eq 1');
     assert(erc721_balance_mock.balance_of(OWNER()) == 0, 'Should eq 0');
     assert(erc721_balance_mock.get_approved(TOKEN_ID) == ZERO(), 'Should eq 0');
-// assert(erc721_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
 }
 
 #[test]
@@ -247,16 +245,15 @@ fn test_transferFrom() {
     utils::impersonate(SPENDER());
     erc721_balance_mock.transferFrom(OWNER(), RECIPIENT(), TOKEN_ID);
 
-    // assert_event_approval(erc721_balance_mock.contract_address, OWNER(), ZERO(), TOKEN_ID);
-    // assert_only_event_transfer(erc721_balance_mock.contract_address, OWNER(), RECIPIENT(), TOKEN_ID);
+    assert_only_event_transfer(erc721_balance_mock.contract_address, OWNER(), RECIPIENT(), TOKEN_ID);
 
     // // drop StoreSetRecord ERC721TokenApprovalModel 
-    // utils::drop_event(world.contract_address);
-    // assert_event_approval(world.contract_address, OWNER(), ZERO(), TOKEN_ID);
-    // // drop StoreSetRecord ERC721BalanceModel x2
-    // utils::drop_event(world.contract_address);
-    // utils::drop_event(world.contract_address);
-    // assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), TOKEN_ID);
+    utils::drop_event(world.contract_address);
+    // // drop StoreSetRecord ERC721BalanceModel x3 - incl mint
+    utils::drop_event(world.contract_address);
+    utils::drop_event(world.contract_address);
+    utils::drop_event(world.contract_address);
+    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), TOKEN_ID);
 
     assert(erc721_balance_mock.balance_of(RECIPIENT()) == 1, 'Should eq 1');
     assert(erc721_balance_mock.balance_of(OWNER()) == 0, 'Should eq 0');
