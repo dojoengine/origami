@@ -35,7 +35,7 @@ mod erc721_burnable_component {
             let mut erc721_approval = get_dep_component_mut!(ref self, ERC721Approval);
             let mut erc721_balance = get_dep_component_mut!(ref self, ERC721Balance);
             let mut erc721_owner = get_dep_component_mut!(ref self, ERC721Owner);
-        
+
             let owner = erc721_owner.get_owner(token_id).address;
 
             // Implicit clear approvals, no need to emit an event
@@ -44,7 +44,9 @@ mod erc721_burnable_component {
             erc721_balance.set_balance(owner, erc721_balance.get_balance(owner).amount - 1);
             erc721_owner.set_owner(token_id, Zeroable::zero());
 
-            let transfer_event = erc721_balance_comp::Transfer { from: owner, to: Zeroable::zero(), token_id };
+            let transfer_event = erc721_balance_comp::Transfer {
+                from: owner, to: Zeroable::zero(), token_id
+            };
 
             erc721_balance.emit(transfer_event.clone());
             emit!(

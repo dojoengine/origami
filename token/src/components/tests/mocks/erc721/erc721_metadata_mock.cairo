@@ -2,7 +2,9 @@
 mod erc721_metadata_mock {
     use token::components::token::erc721::erc721_metadata::erc721_metadata_component;
 
-    component!(path: erc721_metadata_component, storage: erc721_metadata, event: ERC721MetadataEvent);
+    component!(
+        path: erc721_metadata_component, storage: erc721_metadata, event: ERC721MetadataEvent
+    );
 
     #[abi(embed_v0)]
     impl ERC721MetadataImpl =

@@ -77,20 +77,19 @@ mod erc721_owner_component {
         +IWorldProvider<TContractState>,
         +Drop<TContractState>,
     > of InternalTrait<TContractState> {
-        fn get_owner(
-            self: @ComponentState<TContractState>, token_id: u128
-        ) -> ERC721OwnerModel {
+        fn get_owner(self: @ComponentState<TContractState>, token_id: u128) -> ERC721OwnerModel {
             get!(
                 self.get_contract().world(), (get_contract_address(), token_id), (ERC721OwnerModel)
             )
         }
 
         fn set_owner(
-            ref self: ComponentState<TContractState>,
-            token_id: u128,
-            address: ContractAddress
+            ref self: ComponentState<TContractState>, token_id: u128, address: ContractAddress
         ) {
-            set!(self.get_contract().world(), ERC721OwnerModel { token: get_contract_address(), token_id, address });
+            set!(
+                self.get_contract().world(),
+                ERC721OwnerModel { token: get_contract_address(), token_id, address }
+            );
         }
 
         fn exists(self: @ComponentState<TContractState>, token_id: u128) -> bool {

@@ -35,20 +35,14 @@ trait IERC721Approval<TState> {
         self: @TState, owner: ContractAddress, operator: ContractAddress
     ) -> bool;
     fn approve(ref self: TState, to: ContractAddress, token_id: u128);
-    fn set_approval_for_all(
-        ref self: TState, operator: ContractAddress, approved: bool
-    );
+    fn set_approval_for_all(ref self: TState, operator: ContractAddress, approved: bool);
 }
 
 #[starknet::interface]
 trait IERC721ApprovalCamel<TState> {
     fn getApproved(ref self: TState, tokenId: u128) -> ContractAddress;
-    fn isApprovedForAll(
-        self: @TState, owner: ContractAddress, operator: ContractAddress
-    ) -> bool;
-    fn setApprovalForAll(
-        ref self: TState, operator: ContractAddress, approved: bool
-    );
+    fn isApprovedForAll(self: @TState, owner: ContractAddress, operator: ContractAddress) -> bool;
+    fn setApprovalForAll(ref self: TState, operator: ContractAddress, approved: bool);
 }
 
 ///
@@ -125,9 +119,7 @@ mod erc721_approval_component {
             self.get_approval_for_all(owner, operator).approved
         }
 
-        fn approve(
-            ref self: ComponentState<TContractState>, to: ContractAddress, token_id: u128
-        ) {
+        fn approve(ref self: ComponentState<TContractState>, to: ContractAddress, token_id: u128) {
             let mut erc721_owner = get_dep_component_mut!(ref self, ERC721Owner);
 
             let owner = erc721_owner.get_owner(token_id).address;
@@ -136,10 +128,7 @@ mod erc721_approval_component {
                 owner == caller || self.get_approval_for_all(owner, caller).approved,
                 Errors::UNAUTHORIZED
             );
-            self
-                .set_token_approval(
-                    owner, to, token_id, true
-                )
+            self.set_token_approval(owner, to, token_id, true)
         }
 
         fn set_approval_for_all(
@@ -157,9 +146,7 @@ mod erc721_approval_component {
         impl ERC721Owner: erc721_owner_comp::HasComponent<TContractState>,
         +Drop<TContractState>
     > of IERC721ApprovalCamel<ComponentState<TContractState>> {
-        fn getApproved(
-            ref self: ComponentState<TContractState>, tokenId: u128
-        ) -> ContractAddress {
+        fn getApproved(ref self: ComponentState<TContractState>, tokenId: u128) -> ContractAddress {
             self.get_approved(tokenId)
         }
 
@@ -204,7 +191,11 @@ mod erc721_approval_component {
         fn get_approval_for_all(
             self: @ComponentState<TContractState>, owner: ContractAddress, operator: ContractAddress
         ) -> ERC721OperatorApprovalModel {
-            get!(self.get_contract().world(), (get_contract_address(), owner, operator), ERC721OperatorApprovalModel)
+            get!(
+                self.get_contract().world(),
+                (get_contract_address(), owner, operator),
+                ERC721OperatorApprovalModel
+            )
         }
 
         fn set_token_approval(
@@ -236,7 +227,9 @@ mod erc721_approval_component {
             assert(owner != operator, Errors::SELF_APPROVAL);
             set!(
                 self.get_contract().world(),
-                ERC721OperatorApprovalModel { token: get_contract_address(), owner, operator, approved}
+                ERC721OperatorApprovalModel {
+                    token: get_contract_address(), owner, operator, approved
+                }
             );
             let approval_event = ApprovalForAll { owner, operator, approved };
 
@@ -244,7 +237,9 @@ mod erc721_approval_component {
             emit!(self.get_contract().world(), (Event::ApprovalForAll(approval_event)));
         }
 
-        fn is_approved_or_owner(ref self: ComponentState<TContractState>, spender: ContractAddress, token_id: u128) -> bool {
+        fn is_approved_or_owner(
+            ref self: ComponentState<TContractState>, spender: ContractAddress, token_id: u128
+        ) -> bool {
             let mut erc721_owner = get_dep_component_mut!(ref self, ERC721Owner);
             let owner = erc721_owner.get_owner(token_id).address;
             let is_approved_for_all = self.get_approval_for_all(owner, spender).approved;

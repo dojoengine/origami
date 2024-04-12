@@ -8,11 +8,10 @@ use token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID};
 use token::tests::utils;
 
 use token::components::token::erc721::erc721_approval::{
-    erc_721_token_approval_model, ERC721TokenApprovalModel, erc_721_operator_approval_model, ERC721OperatorApprovalModel
+    erc_721_token_approval_model, ERC721TokenApprovalModel, erc_721_operator_approval_model,
+    ERC721OperatorApprovalModel
 };
-use token::components::token::erc721::erc721_owner::{
-    erc_721_owner_model, ERC721OwnerModel,
-};
+use token::components::token::erc721::erc721_owner::{erc_721_owner_model, ERC721OwnerModel,};
 use token::components::token::erc721::erc721_approval::erc721_approval_component;
 use token::components::token::erc721::erc721_approval::erc721_approval_component::{
     Approval, ApprovalForAll, ERC721ApprovalImpl, InternalImpl as ERC721ApprovalInternalImpl
@@ -69,7 +68,13 @@ fn assert_only_event_approval_for_all(
 //
 
 fn STATE() -> (IWorldDispatcher, erc721_approval_mock::ContractState) {
-    let world = spawn_test_world(array![erc_721_token_approval_model::TEST_CLASS_HASH, erc_721_operator_approval_model::TEST_CLASS_HASH, erc_721_owner_model::TEST_CLASS_HASH]);
+    let world = spawn_test_world(
+        array![
+            erc_721_token_approval_model::TEST_CLASS_HASH,
+            erc_721_operator_approval_model::TEST_CLASS_HASH,
+            erc_721_owner_model::TEST_CLASS_HASH
+        ]
+    );
 
     let mut state = erc721_approval_mock::contract_state_for_testing();
     state.world_dispatcher.write(world);
@@ -103,7 +108,9 @@ fn test_erc721_approval_approve_for_all() {
     testing::set_caller_address(OWNER());
 
     state.erc721_approval.set_approval_for_all(SPENDER(), true);
-    assert(state.erc721_approval.is_approved_for_all(OWNER(), SPENDER()) == true, 'should be approved');
+    assert(
+        state.erc721_approval.is_approved_for_all(OWNER(), SPENDER()) == true, 'should be approved'
+    );
 
     assert_only_event_approval_for_all(ZERO(), OWNER(), SPENDER(), true);
 }
