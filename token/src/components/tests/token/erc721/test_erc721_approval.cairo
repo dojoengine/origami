@@ -38,7 +38,7 @@ fn assert_event_approval(
     let event = utils::pop_log::<Approval>(emitter).unwrap();
     assert(event.owner == owner, 'Invalid `owner`');
     assert(event.spender == spender, 'Invalid `spender`');
-    assert(event.token_id == token_id, 'Invalid `token id`');
+    assert(event.token_id == token_id, 'Invalid `token_id`');
 }
 
 fn assert_only_event_approval(
