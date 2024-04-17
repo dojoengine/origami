@@ -31,10 +31,3 @@ mod map {
         mod types;
     }
 }
-
-// mod maze_generator {
-//     mod grid;
-//     mod algorithms {
-//         mod hunt_and_kill;
-//     }
-// }

@@ -147,7 +147,9 @@ mod tests {
     fn test_is_neighbor() {
         let mut grid_tile = ImplGridTile::new(5, 5);
 
-        assert(grid_tile.is_neighbor(GridTile { col: grid_tile.col + 1, row: grid_tile.row }), 'east');
+        assert(
+            grid_tile.is_neighbor(GridTile { col: grid_tile.col + 1, row: grid_tile.row }), 'east'
+        );
 
         assert(
             grid_tile.is_neighbor(GridTile { col: grid_tile.col, row: grid_tile.row + 1 }), 'south'
@@ -157,7 +159,9 @@ mod tests {
             grid_tile.is_neighbor(GridTile { col: grid_tile.col, row: grid_tile.row - 1 }), 'north'
         );
 
-        assert(grid_tile.is_neighbor(GridTile { col: grid_tile.col - 1, row: grid_tile.row }), 'west');
+        assert(
+            grid_tile.is_neighbor(GridTile { col: grid_tile.col - 1, row: grid_tile.row }), 'west'
+        );
     }
 
     #[test]
@@ -167,7 +171,7 @@ mod tests {
         let tiles_range_two = grid_tile.tiles_within_range(2);
         let tiles_range_three = grid_tile.tiles_within_range(3);
         // Including the center tile 
-        assert_eq!(tiles_range_one.len(), 5, "should be 5"); 
+        assert_eq!(tiles_range_one.len(), 5, "should be 5");
         assert_eq!(tiles_range_two.len(), 13, "should be 13");
         assert_eq!(tiles_range_three.len(), 25, "should be 25");
     }
