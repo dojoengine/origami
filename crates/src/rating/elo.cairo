@@ -3,11 +3,11 @@
 
 // Core imports
 
-use core::integer::u256_sqrt;
+use core::integer::{u32_sqrt, u64_sqrt, u128_sqrt, u256_sqrt};
 
 // Constants
 
-const MULTIPLIER: u256 = 10_000;
+const MULTIPLIER: u32 = 10_000;
 const SCALER: u256 = 800;
 
 // Errors
@@ -28,13 +28,31 @@ impl EloImpl of Elo {
     /// # Returns
     /// * `change` - The change in ELO rating of player A.
     /// * `negative` - The directional change of player A's ELO. Opposite sign for player B.
-    #[inline(always)]
-    fn rating_change(rating_a: u256, rating_b: u256, score: u256, k: u256) -> (u256, bool) {
+    fn rating_change<
+        T,
+        +Sub<T>,
+        +PartialOrd<T>,
+        +Into<T, u256>,
+        +Drop<T>,
+        +Copy<T>,
+        S,
+        +Into<S, u32>,
+        +Drop<S>,
+        +Copy<S>,
+        K,
+        +Into<K, u32>,
+        +Drop<K>,
+        +Copy<K>,
+        C,
+        +Into<u32, C>,
+    >(
+        rating_a: T, rating_b: T, score: S, k: K
+    ) -> (C, bool) {
         let negative = rating_a > rating_b;
         let rating_diff: u256 = if negative {
-            rating_a - rating_b
+            (rating_a - rating_b).into()
         } else {
-            rating_b - rating_a
+            (rating_b - rating_a).into()
         };
 
         // [Check] Checks against overflow/underflow
@@ -54,13 +72,13 @@ impl EloImpl of Elo {
         } else {
             (SCALER + rating_diff) / 25
         };
+        // [Info] Order should be less or equal to 77 to fit a u256
         let powered: u256 = PrivateTrait::pow(10, order);
-        let rooted: u256 = u256_sqrt(u256_sqrt(u256_sqrt(u256_sqrt(powered).into()).into()).into())
-            .into();
+        let rooted: u16 = u32_sqrt(u64_sqrt(u128_sqrt(u256_sqrt(powered))));
 
         // [Compute] Change = k * (score - expectedScore)
-        let k_expected_score = k * MULTIPLIER / (100 + rooted);
-        let k_score = k * score;
+        let k_expected_score = k.into() * MULTIPLIER / (100 + rooted.into());
+        let k_score = k.into() * score.into();
         let negative = k_score < k_expected_score;
         let change = if negative {
             k_expected_score - k_score
@@ -69,7 +87,7 @@ impl EloImpl of Elo {
         };
 
         // [Return] Change rounded and its sign
-        (PrivateTrait::round_div(change, 100), negative)
+        (PrivateTrait::round_div(change, 100).into(), negative)
     }
 }
 
@@ -114,42 +132,42 @@ mod tests {
 
     #[test]
     fn test_elo_change_positive_01() {
-        let (mag, sign) = Elo::rating_change(1200, 1400, 100, 20);
+        let (mag, sign) = Elo::rating_change(1200_u128, 1400_u128, 100_u16, 20_u8);
         assert(mag == 15, 'Elo: wrong change mag');
         assert(!sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_positive_02() {
-        let (mag, sign) = Elo::rating_change(1300, 1200, 100, 20);
+        let (mag, sign) = Elo::rating_change(1300_u128, 1200_u128, 100_u16, 20_u8);
         assert(mag == 7, 'Elo: wrong change mag');
         assert(!sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_positive_03() {
-        let (mag, sign) = Elo::rating_change(1900, 2100, 100, 20);
+        let (mag, sign) = Elo::rating_change(1900_u256, 2100_u256, 100_u16, 20_u8);
         assert(mag == 15, 'Elo: wrong change mag');
         assert(!sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_negative_01() {
-        let (mag, sign) = Elo::rating_change(1200, 1400, 0, 20);
+        let (mag, sign) = Elo::rating_change(1200_u128, 1400_u128, 0_u16, 20_u8);
         assert(mag == 5, 'Elo: wrong change mag');
         assert(sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_negative_02() {
-        let (mag, sign) = Elo::rating_change(1300, 1200, 0, 20);
+        let (mag, sign) = Elo::rating_change(1300_u128, 1200_u128, 0_u16, 20_u8);
         assert(mag == 13, 'Elo: wrong change mag');
         assert(sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_draw() {
-        let (mag, sign) = Elo::rating_change(1200, 1400, 50, 20);
+        let (mag, sign) = Elo::rating_change(1200_u128, 1400_u128, 50_u16, 20_u8);
         assert(mag == 5, 'Elo: wrong change mag');
         assert(!sign, 'Elo: wrong change sign');
     }
