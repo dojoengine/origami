@@ -18,7 +18,7 @@ mod errors {
 
 /// Elo implementation..
 #[generate_trait]
-impl EloImpl of Elo {
+impl EloImpl of EloTrait {
     /// Calculates the change in ELO rating, after a given outcome.
     /// # Arguments
     /// * `rating_a` - The ELO rating of the player A.
@@ -128,46 +128,46 @@ mod tests {
 
     // Local imports
 
-    use super::Elo;
+    use super::EloTrait;
 
     #[test]
     fn test_elo_change_positive_01() {
-        let (mag, sign) = Elo::rating_change(1200_u128, 1400_u128, 100_u16, 20_u8);
+        let (mag, sign) = EloTrait::rating_change(1200_u128, 1400_u128, 100_u16, 20_u8);
         assert(mag == 15, 'Elo: wrong change mag');
         assert(!sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_positive_02() {
-        let (mag, sign) = Elo::rating_change(1300_u128, 1200_u128, 100_u16, 20_u8);
+        let (mag, sign) = EloTrait::rating_change(1300_u128, 1200_u128, 100_u16, 20_u8);
         assert(mag == 7, 'Elo: wrong change mag');
         assert(!sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_positive_03() {
-        let (mag, sign) = Elo::rating_change(1900_u256, 2100_u256, 100_u16, 20_u8);
+        let (mag, sign) = EloTrait::rating_change(1900_u256, 2100_u256, 100_u16, 20_u8);
         assert(mag == 15, 'Elo: wrong change mag');
         assert(!sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_negative_01() {
-        let (mag, sign) = Elo::rating_change(1200_u128, 1400_u128, 0_u16, 20_u8);
+        let (mag, sign) = EloTrait::rating_change(1200_u128, 1400_u128, 0_u16, 20_u8);
         assert(mag == 5, 'Elo: wrong change mag');
         assert(sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_negative_02() {
-        let (mag, sign) = Elo::rating_change(1300_u128, 1200_u128, 0_u16, 20_u8);
+        let (mag, sign) = EloTrait::rating_change(1300_u128, 1200_u128, 0_u16, 20_u8);
         assert(mag == 13, 'Elo: wrong change mag');
         assert(sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_draw() {
-        let (mag, sign) = Elo::rating_change(1200_u128, 1400_u128, 50_u16, 20_u8);
+        let (mag, sign) = EloTrait::rating_change(1200_u128, 1400_u128, 50_u16, 20_u8);
         assert(mag == 5, 'Elo: wrong change mag');
         assert(!sign, 'Elo: wrong change sign');
     }
