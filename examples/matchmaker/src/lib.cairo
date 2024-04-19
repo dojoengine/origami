@@ -16,3 +16,11 @@ mod helpers {
     mod bitmap;
 }
 
+#[cfg(test)]
+mod tests {
+    mod setup;
+    mod test_create;
+    mod test_subscribe;
+    mod test_unsubscribe;
+    mod test_fight;
+}

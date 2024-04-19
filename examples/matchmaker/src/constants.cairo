@@ -7,6 +7,12 @@ const DEFAULT_RATING: u32 = 1000;
 
 const LEAGUE_SIZE: u8 = 20;
 
+// World
+
+fn WORLD() -> starknet::ContractAddress {
+    starknet::contract_address_const::<'WORLD'>()
+}
+
 // Constants
 
 fn ZERO() -> starknet::ContractAddress {

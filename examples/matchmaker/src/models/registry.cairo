@@ -197,7 +197,6 @@ mod tests {
         registry.subscribe(ref foe_league, ref foe);
         let league_id = registry.search_league(league, player);
         // [Assert] Registry
-        league_id.print();
         assert(league_id == FAREST_LEAGUE_ID, 'Registry: wrong search league');
     }
 
@@ -212,7 +211,6 @@ mod tests {
         registry.subscribe(ref foe_league, ref foe);
         let league_id = registry.search_league(league, player);
         // [Assert] Registry
-        league_id.print();
         assert(league_id == LEAGUE_ID, 'Registry: wrong search league');
     }
 

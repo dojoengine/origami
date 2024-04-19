@@ -72,7 +72,7 @@ impl PlayerAssert of AssertTrait {
 
     #[inline(always)]
     fn assert_not_exist(player: Player) {
-        assert(player.is_non_zero(), errors::PLAYER_ALREADY_EXIST);
+        assert(player.is_zero(), errors::PLAYER_ALREADY_EXIST);
     }
 
     #[inline(always)]

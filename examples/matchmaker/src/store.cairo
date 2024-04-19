@@ -75,20 +75,7 @@ impl StoreImpl of StoreTrait {
     }
 
     #[inline(always)]
-    fn add_player_to_league(self: Store, player: Player) {
-        // [Effect] Add the player to the last slot
-        let mut league = self.league(player.registry_id, player.league_id);
-        let mut last_slot = self.slot(league.registry_id, player.league_id, league.size);
-        last_slot.index = player.index;
-        last_slot.player_id = player.id;
-        self.set_slot(last_slot);
-        // [Effect] Update the league size
-        league.size += 1;
-        self.set_league(league);
-    }
-
-    #[inline(always)]
-    fn remove_player_from_league(self: Store, player: Player) {
+    fn remove_player_slot(self: Store, player: Player) {
         // [Effect] Replace the slot with the last slot if needed
         let mut league = self.league(player.registry_id, player.league_id);
         let mut last_slot = self.slot(league.registry_id, player.league_id, league.size - 1);
@@ -100,8 +87,5 @@ impl StoreImpl of StoreTrait {
         let mut empty_slot = self.slot(league.registry_id, player.league_id, league.size);
         empty_slot.index = league.size - 1;
         self.set_slot(empty_slot);
-        // [Effect] Update the league size
-        league.size -= 1;
-        self.set_league(league);
     }
 }

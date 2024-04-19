@@ -8,17 +8,17 @@ use dojo::world::IWorldDispatcher;
 
 // Interface
 
-#[dojo::interface]
-trait IMaker {
-    fn create();
-    fn subscribe();
-    fn unsubscribe();
-    fn fight();
+#[starknet::interface]
+trait IMaker<TContractState> {
+    fn create(self: @TContractState, world: IWorldDispatcher);
+    fn subscribe(self: @TContractState, world: IWorldDispatcher);
+    fn unsubscribe(self: @TContractState, world: IWorldDispatcher);
+    fn fight(self: @TContractState, world: IWorldDispatcher);
 }
 
 // Contract
 
-#[dojo::contract]
+#[starknet::contract]
 mod maker {
     // Core imports
 
@@ -30,8 +30,17 @@ mod maker {
     use starknet::ContractAddress;
     use starknet::info::{get_caller_address, get_tx_info};
 
+    // Dojo imports
+
+    use dojo::world;
+    use dojo::world::IWorldDispatcher;
+    use dojo::world::IWorldDispatcherTrait;
+    use dojo::world::IWorldProvider;
+    use dojo::world::IDojoResourceProvider;
+
     // Internal imports
 
+    use matchmaker::constants::WORLD;
     use matchmaker::store::{Store, StoreTrait};
     use matchmaker::models::player::{Player, PlayerTrait, PlayerAssert};
     use matchmaker::models::league::{League, LeagueTrait, LeagueAssert};
@@ -48,11 +57,30 @@ mod maker {
         const CHARACTER_DUPLICATE: felt252 = 'Battle: character duplicate';
     }
 
+    // Storage
+
+    #[storage]
+    struct Storage {}
+
     // Implementations
 
     #[abi(embed_v0)]
+    impl DojoResourceProviderImpl of IDojoResourceProvider<ContractState> {
+        fn dojo_resource(self: @ContractState) -> felt252 {
+            'account'
+        }
+    }
+
+    #[abi(embed_v0)]
+    impl WorldProviderImpl of IWorldProvider<ContractState> {
+        fn world(self: @ContractState) -> IWorldDispatcher {
+            IWorldDispatcher { contract_address: WORLD() }
+        }
+    }
+
+    #[abi(embed_v0)]
     impl MakerImpl of IMaker<ContractState> {
-        fn create(world: IWorldDispatcher) {
+        fn create(self: @ContractState, world: IWorldDispatcher) {
             // [Setup] Datastore
             let mut store: Store = StoreTrait::new(world);
 
@@ -66,7 +94,7 @@ mod maker {
             store.set_player(player);
         }
 
-        fn subscribe(world: IWorldDispatcher) {
+        fn subscribe(self: @ContractState, world: IWorldDispatcher) {
             // [Setup] Datastore
             let mut store: Store = StoreTrait::new(world);
 
@@ -94,7 +122,7 @@ mod maker {
             store.set_registry(registry);
         }
 
-        fn unsubscribe(world: IWorldDispatcher) {
+        fn unsubscribe(self: @ContractState, world: IWorldDispatcher) {
             // [Setup] Datastore
             let mut store: Store = StoreTrait::new(world);
 
@@ -103,9 +131,12 @@ mod maker {
             let mut player = store.player(0, caller);
             PlayerAssert::assert_does_exist(player);
 
+            // [Effect] Remove slot
+            store.remove_player_slot(player);
+
             // [Effect] Unsubscribe to Registry
-            let mut league = store.league(0, player.league_id);
-            let mut registry = store.registry(0);
+            let mut league = store.league(player.registry_id, player.league_id);
+            let mut registry = store.registry(player.registry_id);
             registry.unsubscribe(ref league, ref player);
 
             // [Effect] Update Player
@@ -118,7 +149,7 @@ mod maker {
             store.set_registry(registry);
         }
 
-        fn fight(world: IWorldDispatcher) {
+        fn fight(self: @ContractState, world: IWorldDispatcher) {
             // [Setup] Datastore
             let mut store: Store = StoreTrait::new(world);
 
@@ -140,11 +171,17 @@ mod maker {
             // [Effect] Fight
             player.fight(ref foe, seed);
 
+            // [Effect] Remove player slot
+            store.remove_player_slot(player);
+
             // [Effect] Update Player league and slot
             registry.unsubscribe(ref player_league, ref player);
             let league_id = LeagueTrait::compute_id(player.rating);
             let mut player_league = store.league(0, league_id);
             let player_slot = registry.subscribe(ref player_league, ref player);
+
+            // [Effect] Remove foe slot
+            store.remove_player_slot(foe);
 
             // [Effect] Update Foe league and slot
             registry.unsubscribe(ref foe_league, ref foe);
