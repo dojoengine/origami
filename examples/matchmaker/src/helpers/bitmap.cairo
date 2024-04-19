@@ -39,20 +39,22 @@ impl Bitmap of BitmapTrait {
     /// # Returns
     /// * The index of the nearest significant bit
     #[inline(always)]
-    fn nearest_significant_bit(x: u256, s: u8) -> u8 {
+    fn nearest_significant_bit(x: u256, s: u8) -> Option::<u8> {
         let lower_mask = Bitmap::set_bit_at(0, (s + 1).into(), true) - 1;
         let lower = Bitmap::most_significant_bit(x & lower_mask);
         let upper_mask = ~(lower_mask / 2);
         let upper = Bitmap::least_significant_bit(x & upper_mask);
         match (lower, upper) {
-            (Option::Some(l), Option::Some(u)) => { if s - l < u - s {
-                l
+            (
+                Option::Some(l), Option::Some(u)
+            ) => { if s - l < u - s {
+                Option::Some(l)
             } else {
-                u
+                Option::Some(u)
             } },
-            (Option::Some(l), Option::None) => l,
-            (Option::None, Option::Some(u)) => u,
-            (Option::None, Option::None) => 0,
+            (Option::Some(l), Option::None) => Option::Some(l),
+            (Option::None, Option::Some(u)) => Option::Some(u),
+            (Option::None, Option::None) => Option::None,
         }
     }
 

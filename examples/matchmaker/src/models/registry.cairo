@@ -55,7 +55,13 @@ impl RegistryImpl of RegistryTrait {
         // [Check] Registry is not empty
         RegistryAssert::assert_not_empty(self);
         // [Compute] Loop over the bitmap to find the nearest league with at least 1 player
-        Bitmap::nearest_significant_bit(self.leagues.into(), league.id)
+        match Bitmap::nearest_significant_bit(self.leagues.into(), league.id) {
+            Option::Some(bit) => bit,
+            Option::None => {
+                panic(array![errors::REGISTRY_LEAGUE_NOT_FOUND]);
+                0
+            },
+        }
     }
 }
 
