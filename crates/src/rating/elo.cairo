@@ -4,11 +4,12 @@
 // Core imports
 
 use core::integer::{u32_sqrt, u64_sqrt, u128_sqrt, u256_sqrt};
+use core::integer::i128;
 
 // Constants
 
 const MULTIPLIER: u32 = 10_000;
-const SCALER: u256 = 800;
+const SCALER: i128 = 800;
 
 // Errors
 
@@ -32,7 +33,7 @@ impl EloImpl of EloTrait {
         T,
         +Sub<T>,
         +PartialOrd<T>,
-        +Into<T, u256>,
+        +Into<T, i128>,
         +Drop<T>,
         +Copy<T>,
         S,
@@ -48,30 +49,19 @@ impl EloImpl of EloTrait {
     >(
         rating_a: T, rating_b: T, score: S, k: K
     ) -> (C, bool) {
-        let negative = rating_a > rating_b;
-        let rating_diff: u256 = if negative {
-            (rating_a - rating_b).into()
-        } else {
-            (rating_b - rating_a).into()
-        };
-
         // [Check] Checks against overflow/underflow
         // Large rating diffs leads to 10 ** rating_diff being too large to fit in a u256
         // Large rating diffs when applying the scale factor leads to underflow (800 - rating_diff)
-        assert(
-            rating_diff < 800 || (!negative && rating_diff < 1126), errors::ELO_DIFFERENCE_TOO_LARGE
-        );
+        let rating_diff: i128 = rating_b.into() - rating_a.into();
+        assert(-800 < rating_diff && rating_diff < 1126, errors::ELO_DIFFERENCE_TOO_LARGE);
 
         // [Compute] Expected score = 1 / (1 + 10 ^ (rating_diff / 400))
         // Apply offset of 800 to scale the result by 100
         // Divide by 25 to avoid reach u256 max
         // (x / 400) is the same as ((x / 25) / 16)
         // x ^ (1 / 16) is the same as 16th root of x
-        let order: u256 = if negative {
-            (SCALER - rating_diff) / 25
-        } else {
-            (SCALER + rating_diff) / 25
-        };
+        let order_felt: felt252 = (SCALER + rating_diff).into();
+        let order: u256 = order_felt.into() / 25;
         // [Info] Order should be less or equal to 77 to fit a u256
         let powered: u256 = PrivateTrait::pow(10, order);
         let rooted: u16 = u32_sqrt(u64_sqrt(u128_sqrt(u256_sqrt(powered))));
@@ -132,42 +122,42 @@ mod tests {
 
     #[test]
     fn test_elo_change_positive_01() {
-        let (mag, sign) = EloTrait::rating_change(1200_u128, 1400_u128, 100_u16, 20_u8);
+        let (mag, sign) = EloTrait::rating_change(1200_u64, 1400_u64, 100_u16, 20_u8);
         assert(mag == 15, 'Elo: wrong change mag');
         assert(!sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_positive_02() {
-        let (mag, sign) = EloTrait::rating_change(1300_u128, 1200_u128, 100_u16, 20_u8);
+        let (mag, sign) = EloTrait::rating_change(1300_u64, 1200_u64, 100_u16, 20_u8);
         assert(mag == 7, 'Elo: wrong change mag');
         assert(!sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_positive_03() {
-        let (mag, sign) = EloTrait::rating_change(1900_u256, 2100_u256, 100_u16, 20_u8);
+        let (mag, sign) = EloTrait::rating_change(1900_u64, 2100_u64, 100_u16, 20_u8);
         assert(mag == 15, 'Elo: wrong change mag');
         assert(!sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_negative_01() {
-        let (mag, sign) = EloTrait::rating_change(1200_u128, 1400_u128, 0_u16, 20_u8);
+        let (mag, sign) = EloTrait::rating_change(1200_u64, 1400_u64, 0_u16, 20_u8);
         assert(mag == 5, 'Elo: wrong change mag');
         assert(sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_negative_02() {
-        let (mag, sign) = EloTrait::rating_change(1300_u128, 1200_u128, 0_u16, 20_u8);
+        let (mag, sign) = EloTrait::rating_change(1300_u64, 1200_u64, 0_u16, 20_u8);
         assert(mag == 13, 'Elo: wrong change mag');
         assert(sign, 'Elo: wrong change sign');
     }
 
     #[test]
     fn test_elo_change_draw() {
-        let (mag, sign) = EloTrait::rating_change(1200_u128, 1400_u128, 50_u16, 20_u8);
+        let (mag, sign) = EloTrait::rating_change(1200_u64, 1400_u64, 50_u16, 20_u8);
         assert(mag == 5, 'Elo: wrong change mag');
         assert(!sign, 'Elo: wrong change sign');
     }
