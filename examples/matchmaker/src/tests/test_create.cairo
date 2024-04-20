@@ -27,7 +27,7 @@ fn test_maker_create() {
     let store = StoreTrait::new(world);
 
     // [Create]
-    systems.maker.create(world);
+    systems.maker.create(world, context.player_name);
 
     // [Assert] Player
     let player = store.player(context.registry_id, context.player_id);

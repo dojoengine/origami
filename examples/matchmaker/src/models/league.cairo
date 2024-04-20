@@ -5,7 +5,7 @@ use starknet::ContractAddress;
 
 // Internal imports
 
-use matchmaker::constants::LEAGUE_SIZE;
+use matchmaker::constants::{LEAGUE_SIZE, LEAGUE_COUNT, LEAGUE_MIN_THRESHOLD};
 use matchmaker::models::player::{Player, PlayerTrait, PlayerAssert};
 use matchmaker::models::slot::{Slot, SlotTrait};
 
@@ -33,7 +33,14 @@ impl LeagueImpl of LeagueTrait {
 
     #[inline(always)]
     fn compute_id(rating: u32) -> u8 {
-        let id = rating / LEAGUE_SIZE.into();
+        if rating <= LEAGUE_MIN_THRESHOLD {
+            return 1;
+        }
+        let max_rating = LEAGUE_MIN_THRESHOLD + LEAGUE_SIZE.into() * LEAGUE_COUNT.into();
+        if rating >= max_rating {
+            return LEAGUE_COUNT;
+        }
+        let id = 1 + (rating - LEAGUE_MIN_THRESHOLD) / LEAGUE_SIZE.into();
         if id > 251 {
             251
         } else if id < 1 {
@@ -90,7 +97,10 @@ mod tests {
 
     // Local imports
 
-    use super::{League, LeagueTrait, Player, PlayerTrait, ContractAddress};
+    use super::{
+        League, LeagueTrait, Player, PlayerTrait, ContractAddress, LEAGUE_SIZE, LEAGUE_COUNT,
+        LEAGUE_MIN_THRESHOLD
+    };
 
     // Constants
 
@@ -98,29 +108,30 @@ mod tests {
         starknet::contract_address_const::<'PLAYER'>()
     }
 
-    const REGISTER_ID: u32 = 1;
+    const PLAYER_NAME: felt252 = 'NAME';
+    const REGISTRY_ID: u32 = 1;
     const LEAGUE_ID: u8 = 1;
 
     #[test]
     fn test_new() {
-        let league = LeagueTrait::new(REGISTER_ID, LEAGUE_ID);
-        assert_eq!(league.registry_id, REGISTER_ID);
+        let league = LeagueTrait::new(REGISTRY_ID, LEAGUE_ID);
+        assert_eq!(league.registry_id, REGISTRY_ID);
         assert_eq!(league.id, LEAGUE_ID);
         assert_eq!(league.size, 0);
     }
 
     #[test]
     fn test_compute_id() {
-        let rating = 1000;
+        let rating = LEAGUE_MIN_THRESHOLD - 1;
         let league_id = LeagueTrait::compute_id(rating);
-        assert_eq!(league_id, 50);
+        assert_eq!(league_id, 1);
     }
 
     #[test]
     fn test_compute_id_overflow() {
-        let rating = 10000;
-        let league_id = LeagueTrait::compute_id(rating);
-        assert_eq!(league_id, 251);
+        let max_rating = LEAGUE_MIN_THRESHOLD + LEAGUE_SIZE.into() * LEAGUE_COUNT.into() + 1;
+        let league_id = LeagueTrait::compute_id(max_rating);
+        assert_eq!(league_id, LEAGUE_COUNT);
     }
 
     #[test]
@@ -132,8 +143,8 @@ mod tests {
 
     #[test]
     fn test_subscribe_once() {
-        let mut player = PlayerTrait::new(REGISTER_ID, PLAYER());
-        let mut league = LeagueTrait::new(REGISTER_ID, LEAGUE_ID);
+        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER(), PLAYER_NAME);
+        let mut league = LeagueTrait::new(REGISTRY_ID, LEAGUE_ID);
         let slot = LeagueTrait::subscribe(ref league, ref player);
         // [Assert] League
         assert_eq!(league.size, 1);
@@ -147,16 +158,16 @@ mod tests {
     #[test]
     #[should_panic(expected: ('Player: not subscribable',))]
     fn test_subscribe_twice() {
-        let mut player = PlayerTrait::new(REGISTER_ID, PLAYER());
-        let mut league = LeagueTrait::new(REGISTER_ID, LEAGUE_ID);
+        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER(), PLAYER_NAME);
+        let mut league = LeagueTrait::new(REGISTRY_ID, LEAGUE_ID);
         LeagueTrait::subscribe(ref league, ref player);
         LeagueTrait::subscribe(ref league, ref player);
     }
 
     #[test]
     fn test_unsubscribe_once() {
-        let mut player = PlayerTrait::new(REGISTER_ID, PLAYER());
-        let mut league = LeagueTrait::new(REGISTER_ID, LEAGUE_ID);
+        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER(), PLAYER_NAME);
+        let mut league = LeagueTrait::new(REGISTRY_ID, LEAGUE_ID);
         LeagueTrait::subscribe(ref league, ref player);
         LeagueTrait::unsubscribe(ref league, ref player);
         // [Assert] League
@@ -169,8 +180,8 @@ mod tests {
     #[test]
     #[should_panic(expected: ('League: player not subscribed',))]
     fn test_unsubscribe_twice() {
-        let mut player = PlayerTrait::new(REGISTER_ID, PLAYER());
-        let mut league = LeagueTrait::new(REGISTER_ID, LEAGUE_ID);
+        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER(), PLAYER_NAME);
+        let mut league = LeagueTrait::new(REGISTRY_ID, LEAGUE_ID);
         LeagueTrait::subscribe(ref league, ref player);
         LeagueTrait::unsubscribe(ref league, ref player);
         LeagueTrait::unsubscribe(ref league, ref player);

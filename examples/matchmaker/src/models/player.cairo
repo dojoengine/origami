@@ -29,6 +29,7 @@ struct Player {
     registry_id: u32,
     #[key]
     id: ContractAddress,
+    name: felt252,
     league_id: u8,
     index: u32,
     rating: u32,
@@ -37,8 +38,8 @@ struct Player {
 #[generate_trait]
 impl PlayerImpl of PlayerTrait {
     #[inline(always)]
-    fn new(registry_id: u32, id: ContractAddress) -> Player {
-        Player { registry_id, id, league_id: 0, index: 0, rating: DEFAULT_RATING, }
+    fn new(registry_id: u32, id: ContractAddress, name: felt252) -> Player {
+        Player { registry_id, id, name, league_id: 0, index: 0, rating: DEFAULT_RATING, }
     }
 
     #[inline(always)]
@@ -89,7 +90,7 @@ impl PlayerAssert of AssertTrait {
 impl PlayerZeroable of Zeroable<Player> {
     #[inline(always)]
     fn zero() -> Player {
-        Player { registry_id: 0, id: ZERO(), league_id: 0, index: 0, rating: 0, }
+        Player { registry_id: 0, id: ZERO(), name: 0, league_id: 0, index: 0, rating: 0, }
     }
 
     #[inline(always)]
@@ -119,13 +120,14 @@ mod tests {
         starknet::contract_address_const::<'PLAYER'>()
     }
 
-    const REGISTER_ID: u32 = 1;
+    const PLAYER_NAME: felt252 = 'NAME';
+    const REGISTRY_ID: u32 = 1;
 
     #[test]
     fn test_new() {
         let player_id = PLAYER();
-        let player = PlayerTrait::new(REGISTER_ID, player_id);
-        assert_eq!(player.registry_id, REGISTER_ID);
+        let player = PlayerTrait::new(REGISTRY_ID, player_id, PLAYER_NAME);
+        assert_eq!(player.registry_id, REGISTRY_ID);
         assert_eq!(player.id, player_id);
         assert_eq!(player.league_id, 0);
         assert_eq!(player.index, 0);
@@ -135,7 +137,7 @@ mod tests {
     #[test]
     fn test_subscribable() {
         let player_id = PLAYER();
-        let player = PlayerTrait::new(REGISTER_ID, player_id);
+        let player = PlayerTrait::new(REGISTRY_ID, player_id, PLAYER_NAME);
         AssertTrait::assert_subscribable(player);
     }
 
@@ -143,7 +145,7 @@ mod tests {
     #[should_panic(expected: ('Player: not subscribable',))]
     fn test_subscribable_revert_not_subscribable() {
         let player_id = PLAYER();
-        let mut player = PlayerTrait::new(REGISTER_ID, player_id);
+        let mut player = PlayerTrait::new(REGISTRY_ID, player_id, PLAYER_NAME);
         player.league_id = 1;
         AssertTrait::assert_subscribable(player);
     }
@@ -151,7 +153,7 @@ mod tests {
     #[test]
     fn test_subscribed() {
         let player_id = PLAYER();
-        let mut player = PlayerTrait::new(REGISTER_ID, player_id);
+        let mut player = PlayerTrait::new(REGISTRY_ID, player_id, PLAYER_NAME);
         player.league_id = 1;
         AssertTrait::assert_subscribed(player);
     }
@@ -160,7 +162,7 @@ mod tests {
     #[should_panic(expected: ('Player: not subscribed',))]
     fn test_subscribed_revert_not_subscribed() {
         let player_id = PLAYER();
-        let player = PlayerTrait::new(REGISTER_ID, player_id);
+        let player = PlayerTrait::new(REGISTRY_ID, player_id, PLAYER_NAME);
         AssertTrait::assert_subscribed(player);
     }
 }

@@ -6,6 +6,8 @@ const DEFAULT_RATING: u32 = 1000;
 // Leagues
 
 const LEAGUE_SIZE: u8 = 20;
+const LEAGUE_COUNT: u8 = 17;
+const LEAGUE_MIN_THRESHOLD: u32 = 1000;
 
 // World
 

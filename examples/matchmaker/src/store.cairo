@@ -17,7 +17,7 @@ use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use matchmaker::models::league::{League, LeagueTrait};
 use matchmaker::models::player::Player;
 use matchmaker::models::registry::Registry;
-use matchmaker::models::slot::Slot;
+use matchmaker::models::slot::{Slot, SlotTrait};
 
 
 /// Store struct.
@@ -77,15 +77,20 @@ impl StoreImpl of StoreTrait {
     #[inline(always)]
     fn remove_player_slot(self: Store, player: Player) {
         // [Effect] Replace the slot with the last slot if needed
-        let mut league = self.league(player.registry_id, player.league_id);
-        let mut last_slot = self.slot(league.registry_id, player.league_id, league.size - 1);
-        if last_slot.player_id != player.id {
-            last_slot.index = player.index;
+        let league = self.league(player.registry_id, player.league_id);
+        let mut player_slot = self.slot(player.registry_id, player.league_id, player.index);
+        let mut last_slot = self.slot(player.registry_id, player.league_id, league.size - 1);
+        if last_slot.index != player_slot.index {
+            let mut last_player = self.player(player.registry_id, last_slot.player_id);
+            let last_slot_index = last_slot.index;
+            last_slot.index = player_slot.index;
+            last_player.index = player_slot.index;
+            player_slot.index = last_slot_index;
+            self.set_player(last_player);
             self.set_slot(last_slot);
         }
         // [Effect] Remove the last slot
-        let mut empty_slot = self.slot(league.registry_id, player.league_id, league.size);
-        empty_slot.index = league.size - 1;
-        self.set_slot(empty_slot);
+        player_slot.nullify();
+        self.set_slot(player_slot);
     }
 }

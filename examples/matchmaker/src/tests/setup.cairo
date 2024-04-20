@@ -27,18 +27,12 @@ mod setup {
         starknet::contract_address_const::<'PLAYER'>()
     }
 
-    fn ANYONE() -> ContractAddress {
-        starknet::contract_address_const::<'ANYONE'>()
-    }
-
     fn SOMEONE() -> ContractAddress {
         starknet::contract_address_const::<'SOMEONE'>()
     }
 
-    fn NOONE() -> ContractAddress {
-        starknet::contract_address_const::<'NOONE'>()
-    }
-
+    const PLAYER_NAME: felt252 = 'PLAYER';
+    const SOMEONE_NAME: felt252 = 'SOMEONE';
     const REGISTRY_ID: u32 = 0;
 
     #[derive(Drop)]
@@ -51,8 +45,8 @@ mod setup {
         registry_id: u32,
         player_id: ContractAddress,
         someone_id: ContractAddress,
-        anyone_id: ContractAddress,
-        noone_id: ContractAddress,
+        player_name: felt252,
+        someone_name: felt252,
     }
 
     #[inline(always)]
@@ -71,21 +65,15 @@ mod setup {
 
         // [Setup] Context
         set_contract_address(SOMEONE());
-        systems.maker.create(world);
-        systems.maker.subscribe(world);
-        set_contract_address(ANYONE());
-        systems.maker.create(world);
-        systems.maker.subscribe(world);
-        set_contract_address(NOONE());
-        systems.maker.create(world);
+        systems.maker.create(world, SOMEONE_NAME);
         systems.maker.subscribe(world);
         set_contract_address(PLAYER());
         let context = Context {
             registry_id: REGISTRY_ID,
             player_id: PLAYER(),
             someone_id: SOMEONE(),
-            anyone_id: ANYONE(),
-            noone_id: NOONE()
+            player_name: PLAYER_NAME,
+            someone_name: SOMEONE_NAME,
         };
 
         // [Return]

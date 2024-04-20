@@ -10,7 +10,7 @@ use dojo::world::IWorldDispatcher;
 
 #[starknet::interface]
 trait IMaker<TContractState> {
-    fn create(self: @TContractState, world: IWorldDispatcher);
+    fn create(self: @TContractState, world: IWorldDispatcher, name: felt252);
     fn subscribe(self: @TContractState, world: IWorldDispatcher);
     fn unsubscribe(self: @TContractState, world: IWorldDispatcher);
     fn fight(self: @TContractState, world: IWorldDispatcher);
@@ -80,7 +80,7 @@ mod maker {
 
     #[abi(embed_v0)]
     impl MakerImpl of IMaker<ContractState> {
-        fn create(self: @ContractState, world: IWorldDispatcher) {
+        fn create(self: @ContractState, world: IWorldDispatcher, name: felt252) {
             // [Setup] Datastore
             let mut store: Store = StoreTrait::new(world);
 
@@ -90,7 +90,7 @@ mod maker {
             PlayerAssert::assert_not_exist(player);
 
             // [Effect] Create one
-            let player = PlayerTrait::new(0, caller);
+            let player = PlayerTrait::new(0, caller, name);
             store.set_player(player);
         }
 
@@ -158,48 +158,45 @@ mod maker {
             let mut player = store.player(0, caller);
             PlayerAssert::assert_does_exist(player);
 
-            // [Compute] Search opponent
+            // [Effect] Remove slot
+            store.remove_player_slot(player);
+
+            // [Effect] Search opponent which unsubscribe, then update league
             let seed = get_tx_info().unbox().transaction_hash;
             let mut registry = store.registry(0);
             let mut player_league = store.league(0, player.league_id);
-            let foe_league_id = registry.search_league(player_league, player);
+            let foe_league_id = registry.search_league(ref player_league, ref player);
+            store.set_league(player_league);
+
+            // [Compute] Foe
             let mut foe_league = store.league(0, foe_league_id);
             let foe_slot_id = foe_league.search_player(seed);
             let foe_slot = store.slot(0, foe_league_id, foe_slot_id);
             let mut foe = store.player(0, foe_slot.player_id);
 
-            // [Effect] Fight
+            // [Effect] Remove foe slot, unsubscribe and update league
+            store.remove_player_slot(foe);
+            registry.unsubscribe(ref foe_league, ref foe);
+            store.set_league(foe_league);
+
+            // [Effect] Fight and update players
             player.fight(ref foe, seed);
 
-            // [Effect] Remove player slot
-            store.remove_player_slot(player);
-
-            // [Effect] Update Player league and slot
-            registry.unsubscribe(ref player_league, ref player);
+            // [Effect] Update player, league and slot
             let league_id = LeagueTrait::compute_id(player.rating);
-            let mut player_league = store.league(0, league_id);
-            let player_slot = registry.subscribe(ref player_league, ref player);
-
-            // [Effect] Remove foe slot
-            store.remove_player_slot(foe);
-
-            // [Effect] Update Foe league and slot
-            registry.unsubscribe(ref foe_league, ref foe);
-            let foe_league_id = LeagueTrait::compute_id(foe.rating);
-            let mut foe_league = store.league(0, foe_league_id);
-            let foe_slot = registry.subscribe(ref foe_league, ref foe);
-
-            // [Effect] Update Slots
-            store.set_slot(player_slot);
-            store.set_slot(foe_slot);
-
-            // [Effect] Update Players
+            let mut league = store.league(0, league_id);
+            let slot = registry.subscribe(ref league, ref player);
+            store.set_league(league);
+            store.set_slot(slot);
             store.set_player(player);
-            store.set_player(foe);
 
-            // [Effect] Update League
-            store.set_league(player_league);
-            store.set_league(foe_league);
+            // [Effect] Update Foe, league and slot
+            let league_id = LeagueTrait::compute_id(foe.rating);
+            let mut league = store.league(0, league_id);
+            let slot = registry.subscribe(ref league, ref foe);
+            store.set_league(league);
+            store.set_slot(slot);
+            store.set_player(foe);
 
             // [Effect] Update Registry
             store.set_registry(registry);

@@ -47,7 +47,7 @@ impl RegistryImpl of RegistryTrait {
     }
 
     #[inline(always)]
-    fn search_league(mut self: Registry, mut league: League, mut player: Player) -> u8 {
+    fn search_league(ref self: Registry, ref league: League, ref player: Player) -> u8 {
         // [Check] Player has subscribed
         PlayerAssert::assert_subscribed(player);
         // [Effect] Unsubcribe player from his league
@@ -110,6 +110,7 @@ mod tests {
         starknet::contract_address_const::<'TARGET'>()
     }
 
+    const PLAYER_NAME: felt252 = 'NAME';
     const REGISTRY_ID: u32 = 1;
     const LEAGUE_ID: u8 = 1;
     const CLOSEST_LEAGUE_ID: u8 = 2;
@@ -127,7 +128,7 @@ mod tests {
     #[test]
     fn test_subscribe() {
         let mut registry = RegistryTrait::new(REGISTRY_ID);
-        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER());
+        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER(), PLAYER_NAME);
         let mut league = LeagueTrait::new(REGISTRY_ID, LEAGUE_ID);
         registry.subscribe(ref league, ref player);
         // [Assert] Registry
@@ -137,7 +138,7 @@ mod tests {
     #[test]
     fn test_unsubscribe() {
         let mut registry = RegistryTrait::new(REGISTRY_ID);
-        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER());
+        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER(), PLAYER_NAME);
         let mut league = LeagueTrait::new(REGISTRY_ID, LEAGUE_ID);
         registry.subscribe(ref league, ref player);
         registry.unsubscribe(ref league, ref player);
@@ -149,11 +150,11 @@ mod tests {
     fn test_search_league_same() {
         let mut registry = RegistryTrait::new(REGISTRY_ID);
         let mut league = LeagueTrait::new(REGISTRY_ID, LEAGUE_ID);
-        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER());
+        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER(), PLAYER_NAME);
         registry.subscribe(ref league, ref player);
-        let mut foe = PlayerTrait::new(REGISTRY_ID, TARGET());
+        let mut foe = PlayerTrait::new(REGISTRY_ID, TARGET(), PLAYER_NAME);
         registry.subscribe(ref league, ref foe);
-        let league_id = registry.search_league(league, player);
+        let league_id = registry.search_league(ref league, ref player);
         // [Assert] Registry
         assert(league_id == LEAGUE_ID, 'Registry: wrong search league');
     }
@@ -162,12 +163,12 @@ mod tests {
     fn test_search_league_close() {
         let mut registry = RegistryTrait::new(REGISTRY_ID);
         let mut league = LeagueTrait::new(REGISTRY_ID, LEAGUE_ID);
-        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER());
+        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER(), PLAYER_NAME);
         registry.subscribe(ref league, ref player);
         let mut foe_league = LeagueTrait::new(REGISTRY_ID, CLOSEST_LEAGUE_ID);
-        let mut foe = PlayerTrait::new(REGISTRY_ID, TARGET());
+        let mut foe = PlayerTrait::new(REGISTRY_ID, TARGET(), PLAYER_NAME);
         registry.subscribe(ref foe_league, ref foe);
-        let league_id = registry.search_league(league, player);
+        let league_id = registry.search_league(ref league, ref player);
         // [Assert] Registry
         assert(league_id == CLOSEST_LEAGUE_ID, 'Registry: wrong search league');
     }
@@ -176,12 +177,12 @@ mod tests {
     fn test_search_league_target() {
         let mut registry = RegistryTrait::new(REGISTRY_ID);
         let mut league = LeagueTrait::new(REGISTRY_ID, LEAGUE_ID);
-        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER());
+        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER(), PLAYER_NAME);
         registry.subscribe(ref league, ref player);
         let mut foe_league = LeagueTrait::new(REGISTRY_ID, TARGET_LEAGUE_ID);
-        let mut foe = PlayerTrait::new(REGISTRY_ID, TARGET());
+        let mut foe = PlayerTrait::new(REGISTRY_ID, TARGET(), PLAYER_NAME);
         registry.subscribe(ref foe_league, ref foe);
-        let league_id = registry.search_league(league, player);
+        let league_id = registry.search_league(ref league, ref player);
         // [Assert] Registry
         assert(league_id == TARGET_LEAGUE_ID, 'Registry: wrong search league');
     }
@@ -190,12 +191,12 @@ mod tests {
     fn test_search_league_far_down_top() {
         let mut registry = RegistryTrait::new(REGISTRY_ID);
         let mut league = LeagueTrait::new(REGISTRY_ID, LEAGUE_ID);
-        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER());
+        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER(), PLAYER_NAME);
         registry.subscribe(ref league, ref player);
         let mut foe_league = LeagueTrait::new(REGISTRY_ID, FAREST_LEAGUE_ID);
-        let mut foe = PlayerTrait::new(REGISTRY_ID, TARGET());
+        let mut foe = PlayerTrait::new(REGISTRY_ID, TARGET(), PLAYER_NAME);
         registry.subscribe(ref foe_league, ref foe);
-        let league_id = registry.search_league(league, player);
+        let league_id = registry.search_league(ref league, ref player);
         // [Assert] Registry
         assert(league_id == FAREST_LEAGUE_ID, 'Registry: wrong search league');
     }
@@ -204,12 +205,12 @@ mod tests {
     fn test_search_league_far_top_down() {
         let mut registry = RegistryTrait::new(REGISTRY_ID);
         let mut league = LeagueTrait::new(REGISTRY_ID, FAREST_LEAGUE_ID);
-        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER());
+        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER(), PLAYER_NAME);
         registry.subscribe(ref league, ref player);
         let mut foe_league = LeagueTrait::new(REGISTRY_ID, LEAGUE_ID);
-        let mut foe = PlayerTrait::new(REGISTRY_ID, TARGET());
+        let mut foe = PlayerTrait::new(REGISTRY_ID, TARGET(), PLAYER_NAME);
         registry.subscribe(ref foe_league, ref foe);
-        let league_id = registry.search_league(league, player);
+        let league_id = registry.search_league(ref league, ref player);
         // [Assert] Registry
         assert(league_id == LEAGUE_ID, 'Registry: wrong search league');
     }
@@ -219,8 +220,8 @@ mod tests {
     fn test_search_league_revert_empty() {
         let mut registry = RegistryTrait::new(REGISTRY_ID);
         let mut league = LeagueTrait::new(REGISTRY_ID, LEAGUE_ID);
-        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER());
+        let mut player = PlayerTrait::new(REGISTRY_ID, PLAYER(), PLAYER_NAME);
         registry.subscribe(ref league, ref player);
-        registry.search_league(league, player);
+        registry.search_league(ref league, ref player);
     }
 }

@@ -4,6 +4,7 @@ use starknet::ContractAddress;
 
 // Internal imports
 
+use matchmaker::constants::ZERO;
 use matchmaker::models::player::{Player, PlayerTrait};
 
 #[derive(Model, Copy, Drop, Serde)]
@@ -28,6 +29,11 @@ impl SlotImpl of SlotTrait {
             player_id: player.id,
         }
     }
+
+    #[inline(always)]
+    fn nullify(ref self: Slot) {
+        self.player_id = ZERO();
+    }
 }
 
 #[cfg(test)]
@@ -46,18 +52,19 @@ mod tests {
         starknet::contract_address_const::<'PLAYER'>()
     }
 
-    const REGISTER_ID: u32 = 1;
+    const PLAYER_NAME: felt252 = 'NAME';
+    const REGISTRY_ID: u32 = 1;
     const LEAGUE_ID: u8 = 2;
     const INDEX: u32 = 3;
 
     #[test]
     fn test_new() {
         let player_id = PLAYER();
-        let mut player = PlayerTrait::new(REGISTER_ID, player_id);
+        let mut player = PlayerTrait::new(REGISTRY_ID, player_id, PLAYER_NAME);
         player.league_id = LEAGUE_ID;
         player.index = INDEX;
         let slot = SlotTrait::new(player);
-        assert_eq!(slot.registry_id, REGISTER_ID);
+        assert_eq!(slot.registry_id, REGISTRY_ID);
         assert_eq!(slot.league_id, LEAGUE_ID);
         assert_eq!(slot.index, INDEX);
         assert_eq!(slot.player_id, player_id);

@@ -27,7 +27,7 @@ fn test_maker_unsubscribe() {
     let store = StoreTrait::new(world);
 
     // [Create]
-    systems.maker.create(world);
+    systems.maker.create(world, context.player_name);
 
     // [Subscribe]
     systems.maker.subscribe(world);
