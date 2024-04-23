@@ -44,6 +44,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "matchmaker"
+version = "0.0.0"
+dependencies = [
+ "dojo",
+ "origami",
+]
+
+[[package]]
 name = "origami"
 version = "0.6.0"
 dependencies = [
