@@ -4,7 +4,7 @@ use governance::models::token::{
     Metadata, TotalSupply, Allowances, Balances, Delegates, Checkpoints, NumCheckpoints
 };
 use governance::systems::token::interface::IGovernanceTokenDispatcherTrait;
-use starknet::testing::set_contract_address;
+use starknet::testing::{set_contract_address, set_block_timestamp};
 
 #[test]
 fn test_initialize_token() {
@@ -126,41 +126,49 @@ fn test_delegate_token() {
     assert!(delegatee == delegate, "Delegatee is incorrect");
 }
 
-// #[test]
-// fn test_change_delegate_token() {
-//     let (systems, world) = testing::setup();
+#[test]
+fn test_change_delegate_token() {
+    let (systems, world) = testing::setup();
 
-//     let delegator = testing::ACCOUNT_1();
-//     let delegate_before = testing::ACCOUNT_2();
-//     let delegate_after = testing::ACCOUNT_3();
+    let delegator = testing::ACCOUNT_1();
+    let delegate_before = testing::ACCOUNT_2();
+    let delegate_after = testing::ACCOUNT_3();
 
-//     set_contract_address(testing::GOVERNOR());
-//     systems.token.transfer(delegator, 100 * testing::E18);
+    set_contract_address(testing::GOVERNOR());
+    systems.token.transfer(delegator, 100 * testing::E18);
 
-//     set_contract_address(delegator);
-//     systems.token.delegate(delegate_before);
-//     systems.token.delegate(delegate_after);
+    set_contract_address(delegator);
+    systems.token.delegate(delegate_before);
+    systems.token.delegate(delegate_after);
 
-//     let delegatee = get!(world, testing::ACCOUNT_1(), Delegates).delegatee;
-//     assert!(delegatee == delegate_after, "Delegatee is incorrect");
-// }
+    let delegatee = get!(world, testing::ACCOUNT_1(), Delegates).address;
+    assert!(delegatee == delegate_after, "Delegatee is incorrect");
+}
 
 #[test]
 fn test_get_current_votes() {
-    let (systems, world) = testing::setup();
-
-    let delegate = testing::ACCOUNT_2();
+    let (systems, _) = testing::setup();
 
     set_contract_address(testing::GOVERNOR());
-    systems.token.transfer(testing::ACCOUNT_1(), 100 * testing::E18);
-    let balance = get!(world, testing::ACCOUNT_1(), Balances).amount;
-    println!("Balance: {}", balance);
-// set_contract_address(testing::ACCOUNT_1());
-// systems.token.delegate(testing::ACCOUNT_1());
-// let current_votes = systems.token.get_current_votes(testing::ACCOUNT_1());
-// println!("Current votes before delegation: {}", current_votes);
-// systems.token.delegate(delegate);
-// let current_votes = systems.token.get_current_votes(testing::ACCOUNT_1());
-// println!("Current votes after: {}", current_votes);
-// assert!(current_votes == 100 * testing::E18, "Current votes is incorrect");
+    systems.token.delegate(testing::GOVERNOR());
+    let votes = systems.token.get_current_votes(testing::GOVERNOR());
+    assert!(votes == testing::INITIAL_SUPPLY, "Current votes is incorrect");
+}
+
+#[test]
+fn test_get_prior_votes() {
+    let (systems, _) = testing::setup();
+
+    let delegatee = testing::ACCOUNT_1();
+
+    set_contract_address(testing::GOVERNOR());
+    set_block_timestamp('ts1');
+    systems.token.delegate(delegatee);
+
+    let prior_votes = systems.token.get_prior_votes(testing::ACCOUNT_1(), 0);
+    assert!(prior_votes == 0, "Prior votes is incorrect");
+    set_block_timestamp('ts2');
+
+    let prior_votes_at_ts1 = systems.token.get_prior_votes(testing::ACCOUNT_1(), 'ts1');
+    assert!(prior_votes_at_ts1 == testing::INITIAL_SUPPLY, "Prior votes at ts1 is incorrect");
 }

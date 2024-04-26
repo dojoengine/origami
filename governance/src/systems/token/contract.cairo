@@ -7,10 +7,7 @@ mod governancetoken {
     };
     use governance::systems::token::interface::IGovernanceToken;
     use integer::BoundedInt;
-    use starknet::{
-        ContractAddress, get_caller_address, get_contract_address,
-        info::{get_block_number, get_execution_info},
-    };
+    use starknet::{ContractAddress, get_caller_address, get_contract_address, get_block_timestamp,};
 
     #[abi(embed_v0)]
     impl GovernanceTokenImpl of IGovernanceToken<ContractState> {
@@ -56,7 +53,6 @@ mod governancetoken {
         }
 
         fn transfer(to: ContractAddress, amount: u128) {
-            println!("caller {:?}", get_caller_address());
             transfer_tokens(self.world_dispatcher.read(), get_caller_address(), to, amount);
         }
 
@@ -93,17 +89,17 @@ mod governancetoken {
             }
         }
 
-        fn get_prior_votes(account: ContractAddress, block_number: u64) -> u128 {
+        fn get_prior_votes(account: ContractAddress, timestamp: u64) -> u128 {
             let world = self.world_dispatcher.read();
-            let block_number = get_block_number();
-            assert!(block_number < block_number, "Governance Token: not yet determined");
+            let time_now = get_block_timestamp();
+            assert!(time_now > timestamp, "Governance Token: not yet determined");
             let n_checkpoints = get!(world, account, NumCheckpoints).count;
             if n_checkpoints.is_zero() {
                 return 0;
             }
             let most_recent_checkpoint = get!(world, (account, n_checkpoints - 1), Checkpoints)
                 .checkpoint;
-            if most_recent_checkpoint.from_block > block_number {
+            if most_recent_checkpoint.from_block > timestamp {
                 return 0;
             }
             let mut lower = 0;
@@ -116,10 +112,10 @@ mod governancetoken {
                 }
                 let center = upper - (upper - lower) / 2;
                 let cp = get!(world, (account, center), Checkpoints).checkpoint;
-                if cp.from_block == block_number {
+                if cp.from_block == timestamp {
                     votes = cp.votes;
                     break;
-                } else if cp.from_block < block_number {
+                } else if cp.from_block < timestamp {
                     lower = center;
                 } else {
                     upper = center - 1;
@@ -175,33 +171,30 @@ mod governancetoken {
     }
 
     fn move_delegates(
-        world: IWorldDispatcher, src_rep: ContractAddress, dst_rep: ContractAddress, amount: u128
+        world: IWorldDispatcher, from: ContractAddress, to: ContractAddress, amount: u128
     ) {
-        println!("amount {}", amount);
-        println!("src_rep {:?}", src_rep);
-        println!("dst_rep {:?}", dst_rep);
-        if src_rep != dst_rep && !amount.is_zero() {
-            if !src_rep.is_zero() {
-                let src_rep_num = get!(world, src_rep, NumCheckpoints).count;
-                let src_rep_old = if !src_rep_num.is_zero() {
-                    get!(world, (src_rep, src_rep_num - 1), Checkpoints).checkpoint.votes
+        if from != to && !amount.is_zero() {
+            if !from.is_zero() {
+                let from_num = get!(world, from, NumCheckpoints).count;
+                let from_old = if !from_num.is_zero() {
+                    get!(world, (from, from_num - 1), Checkpoints).checkpoint.votes
                 } else {
                     0
                 };
-                assert!(src_rep_old >= amount, "Governance Token: vote amount underflows");
-                let src_rep_new = src_rep_old - amount;
-                write_checkpoint(world, src_rep, src_rep_num, src_rep_old, src_rep_new);
+                assert!(from_old >= amount, "Governance Token: vote amount underflows");
+                let from_new = from_old - amount;
+                write_checkpoint(world, from, from_num, from_old, from_new);
             }
 
-            if !dst_rep.is_zero() {
-                let dst_rep_num = get!(world, dst_rep, NumCheckpoints).count;
-                let dst_rep_old = if !dst_rep_num.is_zero() {
-                    get!(world, (dst_rep, dst_rep_num - 1), Checkpoints).checkpoint.votes
+            if !to.is_zero() {
+                let to_num = get!(world, to, NumCheckpoints).count;
+                let to_old = if !to_num.is_zero() {
+                    get!(world, (to, to_num - 1), Checkpoints).checkpoint.votes
                 } else {
                     0
                 };
-                let dst_rep_new = dst_rep_old + amount;
-                write_checkpoint(world, dst_rep, dst_rep_num, dst_rep_old, dst_rep_new);
+                let to_new = to_old + amount;
+                write_checkpoint(world, to, to_num, to_old, to_new);
             }
         }
     }
@@ -213,22 +206,20 @@ mod governancetoken {
         old_votes: u128,
         new_votes: u128
     ) {
-        println!("old_votes {}", old_votes);
-        println!("new_votes {}", new_votes);
-        println!("n_checkpoints {}", n_checkpoints);
-        let block_number = get_block_number();
+        let timestamp = get_block_timestamp();
         if !n_checkpoints.is_zero() {
             let mut checkpoint = get!(world, (delegatee, n_checkpoints - 1), Checkpoints)
                 .checkpoint;
-            if checkpoint.from_block == block_number {
+            if checkpoint.from_block == timestamp {
                 checkpoint.votes = new_votes;
                 set!(
                     world, Checkpoints { account: delegatee, index: n_checkpoints - 1, checkpoint }
                 );
             }
         } else {
-            let mut checkpoint = Checkpoint { from_block: block_number, votes: new_votes };
+            let mut checkpoint = Checkpoint { from_block: timestamp, votes: new_votes };
             set!(world, Checkpoints { account: delegatee, index: n_checkpoints, checkpoint });
+            set!(world, NumCheckpoints { account: delegatee, count: n_checkpoints + 1 });
         }
         emit!(
             world,
