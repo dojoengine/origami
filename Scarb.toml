@@ -4,6 +4,7 @@ members = [
     "examples/chess",
     "examples/hex_map",
     "examples/market",
+    "examples/matchmaker",
     "examples/projectile",
     "token",
     "governance"

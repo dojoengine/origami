@@ -12,6 +12,11 @@ mod defi {
     }
 }
 
+mod rating {
+    mod elo;
+}
+
+
 mod random {
     mod deck;
     mod dice;

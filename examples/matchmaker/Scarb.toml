@@ -1,0 +1,9 @@
+[package]
+name = "matchmaker"
+version = "0.0.0"
+description = "Example of elo rating crate usage."
+homepage = "https://github.com/dojoengine/origami/tree/examples/matchmaker"
+
+[dependencies]
+dojo.workspace = true
+origami.workspace = true
