@@ -1,14 +1,14 @@
 use dojo::world::IWorldDispatcherTrait;
+use governance::models::governor::{ProposalParams, Proposals, ProposalCount, Support};
+use governance::systems::governor::interface::IGovernorDispatcherTrait;
+use governance::systems::timelock::interface::ITimelockDispatcherTrait;
+use governance::systems::token::interface::IGovernanceTokenDispatcherTrait;
 use governance::utils::{
     mock_contract_upgraded::{
         hellostarknetupgraded, IHelloStarknetUgradedDispatcher, IHelloStarknetUgradedDispatcherTrait
     },
     mock_contract::{IHelloStarknetDispatcherTrait}, testing
 };
-use governance::models::governor::{ProposalParams, Proposals, ProposalCount, Support};
-use governance::systems::governor::interface::IGovernorDispatcherTrait;
-use governance::systems::token::interface::IGovernanceTokenDispatcherTrait;
-use governance::systems::timelock::interface::ITimelockDispatcherTrait;
 use starknet::testing::{set_contract_address, set_block_timestamp};
 
 const QUORUM: u128 = 5;
