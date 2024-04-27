@@ -23,6 +23,9 @@ use governance::systems::{
         interface::{IGovernanceTokenDispatcher, IGovernanceTokenDispatcherTrait}
     }
 };
+use governance::utils::mock_contract::{
+    hellostarknet, IHelloStarknetDispatcher, mock_balances, MockBalances
+};
 use starknet::{ContractAddress, contract_address_const};
 
 const DAY: u64 = 86400;
@@ -52,7 +55,8 @@ fn ACCOUNT_5() -> ContractAddress {
 struct Systems {
     governor: IGovernorDispatcher,
     timelock: ITimelockDispatcher,
-    token: IGovernanceTokenDispatcher
+    token: IGovernanceTokenDispatcher,
+    mock: IHelloStarknetDispatcher,
 }
 
 fn setup() -> (Systems, IWorldDispatcher) {
@@ -71,12 +75,13 @@ fn setup() -> (Systems, IWorldDispatcher) {
         delegates::TEST_CLASS_HASH,
         checkpoints::TEST_CLASS_HASH,
         num_checkpoints::TEST_CLASS_HASH,
-        nonces::TEST_CLASS_HASH
+        nonces::TEST_CLASS_HASH,
+        mock_balances::TEST_CLASS_HASH
     ];
     let world = spawn_test_world(models);
 
     let contract_address = world.deploy_contract(1, governor::TEST_CLASS_HASH.try_into().unwrap());
-    let governor_contract = IGovernorDispatcher { contract_address };
+    let governor = IGovernorDispatcher { contract_address };
 
     let contract_address = world.deploy_contract(2, timelock::TEST_CLASS_HASH.try_into().unwrap());
     let timelock = ITimelockDispatcher { contract_address };
@@ -85,11 +90,15 @@ fn setup() -> (Systems, IWorldDispatcher) {
         .deploy_contract(3, governancetoken::TEST_CLASS_HASH.try_into().unwrap());
     let token = IGovernanceTokenDispatcher { contract_address };
 
-    let systems = Systems { governor: governor_contract, timelock, token };
+    let contract_address = world
+        .deploy_contract(4, hellostarknet::TEST_CLASS_HASH.try_into().unwrap());
+    let mock = IHelloStarknetDispatcher { contract_address };
+
+    let systems = Systems { governor, timelock, token, mock };
 
     systems.governor.initialize(timelock.contract_address, token.contract_address, GOVERNOR());
     systems.token.initialize('Gov Token', 'GOV', 18, INITIAL_SUPPLY, GOVERNOR());
-    systems.timelock.initialize(systems.governor.contract_address, DAY * 2);
+    // systems.timelock.initialize(systems.governor.contract_address, DAY * 2);
     (systems, world)
 }
 

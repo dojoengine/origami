@@ -50,7 +50,7 @@ struct LatestProposalIds {
     id: usize,
 }
 
-#[derive(Copy, Drop, Default, Introspect, Serde)]
+#[derive(Copy, Debug, Drop, Default, Introspect, Serde)]
 struct Proposal {
     id: usize,
     proposer: ContractAddress,

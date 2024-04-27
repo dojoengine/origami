@@ -14,7 +14,8 @@ mod governor {
         token::interface::{IGovernanceTokenDispatcher, IGovernanceTokenDispatcherTrait}
     };
     use starknet::{
-        ContractAddress, ClassHash, get_contract_address, get_caller_address, info::get_block_number
+        ContractAddress, ClassHash, get_contract_address, get_caller_address,
+        info::get_block_timestamp
     };
 
     #[abi(embed_v0)]
@@ -39,11 +40,13 @@ mod governor {
             quorum_votes: u128, threshold: u128, voting_delay: u64, voting_period: u64,
         ) {
             let world = self.world_dispatcher.read();
-            let guardian = get!(world, get_contract_address(), GovernorParams).guardian;
+            let params = get!(world, get_contract_address(), GovernorParams);
             assert!(
-                guardian == get_contract_address(),
+                params.guardian == get_caller_address(),
                 "Governor::set_proposal_params: only guardian can set proposal params"
             );
+            ITimelockDispatcher { contract_address: params.timelock }
+                .initialize(get_contract_address(), voting_delay);
             set!(
                 world,
                 ProposalParams {
@@ -56,18 +59,16 @@ mod governor {
             );
         }
 
-        fn propose(
-            target: ContractAddress, class_hash: ClassHash, description: ByteArray
-        ) -> usize {
+        fn propose(target: ContractAddress, class_hash: ClassHash,) -> usize {
             let world = self.world_dispatcher.read();
             let contract = get_contract_address();
             let caller = get_caller_address();
             let params = get!(world, contract, ProposalParams);
-            let curr_block = get_block_number();
+            let time_now = get_block_timestamp();
             let gov_token = IGovernanceTokenDispatcher {
                 contract_address: get!(world, contract, GovernorParams).gov_token
             };
-            let prior_votes = gov_token.get_prior_votes(caller, curr_block - 1);
+            let prior_votes = gov_token.get_prior_votes(caller, time_now - 1);
             assert!(
                 prior_votes > params.threshold,
                 "Governor::propose: proposer votes below proposal threshold"
@@ -91,7 +92,7 @@ mod governor {
                 }
             }
 
-            let start_block = curr_block + params.voting_delay;
+            let start_block = time_now + params.voting_delay;
             let end_block = start_block + params.voting_period;
             let curr_proposal_count = get!(world, contract, ProposalCount).count;
             set!(world, ProposalCount { contract, count: curr_proposal_count + 1 });
@@ -99,12 +100,14 @@ mod governor {
 
             let mut new_proposal: Proposal = Default::default();
             new_proposal.id = proposal_id;
+            new_proposal.class_hash = class_hash;
             new_proposal.proposer = caller;
             new_proposal.target = target;
             new_proposal.start_block = start_block;
             new_proposal.end_block = end_block;
 
             set!(world, LatestProposalIds { address: caller, id: proposal_id });
+            set!(world, Proposals { id: proposal_id, proposal: new_proposal });
 
             emit!(
                 world,
@@ -125,9 +128,10 @@ mod governor {
             let mut proposal = get!(world, proposal_id, Proposals).proposal;
             let timelock_addr = get!(world, get_contract_address(), GovernorParams).timelock;
             let timelock_delay = get!(world, timelock_addr, TimelockParams).delay;
-            let eta = get_block_number() + timelock_delay;
-            queue_or_revert(world, proposal.target, proposal.class_hash, proposal.eta);
+            let eta = get_block_timestamp() + timelock_delay;
+            queue_or_revert(world, proposal.target, proposal.class_hash, eta);
             proposal.eta = eta;
+            set!(world, Proposals { id: proposal_id, proposal });
             emit!(world, governorevents::ProposalQueued { id: proposal_id, eta });
         }
 
@@ -146,6 +150,7 @@ mod governor {
                 contract_address: get!(world, get_contract_address(), GovernorParams).timelock
             };
             timelock.execute_transaction(proposal.target, proposal.class_hash, proposal.eta);
+            set!(world, Proposals { id: proposal_id, proposal });
 
             emit!(world, governorevents::ProposalExecuted { id: proposal_id, executed: true });
         }
@@ -168,7 +173,8 @@ mod governor {
             let gov_token = IGovernanceTokenDispatcher {
                 contract_address: get!(world, contract, GovernorParams).gov_token
             };
-            let prior_votes = gov_token.get_prior_votes(proposal.proposer, get_block_number() - 1);
+            let prior_votes = gov_token
+                .get_prior_votes(proposal.proposer, get_block_timestamp() - 1);
             assert!(
                 guardian == get_caller_address() || prior_votes < threshold,
                 "Governor::cancel: proposer above threshold"
@@ -201,7 +207,7 @@ mod governor {
 
             let proposal = get!(world, proposal_id, Proposals).proposal;
             let quorum_votes = get!(world, contract, ProposalParams).quorum_votes;
-            let block_number = get_block_number();
+            let block_number = get_block_timestamp();
 
             if proposal.canceled {
                 return ProposalState::Canceled(());
@@ -245,6 +251,7 @@ mod governor {
                 Support::Against => { proposal.against_votes += votes; },
                 Support::Abstain => { proposal.abstain_votes += votes; }
             }
+            set!(world, Proposals { id: proposal_id, proposal });
 
             receipt.has_voted = true;
             receipt.support = support;

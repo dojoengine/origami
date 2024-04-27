@@ -33,5 +33,7 @@ mod systems {
 mod utils {
     #[cfg(test)]
     mod testing;
+    mod mock_contract;
+    mod mock_contract_upgraded;
 }
 
