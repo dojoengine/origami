@@ -30,6 +30,6 @@ struct ERC1155Balance {
     #[key]
     account: ContractAddress,
     #[key]
-    id: u128,
+    id: felt252,
     amount: u256
 }
