@@ -223,7 +223,11 @@ mod ERC1155 {
         }
 
         fn get_balance(self: @ContractState, account: ContractAddress, id: u256) -> ERC1155Balance {
-            get!(self.world(), (get_contract_address(), account, TryInto::<u256, felt252>::try_into(id).unwrap()), ERC1155Balance)
+            get!(
+                self.world(),
+                (get_contract_address(), account, TryInto::<u256, felt252>::try_into(id).unwrap()),
+                ERC1155Balance
+            )
         }
 
         fn get_operator_approval(
@@ -251,7 +255,10 @@ mod ERC1155 {
 
         fn set_balance(ref self: ContractState, account: ContractAddress, id: u256, amount: u256) {
             set!(
-                self.world(), ERC1155Balance { token: get_contract_address(), account, id: id.try_into().unwrap(), amount }
+                self.world(),
+                ERC1155Balance {
+                    token: get_contract_address(), account, id: id.try_into().unwrap(), amount
+                }
             );
         }
 

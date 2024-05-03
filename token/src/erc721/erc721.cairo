@@ -225,12 +225,19 @@ mod ERC721 {
         }
 
         fn get_owner_of(self: @ContractState, token_id: u256) -> ERC721Owner {
-            
-            get!(self.world(), (get_contract_address(), TryInto::<u256, felt252>::try_into(token_id).unwrap()), ERC721Owner)
+            get!(
+                self.world(),
+                (get_contract_address(), TryInto::<u256, felt252>::try_into(token_id).unwrap()),
+                ERC721Owner
+            )
         }
 
         fn get_token_approval(self: @ContractState, token_id: u256) -> ERC721TokenApproval {
-            get!(self.world(), (get_contract_address(), TryInto::<u256, felt252>::try_into(token_id).unwrap()), ERC721TokenApproval)
+            get!(
+                self.world(),
+                (get_contract_address(), TryInto::<u256, felt252>::try_into(token_id).unwrap()),
+                ERC721TokenApproval
+            )
         }
 
         fn get_operator_approval(
@@ -246,10 +253,13 @@ mod ERC721 {
             token_id: u256,
             emit: bool
         ) {
-
             set!(
                 self.world(),
-                ERC721TokenApproval { token: get_contract_address(), token_id: token_id.try_into().unwrap(), address: to, }
+                ERC721TokenApproval {
+                    token: get_contract_address(),
+                    token_id: token_id.try_into().unwrap(),
+                    address: to,
+                }
             );
             if emit {
                 let approval_event = Approval { owner, approved: to, token_id: token_id };
@@ -281,7 +291,12 @@ mod ERC721 {
         }
 
         fn set_owner(ref self: ContractState, token_id: u256, address: ContractAddress) {
-            set!(self.world(), ERC721Owner { token: get_contract_address(), token_id: token_id.try_into().unwrap(), address });
+            set!(
+                self.world(),
+                ERC721Owner {
+                    token: get_contract_address(), token_id: token_id.try_into().unwrap(), address
+                }
+            );
         }
     }
 
