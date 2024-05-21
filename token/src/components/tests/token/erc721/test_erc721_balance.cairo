@@ -3,7 +3,7 @@ use starknet::ContractAddress;
 use starknet::testing;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{ADMIN, ZERO, OWNER, OTHER, SPENDER, RECIPIENT, TOKEN_ID};
+use token::tests::constants::{ADMIN, ZERO, OWNER, OTHER, SPENDER, RECIPIENT, TOKEN_ID, DATA};
 
 use token::tests::utils;
 
@@ -38,7 +38,7 @@ use debug::PrintTrait;
 //
 
 fn assert_event_transfer(
-    emitter: ContractAddress, from: ContractAddress, to: ContractAddress, token_id: u128
+    emitter: ContractAddress, from: ContractAddress, to: ContractAddress, token_id: u256
 ) {
     let event = utils::pop_log::<Transfer>(emitter).unwrap();
     assert(event.from == from, 'Invalid `from`');
@@ -47,7 +47,7 @@ fn assert_event_transfer(
 }
 
 fn assert_only_event_transfer(
-    emitter: ContractAddress, from: ContractAddress, to: ContractAddress, token_id: u128
+    emitter: ContractAddress, from: ContractAddress, to: ContractAddress, token_id: u256
 ) {
     assert_event_transfer(emitter, from, to, token_id);
     utils::assert_no_events_left(emitter);
@@ -153,7 +153,7 @@ fn test_erc721_balance_unauthorized() {
 }
 
 
-// //
+//
 // Setup
 //
 
@@ -233,9 +233,40 @@ fn test_transfer_from_to_zero_address() {
     erc721_balance_mock.transfer_from(OWNER(), ZERO(), TOKEN_ID);
 }
 
-// //
-// // transferFrom 
-// //
+#[test]
+fn test_safe_transfer_from() {
+    let (world, mut erc721_balance_mock) = setup();
+
+    utils::impersonate(OWNER());
+    erc721_balance_mock.approve(SPENDER(), TOKEN_ID);
+
+    utils::drop_all_events(erc721_balance_mock.contract_address);
+    utils::drop_all_events(world.contract_address);
+    utils::assert_no_events_left(erc721_balance_mock.contract_address);
+
+    utils::impersonate(SPENDER());
+    erc721_balance_mock.safe_transfer_from(OWNER(), RECIPIENT(), TOKEN_ID, DATA);
+
+    assert_only_event_transfer(
+        erc721_balance_mock.contract_address, OWNER(), RECIPIENT(), TOKEN_ID
+    );
+
+    // // drop StoreSetRecord ERC721TokenApprovalModel 
+    utils::drop_event(world.contract_address);
+    // // drop StoreSetRecord ERC721BalanceModel x3 - incl mint
+    utils::drop_event(world.contract_address);
+    utils::drop_event(world.contract_address);
+    utils::drop_event(world.contract_address);
+    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), TOKEN_ID);
+
+    assert(erc721_balance_mock.balance_of(RECIPIENT()) == 1, 'Should eq 1');
+    assert(erc721_balance_mock.balance_of(OWNER()) == 0, 'Should eq 0');
+    assert(erc721_balance_mock.get_approved(TOKEN_ID) == ZERO(), 'Should eq 0');
+}
+
+//
+// transferFrom 
+//
 
 #[test]
 fn test_transferFrom() {
@@ -266,5 +297,36 @@ fn test_transferFrom() {
     assert(erc721_balance_mock.balance_of(RECIPIENT()) == 1, 'Should eq 1');
     assert(erc721_balance_mock.balance_of(OWNER()) == 0, 'Should eq 0');
     assert(erc721_balance_mock.get_approved(TOKEN_ID) == ZERO(), 'Should eq 0');
-// assert(erc721_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
 }
+
+#[test]
+fn test_safeTransferFrom() {
+    let (world, mut erc721_balance_mock) = setup();
+
+    utils::impersonate(OWNER());
+    erc721_balance_mock.approve(SPENDER(), TOKEN_ID);
+
+    utils::drop_all_events(erc721_balance_mock.contract_address);
+    utils::drop_all_events(world.contract_address);
+    utils::assert_no_events_left(erc721_balance_mock.contract_address);
+
+    utils::impersonate(SPENDER());
+    erc721_balance_mock.safeTransferFrom(OWNER(), RECIPIENT(), TOKEN_ID, DATA);
+
+    assert_only_event_transfer(
+        erc721_balance_mock.contract_address, OWNER(), RECIPIENT(), TOKEN_ID
+    );
+
+    // // drop StoreSetRecord ERC721TokenApprovalModel 
+    utils::drop_event(world.contract_address);
+    // // drop StoreSetRecord ERC721BalanceModel x3 - incl mint
+    utils::drop_event(world.contract_address);
+    utils::drop_event(world.contract_address);
+    utils::drop_event(world.contract_address);
+    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), TOKEN_ID);
+
+    assert(erc721_balance_mock.balance_of(RECIPIENT()) == 1, 'Should eq 1');
+    assert(erc721_balance_mock.balance_of(OWNER()) == 0, 'Should eq 0');
+    assert(erc721_balance_mock.get_approved(TOKEN_ID) == ZERO(), 'Should eq 0');
+}
+

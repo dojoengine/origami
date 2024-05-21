@@ -32,7 +32,7 @@ use debug::PrintTrait;
 //
 
 fn assert_event_approval(
-    emitter: ContractAddress, owner: ContractAddress, spender: ContractAddress, token_id: u128
+    emitter: ContractAddress, owner: ContractAddress, spender: ContractAddress, token_id: u256
 ) {
     let event = utils::pop_log::<Approval>(emitter).unwrap();
     assert(event.owner == owner, 'Invalid `owner`');
@@ -41,7 +41,7 @@ fn assert_event_approval(
 }
 
 fn assert_only_event_approval(
-    emitter: ContractAddress, owner: ContractAddress, spender: ContractAddress, token_id: u128
+    emitter: ContractAddress, owner: ContractAddress, spender: ContractAddress, token_id: u256
 ) {
     assert_event_approval(emitter, owner, spender, token_id);
     utils::assert_no_events_left(emitter);

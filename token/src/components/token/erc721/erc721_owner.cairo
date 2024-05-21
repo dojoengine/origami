@@ -19,16 +19,16 @@ struct ERC721OwnerModel {
 
 #[starknet::interface]
 trait IERC721Owner<TState> {
-    fn owner_of(self: @TState, token_id: u128) -> ContractAddress;
+    fn owner_of(self: @TState, token_id: u256) -> ContractAddress;
 }
 
 #[starknet::interface]
 trait IERC721OwnerCamel<TState> {
-    fn ownerOf(self: @TState, token_id: u128) -> ContractAddress;
+    fn ownerOf(self: @TState, token_id: u256) -> ContractAddress;
 }
 
 ///
-/// ERC20Balance Component
+/// ERC721Owner Component
 ///
 #[starknet::component]
 mod erc721_owner_component {
@@ -52,7 +52,7 @@ mod erc721_owner_component {
         +IWorldProvider<TContractState>,
         +Drop<TContractState>,
     > of IERC721Owner<ComponentState<TContractState>> {
-        fn owner_of(self: @ComponentState<TContractState>, token_id: u128) -> ContractAddress {
+        fn owner_of(self: @ComponentState<TContractState>, token_id: u256) -> ContractAddress {
             self.get_owner(token_id).address
         }
     }
@@ -64,7 +64,7 @@ mod erc721_owner_component {
         +IWorldProvider<TContractState>,
         +Drop<TContractState>,
     > of IERC721OwnerCamel<ComponentState<TContractState>> {
-        fn ownerOf(self: @ComponentState<TContractState>, token_id: u128) -> ContractAddress {
+        fn ownerOf(self: @ComponentState<TContractState>, token_id: u256) -> ContractAddress {
             self.get_owner(token_id).address
         }
     }
@@ -77,22 +77,24 @@ mod erc721_owner_component {
         +IWorldProvider<TContractState>,
         +Drop<TContractState>,
     > of InternalTrait<TContractState> {
-        fn get_owner(self: @ComponentState<TContractState>, token_id: u128) -> ERC721OwnerModel {
+        fn get_owner(self: @ComponentState<TContractState>, token_id: u256) -> ERC721OwnerModel {
             get!(
-                self.get_contract().world(), (get_contract_address(), token_id), (ERC721OwnerModel)
+                self.get_contract().world(),
+                (get_contract_address(), token_id.low),
+                (ERC721OwnerModel)
             )
         }
 
         fn set_owner(
-            ref self: ComponentState<TContractState>, token_id: u128, address: ContractAddress
+            ref self: ComponentState<TContractState>, token_id: u256, address: ContractAddress
         ) {
             set!(
                 self.get_contract().world(),
-                ERC721OwnerModel { token: get_contract_address(), token_id, address }
+                ERC721OwnerModel { token: get_contract_address(), token_id: token_id.low, address }
             );
         }
 
-        fn exists(self: @ComponentState<TContractState>, token_id: u128) -> bool {
+        fn exists(self: @ComponentState<TContractState>, token_id: u256) -> bool {
             let owner = self.get_owner(token_id).address;
             owner.is_non_zero()
         }

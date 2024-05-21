@@ -13,6 +13,7 @@ mod mocks {
     mod erc721 {
         mod erc721_approval_mock;
         mod erc721_balance_mock;
+        mod erc721_enumerable_mock;
         mod erc721_metadata_mock;
         mod erc721_mintable_burnable_mock;
     }
@@ -48,6 +49,8 @@ mod token {
         mod test_erc721_approval;
         #[cfg(test)]
         mod test_erc721_balance;
+        #[cfg(test)]
+        mod test_erc721_enumerable;
         #[cfg(test)]
         mod test_erc721_metadata;
         #[cfg(test)]
