@@ -16,7 +16,7 @@ source = "git+https://github.com/influenceth/cubit.git#8eacc2b1d952d6266f9725776
 [[package]]
 name = "dojo"
 version = "0.6.0"
-source = "git+https://github.com/dojoengine/dojo?tag=v0.7.0-alpha.5#328004d65bbbf7692c26f030b75fa95b7947841d"
+source = "git+https://github.com/dojoengine/dojo?tag=v0.7.0-alpha.3#855da3112c87faea87646db5a406ac77b4daf149"
 dependencies = [
  "dojo_plugin",
 ]

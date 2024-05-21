@@ -15,6 +15,7 @@ const TOKEN_ID_2: u256 = 2;
 const TOKEN_AMOUNT_2: u256 = 69;
 const PUBKEY: felt252 = 'PUBKEY';
 const OTHER_ID: felt252 = 'OTHER_ID';
+const DATA: Span<felt252> = array!['DATA'].span();
 
 fn ADMIN() -> ContractAddress {
     contract_address_const::<'ADMIN'>()

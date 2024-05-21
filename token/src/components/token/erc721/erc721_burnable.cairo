@@ -31,7 +31,7 @@ mod erc721_burnable_component {
         impl ERC721Owner: erc721_owner_comp::HasComponent<TContractState>,
         +Drop<TContractState>,
     > of InternalTrait<TContractState> {
-        fn burn(ref self: ComponentState<TContractState>, token_id: u128) {
+        fn burn(ref self: ComponentState<TContractState>, token_id: u256) {
             let mut erc721_approval = get_dep_component_mut!(ref self, ERC721Approval);
             let mut erc721_balance = get_dep_component_mut!(ref self, ERC721Balance);
             let mut erc721_owner = get_dep_component_mut!(ref self, ERC721Owner);
@@ -41,7 +41,7 @@ mod erc721_burnable_component {
             // Implicit clear approvals, no need to emit an event
             erc721_approval.set_token_approval(owner, Zeroable::zero(), token_id, false);
 
-            erc721_balance.set_balance(owner, erc721_balance.get_balance(owner).amount - 1);
+            erc721_balance.set_balance(owner, erc721_balance.get_balance(owner).amount.into() - 1);
             erc721_owner.set_owner(token_id, Zeroable::zero());
 
             let transfer_event = erc721_balance_comp::Transfer {
