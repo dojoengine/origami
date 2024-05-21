@@ -4,7 +4,7 @@ use starknet::ContractAddress;
 /// Model
 ///
 
-#[derive(Model, Introspect, Drop, Serde)]
+#[derive(Model, Drop, Serde)]
 struct ERC721MetaModel {
     #[key]
     token: ContractAddress,
