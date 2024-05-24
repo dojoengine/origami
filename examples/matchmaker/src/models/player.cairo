@@ -23,7 +23,8 @@ mod errors {
     const PLAYER_NOT_SUBSCRIBED: felt252 = 'Player: not subscribed';
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Player {
     #[key]
     registry_id: u32,

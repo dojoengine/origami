@@ -15,7 +15,8 @@ mod errors {
     const LEAGUE_NOT_SUBSCRIBED: felt252 = 'League: player not subscribed';
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct League {
     #[key]
     registry_id: u32,

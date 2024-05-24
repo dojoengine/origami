@@ -6,7 +6,8 @@ use cubit::f128::types::fixed::{Fixed, FixedTrait};
 
 const SCALING_FACTOR: u128 = 10000;
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Market {
     #[key]
     item_id: u32,
