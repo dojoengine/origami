@@ -22,8 +22,6 @@ impl IntrospectFixed of Introspect<Fixed> {
 
     #[inline(always)]
     fn layout() -> Layout {
-        // layout.append(128);
-        // layout.append(1);
         Layout::Fixed(array![128, 1].span())
     }
 
