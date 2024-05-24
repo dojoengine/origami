@@ -8,7 +8,8 @@ const ISRC5_ID: felt252 = 0x3f918d17e5ee77373b56385708f855659a07f75997f365cf8774
 /// Model
 ///
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct SRC5Model {
     #[key]
     token: ContractAddress,

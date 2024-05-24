@@ -6,7 +6,8 @@ use starknet::ContractAddress;
 /// Model
 ///
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct InitializableModel {
     #[key]
     token: ContractAddress,

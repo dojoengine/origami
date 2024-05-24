@@ -7,7 +7,8 @@ use starknet::ContractAddress;
 use matchmaker::constants::ZERO;
 use matchmaker::models::player::{Player, PlayerTrait};
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Slot {
     #[key]
     registry_id: u32,

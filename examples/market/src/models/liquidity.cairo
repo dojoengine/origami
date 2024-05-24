@@ -4,7 +4,7 @@ use starknet::ContractAddress;
 
 // Dojo imports
 
-use dojo::database::introspect::{Struct, Ty, Introspect, Member, serialize_member};
+use dojo::database::introspect::{Struct, Ty, Introspect, Member, Layout};
 
 // External imports
 
@@ -16,14 +16,15 @@ const SCALING_FACTOR: u128 = 10000;
 
 impl IntrospectFixed of Introspect<Fixed> {
     #[inline(always)]
-    fn size() -> usize {
-        2
+    fn size() -> Option<usize> {
+        Option::Some(2)
     }
 
     #[inline(always)]
-    fn layout(ref layout: Array<u8>) {
-        layout.append(128);
-        layout.append(1);
+    fn layout() -> Layout {
+        // layout.append(128);
+        // layout.append(1);
+        Layout::Fixed(array![128, 1].span())
     }
 
     #[inline(always)]
@@ -33,12 +34,8 @@ impl IntrospectFixed of Introspect<Fixed> {
                 name: 'Fixed',
                 attrs: array![].span(),
                 children: array![
-                    serialize_member(
-                        @Member { name: 'mag', ty: Ty::Primitive('u128'), attrs: array![].span() }
-                    ),
-                    serialize_member(
-                        @Member { name: 'sign', ty: Ty::Primitive('bool'), attrs: array![].span() }
-                    )
+                    Member { name: 'mag', attrs: array![].span(), ty: Ty::Primitive('u128') },
+                    Member { name: 'sign', attrs: array![].span(), ty: Ty::Primitive('bool') },
                 ]
                     .span()
             }
@@ -46,7 +43,9 @@ impl IntrospectFixed of Introspect<Fixed> {
     }
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Liquidity {
     #[key]
     player: ContractAddress,

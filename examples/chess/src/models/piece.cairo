@@ -1,7 +1,8 @@
 use chess::models::player::Color;
 use starknet::ContractAddress;
 
-#[derive(Model, Drop, Serde)]
+#[dojo::model]
+#[derive(Drop, Serde)]
 struct Piece {
     #[key]
     game_id: u32,

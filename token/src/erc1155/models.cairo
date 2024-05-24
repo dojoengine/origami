@@ -2,7 +2,8 @@
 
 use starknet::ContractAddress;
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct ERC1155Meta {
     #[key]
     token: ContractAddress,
@@ -11,7 +12,8 @@ struct ERC1155Meta {
     base_uri: felt252,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct ERC1155OperatorApproval {
     #[key]
     token: ContractAddress,
@@ -23,7 +25,8 @@ struct ERC1155OperatorApproval {
 }
 
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct ERC1155Balance {
     #[key]
     token: ContractAddress,

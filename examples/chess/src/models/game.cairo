@@ -1,7 +1,8 @@
 use chess::models::player::Color;
 use starknet::ContractAddress;
 
-#[derive(Model, Drop, Serde)]
+#[dojo::model]
+#[derive(Drop, Serde)]
 struct Game {
     #[key]
     game_id: u32,
@@ -10,7 +11,8 @@ struct Game {
     black: ContractAddress
 }
 
-#[derive(Model, Drop, Serde)]
+#[dojo::model]
+#[derive(Drop, Serde)]
 struct GameTurn {
     #[key]
     game_id: u32,

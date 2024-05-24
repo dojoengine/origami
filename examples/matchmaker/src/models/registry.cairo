@@ -19,7 +19,8 @@ mod errors {
     const REGISTRY_LEAGUE_NOT_FOUND: felt252 = 'Registry: league not found';
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Registry {
     #[key]
     id: u32,

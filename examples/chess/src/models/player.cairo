@@ -7,7 +7,8 @@ enum Color {
     None,
 }
 
-#[derive(Model, Drop, Serde)]
+#[dojo::model]
+#[derive(Drop, Serde)]
 struct Player {
     #[key]
     game_id: u32,
