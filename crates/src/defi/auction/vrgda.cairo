@@ -46,7 +46,7 @@ impl TVRGDATrait<T, +VRGDAVarsTrait<T>, +VRGDATargetTimeTrait<T>> of VRGDATrait<
 /// A Linear Variable Rate Gradual Dutch Auction (VRGDA) struct.
 /// Represents an auction where the price decays linearly based on the target price,
 /// decay constant, and per-time-unit rate.
-#[derive(Copy, Drop, Serde, starknet::Storage)]
+#[derive(Copy, Drop, Serde, starknet::Store)]
 struct LinearVRGDA {
     target_price: Fixed,
     decay_constant: Fixed,
@@ -81,7 +81,7 @@ impl LinearVRGDATargetTimeImpl of VRGDATargetTimeTrait<LinearVRGDA> {
 
 impl LinearVRGDAImpl = TVRGDATrait<LinearVRGDA>;
 
-#[derive(Copy, Drop, Serde, starknet::Storage)]
+#[derive(Copy, Drop, Serde, starknet::Store)]
 struct LogisticVRGDA {
     target_price: Fixed,
     decay_constant: Fixed,
