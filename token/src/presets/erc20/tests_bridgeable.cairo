@@ -74,10 +74,20 @@ fn setup() -> (IWorldDispatcher, IERC20BridgeablePresetDispatcher) {
     };
 
     // setup auth
-    world.grant_writer('ERC20AllowanceModel', erc20_bridgeable_dispatcher.contract_address);
-    world.grant_writer('ERC20BalanceModel', erc20_bridgeable_dispatcher.contract_address);
-    world.grant_writer('ERC20MetadataModel', erc20_bridgeable_dispatcher.contract_address);
-    world.grant_writer('ERC20BridgeableModel', erc20_bridgeable_dispatcher.contract_address);
+    world
+        .grant_writer(
+            selector!("ERC20AllowanceModel"), erc20_bridgeable_dispatcher.contract_address
+        );
+    world
+        .grant_writer(selector!("ERC20BalanceModel"), erc20_bridgeable_dispatcher.contract_address);
+    world
+        .grant_writer(
+            selector!("ERC20MetadataModel"), erc20_bridgeable_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC20BridgeableModel"), erc20_bridgeable_dispatcher.contract_address
+        );
 
     // initialize contracts
     erc20_bridgeable_dispatcher.initializer(NAME, SYMBOL, SUPPLY, OWNER(), BRIDGE());

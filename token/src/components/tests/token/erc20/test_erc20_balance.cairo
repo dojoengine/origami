@@ -166,8 +166,14 @@ fn setup() -> (IWorldDispatcher, IERC20BalanceMockDispatcher) {
     };
 
     // setup auth
-    world.grant_writer('ERC20AllowanceModel', erc20_balance_mock_dispatcher.contract_address);
-    world.grant_writer('ERC20BalanceModel', erc20_balance_mock_dispatcher.contract_address);
+    world
+        .grant_writer(
+            selector!("ERC20AllowanceModel"), erc20_balance_mock_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC20BalanceModel"), erc20_balance_mock_dispatcher.contract_address
+        );
 
     // initialize contracts
     erc20_balance_mock_dispatcher.initializer(SUPPLY, OWNER());

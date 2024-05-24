@@ -85,13 +85,13 @@ fn setup() -> (IWorldDispatcher, IDojoTokenDispatcher, IDojoBridgeDispatcher) {
     };
 
     // setup auth for dojo_token
-    world.grant_writer('ERC20AllowanceModel', dojo_token_dispatcher.contract_address);
-    world.grant_writer('ERC20BalanceModel', dojo_token_dispatcher.contract_address);
-    world.grant_writer('ERC20MetadataModel', dojo_token_dispatcher.contract_address);
-    world.grant_writer('ERC20BridgeableModel', dojo_token_dispatcher.contract_address);
+    world.grant_writer(selector!("ERC20AllowanceModel"), dojo_token_dispatcher.contract_address);
+    world.grant_writer(selector!("ERC20BalanceModel"), dojo_token_dispatcher.contract_address);
+    world.grant_writer(selector!("ERC20MetadataModel"), dojo_token_dispatcher.contract_address);
+    world.grant_writer(selector!("ERC20BridgeableModel"), dojo_token_dispatcher.contract_address);
    
     // setup auth for dojo_bridge
-    world.grant_writer('DojoBridgeModel', dojo_bridge_dispatcher.contract_address);
+    world.grant_writer(selector!("DojoBridgeModel"), dojo_bridge_dispatcher.contract_address);
 
 
     // initialize dojo_token
