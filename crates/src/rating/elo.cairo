@@ -91,9 +91,9 @@ impl Private of PrivateTrait {
         } else if exp == 1_u8.into() {
             base
         } else if exp % 2_u8.into() == 0_u8.into() {
-            PrivateTrait::pow(base * base, exp / 2_u8.into())
+            Self::pow(base * base, exp / 2_u8.into())
         } else {
-            base * PrivateTrait::pow(base * base, exp / 2_u8.into())
+            base * Self::pow(base * base, exp / 2_u8.into())
         }
     }
 

@@ -80,7 +80,7 @@ impl DeckImpl of DeckTrait {
 
     fn from_bitmap(seed: felt252, number: u32, mut bitmap: u128) -> Deck {
         assert(number <= 128, errors::TOO_MANY_CARDS);
-        let mut deck = DeckTrait::new(seed, number);
+        let mut deck = Self::new(seed, number);
         let mut card: u8 = 1;
         loop {
             if bitmap == 0 || card.into() > number {
