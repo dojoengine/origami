@@ -125,7 +125,7 @@ mod ERC721 {
 
             let caller = get_caller_address();
             assert(
-                owner == caller || ERC721Impl::is_approved_for_all(@self, owner, caller),
+                owner == caller || Self::is_approved_for_all(@self, owner, caller),
                 Errors::UNAUTHORIZED
             );
             self._approve(to, token_id);
