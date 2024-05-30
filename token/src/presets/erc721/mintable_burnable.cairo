@@ -4,8 +4,8 @@ use dojo::world::IWorldDispatcher;
 #[starknet::interface]
 trait IERC721MintableBurnablePreset<TState> {
     // IERC721
-    fn name(self: @TState) -> felt252;
-    fn symbol(self: @TState) -> felt252;
+    fn name(self: @TState) -> ByteArray;
+    fn symbol(self: @TState) -> ByteArray;
     fn token_uri(ref self: TState, token_id: u256) -> ByteArray;
     fn owner_of(self: @TState, account: ContractAddress) -> bool;
     fn balance_of(self: @TState, account: ContractAddress) -> u256;
@@ -106,6 +106,7 @@ mod ERC721MintableBurnable {
     impl ERC721ApprovalInternalImpl = erc721_approval_component::InternalImpl<ContractState>;
     impl ERC721BalanceInternalImpl = erc721_balance_component::InternalImpl<ContractState>;
     impl ERC721BurnableInternalImpl = erc721_burnable_component::InternalImpl<ContractState>;
+    impl ERC721MetadataInternalImpl = erc721_metadata_component::InternalImpl<ContractState>;
     impl ERC721MintableInternalImpl = erc721_mintable_component::InternalImpl<ContractState>;
     impl ERC721OwnerInternalImpl = erc721_owner_component::InternalImpl<ContractState>;
 
@@ -147,7 +148,7 @@ mod ERC721MintableBurnable {
             recipient: ContractAddress,
             token_ids: Span<u256>
         ) {
-            self.erc721_metadata.initializer(name, symbol, base_uri);
+            self.erc721_metadata.initialize(name, symbol, base_uri);
             self.mint_assets(recipient, token_ids);
         }
     }

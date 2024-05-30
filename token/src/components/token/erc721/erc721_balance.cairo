@@ -4,7 +4,8 @@ use starknet::ContractAddress;
 /// Model
 ///
 
-#[derive(Model, Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
 struct ERC721BalanceModel {
     #[key]
     token: ContractAddress,
