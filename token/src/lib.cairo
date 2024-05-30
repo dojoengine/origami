@@ -8,14 +8,14 @@ mod components {
     }
 
     mod token {
-        // mod erc20 {
-        //     mod erc20_allowance;
-        //     mod erc20_balance;
-        //     mod erc20_bridgeable;
-        //     mod erc20_burnable;
-        //     mod erc20_metadata;
-        //     mod erc20_mintable;
-        // }
+        mod erc20 {
+            mod erc20_allowance;
+            mod erc20_balance;
+            mod erc20_bridgeable;
+            mod erc20_burnable;
+            mod erc20_metadata;
+            mod erc20_mintable;
+        }
 
         mod erc721 {
             mod erc721_approval;
@@ -24,6 +24,7 @@ mod components {
             mod erc721_metadata;
             mod erc721_mintable;
             mod erc721_owner;
+            mod erc721_receiver;
             mod interface;
         }
     }
@@ -36,6 +37,12 @@ mod presets {
         mod bridgeable;
         #[cfg(test)]
         mod tests_bridgeable;
+    }
+
+    mod erc721 {
+        mod mintable_burnable;
+        #[cfg(test)]
+        mod tests_mintable_burnable;
     }
 }
 
