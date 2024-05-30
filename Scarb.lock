@@ -4,12 +4,12 @@ version = 1
 [[package]]
 name = "cubit"
 version = "1.3.0"
-source = "git+https://github.com/influenceth/cubit.git#9402f710716b12c21cd1e481c57c54edaf5bb4b1"
+source = "git+https://github.com/influenceth/cubit.git#8eacc2b1d952d6266f9725776445c7fb97453403"
 
 [[package]]
 name = "dojo"
 version = "0.6.0"
-source = "git+https://github.com/dojoengine/dojo.git?branch=storage_layout#77102063ef82f582398ecfb6d3ab7ef09dd3f475"
+source = "git+https://github.com/dojoengine/dojo.git?tag=v0.7.0-alpha.4#aa5b534ebc4d82c18c6334ae7f3d236e77313c90"
 dependencies = [
  "dojo_plugin",
 ]

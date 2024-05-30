@@ -4,7 +4,8 @@ use starknet::ContractAddress;
 /// Model
 ///
 
-#[derive(Model, Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
 struct ERC721TokenApprovalModel {
     #[key]
     token: ContractAddress,
@@ -13,7 +14,8 @@ struct ERC721TokenApprovalModel {
     address: ContractAddress,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
 struct ERC721OperatorApprovalModel {
     #[key]
     token: ContractAddress,

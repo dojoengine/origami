@@ -3,7 +3,7 @@ use starknet::ContractAddress;
 use starknet::testing;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{ADMIN, ZERO, OWNER, OTHER, SPENDER, RECIPIENT, TOKEN_ID, DATA};
+use token::tests::constants::{ADMIN, ZERO, OWNER, OTHER, SPENDER, RECIPIENT, TOKEN_ID};
 
 use token::tests::utils;
 
@@ -30,6 +30,12 @@ use token::components::tests::mocks::erc721::erc721_balance_mock::erc721_balance
 
 use token::components::tests::token::erc721::test_erc721_approval::{
     assert_event_approval, assert_only_event_approval
+};
+
+use token::components::introspection::src5::{src_5_model, SRC5Model, ISRC5, ISRC5_ID};
+use token::components::introspection::src5::src5_component::{InternalImpl as SRC5InternalImpl};
+use token::components::tests::mocks::erc721::erc721_receiver_mock::{
+    erc721_receiver_mock, IERC721ReceiverMockDispatcher, IERC721ReceiverMockDispatcherTrait
 };
 
 use debug::PrintTrait;
@@ -157,32 +163,44 @@ fn test_erc721_balance_unauthorized() {
 // Setup
 //
 
-fn setup() -> (IWorldDispatcher, IERC721BalanceMockDispatcher) {
+fn setup() -> (IWorldDispatcher, IERC721BalanceMockDispatcher, IERC721ReceiverMockDispatcher) {
     let world = spawn_test_world(
         array![
-            erc_721_token_approval_model::TEST_CLASS_HASH, erc_721_balance_model::TEST_CLASS_HASH,
+            erc_721_token_approval_model::TEST_CLASS_HASH, erc_721_balance_model::TEST_CLASS_HASH, src_5_model::TEST_CLASS_HASH
         ]
     );
 
-    // deploy contract
+    // deploy balance mock contract
     let mut erc721_balance_mock_dispatcher = IERC721BalanceMockDispatcher {
         contract_address: world
             .deploy_contract('salt', erc721_balance_mock::TEST_CLASS_HASH.try_into().unwrap())
     };
 
-    // setup auth
-    world.grant_writer('ERC721TokenApprovalModel', erc721_balance_mock_dispatcher.contract_address);
-    world.grant_writer('ERC721BalanceModel', erc721_balance_mock_dispatcher.contract_address);
-    world.grant_writer('ERC721OwnerModel', erc721_balance_mock_dispatcher.contract_address);
+    // setup balance auth
+    world.grant_writer(selector!("ERC721TokenApprovalModel"), erc721_balance_mock_dispatcher.contract_address);
+    world.grant_writer(selector!("ERC721BalanceModel"), erc721_balance_mock_dispatcher.contract_address);
+    world.grant_writer(selector!("ERC721OwnerModel"), erc721_balance_mock_dispatcher.contract_address);
 
-    // initialize contracts
+    // initialize balance contracts
     erc721_balance_mock_dispatcher.initializer(OWNER(), TOKEN_ID);
 
-    // drop all events
+    // drop balance events
     utils::drop_all_events(erc721_balance_mock_dispatcher.contract_address);
     utils::drop_all_events(world.contract_address);
 
-    (world, erc721_balance_mock_dispatcher)
+    // deploy erc721 receiver contract
+    let mut erc721_receiver_mock_dispatcher = IERC721ReceiverMockDispatcher {
+        contract_address: world
+            .deploy_contract('salt2', erc721_receiver_mock::TEST_CLASS_HASH.try_into().unwrap())
+    };
+
+    // setup erc721 receiver auth
+    world.grant_writer(selector!("SRC5Model"), erc721_receiver_mock_dispatcher.contract_address);
+
+    // register balance contracts
+    erc721_receiver_mock_dispatcher.initializer();
+
+    (world, erc721_balance_mock_dispatcher, erc721_receiver_mock_dispatcher)
 }
 
 
@@ -192,7 +210,7 @@ fn setup() -> (IWorldDispatcher, IERC721BalanceMockDispatcher) {
 
 #[test]
 fn test_transfer_from() {
-    let (world, mut erc721_balance_mock) = setup();
+    let (world, mut erc721_balance_mock, _) = setup();
 
     utils::impersonate(OWNER());
     erc721_balance_mock.approve(SPENDER(), TOKEN_ID);
@@ -224,7 +242,7 @@ fn test_transfer_from() {
 #[test]
 #[should_panic(expected: ('ERC721: invalid receiver', 'ENTRYPOINT_FAILED'))]
 fn test_transfer_from_to_zero_address() {
-    let (_world, mut erc721_balance_mock) = setup();
+    let (_world, mut erc721_balance_mock, _) = setup();
 
     utils::impersonate(OWNER());
     erc721_balance_mock.approve(SPENDER(), TOKEN_ID);
@@ -235,7 +253,7 @@ fn test_transfer_from_to_zero_address() {
 
 #[test]
 fn test_safe_transfer_from() {
-    let (world, mut erc721_balance_mock) = setup();
+    let (world, mut erc721_balance_mock, mut erc721_receiver_mock) = setup();
 
     utils::impersonate(OWNER());
     erc721_balance_mock.approve(SPENDER(), TOKEN_ID);
@@ -245,10 +263,11 @@ fn test_safe_transfer_from() {
     utils::assert_no_events_left(erc721_balance_mock.contract_address);
 
     utils::impersonate(SPENDER());
-    erc721_balance_mock.safe_transfer_from(OWNER(), RECIPIENT(), TOKEN_ID, DATA);
+    let DATA: Span<felt252> = array!['DATA'].span();
+    erc721_balance_mock.safe_transfer_from(OWNER(), erc721_receiver_mock.contract_address, TOKEN_ID, DATA);
 
     assert_only_event_transfer(
-        erc721_balance_mock.contract_address, OWNER(), RECIPIENT(), TOKEN_ID
+        erc721_balance_mock.contract_address, OWNER(), erc721_receiver_mock.contract_address, TOKEN_ID
     );
 
     // // drop StoreSetRecord ERC721TokenApprovalModel 
@@ -257,9 +276,9 @@ fn test_safe_transfer_from() {
     utils::drop_event(world.contract_address);
     utils::drop_event(world.contract_address);
     utils::drop_event(world.contract_address);
-    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), TOKEN_ID);
+    assert_only_event_transfer(world.contract_address, OWNER(), erc721_receiver_mock.contract_address, TOKEN_ID);
 
-    assert(erc721_balance_mock.balance_of(RECIPIENT()) == 1, 'Should eq 1');
+    assert(erc721_balance_mock.balance_of(erc721_receiver_mock.contract_address) == 1, 'Should eq 1');
     assert(erc721_balance_mock.balance_of(OWNER()) == 0, 'Should eq 0');
     assert(erc721_balance_mock.get_approved(TOKEN_ID) == ZERO(), 'Should eq 0');
 }
@@ -270,7 +289,7 @@ fn test_safe_transfer_from() {
 
 #[test]
 fn test_transferFrom() {
-    let (world, mut erc721_balance_mock) = setup();
+    let (world, mut erc721_balance_mock, _) = setup();
 
     utils::impersonate(OWNER());
     erc721_balance_mock.approve(SPENDER(), TOKEN_ID);
@@ -301,7 +320,7 @@ fn test_transferFrom() {
 
 #[test]
 fn test_safeTransferFrom() {
-    let (world, mut erc721_balance_mock) = setup();
+    let (world, mut erc721_balance_mock, mut erc721_receiver_mock) = setup();
 
     utils::impersonate(OWNER());
     erc721_balance_mock.approve(SPENDER(), TOKEN_ID);
@@ -311,10 +330,11 @@ fn test_safeTransferFrom() {
     utils::assert_no_events_left(erc721_balance_mock.contract_address);
 
     utils::impersonate(SPENDER());
-    erc721_balance_mock.safeTransferFrom(OWNER(), RECIPIENT(), TOKEN_ID, DATA);
+    let DATA: Span<felt252> = array!['DATA'].span();
+    erc721_balance_mock.safeTransferFrom(OWNER(), erc721_receiver_mock.contract_address, TOKEN_ID, DATA);
 
     assert_only_event_transfer(
-        erc721_balance_mock.contract_address, OWNER(), RECIPIENT(), TOKEN_ID
+        erc721_balance_mock.contract_address, OWNER(), erc721_receiver_mock.contract_address, TOKEN_ID
     );
 
     // // drop StoreSetRecord ERC721TokenApprovalModel 
@@ -323,9 +343,9 @@ fn test_safeTransferFrom() {
     utils::drop_event(world.contract_address);
     utils::drop_event(world.contract_address);
     utils::drop_event(world.contract_address);
-    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), TOKEN_ID);
+    assert_only_event_transfer(world.contract_address, OWNER(), erc721_receiver_mock.contract_address, TOKEN_ID);
 
-    assert(erc721_balance_mock.balance_of(RECIPIENT()) == 1, 'Should eq 1');
+    assert(erc721_balance_mock.balance_of(erc721_receiver_mock.contract_address) == 1, 'Should eq 1');
     assert(erc721_balance_mock.balance_of(OWNER()) == 0, 'Should eq 0');
     assert(erc721_balance_mock.get_approved(TOKEN_ID) == ZERO(), 'Should eq 0');
 }

@@ -1,7 +1,7 @@
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, NAME, SYMBOL, URI, TOKEN_ID, TOKEN_ID_2, VALUE};
+use token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID, TOKEN_ID_2, VALUE};
 
 use token::tests::utils;
 
@@ -33,10 +33,10 @@ use token::presets::erc721::mintable_burnable::{
 use token::presets::erc721::mintable_burnable::ERC721MintableBurnable::{ERC721InitializerImpl};
 use token::presets::erc721::mintable_burnable::ERC721MintableBurnable::world_dispatcherContractMemberStateTrait;
 
-use token::components::tests::token::erc20::test_erc20_allowance::{
+use token::components::tests::token::erc721::test_erc721_approval::{
     assert_event_approval, assert_only_event_approval
 };
-use token::components::tests::token::erc20::test_erc20_balance::{
+use token::components::tests::token::erc721::test_erc721_balance::{
     assert_event_transfer, assert_only_event_transfer
 };
 
@@ -59,14 +59,13 @@ fn setup() -> (IWorldDispatcher, IERC721MintableBurnablePresetDispatcher) {
     };
 
     // setup auth
-    world.grant_writer('ERC721TokenApprovalModel', erc721_mintable_burnable_dispatcher.contract_address);
-    world.grant_writer('ERC721BalanceModel', erc721_mintable_burnable_dispatcher.contract_address);
-    world.grant_writer('ERC721MetadataModel', erc721_mintable_burnable_dispatcher.contract_address);
-    world.grant_writer('ERC721OwnerModel', erc721_mintable_burnable_dispatcher.contract_address);
+    world.grant_writer(selector!("ERC721TokenApprovalModel"), erc721_mintable_burnable_dispatcher.contract_address);
+    world.grant_writer(selector!("ERC721BalanceModel"), erc721_mintable_burnable_dispatcher.contract_address);
+    world.grant_writer(selector!("ERC721MetadataModel"), erc721_mintable_burnable_dispatcher.contract_address);
+    world.grant_writer(selector!("ERC721OwnerModel"), erc721_mintable_burnable_dispatcher.contract_address);
 
     // initialize contracts
-    // let tokens = array![TOKEN_ID, TOKEN_ID_2].span()
-    erc721_mintable_burnable_dispatcher.initializer(NAME, SYMBOL, URI, OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
+    erc721_mintable_burnable_dispatcher.initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
 
     // drop all events
     utils::drop_all_events(erc721_mintable_burnable_dispatcher.contract_address);
@@ -84,9 +83,9 @@ fn test_initializer() {
     let (_world, mut erc721_mintable_burnable) = setup();
 
     assert(erc721_mintable_burnable.balance_of(OWNER()) == 2, 'Should eq 2');
-    assert(erc721_mintable_burnable.name() == NAME, 'Name should be NAME');
-    assert(erc721_mintable_burnable.symbol() == SYMBOL, 'Symbol should be SYMBOL');
-    assert(erc721_mintable_burnable.token_uri(TOKEN_ID) == URI, 'Uri should be URI');
+    assert(erc721_mintable_burnable.name() == "NAME", 'Name should be NAME');
+    assert(erc721_mintable_burnable.symbol() == "SYMBOL", 'Symbol should be SYMBOL');
+    assert(erc721_mintable_burnable.token_uri(TOKEN_ID) == "URI21", 'Uri should be URI21');
 }
 
 //
@@ -120,27 +119,19 @@ fn test_transfer_from() {
     let (world, mut mintable_burnable) = setup();
 
     utils::impersonate(OWNER());
-
     mintable_burnable.approve(SPENDER(), TOKEN_ID);
 
     utils::drop_all_events(mintable_burnable.contract_address);
     utils::drop_all_events(world.contract_address);
+    utils::assert_no_events_left(mintable_burnable.contract_address);
 
     utils::impersonate(SPENDER());
     mintable_burnable.transfer_from(OWNER(), RECIPIENT(), TOKEN_ID);
 
     assert_only_event_transfer(mintable_burnable.contract_address, OWNER(), RECIPIENT(), TOKEN_ID);
 
-    // drop StoreSetRecord ERC721TokenApprovalModel
-    utils::drop_event(world.contract_address);
-    // assert_event_approval(world.contract_address, OWNER(), SPENDER(), 0);
-    // drop StoreSetRecord ERC721BalanceModel x2
-    utils::drop_event(world.contract_address);
-    utils::drop_event(world.contract_address);
-    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), TOKEN_ID);
-
     assert(mintable_burnable.balance_of(RECIPIENT()) == 1, 'Should eq 1');
-    assert(mintable_burnable.balance_of(OWNER()) == 2 - 1, 'Should eq 2 - 1');
+    assert(mintable_burnable.balance_of(OWNER()) == 1, 'Should eq 1');
     assert(mintable_burnable.get_approved(TOKEN_ID) == ZERO(), 'Should eq 0');
 }
 
@@ -152,11 +143,11 @@ fn test_transfer_from() {
 fn test_mint() {
     let (world, mut mintable_burnable) = setup();
 
-    mintable_burnable.mint(RECIPIENT(), 2);
+    mintable_burnable.mint(RECIPIENT(), 3);
     assert(mintable_burnable.balance_of(RECIPIENT()) == 1, 'invalid balance_of');
     utils::drop_event(world.contract_address);
     utils::drop_event(world.contract_address);
-    assert_only_event_transfer(world.contract_address, OWNER(), RECIPIENT(), 2);
+    assert_only_event_transfer(world.contract_address, ZERO(), RECIPIENT(), 3);
 }
 
 
@@ -170,6 +161,7 @@ fn test_burn() {
 
     mintable_burnable.burn(TOKEN_ID);
     assert(mintable_burnable.balance_of(OWNER()) == 1, 'invalid balance_of');
+    utils::drop_event(world.contract_address);
     utils::drop_event(world.contract_address);
     utils::drop_event(world.contract_address);
     assert_only_event_transfer(world.contract_address, OWNER(), ZERO(), TOKEN_ID);
