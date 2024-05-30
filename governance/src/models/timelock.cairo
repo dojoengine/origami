@@ -1,6 +1,8 @@
 use starknet::{ContractAddress, ClassHash};
 
-#[derive(Model, Copy, Drop, Serde)]
+
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct TimelockParams {
     #[key]
     contract: ContractAddress,
@@ -8,14 +10,16 @@ struct TimelockParams {
     delay: u64,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct PendingAdmin {
     #[key]
     contract: ContractAddress,
     address: ContractAddress,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct QueuedTransactions {
     #[key]
     contract: ContractAddress,

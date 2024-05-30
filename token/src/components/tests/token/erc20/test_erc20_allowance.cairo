@@ -15,8 +15,7 @@ use token::components::token::erc20::erc20_allowance::erc20_allowance_component:
     Approval, ERC20AllowanceImpl, InternalImpl
 };
 use token::components::tests::mocks::erc20::erc20_allowance_mock::erc20_allowance_mock;
-use token::components::tests::mocks::erc20::erc20_allowance_mock::erc20_allowance_mock::world_dispatcherContractMemberStateTrait;
-
+use starknet::storage::{StorageMemberAccessTrait};
 use debug::PrintTrait;
 
 //

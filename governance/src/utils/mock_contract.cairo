@@ -6,7 +6,8 @@ trait IHelloStarknet {
     fn get_balance() -> u128;
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct MockBalances {
     #[key]
     account: u128,

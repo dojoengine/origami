@@ -1,6 +1,7 @@
 use starknet::ContractAddress;
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Metadata {
     #[key]
     token: ContractAddress,
@@ -9,14 +10,16 @@ struct Metadata {
     decimals: u8,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct TotalSupply {
     #[key]
     token: ContractAddress,
     amount: u128,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Allowances {
     #[key]
     delegator: ContractAddress,
@@ -25,21 +28,24 @@ struct Allowances {
     amount: u128,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Balances {
     #[key]
     account: ContractAddress,
     amount: u128,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Delegates {
     #[key]
     account: ContractAddress,
     address: ContractAddress,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Checkpoints {
     #[key]
     account: ContractAddress,
@@ -48,14 +54,16 @@ struct Checkpoints {
     checkpoint: Checkpoint,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct NumCheckpoints {
     #[key]
     account: ContractAddress,
     count: u64,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Nonces {
     #[key]
     account: ContractAddress,

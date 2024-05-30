@@ -80,22 +80,25 @@ fn setup() -> (Systems, IWorldDispatcher) {
     ];
     let world = spawn_test_world(models);
 
-    let contract_address = world.deploy_contract(1, governor::TEST_CLASS_HASH.try_into().unwrap());
+    let contract_address = world
+        .deploy_contract(1, governor::TEST_CLASS_HASH.try_into().unwrap(), array![].span());
     let governor = IGovernorDispatcher { contract_address };
 
-    let contract_address = world.deploy_contract(2, timelock::TEST_CLASS_HASH.try_into().unwrap());
+    let contract_address = world
+        .deploy_contract(2, timelock::TEST_CLASS_HASH.try_into().unwrap(), array![].span());
     let timelock = ITimelockDispatcher { contract_address };
 
     let contract_address = world
-        .deploy_contract(3, governancetoken::TEST_CLASS_HASH.try_into().unwrap());
+        .deploy_contract(3, governancetoken::TEST_CLASS_HASH.try_into().unwrap(), array![].span());
     let token = IGovernanceTokenDispatcher { contract_address };
 
     let contract_address = world
-        .deploy_contract(4, hellostarknet::TEST_CLASS_HASH.try_into().unwrap());
+        .deploy_contract(4, hellostarknet::TEST_CLASS_HASH.try_into().unwrap(), array![].span());
     let mock = IHelloStarknetDispatcher { contract_address };
 
     let systems = Systems { governor, timelock, token, mock };
 
+    // should use constructor now
     systems.governor.initialize(timelock.contract_address, token.contract_address, GOVERNOR());
     systems.token.initialize('Gov Token', 'GOV', 18, INITIAL_SUPPLY, GOVERNOR());
     // systems.timelock.initialize(systems.governor.contract_address, DAY * 2);

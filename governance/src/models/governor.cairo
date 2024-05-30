@@ -1,7 +1,8 @@
 use governance::libraries::traits::{ContractAddressDefault, ClassHashDefault};
 use starknet::{ContractAddress, ClassHash};
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct GovernorParams {
     #[key]
     contract: ContractAddress,
@@ -10,7 +11,8 @@ struct GovernorParams {
     guardian: ContractAddress,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct ProposalParams {
     #[key]
     contract: ContractAddress,
@@ -20,21 +22,24 @@ struct ProposalParams {
     voting_period: u64,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct ProposalCount {
     #[key]
     contract: ContractAddress,
     count: usize,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Proposals {
     #[key]
     id: usize,
     proposal: Proposal,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Receipts {
     #[key]
     proposal_id: usize,
@@ -43,7 +48,8 @@ struct Receipts {
     receipt: Receipt,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct LatestProposalIds {
     #[key]
     address: ContractAddress,

@@ -22,7 +22,8 @@ use token::erc1155::models::{
     ERC1155Meta, erc_1155_meta, ERC1155OperatorApproval, erc_1155_operator_approval, ERC1155Balance,
     erc_1155_balance
 };
-use token::erc1155::ERC1155::_worldContractMemberStateTrait;
+use starknet::storage::{StorageMemberAccessTrait};
+
 use debug::PrintTrait;
 
 //
