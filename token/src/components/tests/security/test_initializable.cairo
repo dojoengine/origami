@@ -6,8 +6,7 @@ use token::components::security::initializable::initializable_component::{
     InitializableImpl, InternalImpl
 };
 use token::components::tests::mocks::initializable_mock::InitializableMock;
-use token::components::tests::mocks::initializable_mock::InitializableMock::world_dispatcherContractMemberStateTrait;
-
+use starknet::storage::{StorageMemberAccessTrait};
 
 fn STATE() -> (IWorldDispatcher, InitializableMock::ContractState) {
     let world = spawn_test_world(array![initializable_model::TEST_CLASS_HASH,]);

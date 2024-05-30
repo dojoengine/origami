@@ -8,8 +8,7 @@ use token::components::token::erc20::erc20_metadata::erc20_metadata_component::{
     ERC20MetadataImpl, ERC20MetadataTotalSupplyImpl, ERC20MetadataTotalSupplyCamelImpl, InternalImpl
 };
 use token::components::tests::mocks::erc20::erc20_metadata_mock::erc20_metadata_mock;
-use token::components::tests::mocks::erc20::erc20_metadata_mock::erc20_metadata_mock::world_dispatcherContractMemberStateTrait;
-
+use starknet::storage::{StorageMemberAccessTrait};
 
 fn STATE() -> (IWorldDispatcher, erc20_metadata_mock::ContractState) {
     let world = spawn_test_world(array![erc_20_metadata_model::TEST_CLASS_HASH,]);

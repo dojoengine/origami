@@ -19,8 +19,7 @@ use token::components::token::erc20::erc20_balance::erc20_balance_component::{
 use token::components::tests::mocks::erc20::erc20_balance_mock::{
     erc20_balance_mock, IERC20BalanceMockDispatcher, IERC20BalanceMockDispatcherTrait
 };
-use token::components::tests::mocks::erc20::erc20_balance_mock::erc20_balance_mock::world_dispatcherContractMemberStateTrait;
-
+use starknet::storage::{StorageMemberAccessTrait};
 use token::components::tests::token::erc20::test_erc20_allowance::{
     assert_event_approval, assert_only_event_approval
 };
@@ -162,7 +161,9 @@ fn setup() -> (IWorldDispatcher, IERC20BalanceMockDispatcher) {
     // deploy contract
     let mut erc20_balance_mock_dispatcher = IERC20BalanceMockDispatcher {
         contract_address: world
-            .deploy_contract('salt', erc20_balance_mock::TEST_CLASS_HASH.try_into().unwrap())
+            .deploy_contract(
+                'salt', erc20_balance_mock::TEST_CLASS_HASH.try_into().unwrap(), array![].span()
+            )
     };
 
     // setup auth
@@ -175,6 +176,7 @@ fn setup() -> (IWorldDispatcher, IERC20BalanceMockDispatcher) {
             selector!("ERC20BalanceModel"), erc20_balance_mock_dispatcher.contract_address
         );
 
+    // should use constructor now
     // initialize contracts
     erc20_balance_mock_dispatcher.initializer(SUPPLY, OWNER());
 

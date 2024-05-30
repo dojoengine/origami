@@ -35,7 +35,8 @@ use token::erc721::models::{
     ERC721Meta, erc_721_meta, ERC721OperatorApproval, erc_721_operator_approval, ERC721Owner,
     erc_721_owner, ERC721Balance, erc_721_balance, ERC721TokenApproval, erc_721_token_approval
 };
-use token::erc721::ERC721::_worldContractMemberStateTrait;
+use starknet::storage::{StorageMemberAccessTrait};
+
 
 //
 // Setup
