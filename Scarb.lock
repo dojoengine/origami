@@ -27,6 +27,13 @@ version = "0.3.11"
 source = "git+https://github.com/dojoengine/dojo?tag=v0.3.11#1e651b5d4d3b79b14a7d8aa29a92062fcb9e6659"
 
 [[package]]
+name = "governance"
+version = "0.0.0"
+dependencies = [
+ "dojo",
+]
+
+[[package]]
 name = "hex_map"
 version = "0.0.0"
 dependencies = [
