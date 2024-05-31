@@ -2,6 +2,13 @@
 version = 1
 
 [[package]]
+name = "chess"
+version = "0.6.0-alpha.6"
+dependencies = [
+ "dojo",
+]
+
+[[package]]
 name = "cubit"
 version = "1.3.0"
 source = "git+https://github.com/influenceth/cubit.git#8eacc2b1d952d6266f9725776445c7fb97453403"
@@ -53,10 +60,10 @@ dependencies = [
 
 [[package]]
 name = "origami"
-version = "0.6.0"
+version = "0.7.0-alpha.5"
 dependencies = [
+ "cubit",
  "dojo",
- "origami",
 ]
 
 [[package]]

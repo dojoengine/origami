@@ -29,9 +29,7 @@ trait IERC721EnumMintBurnPreset<TState> {
         token_ids: Span<u256>
     );
     fn balance_of(self: @TState, account: ContractAddress) -> u256;
-    fn transfer_from(
-        ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u256
-    );
+    fn transfer_from(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u256);
     fn safe_transfer_from(
         ref self: TState,
         from: ContractAddress,
@@ -58,9 +56,7 @@ trait IERC721EnumInit<TState> {
 #[starknet::interface]
 trait IERC721EnumTransfer<TState> {
     fn balance_of(self: @TState, account: ContractAddress) -> u256;
-    fn transfer_from(
-        ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u256
-    );
+    fn transfer_from(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u256);
     fn safe_transfer_from(
         ref self: TState,
         from: ContractAddress,

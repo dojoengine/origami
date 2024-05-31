@@ -13,6 +13,7 @@ mod mocks {
     mod erc721 {
         mod erc721_approval_mock;
         mod erc721_balance_mock;
+        mod erc721_enumerable_mock;
         mod erc721_metadata_mock;
         mod erc721_mintable_burnable_mock;
         mod erc721_receiver_mock;
@@ -31,18 +32,18 @@ mod security {
 
 
 mod token {
-    // mod erc20 {
-    //     #[cfg(test)]
-    //     mod test_erc20_allowance;
-    //     #[cfg(test)]
-    //     mod test_erc20_balance;
-    //     #[cfg(test)]
-    //     mod test_erc20_metadata;
-    //     #[cfg(test)]
-    //     mod test_erc20_mintable_burnable;
-    //     #[cfg(test)]
-    //     mod test_erc20_bridgeable;
-    // }
+    mod erc20 {
+        #[cfg(test)]
+        mod test_erc20_allowance;
+        #[cfg(test)]
+        mod test_erc20_balance;
+        #[cfg(test)]
+        mod test_erc20_metadata;
+        #[cfg(test)]
+        mod test_erc20_mintable_burnable;
+        #[cfg(test)]
+        mod test_erc20_bridgeable;
+    }
 
     mod erc721 {
         #[cfg(test)]
@@ -51,17 +52,6 @@ mod token {
         mod test_erc721_balance;
         #[cfg(test)]
         mod test_erc721_enumerable;
-        #[cfg(test)]
-        mod test_erc721_metadata;
-        #[cfg(test)]
-        mod test_erc721_mintable_burnable;
-    }
-
-    mod erc721 {
-        #[cfg(test)]
-        mod test_erc721_approval;
-        #[cfg(test)]
-        mod test_erc721_balance;
         #[cfg(test)]
         mod test_erc721_metadata;
         #[cfg(test)]

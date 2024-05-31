@@ -29,9 +29,10 @@ use token::components::token::erc721::erc721_mintable::erc721_mintable_component
 use token::components::token::erc721::erc721_burnable::erc721_burnable_component::InternalImpl as ERC721BurnableInternalImpl;
 
 use token::presets::erc721::enumerable_mintable_burnable::{
-    ERC721EnumMintBurn, IERC721EnumMintBurnPresetDispatcher, IERC721EnumMintBurnPresetDispatcherTrait
+    ERC721EnumMintBurn, IERC721EnumMintBurnPresetDispatcher,
+    IERC721EnumMintBurnPresetDispatcherTrait
 };
-use token::presets::erc721::mintable_burnable::ERC721MintableBurnable::world_dispatcherContractMemberStateTrait;
+use starknet::storage::{StorageMemberAccessTrait};
 
 use token::components::tests::token::erc721::test_erc721_approval::{
     assert_event_approval, assert_only_event_approval
@@ -41,7 +42,6 @@ use token::components::tests::token::erc721::test_erc721_balance::{
 };
 
 
-
 //
 // Setup
 //
@@ -49,7 +49,9 @@ use token::components::tests::token::erc721::test_erc721_balance::{
 fn setup() -> (IWorldDispatcher, IERC721EnumMintBurnPresetDispatcher) {
     let world = spawn_test_world(
         array![
-            erc_721_token_approval_model::TEST_CLASS_HASH, erc_721_balance_model::TEST_CLASS_HASH, erc_721_meta_model::TEST_CLASS_HASH,
+            erc_721_token_approval_model::TEST_CLASS_HASH,
+            erc_721_balance_model::TEST_CLASS_HASH,
+            erc_721_meta_model::TEST_CLASS_HASH,
         ]
     );
 
@@ -60,18 +62,51 @@ fn setup() -> (IWorldDispatcher, IERC721EnumMintBurnPresetDispatcher) {
     };
 
     // setup auth
-    world.grant_writer(selector!("ERC721TokenApprovalModel"), erc721_enum_mint_burn_dispatcher.contract_address);
-    world.grant_writer(selector!("ERC721BalanceModel"), erc721_enum_mint_burn_dispatcher.contract_address);
-    world.grant_writer(selector!("ERC721EnumerableIndexModel"), erc721_enum_mint_burn_dispatcher.contract_address);
-    world.grant_writer(selector!("ERC721EnumerableOwnerIndexModel"), erc721_enum_mint_burn_dispatcher.contract_address);
-    world.grant_writer(selector!("ERC721EnumerableTokenModel"), erc721_enum_mint_burn_dispatcher.contract_address);
-    world.grant_writer(selector!("ERC721EnumerableOwnerTokenModel"), erc721_enum_mint_burn_dispatcher.contract_address);
-    world.grant_writer(selector!("ERC721EnumerableTotalModel"), erc721_enum_mint_burn_dispatcher.contract_address);
-    world.grant_writer(selector!("ERC721MetadataModel"), erc721_enum_mint_burn_dispatcher.contract_address);
-    world.grant_writer(selector!("ERC721OwnerModel"), erc721_enum_mint_burn_dispatcher.contract_address);
+    world
+        .grant_writer(
+            selector!("ERC721TokenApprovalModel"), erc721_enum_mint_burn_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC721BalanceModel"), erc721_enum_mint_burn_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC721EnumerableIndexModel"),
+            erc721_enum_mint_burn_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC721EnumerableOwnerIndexModel"),
+            erc721_enum_mint_burn_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC721EnumerableTokenModel"),
+            erc721_enum_mint_burn_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC721EnumerableOwnerTokenModel"),
+            erc721_enum_mint_burn_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC721EnumerableTotalModel"),
+            erc721_enum_mint_burn_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC721MetadataModel"), erc721_enum_mint_burn_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC721OwnerModel"), erc721_enum_mint_burn_dispatcher.contract_address
+        );
 
     // initialize contracts
-    erc721_enum_mint_burn_dispatcher.initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
+    erc721_enum_mint_burn_dispatcher
+        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
 
     // drop all events
     utils::drop_all_events(erc721_enum_mint_burn_dispatcher.contract_address);
@@ -105,9 +140,7 @@ fn test_approve() {
     utils::impersonate(OWNER());
 
     enum_mint_burn.approve(SPENDER(), TOKEN_ID);
-    assert(
-        enum_mint_burn.get_approved(TOKEN_ID) == SPENDER(), 'Spender not approved correctly'
-    );
+    assert(enum_mint_burn.get_approved(TOKEN_ID) == SPENDER(), 'Spender not approved correctly');
 
     // drop StoreSetRecord ERC721TokenApprovalModel
     utils::drop_event(world.contract_address);
@@ -141,7 +174,9 @@ fn test_transfer_from() {
     assert(enum_mint_burn.get_approved(TOKEN_ID) == ZERO(), 'Should eq 0');
     assert(enum_mint_burn.total_supply() == 2, 'Should eq 2');
     assert(enum_mint_burn.token_by_index(0) == TOKEN_ID, 'Should eq TOKEN_ID');
-    assert(enum_mint_burn.token_of_owner_by_index(RECIPIENT(), 0) == TOKEN_ID, 'Should eq TOKEN_ID');
+    assert(
+        enum_mint_burn.token_of_owner_by_index(RECIPIENT(), 0) == TOKEN_ID, 'Should eq TOKEN_ID'
+    );
 }
 
 //
@@ -156,7 +191,10 @@ fn test_mint() {
     assert(enum_mint_burn.balance_of(RECIPIENT()) == 1, 'invalid balance_of');
     assert(enum_mint_burn.total_supply() == 3, 'invalid total_supply');
     assert(enum_mint_burn.token_by_index(2) == 3, 'invalid token_by_index');
-    assert(enum_mint_burn.token_of_owner_by_index(RECIPIENT(), 0) == 3, 'invalid token_of_owner_by_index');
+    assert(
+        enum_mint_burn.token_of_owner_by_index(RECIPIENT(), 0) == 3,
+        'invalid token_of_owner_by_index'
+    );
 }
 
 //
@@ -171,6 +209,9 @@ fn test_burn() {
     assert(enum_mint_burn.balance_of(OWNER()) == 1, 'invalid balance_of');
     assert(enum_mint_burn.total_supply() == 1, 'invalid total_supply');
     assert(enum_mint_burn.token_by_index(0) == TOKEN_ID, 'invalid token_by_index');
-    assert(enum_mint_burn.token_of_owner_by_index(OWNER(), 0) == TOKEN_ID, 'invalid token_of_owner_by_index');
+    assert(
+        enum_mint_burn.token_of_owner_by_index(OWNER(), 0) == TOKEN_ID,
+        'invalid token_of_owner_by_index'
+    );
 }
 

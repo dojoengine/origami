@@ -24,7 +24,7 @@ use token::components::tests::mocks::erc721::erc721_enumerable_mock::{
 };
 
 
-use token::components::tests::mocks::erc721::erc721_enumerable_mock::erc721_enumerable_mock::world_dispatcherContractMemberStateTrait;
+use starknet::storage::{StorageMemberAccessTrait};
 
 use debug::PrintTrait;
 
