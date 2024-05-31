@@ -4,8 +4,8 @@ use starknet::ContractAddress;
 /// Model
 ///
 
-#[derive(Drop, Serde)]
 #[dojo::model]
+#[derive(Drop, Serde)]
 struct ERC721MetaModel {
     #[key]
     token: ContractAddress,
