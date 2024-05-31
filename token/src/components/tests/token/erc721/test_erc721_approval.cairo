@@ -23,7 +23,7 @@ use token::components::token::erc721::erc721_owner::erc721_owner_component::{
 };
 
 use token::components::tests::mocks::erc721::erc721_approval_mock::erc721_approval_mock;
-use token::components::tests::mocks::erc721::erc721_approval_mock::erc721_approval_mock::world_dispatcherContractMemberStateTrait;
+use starknet::storage::{StorageMemberAccessTrait};
 
 use debug::PrintTrait;
 

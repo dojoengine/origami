@@ -18,14 +18,17 @@ mod erc721_receiver_mock {
     use token::components::introspection::src5::src5_component;
     use token::components::token::erc721::erc721_receiver::erc721_receiver_component;
 
-    component!(path: erc721_receiver_component, storage: erc721_receiver, event: ERC721ReceiverEvent);
+    component!(
+        path: erc721_receiver_component, storage: erc721_receiver, event: ERC721ReceiverEvent
+    );
     component!(path: src5_component, storage: src5, event: SRC5Event);
 
     #[abi(embed_v0)]
     impl SRC5Impl = src5_component::SRC5Impl<ContractState>;
 
     #[abi(embed_v0)]
-    impl ERC721ReceiverImpl = erc721_receiver_component::ERC721ReceiverImpl<ContractState>;
+    impl ERC721ReceiverImpl =
+        erc721_receiver_component::ERC721ReceiverImpl<ContractState>;
 
     impl ERC721ReceiverInternalImpl = erc721_receiver_component::InternalImpl<ContractState>;
 

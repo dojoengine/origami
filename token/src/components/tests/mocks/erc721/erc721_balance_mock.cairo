@@ -8,13 +8,25 @@ trait IERC721BalanceMock<TState> {
     fn balance_of(self: @TState, account: ContractAddress) -> u256;
     fn get_approved(self: @TState, token_id: u256) -> ContractAddress;
     fn transfer_from(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u256);
-    fn safe_transfer_from(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u256, data: Span<felt252>);
+    fn safe_transfer_from(
+        ref self: TState,
+        from: ContractAddress,
+        to: ContractAddress,
+        token_id: u256,
+        data: Span<felt252>
+    );
     fn approve(ref self: TState, to: ContractAddress, token_id: u256);
 
     // IERC721CamelOnly
     fn balanceOf(self: @TState, account: ContractAddress) -> u256;
     fn transferFrom(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u256);
-    fn safeTransferFrom(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u256, data: Span<felt252>);
+    fn safeTransferFrom(
+        ref self: TState,
+        from: ContractAddress,
+        to: ContractAddress,
+        token_id: u256,
+        data: Span<felt252>
+    );
 
     // IWorldProvider
     fn world(self: @TState,) -> IWorldDispatcher;

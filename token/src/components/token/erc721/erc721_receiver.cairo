@@ -6,12 +6,24 @@ use starknet::ContractAddress;
 
 #[starknet::interface]
 trait IERC721Receiver<TState> {
-    fn on_erc721_received(self: @TState, operator: ContractAddress, from: ContractAddress, token_id: u256, data: Span<felt252>) -> felt252;
+    fn on_erc721_received(
+        self: @TState,
+        operator: ContractAddress,
+        from: ContractAddress,
+        token_id: u256,
+        data: Span<felt252>
+    ) -> felt252;
 }
 
 #[starknet::interface]
 trait IERC721ReceiverCamel<TState> {
-    fn onERC721Received(self: @TState, operator: ContractAddress, from: ContractAddress, tokenId: u256, data: Span<felt252>) -> felt252;
+    fn onERC721Received(
+        self: @TState,
+        operator: ContractAddress,
+        from: ContractAddress,
+        tokenId: u256,
+        data: Span<felt252>
+    ) -> felt252;
 }
 
 ///
@@ -42,7 +54,13 @@ mod erc721_receiver_component {
         +IWorldProvider<TContractState>,
         +Drop<TContractState>,
     > of IERC721Receiver<ComponentState<TContractState>> {
-        fn on_erc721_received(self: @ComponentState<TContractState>, operator: ContractAddress, from: ContractAddress, token_id: u256, data: Span<felt252>) -> felt252 {
+        fn on_erc721_received(
+            self: @ComponentState<TContractState>,
+            operator: ContractAddress,
+            from: ContractAddress,
+            token_id: u256,
+            data: Span<felt252>
+        ) -> felt252 {
             IERC721_RECEIVER_ID
         }
     }
@@ -54,7 +72,13 @@ mod erc721_receiver_component {
         +IWorldProvider<TContractState>,
         +Drop<TContractState>,
     > of IERC721ReceiverCamel<ComponentState<TContractState>> {
-        fn onERC721Received(self: @ComponentState<TContractState>, operator: ContractAddress, from: ContractAddress, tokenId: u256, data: Span<felt252>) -> felt252 {
+        fn onERC721Received(
+            self: @ComponentState<TContractState>,
+            operator: ContractAddress,
+            from: ContractAddress,
+            tokenId: u256,
+            data: Span<felt252>
+        ) -> felt252 {
             IERC721_RECEIVER_ID
         }
     }

@@ -2,7 +2,8 @@
 
 use starknet::ContractAddress;
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct ERC20Balance {
     #[key]
     token: ContractAddress,
@@ -11,7 +12,8 @@ struct ERC20Balance {
     amount: u256,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct ERC20Allowance {
     #[key]
     token: ContractAddress,
@@ -22,7 +24,8 @@ struct ERC20Allowance {
     amount: u256,
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct ERC20Meta {
     #[key]
     token: ContractAddress,

@@ -1,6 +1,7 @@
 // Core imports
 
 use integer::u256;
+use integer::u256_from_felt252;
 use zeroable::Zeroable;
 use debug::PrintTrait;
 
@@ -34,7 +35,8 @@ use token::erc721::models::{
     ERC721Meta, erc_721_meta, ERC721OperatorApproval, erc_721_operator_approval, ERC721Owner,
     erc_721_owner, ERC721Balance, erc_721_balance, ERC721TokenApproval, erc_721_token_approval
 };
-use token::erc721::ERC721::_worldContractMemberStateTrait;
+use starknet::storage::{StorageMemberAccessTrait};
+
 
 //
 // Setup
@@ -156,14 +158,14 @@ fn test_owner_of() {
 #[should_panic(expected: ('ERC721: invalid token ID',))]
 fn test_owner_of_non_minted() {
     let state = setup();
-    ERC721Impl::owner_of(@state, 7);
+    ERC721Impl::owner_of(@state, u256_from_felt252(7));
 }
 
 #[test]
 #[should_panic(expected: ('ERC721: invalid token ID',))]
 fn test_token_uri_non_minted() {
     let state = setup();
-    ERC721MetadataImpl::token_uri(@state, 7);
+    ERC721MetadataImpl::token_uri(@state, u256_from_felt252(7));
 }
 
 #[test]
@@ -181,7 +183,7 @@ fn test_get_approved() {
 #[should_panic(expected: ('ERC721: invalid token ID',))]
 fn test_get_approved_nonexistent() {
     let mut state = setup();
-    ERC721Impl::get_approved(@state, 7);
+    ERC721Impl::get_approved(@state, u256_from_felt252(7));
 }
 
 #[test]
@@ -1315,7 +1317,7 @@ fn assert_state_before_transfer(
     state: @ERC721::ContractState,
     owner: ContractAddress,
     recipient: ContractAddress,
-    token_id: u128
+    token_id: u256
 ) {
     assert(ERC721Impl::owner_of(state, token_id) == owner, 'Ownership before');
     assert(ERC721Impl::balance_of(state, owner) == 1, 'Balance of owner before');
@@ -1326,7 +1328,7 @@ fn assert_state_after_transfer(
     state: @ERC721::ContractState,
     owner: ContractAddress,
     recipient: ContractAddress,
-    token_id: u128
+    token_id: u256
 ) {
     assert(ERC721Impl::owner_of(state, token_id) == recipient, 'Ownership after');
     assert(ERC721Impl::balance_of(state, owner) == 0, 'Balance of owner after');
@@ -1339,7 +1341,7 @@ fn assert_state_before_mint(state: @ERC721::ContractState, recipient: ContractAd
 }
 
 fn assert_state_after_mint(
-    state: @ERC721::ContractState, recipient: ContractAddress, token_id: u128
+    state: @ERC721::ContractState, recipient: ContractAddress, token_id: u256
 ) {
     assert(ERC721Impl::owner_of(state, token_id) == recipient, 'Ownership after');
     assert(ERC721Impl::balance_of(state, recipient) == 1, 'Balance of recipient after');
@@ -1356,7 +1358,7 @@ fn assert_event_approval_for_all(
     utils::assert_no_events_left(ZERO());
 }
 
-fn assert_event_approval(owner: ContractAddress, approved: ContractAddress, token_id: u128) {
+fn assert_event_approval(owner: ContractAddress, approved: ContractAddress, token_id: u256) {
     let event = utils::pop_log::<Approval>(ZERO()).unwrap();
     assert(event.owner == owner, 'Invalid `owner`');
     assert(event.approved == approved, 'Invalid `approved`');
@@ -1364,7 +1366,7 @@ fn assert_event_approval(owner: ContractAddress, approved: ContractAddress, toke
     utils::assert_no_events_left(ZERO());
 }
 
-fn assert_event_transfer(from: ContractAddress, to: ContractAddress, token_id: u128) {
+fn assert_event_transfer(from: ContractAddress, to: ContractAddress, token_id: u256) {
     let event = utils::pop_log::<Transfer>(ZERO()).unwrap();
     assert(event.from == from, 'Invalid `from`');
     assert(event.to == to, 'Invalid `to`');

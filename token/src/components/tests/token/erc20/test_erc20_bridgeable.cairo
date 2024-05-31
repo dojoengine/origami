@@ -4,9 +4,7 @@ use starknet::ContractAddress;
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{
-    ZERO, OWNER, SPENDER, RECIPIENT, BRIDGE, NAME, SYMBOL, DECIMALS, SUPPLY, VALUE
-};
+use token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, BRIDGE, DECIMALS, SUPPLY, VALUE};
 
 use token::components::token::erc20::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
 use token::components::token::erc20::erc20_metadata::erc20_metadata_component::{
@@ -32,8 +30,7 @@ use token::components::tests::mocks::erc20::erc20_bridgeable_mock::erc20_bridgea
 use token::components::tests::mocks::erc20::erc20_bridgeable_mock::erc20_bridgeable_mock::{
     ERC20InitializerImpl
 };
-use token::components::tests::mocks::erc20::erc20_bridgeable_mock::erc20_bridgeable_mock::world_dispatcherContractMemberStateTrait;
-
+use starknet::storage::{StorageMemberAccessTrait};
 
 fn STATE() -> (IWorldDispatcher, erc20_bridgeable_mock::ContractState) {
     let world = spawn_test_world(
@@ -53,7 +50,7 @@ fn STATE() -> (IWorldDispatcher, erc20_bridgeable_mock::ContractState) {
 
 fn setup() -> erc20_bridgeable_mock::ContractState {
     let (_world, mut state) = STATE();
-    state.initializer(NAME, SYMBOL, SUPPLY, OWNER(), BRIDGE());
+    state.initializer("NAME", "SYMBOL", SUPPLY, OWNER(), BRIDGE());
     state
 }
 
@@ -64,7 +61,7 @@ fn setup() -> erc20_bridgeable_mock::ContractState {
 #[test]
 fn test_erc20_bridgeable_initializer() {
     let (_world, mut state) = STATE();
-    state.initializer(NAME, SYMBOL, SUPPLY, OWNER(), BRIDGE());
+    state.initializer("NAME", "SYMBOL", SUPPLY, OWNER(), BRIDGE());
 
     assert(state.l2_bridge_address() == BRIDGE(), 'should be BRIDGE');
 }

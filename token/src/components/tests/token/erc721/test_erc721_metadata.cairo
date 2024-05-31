@@ -10,7 +10,7 @@ use token::components::token::erc721::erc721_metadata::erc721_metadata_component
 use token::components::token::erc721::erc721_mintable::erc721_mintable_component::InternalImpl as ERC721MintableInternalImpl;
 
 use token::components::tests::mocks::erc721::erc721_metadata_mock::erc721_metadata_mock;
-use token::components::tests::mocks::erc721::erc721_metadata_mock::erc721_metadata_mock::world_dispatcherContractMemberStateTrait;
+use starknet::storage::{StorageMemberAccessTrait};
 
 
 fn STATE() -> (IWorldDispatcher, erc721_metadata_mock::ContractState) {

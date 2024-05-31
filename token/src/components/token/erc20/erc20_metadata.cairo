@@ -4,12 +4,13 @@ use starknet::ContractAddress;
 /// Model
 ///
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Drop, Serde)]
 struct ERC20MetadataModel {
     #[key]
     token: ContractAddress,
-    name: felt252,
-    symbol: felt252,
+    name: ByteArray,
+    symbol: ByteArray,
     decimals: u8,
     total_supply: u256,
 }
@@ -20,8 +21,8 @@ struct ERC20MetadataModel {
 
 #[starknet::interface]
 trait IERC20Metadata<TState> {
-    fn name(self: @TState) -> felt252;
-    fn symbol(self: @TState) -> felt252;
+    fn name(self: @TState) -> ByteArray;
+    fn symbol(self: @TState) -> ByteArray;
     fn decimals(self: @TState) -> u8;
 }
 
@@ -60,10 +61,10 @@ mod erc20_metadata_component {
         +IWorldProvider<TContractState>,
         +Drop<TContractState>,
     > of IERC20Metadata<ComponentState<TContractState>> {
-        fn name(self: @ComponentState<TContractState>) -> felt252 {
+        fn name(self: @ComponentState<TContractState>) -> ByteArray {
             self.get_metadata().name
         }
-        fn symbol(self: @ComponentState<TContractState>) -> felt252 {
+        fn symbol(self: @ComponentState<TContractState>) -> ByteArray {
             self.get_metadata().symbol
         }
         fn decimals(self: @ComponentState<TContractState>) -> u8 {
@@ -108,7 +109,10 @@ mod erc20_metadata_component {
         }
 
         fn initialize(
-            ref self: ComponentState<TContractState>, name: felt252, symbol: felt252, decimals: u8
+            ref self: ComponentState<TContractState>,
+            name: ByteArray,
+            symbol: ByteArray,
+            decimals: u8
         ) {
             set!(
                 self.get_contract().world(),

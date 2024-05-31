@@ -6,9 +6,7 @@ use zeroable::Zeroable;
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{
-    ZERO, OWNER, SPENDER, RECIPIENT, BRIDGE, NAME, SYMBOL, DECIMALS, SUPPLY, VALUE
-};
+use token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, BRIDGE, DECIMALS, SUPPLY, VALUE};
 
 use token::tests::utils;
 
@@ -43,7 +41,7 @@ use token::presets::erc20::bridgeable::{
     ERC20Bridgeable, IERC20BridgeablePresetDispatcher, IERC20BridgeablePresetDispatcherTrait
 };
 use token::presets::erc20::bridgeable::ERC20Bridgeable::{ERC20InitializerImpl};
-use token::presets::erc20::bridgeable::ERC20Bridgeable::world_dispatcherContractMemberStateTrait;
+use starknet::storage::{StorageMemberAccessTrait};
 
 use token::components::tests::token::erc20::test_erc20_allowance::{
     assert_event_approval, assert_only_event_approval
@@ -70,17 +68,29 @@ fn setup() -> (IWorldDispatcher, IERC20BridgeablePresetDispatcher) {
     // deploy contract
     let mut erc20_bridgeable_dispatcher = IERC20BridgeablePresetDispatcher {
         contract_address: world
-            .deploy_contract('salt', ERC20Bridgeable::TEST_CLASS_HASH.try_into().unwrap())
+            .deploy_contract(
+                'salt', ERC20Bridgeable::TEST_CLASS_HASH.try_into().unwrap(), array![].span()
+            )
     };
 
     // setup auth
-    world.grant_writer('ERC20AllowanceModel', erc20_bridgeable_dispatcher.contract_address);
-    world.grant_writer('ERC20BalanceModel', erc20_bridgeable_dispatcher.contract_address);
-    world.grant_writer('ERC20MetadataModel', erc20_bridgeable_dispatcher.contract_address);
-    world.grant_writer('ERC20BridgeableModel', erc20_bridgeable_dispatcher.contract_address);
+    world
+        .grant_writer(
+            selector!("ERC20AllowanceModel"), erc20_bridgeable_dispatcher.contract_address
+        );
+    world
+        .grant_writer(selector!("ERC20BalanceModel"), erc20_bridgeable_dispatcher.contract_address);
+    world
+        .grant_writer(
+            selector!("ERC20MetadataModel"), erc20_bridgeable_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC20BridgeableModel"), erc20_bridgeable_dispatcher.contract_address
+        );
 
     // initialize contracts
-    erc20_bridgeable_dispatcher.initializer(NAME, SYMBOL, SUPPLY, OWNER(), BRIDGE());
+    erc20_bridgeable_dispatcher.initializer("NAME", "SYMBOL", SUPPLY, OWNER(), BRIDGE());
 
     // drop all events
     utils::drop_all_events(erc20_bridgeable_dispatcher.contract_address);
@@ -100,8 +110,8 @@ fn test_initializer() {
 
     assert(erc20_bridgeable.balance_of(OWNER()) == SUPPLY, 'Should eq inital_supply');
     assert(erc20_bridgeable.total_supply() == SUPPLY, 'Should eq inital_supply');
-    assert(erc20_bridgeable.name() == NAME, 'Name should be NAME');
-    assert(erc20_bridgeable.symbol() == SYMBOL, 'Symbol should be SYMBOL');
+    assert(erc20_bridgeable.name() == "NAME", 'Name should be NAME');
+    assert(erc20_bridgeable.symbol() == "SYMBOL", 'Symbol should be SYMBOL');
     assert(erc20_bridgeable.decimals() == DECIMALS, 'Decimals should be 18');
     assert(erc20_bridgeable.l2_bridge_address() == BRIDGE(), 'Decimals should be BRIDGE');
 }
