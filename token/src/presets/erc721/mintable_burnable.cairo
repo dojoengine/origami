@@ -31,6 +31,7 @@ trait IERC721MintableBurnablePreset<TState> {
     );
     fn mint(ref self: TState, to: ContractAddress, token_id: u256);
     fn burn(ref self: TState, token_id: u256);
+    fn dojo_resource(self: @TState,) -> felt252;
 }
 
 #[starknet::interface]
@@ -54,12 +55,16 @@ trait IERC721MintableBurnableMintBurn<TState> {
 #[dojo::contract(allow_ref_self)]
 mod ERC721MintableBurnable {
     use starknet::ContractAddress;
+    use starknet::{get_caller_address, get_contract_address};
+    use token::components::security::initializable::initializable_component;
     use token::components::token::erc721::erc721_approval::erc721_approval_component;
     use token::components::token::erc721::erc721_balance::erc721_balance_component;
     use token::components::token::erc721::erc721_burnable::erc721_burnable_component;
     use token::components::token::erc721::erc721_metadata::erc721_metadata_component;
     use token::components::token::erc721::erc721_mintable::erc721_mintable_component;
     use token::components::token::erc721::erc721_owner::erc721_owner_component;
+
+    component!(path: initializable_component, storage: initializable, event: InitializableEvent);
 
     component!(
         path: erc721_approval_component, storage: erc721_approval, event: ERC721ApprovalEvent
@@ -75,6 +80,8 @@ mod ERC721MintableBurnable {
         path: erc721_mintable_component, storage: erc721_mintable, event: ERC721MintableEvent
     );
     component!(path: erc721_owner_component, storage: erc721_owner, event: ERC721OwnerEvent);
+
+    impl InitializableImpl = initializable_component::InitializableImpl<ContractState>;
 
     #[abi(embed_v0)]
     impl ERC721ApprovalImpl =
@@ -103,6 +110,7 @@ mod ERC721MintableBurnable {
     #[abi(embed_v0)]
     impl ERC721OwnerImpl = erc721_owner_component::ERC721OwnerImpl<ContractState>;
 
+    impl InitializableInternalImpl = initializable_component::InternalImpl<ContractState>;
     impl ERC721ApprovalInternalImpl = erc721_approval_component::InternalImpl<ContractState>;
     impl ERC721BalanceInternalImpl = erc721_balance_component::InternalImpl<ContractState>;
     impl ERC721BurnableInternalImpl = erc721_burnable_component::InternalImpl<ContractState>;
@@ -112,6 +120,8 @@ mod ERC721MintableBurnable {
 
     #[storage]
     struct Storage {
+        #[substorage(v0)]
+        initializable: initializable_component::Storage,
         #[substorage(v0)]
         erc721_approval: erc721_approval_component::Storage,
         #[substorage(v0)]
@@ -129,6 +139,7 @@ mod ERC721MintableBurnable {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
+        InitializableEvent: initializable_component::Event,
         ERC721ApprovalEvent: erc721_approval_component::Event,
         ERC721BalanceEvent: erc721_balance_component::Event,
         ERC721BurnableEvent: erc721_burnable_component::Event,
@@ -137,6 +148,9 @@ mod ERC721MintableBurnable {
         ERC721OwnerEvent: erc721_owner_component::Event,
     }
 
+    mod Errors {
+        const CALLER_IS_NOT_OWNER: felt252 = 'ERC721: caller is not owner';
+    }
 
     #[abi(embed_v0)]
     impl ERC721InitializerImpl of super::IERC721MintableBurnableInit<ContractState> {
@@ -148,8 +162,15 @@ mod ERC721MintableBurnable {
             recipient: ContractAddress,
             token_ids: Span<u256>
         ) {
+            assert(
+                self.world().is_owner(get_caller_address(), get_contract_address().into()),
+                Errors::CALLER_IS_NOT_OWNER
+            );
+
             self.erc721_metadata.initialize(name, symbol, base_uri);
             self.mint_assets(recipient, token_ids);
+
+            self.initializable.initialize();
         }
     }
 
