@@ -1,7 +1,7 @@
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{NAME, SYMBOL, DECIMALS};
+use token::tests::constants::{DECIMALS};
 
 use token::components::token::erc20::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
 use token::components::token::erc20::erc20_metadata::erc20_metadata_component::{
@@ -23,10 +23,10 @@ fn STATE() -> (IWorldDispatcher, erc20_metadata_mock::ContractState) {
 fn test_erc20_metadata_initialize() {
     let (_world, mut state) = STATE();
 
-    state.erc20_metadata.initialize(NAME, SYMBOL, DECIMALS);
+    state.erc20_metadata.initialize("NAME", "SYMBOL", DECIMALS);
 
-    assert(state.erc20_metadata.name() == NAME, 'Should be NAME');
-    assert(state.erc20_metadata.symbol() == SYMBOL, 'Should be SYMBOL');
+    assert(state.erc20_metadata.name() == "NAME", 'Should be NAME');
+    assert(state.erc20_metadata.symbol() == "SYMBOL", 'Should be SYMBOL');
     assert(state.erc20_metadata.decimals() == DECIMALS, 'Should be 18');
     assert(state.erc20_metadata.total_supply() == 0, 'Should be 0');
     assert(state.erc20_metadata.totalSupply() == 0, 'Should be 0');

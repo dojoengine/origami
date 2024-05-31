@@ -11,8 +11,8 @@ trait IERC20BridgeablePreset<TState> {
 
     // IERC20Metadata
     fn decimals(self: @TState,) -> u8;
-    fn name(self: @TState,) -> felt252;
-    fn symbol(self: @TState,) -> felt252;
+    fn name(self: @TState,) -> ByteArray;
+    fn symbol(self: @TState,) -> ByteArray;
 
     // IERC20MetadataTotalSupply
     fn total_supply(self: @TState,) -> u256;
@@ -45,8 +45,8 @@ trait IERC20BridgeablePreset<TState> {
     // WITHOUT INTERFACE !!!
     fn initializer(
         ref self: TState,
-        name: felt252,
-        symbol: felt252,
+        name: ByteArray,
+        symbol: ByteArray,
         initial_supply: u256,
         recipient: ContractAddress,
         l2_bridge_address: ContractAddress
@@ -63,8 +63,8 @@ trait IERC20BridgeablePreset<TState> {
 trait IERC20BridgeableInitializer<TState> {
     fn initializer(
         ref self: TState,
-        name: felt252,
-        symbol: felt252,
+        name: ByteArray,
+        symbol: ByteArray,
         initial_supply: u256,
         recipient: ContractAddress,
         l2_bridge_address: ContractAddress
@@ -186,8 +186,8 @@ mod ERC20Bridgeable {
     impl ERC20InitializerImpl of super::IERC20BridgeableInitializer<ContractState> {
         fn initializer(
             ref self: ContractState,
-            name: felt252,
-            symbol: felt252,
+            name: ByteArray,
+            symbol: ByteArray,
             initial_supply: u256,
             recipient: ContractAddress,
             l2_bridge_address: ContractAddress,

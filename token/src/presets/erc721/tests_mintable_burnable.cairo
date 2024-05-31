@@ -28,10 +28,11 @@ use token::components::token::erc721::erc721_mintable::erc721_mintable_component
 use token::components::token::erc721::erc721_burnable::erc721_burnable_component::InternalImpl as ERC721BurnableInternalImpl;
 
 use token::presets::erc721::mintable_burnable::{
-    ERC721MintableBurnable, IERC721MintableBurnablePresetDispatcher, IERC721MintableBurnablePresetDispatcherTrait
+    ERC721MintableBurnable, IERC721MintableBurnablePresetDispatcher,
+    IERC721MintableBurnablePresetDispatcherTrait
 };
 use token::presets::erc721::mintable_burnable::ERC721MintableBurnable::{ERC721InitializerImpl};
-use token::presets::erc721::mintable_burnable::ERC721MintableBurnable::world_dispatcherContractMemberStateTrait;
+use starknet::storage::{StorageMemberAccessTrait};
 
 use token::components::tests::token::erc721::test_erc721_approval::{
     assert_event_approval, assert_only_event_approval
@@ -48,24 +49,42 @@ use token::components::tests::token::erc721::test_erc721_balance::{
 fn setup() -> (IWorldDispatcher, IERC721MintableBurnablePresetDispatcher) {
     let world = spawn_test_world(
         array![
-            erc_721_token_approval_model::TEST_CLASS_HASH, erc_721_balance_model::TEST_CLASS_HASH, erc_721_meta_model::TEST_CLASS_HASH,
+            erc_721_token_approval_model::TEST_CLASS_HASH,
+            erc_721_balance_model::TEST_CLASS_HASH,
+            erc_721_meta_model::TEST_CLASS_HASH,
         ]
     );
 
     // deploy contract
     let mut erc721_mintable_burnable_dispatcher = IERC721MintableBurnablePresetDispatcher {
         contract_address: world
-            .deploy_contract('salt', ERC721MintableBurnable::TEST_CLASS_HASH.try_into().unwrap())
+            .deploy_contract(
+                'salt', ERC721MintableBurnable::TEST_CLASS_HASH.try_into().unwrap(), array![].span()
+            )
     };
 
     // setup auth
-    world.grant_writer(selector!("ERC721TokenApprovalModel"), erc721_mintable_burnable_dispatcher.contract_address);
-    world.grant_writer(selector!("ERC721BalanceModel"), erc721_mintable_burnable_dispatcher.contract_address);
-    world.grant_writer(selector!("ERC721MetadataModel"), erc721_mintable_burnable_dispatcher.contract_address);
-    world.grant_writer(selector!("ERC721OwnerModel"), erc721_mintable_burnable_dispatcher.contract_address);
+    world
+        .grant_writer(
+            selector!("ERC721TokenApprovalModel"),
+            erc721_mintable_burnable_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC721BalanceModel"), erc721_mintable_burnable_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC721MetadataModel"), erc721_mintable_burnable_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC721OwnerModel"), erc721_mintable_burnable_dispatcher.contract_address
+        );
 
     // initialize contracts
-    erc721_mintable_burnable_dispatcher.initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
+    erc721_mintable_burnable_dispatcher
+        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
 
     // drop all events
     utils::drop_all_events(erc721_mintable_burnable_dispatcher.contract_address);
@@ -99,9 +118,7 @@ fn test_approve() {
     utils::impersonate(OWNER());
 
     mintable_burnable.approve(SPENDER(), TOKEN_ID);
-    assert(
-        mintable_burnable.get_approved(TOKEN_ID) == SPENDER(), 'Spender not approved correctly'
-    );
+    assert(mintable_burnable.get_approved(TOKEN_ID) == SPENDER(), 'Spender not approved correctly');
 
     // drop StoreSetRecord ERC721TokenApprovalModel
     utils::drop_event(world.contract_address);

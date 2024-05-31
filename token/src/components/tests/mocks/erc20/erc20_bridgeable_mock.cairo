@@ -4,8 +4,8 @@ use starknet::ContractAddress;
 trait IERC20BridgeableMockInit<TState> {
     fn initializer(
         ref self: TState,
-        name: felt252,
-        symbol: felt252,
+        name: ByteArray,
+        symbol: ByteArray,
         initial_supply: u256,
         recipient: ContractAddress,
         l2_bridge_address: ContractAddress,
@@ -108,8 +108,8 @@ mod erc20_bridgeable_mock {
     impl ERC20InitializerImpl of super::IERC20BridgeableMockInit<ContractState> {
         fn initializer(
             ref self: ContractState,
-            name: felt252,
-            symbol: felt252,
+            name: ByteArray,
+            symbol: ByteArray,
             initial_supply: u256,
             recipient: ContractAddress,
             l2_bridge_address: ContractAddress,

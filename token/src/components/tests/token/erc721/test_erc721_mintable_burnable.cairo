@@ -17,7 +17,7 @@ use token::components::token::erc721::erc721_mintable::erc721_mintable_component
 use token::components::token::erc721::erc721_burnable::erc721_burnable_component::InternalImpl as ERC721BurnableInternalImpl;
 
 use token::components::tests::mocks::erc721::erc721_mintable_burnable_mock::erc721_mintable_burnable_mock;
-use token::components::tests::mocks::erc721::erc721_mintable_burnable_mock::erc721_mintable_burnable_mock::world_dispatcherContractMemberStateTrait;
+use starknet::storage::{StorageMemberAccessTrait};
 
 
 fn STATE() -> (IWorldDispatcher, erc721_mintable_burnable_mock::ContractState) {
