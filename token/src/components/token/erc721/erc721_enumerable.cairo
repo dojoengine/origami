@@ -5,8 +5,8 @@ use starknet::ContractAddress;
 ///
 /// 
 
-#[derive(Copy, Drop, Serde)]
 #[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct ERC721EnumerableIndexModel {
     #[key]
     token: ContractAddress,
