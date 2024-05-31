@@ -136,7 +136,7 @@ mod erc721_approval_component {
         fn set_approval_for_all(
             ref self: ComponentState<TContractState>, operator: ContractAddress, approved: bool
         ) {
-            self._set_approval_for_all(get_caller_address(), operator, approved)
+            self.set_approval_for_all_internal(get_caller_address(), operator, approved)
         }
     }
 
@@ -222,7 +222,7 @@ mod erc721_approval_component {
             }
         }
 
-        fn _set_approval_for_all(
+        fn set_approval_for_all_internal(
             ref self: ComponentState<TContractState>,
             owner: ContractAddress,
             operator: ContractAddress,
