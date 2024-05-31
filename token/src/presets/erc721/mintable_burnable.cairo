@@ -80,7 +80,7 @@ mod ERC721MintableBurnable {
         path: erc721_mintable_component, storage: erc721_mintable, event: ERC721MintableEvent
     );
     component!(path: erc721_owner_component, storage: erc721_owner, event: ERC721OwnerEvent);
-    
+
     impl InitializableImpl = initializable_component::InitializableImpl<ContractState>;
 
     #[abi(embed_v0)]
