@@ -2,7 +2,8 @@
 
 use starknet::ContractAddress;
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Item {
     #[key]
     player: ContractAddress,

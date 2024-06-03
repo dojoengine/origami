@@ -32,8 +32,7 @@ use token::components::tests::mocks::erc20::erc20_bridgeable_mock::erc20_bridgea
 use token::components::tests::mocks::erc20::erc20_bridgeable_mock::erc20_bridgeable_mock::{
     ERC20InitializerImpl
 };
-use token::components::tests::mocks::erc20::erc20_bridgeable_mock::erc20_bridgeable_mock::world_dispatcherContractMemberStateTrait;
-
+use starknet::storage::{StorageMemberAccessTrait};
 
 fn STATE() -> (IWorldDispatcher, erc20_bridgeable_mock::ContractState) {
     let world = spawn_test_world(

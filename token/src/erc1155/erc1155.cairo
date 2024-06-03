@@ -28,7 +28,7 @@ mod ERC1155 {
         operator: ContractAddress,
         from: ContractAddress,
         to: ContractAddress,
-        id: u128,
+        id: u256,
         value: u256
     }
 
@@ -37,7 +37,7 @@ mod ERC1155 {
         operator: ContractAddress,
         from: ContractAddress,
         to: ContractAddress,
-        ids: Array<u128>,
+        ids: Array<u256>,
         values: Array<u256>
     }
 
@@ -83,7 +83,7 @@ mod ERC1155 {
             self.get_meta().symbol
         }
 
-        fn uri(self: @ContractState, token_id: u128) -> felt252 {
+        fn uri(self: @ContractState, token_id: u256) -> felt252 {
             //assert(self._exists(token_id), Errors::INVALID_TOKEN_ID);
             // TODO : concat with id
             self.get_uri(token_id)
@@ -93,13 +93,13 @@ mod ERC1155 {
 
     #[abi(embed_v0)]
     impl ERC1155Impl of interface::IERC1155<ContractState> {
-        fn balance_of(self: @ContractState, account: ContractAddress, id: u128) -> u256 {
+        fn balance_of(self: @ContractState, account: ContractAddress, id: u256) -> u256 {
             assert(account.is_non_zero(), Errors::INVALID_ACCOUNT);
             self.get_balance(account, id).amount
         }
 
         fn balance_of_batch(
-            self: @ContractState, accounts: Array<ContractAddress>, ids: Array<u128>
+            self: @ContractState, accounts: Array<ContractAddress>, ids: Array<u256>
         ) -> Array<u256> {
             assert(ids.len() == accounts.len(), Errors::INVALID_ARRAY_LENGTH);
 
@@ -130,7 +130,7 @@ mod ERC1155 {
             ref self: ContractState,
             from: ContractAddress,
             to: ContractAddress,
-            id: u128,
+            id: u256,
             amount: u256,
             data: Array<u8>
         ) {
@@ -147,7 +147,7 @@ mod ERC1155 {
             ref self: ContractState,
             from: ContractAddress,
             to: ContractAddress,
-            ids: Array<u128>,
+            ids: Array<u256>,
             amounts: Array<u256>,
             data: Array<u8>
         ) {
@@ -163,12 +163,12 @@ mod ERC1155 {
 
     #[abi(embed_v0)]
     impl ERC1155CamelOnlyImpl of interface::IERC1155CamelOnly<ContractState> {
-        fn balanceOf(self: @ContractState, account: ContractAddress, id: u128) -> u256 {
+        fn balanceOf(self: @ContractState, account: ContractAddress, id: u256) -> u256 {
             ERC1155Impl::balance_of(self, account, id)
         }
 
         fn balanceOfBatch(
-            self: @ContractState, accounts: Array<ContractAddress>, ids: Array<u128>
+            self: @ContractState, accounts: Array<ContractAddress>, ids: Array<u256>
         ) -> Array<u256> {
             ERC1155Impl::balance_of_batch(self, accounts, ids)
         }
@@ -185,7 +185,7 @@ mod ERC1155 {
             ref self: ContractState,
             from: ContractAddress,
             to: ContractAddress,
-            id: u128,
+            id: u256,
             amount: u256,
             data: Array<u8>
         ) {
@@ -195,7 +195,7 @@ mod ERC1155 {
             ref self: ContractState,
             from: ContractAddress,
             to: ContractAddress,
-            ids: Array<u128>,
+            ids: Array<u256>,
             amounts: Array<u256>,
             data: Array<u8>
         ) {
@@ -217,13 +217,17 @@ mod ERC1155 {
             get!(self.world(), get_contract_address(), ERC1155Meta)
         }
 
-        fn get_uri(self: @ContractState, token_id: u128) -> felt252 {
+        fn get_uri(self: @ContractState, token_id: u256) -> felt252 {
             // TODO : concat with id when we have string type
             self.get_meta().base_uri
         }
 
-        fn get_balance(self: @ContractState, account: ContractAddress, id: u128) -> ERC1155Balance {
-            get!(self.world(), (get_contract_address(), account, id), ERC1155Balance)
+        fn get_balance(self: @ContractState, account: ContractAddress, id: u256) -> ERC1155Balance {
+            get!(
+                self.world(),
+                (get_contract_address(), account, TryInto::<u256, felt252>::try_into(id).unwrap()),
+                ERC1155Balance
+            )
         }
 
         fn get_operator_approval(
@@ -249,9 +253,12 @@ mod ERC1155 {
             emit!(self.world(), (Event::ApprovalForAll(approval_for_all_event)));
         }
 
-        fn set_balance(ref self: ContractState, account: ContractAddress, id: u128, amount: u256) {
+        fn set_balance(ref self: ContractState, account: ContractAddress, id: u256, amount: u256) {
             set!(
-                self.world(), ERC1155Balance { token: get_contract_address(), account, id, amount }
+                self.world(),
+                ERC1155Balance {
+                    token: get_contract_address(), account, id: id.try_into().unwrap(), amount
+                }
             );
         }
 
@@ -259,7 +266,7 @@ mod ERC1155 {
             ref self: ContractState,
             from: ContractAddress,
             to: ContractAddress,
-            id: u128,
+            id: u256,
             amount: u256,
         ) {
             self.set_balance(from, id, self.get_balance(from, id).amount - amount);
@@ -294,7 +301,7 @@ mod ERC1155 {
             ref self: ContractState,
             from: ContractAddress,
             to: ContractAddress,
-            id: u128,
+            id: u256,
             amount: u256,
             data: Array<u8>
         ) {
@@ -312,7 +319,7 @@ mod ERC1155 {
             ref self: ContractState,
             from: ContractAddress,
             to: ContractAddress,
-            ids: Array<u128>,
+            ids: Array<u256>,
             amounts: Array<u256>,
             data: Array<u8>
         ) {
@@ -338,7 +345,7 @@ mod ERC1155 {
             emit!(self.world(), (Event::TransferBatch(transfer_batch_event)));
         }
 
-        fn _mint(ref self: ContractState, to: ContractAddress, id: u128, amount: u256) {
+        fn _mint(ref self: ContractState, to: ContractAddress, id: u256, amount: u256) {
             assert(to.is_non_zero(), Errors::INVALID_RECEIVER);
 
             self.set_balance(to, id, self.get_balance(to, id).amount + amount);
@@ -351,7 +358,7 @@ mod ERC1155 {
             emit!(self.world(), (Event::TransferSingle(transfer_single_event)));
         }
 
-        fn _burn(ref self: ContractState, id: u128, amount: u256) {
+        fn _burn(ref self: ContractState, id: u256, amount: u256) {
             let caller = get_caller_address();
             assert(self.get_balance(caller, id).amount >= amount, Errors::INSUFFICIENT_BALANCE);
 
@@ -372,7 +379,7 @@ mod ERC1155 {
         fn _safe_mint(
             ref self: ContractState,
             to: ContractAddress,
-            id: u128,
+            id: u256,
             amount: u256,
             data: Span<felt252>
         ) {

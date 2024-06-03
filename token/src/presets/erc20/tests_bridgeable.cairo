@@ -43,7 +43,7 @@ use token::presets::erc20::bridgeable::{
     ERC20Bridgeable, IERC20BridgeablePresetDispatcher, IERC20BridgeablePresetDispatcherTrait
 };
 use token::presets::erc20::bridgeable::ERC20Bridgeable::{ERC20InitializerImpl};
-use token::presets::erc20::bridgeable::ERC20Bridgeable::world_dispatcherContractMemberStateTrait;
+use starknet::storage::{StorageMemberAccessTrait};
 
 use token::components::tests::token::erc20::test_erc20_allowance::{
     assert_event_approval, assert_only_event_approval
@@ -70,14 +70,26 @@ fn setup() -> (IWorldDispatcher, IERC20BridgeablePresetDispatcher) {
     // deploy contract
     let mut erc20_bridgeable_dispatcher = IERC20BridgeablePresetDispatcher {
         contract_address: world
-            .deploy_contract('salt', ERC20Bridgeable::TEST_CLASS_HASH.try_into().unwrap())
+            .deploy_contract(
+                'salt', ERC20Bridgeable::TEST_CLASS_HASH.try_into().unwrap(), array![].span()
+            )
     };
 
     // setup auth
-    world.grant_writer('ERC20AllowanceModel', erc20_bridgeable_dispatcher.contract_address);
-    world.grant_writer('ERC20BalanceModel', erc20_bridgeable_dispatcher.contract_address);
-    world.grant_writer('ERC20MetadataModel', erc20_bridgeable_dispatcher.contract_address);
-    world.grant_writer('ERC20BridgeableModel', erc20_bridgeable_dispatcher.contract_address);
+    world
+        .grant_writer(
+            selector!("ERC20AllowanceModel"), erc20_bridgeable_dispatcher.contract_address
+        );
+    world
+        .grant_writer(selector!("ERC20BalanceModel"), erc20_bridgeable_dispatcher.contract_address);
+    world
+        .grant_writer(
+            selector!("ERC20MetadataModel"), erc20_bridgeable_dispatcher.contract_address
+        );
+    world
+        .grant_writer(
+            selector!("ERC20BridgeableModel"), erc20_bridgeable_dispatcher.contract_address
+        );
 
     // initialize contracts
     erc20_bridgeable_dispatcher.initializer(NAME, SYMBOL, SUPPLY, OWNER(), BRIDGE());

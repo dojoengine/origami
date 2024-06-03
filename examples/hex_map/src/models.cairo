@@ -7,7 +7,8 @@ struct Vec2 {
     y: u32
 }
 
-#[derive(Model, Copy, Drop, Serde)]
+#[dojo::model]
+#[derive(Copy, Drop, Serde)]
 struct Position {
     #[key]
     player: ContractAddress,

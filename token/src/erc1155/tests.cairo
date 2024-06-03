@@ -22,7 +22,8 @@ use token::erc1155::models::{
     ERC1155Meta, erc_1155_meta, ERC1155OperatorApproval, erc_1155_operator_approval, ERC1155Balance,
     erc_1155_balance
 };
-use token::erc1155::ERC1155::_worldContractMemberStateTrait;
+use starknet::storage::{StorageMemberAccessTrait};
+
 use debug::PrintTrait;
 
 //
@@ -696,14 +697,14 @@ fn test__burn_more_than_balance() {
 //
 
 fn assert_state_before_transfer(
-    state: @ERC1155::ContractState, owner: ContractAddress, recipient: ContractAddress, id: u128,
+    state: @ERC1155::ContractState, owner: ContractAddress, recipient: ContractAddress, id: u256,
 ) {
     assert(ERC1155Impl::balance_of(state, owner, id) == TOKEN_AMOUNT, 'Balance of owner before');
     assert(ERC1155Impl::balance_of(state, recipient, id) == 0, 'Balance of recipient before');
 }
 
 fn assert_state_after_transfer(
-    state: @ERC1155::ContractState, owner: ContractAddress, recipient: ContractAddress, id: u128
+    state: @ERC1155::ContractState, owner: ContractAddress, recipient: ContractAddress, id: u256
 ) {
     assert(ERC1155Impl::balance_of(state, owner, id) == 0, 'Balance of owner after');
     assert(
@@ -760,7 +761,7 @@ fn assert_event_approval_for_all(
 }
 
 fn assert_event_transfer_single(
-    from: ContractAddress, to: ContractAddress, id: u128, amount: u256
+    from: ContractAddress, to: ContractAddress, id: u256, amount: u256
 ) {
     let event = utils::pop_log::<TransferSingle>(ZERO()).unwrap();
     assert(event.from == from, 'Invalid `from`');
@@ -771,7 +772,7 @@ fn assert_event_transfer_single(
 }
 
 fn assert_event_transfer_batch(
-    from: ContractAddress, to: ContractAddress, ids: Array<u128>, amounts: Array<u256>
+    from: ContractAddress, to: ContractAddress, ids: Array<u256>, amounts: Array<u256>
 ) {
     let event = utils::pop_log::<TransferBatch>(ZERO()).unwrap();
     assert(event.from == from, 'Invalid `from`');

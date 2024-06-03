@@ -21,7 +21,8 @@ use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use token::erc20::models::{
     ERC20Allowance, erc_20_allowance, ERC20Balance, erc_20_balance, ERC20Meta, erc_20_meta
 };
-use token::erc20::ERC20::_worldContractMemberStateTrait;
+use starknet::storage::{StorageMemberAccessTrait};
+
 use debug::PrintTrait;
 
 //

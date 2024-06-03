@@ -75,23 +75,23 @@ fn setup() -> (IWorldDispatcher, IDojoTokenDispatcher, IDojoBridgeDispatcher) {
     // deploy token
     let mut dojo_token_dispatcher = IDojoTokenDispatcher {
         contract_address: world
-            .deploy_contract('salt', dojo_token::TEST_CLASS_HASH.try_into().unwrap())
+            .deploy_contract('salt', dojo_token::TEST_CLASS_HASH.try_into().unwrap(), array![].span())
     };
 
      // deploy bridge
     let mut dojo_bridge_dispatcher = IDojoBridgeDispatcher {
         contract_address: world
-            .deploy_contract('salt', dojo_bridge::TEST_CLASS_HASH.try_into().unwrap())
+            .deploy_contract('salt', dojo_bridge::TEST_CLASS_HASH.try_into().unwrap(),array![].span())
     };
 
     // setup auth for dojo_token
-    world.grant_writer('ERC20AllowanceModel', dojo_token_dispatcher.contract_address);
-    world.grant_writer('ERC20BalanceModel', dojo_token_dispatcher.contract_address);
-    world.grant_writer('ERC20MetadataModel', dojo_token_dispatcher.contract_address);
-    world.grant_writer('ERC20BridgeableModel', dojo_token_dispatcher.contract_address);
+    world.grant_writer(selector!("ERC20AllowanceModel"), dojo_token_dispatcher.contract_address);
+    world.grant_writer(selector!("ERC20BalanceModel"), dojo_token_dispatcher.contract_address);
+    world.grant_writer(selector!("ERC20MetadataModel"), dojo_token_dispatcher.contract_address);
+    world.grant_writer(selector!("ERC20BridgeableModel"), dojo_token_dispatcher.contract_address);
    
     // setup auth for dojo_bridge
-    world.grant_writer('DojoBridgeModel', dojo_bridge_dispatcher.contract_address);
+    world.grant_writer(selector!("DojoBridgeModel"), dojo_bridge_dispatcher.contract_address);
 
 
     // initialize dojo_token
