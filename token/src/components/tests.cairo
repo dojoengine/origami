@@ -9,6 +9,14 @@ mod mocks {
         mod erc20_mintable_burnable_mock;
         mod erc20_bridgeable_mock;
     }
+
+    mod erc721 {
+        mod erc721_approval_mock;
+        mod erc721_balance_mock;
+        mod erc721_metadata_mock;
+        mod erc721_mintable_burnable_mock;
+        mod erc721_receiver_mock;
+    }
 }
 
 mod introspection {
@@ -36,5 +44,14 @@ mod token {
         mod test_erc20_bridgeable;
     }
 
-    mod erc711 {}
+    mod erc721 {
+        #[cfg(test)]
+        mod test_erc721_approval;
+        #[cfg(test)]
+        mod test_erc721_balance;
+        #[cfg(test)]
+        mod test_erc721_metadata;
+        #[cfg(test)]
+        mod test_erc721_mintable_burnable;
+    }
 }
