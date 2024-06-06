@@ -44,6 +44,9 @@ mod presets {
         mod mintable_burnable;
         #[cfg(test)]
         mod tests_mintable_burnable;
+        mod enumerable_mintable_burnable;
+        #[cfg(test)]
+        mod tests_enumerable_mintable_burnable;
     }
 }
 

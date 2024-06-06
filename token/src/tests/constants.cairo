@@ -12,6 +12,7 @@ const OTHER_ROLE: felt252 = 'OTHER_ROLE';
 const TOKEN_ID: u256 = 21;
 const TOKEN_AMOUNT: u256 = 42;
 const TOKEN_ID_2: u256 = 2;
+const TOKEN_ID_3: u256 = 78;
 const TOKEN_AMOUNT_2: u256 = 69;
 const PUBKEY: felt252 = 'PUBKEY';
 const OTHER_ID: felt252 = 'OTHER_ID';

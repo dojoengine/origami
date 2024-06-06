@@ -1,7 +1,7 @@
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID, TOKEN_ID_2};
+use token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID, TOKEN_ID_2, TOKEN_ID_3};
 
 use token::tests::utils;
 
@@ -58,7 +58,7 @@ fn setup() -> (IWorldDispatcher, IERC721EnumMintBurnPresetDispatcher) {
     // deploy contract
     let mut erc721_enum_mint_burn_dispatcher = IERC721EnumMintBurnPresetDispatcher {
         contract_address: world
-            .deploy_contract('salt', ERC721EnumMintBurn::TEST_CLASS_HASH.try_into().unwrap())
+            .deploy_contract('salt', ERC721EnumMintBurn::TEST_CLASS_HASH.try_into().unwrap(), array![].span())
     };
 
     // setup auth
@@ -104,14 +104,6 @@ fn setup() -> (IWorldDispatcher, IERC721EnumMintBurnPresetDispatcher) {
             selector!("ERC721OwnerModel"), erc721_enum_mint_burn_dispatcher.contract_address
         );
 
-    // initialize contracts
-    erc721_enum_mint_burn_dispatcher
-        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
-
-    // drop all events
-    utils::drop_all_events(erc721_enum_mint_burn_dispatcher.contract_address);
-    utils::drop_all_events(world.contract_address);
-
     (world, erc721_enum_mint_burn_dispatcher)
 }
 
@@ -121,12 +113,44 @@ fn setup() -> (IWorldDispatcher, IERC721EnumMintBurnPresetDispatcher) {
 
 #[test]
 fn test_initializer() {
-    let (_world, mut enum_mint_burn) = setup();
+    let (world, mut enum_mint_burn) = setup();
+
+    // initialize contracts
+    enum_mint_burn
+        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
+
+    // drop all events
+    utils::drop_all_events(enum_mint_burn.contract_address);
+    utils::drop_all_events(world.contract_address);
 
     assert(enum_mint_burn.balance_of(OWNER()) == 2, 'Should eq 2');
     assert(enum_mint_burn.name() == "NAME", 'Name should be NAME');
     assert(enum_mint_burn.symbol() == "SYMBOL", 'Symbol should be SYMBOL');
     assert(enum_mint_burn.token_uri(TOKEN_ID) == "URI21", 'Uri should be URI21');
+}
+
+#[test]
+#[should_panic(expected: ('ERC721: caller is not owner', 'ENTRYPOINT_FAILED'))]
+fn test_initialize_not_world_owner() {
+    let (_world, mut enum_mint_burn) = setup();
+
+    utils::impersonate(OWNER());
+
+    // initialize contracts
+    enum_mint_burn
+        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
+}
+
+#[test]
+#[should_panic(expected: ('Initializable: is initialized', 'ENTRYPOINT_FAILED'))]
+fn test_initialize_multiple() {
+    let (_world, mut enum_mint_burn) = setup();
+
+    // initialize contracts
+    enum_mint_burn
+        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
+
+    enum_mint_burn.initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID_3].span());
 }
 
 //
@@ -136,6 +160,14 @@ fn test_initializer() {
 #[test]
 fn test_approve() {
     let (world, mut enum_mint_burn) = setup();
+
+    // initialize contracts
+    enum_mint_burn
+        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
+
+    // drop all events
+    utils::drop_all_events(enum_mint_burn.contract_address);
+    utils::drop_all_events(world.contract_address);
 
     utils::impersonate(OWNER());
 
@@ -149,13 +181,21 @@ fn test_approve() {
     assert_only_event_approval(world.contract_address, OWNER(), SPENDER(), TOKEN_ID);
 }
 
-// //
-// // transfer_from
-// //
+//
+// transfer_from
+//
 
 #[test]
 fn test_transfer_from() {
     let (world, mut enum_mint_burn) = setup();
+
+    // initialize contracts
+    enum_mint_burn
+        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
+
+    // drop all events
+    utils::drop_all_events(enum_mint_burn.contract_address);
+    utils::drop_all_events(world.contract_address);
 
     utils::impersonate(OWNER());
     enum_mint_burn.approve(SPENDER(), TOKEN_ID);
@@ -187,6 +227,14 @@ fn test_transfer_from() {
 fn test_mint() {
     let (world, mut enum_mint_burn) = setup();
 
+    // initialize contracts
+    enum_mint_burn
+        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
+
+    // drop all events
+    utils::drop_all_events(enum_mint_burn.contract_address);
+    utils::drop_all_events(world.contract_address);
+
     enum_mint_burn.mint(RECIPIENT(), 3);
     assert(enum_mint_burn.balance_of(RECIPIENT()) == 1, 'invalid balance_of');
     assert(enum_mint_burn.total_supply() == 3, 'invalid total_supply');
@@ -204,6 +252,14 @@ fn test_mint() {
 #[test]
 fn test_burn() {
     let (world, mut enum_mint_burn) = setup();
+
+    // initialize contracts
+    enum_mint_burn
+        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
+
+    // drop all events
+    utils::drop_all_events(enum_mint_burn.contract_address);
+    utils::drop_all_events(world.contract_address);
 
     enum_mint_burn.burn(TOKEN_ID_2);
     assert(enum_mint_burn.balance_of(OWNER()) == 1, 'invalid balance_of');
