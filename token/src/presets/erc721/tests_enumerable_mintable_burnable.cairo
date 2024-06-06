@@ -46,7 +46,7 @@ use token::components::tests::token::erc721::test_erc721_balance::{
 // Setup
 //
 
-fn setup() -> (IWorldDispatcher, IERC721EnumMintBurnPresetDispatcher) {
+fn setup_uninitialized() -> (IWorldDispatcher, IERC721EnumMintBurnPresetDispatcher) {
     let world = spawn_test_world(
         array![
             erc_721_token_approval_model::TEST_CLASS_HASH,
@@ -109,13 +109,8 @@ fn setup() -> (IWorldDispatcher, IERC721EnumMintBurnPresetDispatcher) {
     (world, erc721_enum_mint_burn_dispatcher)
 }
 
-//
-// initializer 
-//
-
-#[test]
-fn test_initializer() {
-    let (world, mut enum_mint_burn) = setup();
+fn setup() -> (IWorldDispatcher, IERC721EnumMintBurnPresetDispatcher) {
+    let (world, mut enum_mint_burn) = setup_uninitialized();
 
     // initialize contracts
     enum_mint_burn
@@ -124,6 +119,17 @@ fn test_initializer() {
     // drop all events
     utils::drop_all_events(enum_mint_burn.contract_address);
     utils::drop_all_events(world.contract_address);
+
+    (world, enum_mint_burn)
+}
+
+//
+// initializer 
+//
+
+#[test]
+fn test_initializer() {
+    let (_world, mut enum_mint_burn) = setup();
 
     assert(enum_mint_burn.balance_of(OWNER()) == 2, 'Should eq 2');
     assert(enum_mint_burn.name() == "NAME", 'Name should be NAME');
@@ -134,7 +140,7 @@ fn test_initializer() {
 #[test]
 #[should_panic(expected: ('ERC721: caller is not owner', 'ENTRYPOINT_FAILED'))]
 fn test_initialize_not_world_owner() {
-    let (_world, mut enum_mint_burn) = setup();
+    let (_world, mut enum_mint_burn) = setup_uninitialized();
 
     utils::impersonate(OWNER());
 
@@ -148,10 +154,6 @@ fn test_initialize_not_world_owner() {
 fn test_initialize_multiple() {
     let (_world, mut enum_mint_burn) = setup();
 
-    // initialize contracts
-    enum_mint_burn
-        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
-
     enum_mint_burn.initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID_3].span());
 }
 
@@ -162,14 +164,6 @@ fn test_initialize_multiple() {
 #[test]
 fn test_approve() {
     let (world, mut enum_mint_burn) = setup();
-
-    // initialize contracts
-    enum_mint_burn
-        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
-
-    // drop all events
-    utils::drop_all_events(enum_mint_burn.contract_address);
-    utils::drop_all_events(world.contract_address);
 
     utils::impersonate(OWNER());
 
@@ -190,14 +184,6 @@ fn test_approve() {
 #[test]
 fn test_transfer_from() {
     let (world, mut enum_mint_burn) = setup();
-
-    // initialize contracts
-    enum_mint_burn
-        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
-
-    // drop all events
-    utils::drop_all_events(enum_mint_burn.contract_address);
-    utils::drop_all_events(world.contract_address);
 
     utils::impersonate(OWNER());
     enum_mint_burn.approve(SPENDER(), TOKEN_ID);
@@ -227,15 +213,7 @@ fn test_transfer_from() {
 
 #[test]
 fn test_mint() {
-    let (world, mut enum_mint_burn) = setup();
-
-    // initialize contracts
-    enum_mint_burn
-        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
-
-    // drop all events
-    utils::drop_all_events(enum_mint_burn.contract_address);
-    utils::drop_all_events(world.contract_address);
+    let (_world, mut enum_mint_burn) = setup();
 
     enum_mint_burn.mint(RECIPIENT(), 3);
     assert(enum_mint_burn.balance_of(RECIPIENT()) == 1, 'invalid balance_of');
@@ -253,15 +231,7 @@ fn test_mint() {
 
 #[test]
 fn test_burn() {
-    let (world, mut enum_mint_burn) = setup();
-
-    // initialize contracts
-    enum_mint_burn
-        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
-
-    // drop all events
-    utils::drop_all_events(enum_mint_burn.contract_address);
-    utils::drop_all_events(world.contract_address);
+    let (_world, mut enum_mint_burn) = setup();
 
     enum_mint_burn.burn(TOKEN_ID_2);
     assert(enum_mint_burn.balance_of(OWNER()) == 1, 'invalid balance_of');
