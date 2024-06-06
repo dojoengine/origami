@@ -1,7 +1,9 @@
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID, TOKEN_ID_2, TOKEN_ID_3, VALUE};
+use token::tests::constants::{
+    ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID, TOKEN_ID_2, TOKEN_ID_3, VALUE
+};
 
 use token::tests::utils;
 

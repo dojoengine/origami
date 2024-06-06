@@ -58,7 +58,9 @@ fn setup() -> (IWorldDispatcher, IERC721EnumMintBurnPresetDispatcher) {
     // deploy contract
     let mut erc721_enum_mint_burn_dispatcher = IERC721EnumMintBurnPresetDispatcher {
         contract_address: world
-            .deploy_contract('salt', ERC721EnumMintBurn::TEST_CLASS_HASH.try_into().unwrap(), array![].span())
+            .deploy_contract(
+                'salt', ERC721EnumMintBurn::TEST_CLASS_HASH.try_into().unwrap(), array![].span()
+            )
     };
 
     // setup auth
