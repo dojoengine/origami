@@ -91,8 +91,7 @@ fn setup() -> (IWorldDispatcher, IERC721MintableBurnablePresetDispatcher) {
     let (world, mut mint_burn) = setup_uninitialized();
 
     // initialize contracts
-    mint_burn
-        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
+    mint_burn.initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
 
     // drop all events
     utils::drop_all_events(mint_burn.contract_address);
