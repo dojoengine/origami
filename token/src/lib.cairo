@@ -21,6 +21,7 @@ mod components {
             mod erc721_approval;
             mod erc721_balance;
             mod erc721_burnable;
+            mod erc721_enumerable;
             mod erc721_metadata;
             mod erc721_mintable;
             mod erc721_owner;
@@ -43,6 +44,9 @@ mod presets {
         mod mintable_burnable;
         #[cfg(test)]
         mod tests_mintable_burnable;
+        mod enumerable_mintable_burnable;
+        #[cfg(test)]
+        mod tests_enumerable_mintable_burnable;
     }
 }
 

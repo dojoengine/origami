@@ -1,7 +1,9 @@
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID, TOKEN_ID_2, VALUE};
+use token::tests::constants::{
+    ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID, TOKEN_ID_2, TOKEN_ID_3, VALUE
+};
 
 use token::tests::utils;
 
@@ -46,7 +48,7 @@ use token::components::tests::token::erc721::test_erc721_balance::{
 // Setup
 //
 
-fn setup() -> (IWorldDispatcher, IERC721MintableBurnablePresetDispatcher) {
+fn setup_uninitialized() -> (IWorldDispatcher, IERC721MintableBurnablePresetDispatcher) {
     let world = spawn_test_world(
         array![
             erc_721_token_approval_model::TEST_CLASS_HASH,
@@ -82,15 +84,20 @@ fn setup() -> (IWorldDispatcher, IERC721MintableBurnablePresetDispatcher) {
             selector!("ERC721OwnerModel"), erc721_mintable_burnable_dispatcher.contract_address
         );
 
+    (world, erc721_mintable_burnable_dispatcher)
+}
+
+fn setup() -> (IWorldDispatcher, IERC721MintableBurnablePresetDispatcher) {
+    let (world, mut mint_burn) = setup_uninitialized();
+
     // initialize contracts
-    erc721_mintable_burnable_dispatcher
-        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
+    mint_burn.initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
 
     // drop all events
-    utils::drop_all_events(erc721_mintable_burnable_dispatcher.contract_address);
+    utils::drop_all_events(mint_burn.contract_address);
     utils::drop_all_events(world.contract_address);
 
-    (world, erc721_mintable_burnable_dispatcher)
+    (world, mint_burn)
 }
 
 //
@@ -99,12 +106,32 @@ fn setup() -> (IWorldDispatcher, IERC721MintableBurnablePresetDispatcher) {
 
 #[test]
 fn test_initializer() {
-    let (_world, mut erc721_mintable_burnable) = setup();
+    let (_world, mut mintable_burnable) = setup();
 
-    assert(erc721_mintable_burnable.balance_of(OWNER()) == 2, 'Should eq 2');
-    assert(erc721_mintable_burnable.name() == "NAME", 'Name should be NAME');
-    assert(erc721_mintable_burnable.symbol() == "SYMBOL", 'Symbol should be SYMBOL');
-    assert(erc721_mintable_burnable.token_uri(TOKEN_ID) == "URI21", 'Uri should be URI21');
+    assert(mintable_burnable.balance_of(OWNER()) == 2, 'Should eq 2');
+    assert(mintable_burnable.name() == "NAME", 'Name should be NAME');
+    assert(mintable_burnable.symbol() == "SYMBOL", 'Symbol should be SYMBOL');
+    assert(mintable_burnable.token_uri(TOKEN_ID) == "URI21", 'Uri should be URI21');
+}
+
+#[test]
+#[should_panic(expected: ('ERC721: caller is not owner', 'ENTRYPOINT_FAILED'))]
+fn test_initialize_not_world_owner() {
+    let (_world, mut mintable_burnable) = setup_uninitialized();
+
+    utils::impersonate(OWNER());
+
+    // initialize contracts
+    mintable_burnable
+        .initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID, TOKEN_ID_2].span());
+}
+
+#[test]
+#[should_panic(expected: ('Initializable: is initialized', 'ENTRYPOINT_FAILED'))]
+fn test_initialize_multiple() {
+    let (_world, mut mintable_burnable) = setup();
+
+    mintable_burnable.initializer("NAME", "SYMBOL", "URI", OWNER(), array![TOKEN_ID_3].span());
 }
 
 //
