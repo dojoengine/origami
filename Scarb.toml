@@ -3,6 +3,7 @@ members = [
     "crates",
     "examples/chess",
     "examples/hex_map",
+    "examples/grid_map",
     "examples/market",
     "examples/matchmaker",
     "examples/projectile",

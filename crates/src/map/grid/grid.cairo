@@ -1,7 +1,3 @@
-use core::clone::Clone;
-use core::traits::Into;
-use core::box::BoxTrait;
-use core::option::OptionTrait;
 use core::array::ArrayTrait;
 use origami::map::grid::{types::{GridTile, Direction, DirectionIntoFelt252}};
 

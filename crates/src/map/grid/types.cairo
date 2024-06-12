@@ -1,4 +1,4 @@
-#[derive(Drop, Copy, Serde)]
+#[derive(Copy, Drop, Serde, Introspect)]
 struct GridTile {
     col: u32,
     row: u32,

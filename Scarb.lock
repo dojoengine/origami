@@ -34,6 +34,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "grid_map"
+version = "0.0.0"
+dependencies = [
+ "cubit",
+ "dojo",
+ "origami",
+]
+
+[[package]]
 name = "hex_map"
 version = "0.0.0"
 dependencies = [
