@@ -74,10 +74,3 @@ dependencies = [
  "dojo",
  "origami",
 ]
-
-[[package]]
-name = "token"
-version = "0.0.0"
-dependencies = [
- "dojo",
-]

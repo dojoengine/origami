@@ -6,7 +6,7 @@ members = [
     "examples/market",
     "examples/matchmaker",
     "examples/projectile",
-    "token",
+    # "token",
     "governance"
 ]
 
