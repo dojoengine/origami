@@ -111,9 +111,7 @@ mod actions {
                 }
             }
 
-            let mut map = get!(world, game_id, (Map));
-            let mut new_map = map;
-            new_map.players = players;
+            map.players = players;
             set!(world, (player_position));
             set!(world, (new_map));
             emit!(world, (Event::Spawned(Spawned { player, vec: player_position.vec })));
