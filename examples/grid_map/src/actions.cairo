@@ -1,5 +1,4 @@
 // internal imports
-use core::Into;
 use origami::map::grid::{types::Direction};
 use grid_map::models::Position;
 
