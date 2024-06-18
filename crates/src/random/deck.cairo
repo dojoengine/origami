@@ -42,7 +42,8 @@ trait DeckTrait {
     /// # Arguments
     /// * `seed` - A seed to initialize the deck.
     /// * `number` - The initial number of cards (must be below u128).
-    /// * `bitmap` - The bitmap, each bit is a card with: 0/1 is in/out (so a null bitmap will create a `new` deck).
+    /// * `bitmap` - The bitmap, each bit is a card with: 0/1 is in/out (so a null bitmap will
+    /// create a `new` deck).
     /// # Returns
     /// * The initialized `Deck`.
     fn from_bitmap(seed: felt252, number: u32, bitmap: u128) -> Deck;
