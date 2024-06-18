@@ -25,7 +25,8 @@ impl EloImpl of EloTrait {
     /// * `rating_a` - The ELO rating of the player A.
     /// * `rating_b` - The ELO rating of the player B.
     /// * `score` - The score of the player A, scaled by 100. 100 = win, 50 = draw, 0 = loss.
-    /// * `k` - The k-factor or development multiplier used to calculate the change in ELO rating. 20 is the typical value.
+    /// * `k` - The k-factor or development multiplier used to calculate the change in ELO rating.
+    /// 20 is the typical value.
     /// # Returns
     /// * `change` - The change in ELO rating of player A.
     /// * `negative` - The directional change of player A's ELO. Opposite sign for player B.

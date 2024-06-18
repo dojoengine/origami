@@ -12,8 +12,8 @@ fn main() -> (usize, Array::<Fixed>, Array::<Fixed>) {
     // v_0_mag_felt: felt252, theta_0_deg_felt: felt252, x_0_felt: felt252, y_0_felt: felt252
 
     //
-    // Projectile parameters 
-    // 
+    // Projectile parameters
+    //
     /// Inputs: to be contract inputs for view function `main`
     /// Launch velocity magnitude, 0 <= v_0_felt <= 100
     let v_0_mag_felt = 100;
@@ -43,7 +43,7 @@ fn main() -> (usize, Array::<Fixed>, Array::<Fixed>) {
     assert(v_0_mag.mag <= 100 * ONE_u128, 'need v_0_mag_felt <= 100');
     assert(v_0_mag.mag > 0 * ONE_u128, 'need v_0_mag_felt > 0');
     assert(v_0_mag.sign == false, 'need v_0_mag_felt > 0');
-    // `theta_0_deg.mag` not exact after conversion, so use 180.0000001 
+    // `theta_0_deg.mag` not exact after conversion, so use 180.0000001
     assert(theta_0_deg.mag <= 180000001 * ONE_u128 / 1000000, '-180 <= theta_0_deg_felt <= 180');
     assert(x_0 <= x_max, 'need x_0 <= x_max');
     assert(x_0 >= x_min, 'need x_0 >= x_min');

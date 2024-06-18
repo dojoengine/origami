@@ -148,7 +148,8 @@ impl MarketImpl of MarketTrait {
     //
     // Returns:
     //
-    // (amount, quantity, shares): The amount of cash and quantity of items added to the market and the shares minted
+    // (amount, quantity, shares): The amount of cash and quantity of items added to the market and
+    // the shares minted
     fn add_liquidity(self: @Market, amount: u128, quantity: u128) -> (u128, u128, Fixed) {
         // Compute the amount and quantity to add to the market
         let (amount, quantity) = self.add_liquidity_inner(amount, quantity);
@@ -300,7 +301,7 @@ mod tests {
         let (amount, quantity) = (SCALING_FACTOR * 2, 20); // pool 1:10
         let (amount_add, quantity_add, liquidity_add) = market.add_liquidity(amount, quantity);
 
-        // Assert 
+        // Assert
         assert(amount_add == amount, 'wrong cash amount');
         assert(quantity_add == quantity, 'wrong item quantity');
 
@@ -343,7 +344,8 @@ mod tests {
         let _expected_liquidity = FixedTrait::sqrt(expected_amount * expected_quantity);
 
         let _final_liquidity = initial_liquidity + liquidity_add;
-    // assert_precise(expected_liquidity, final_liquidity.into(), 'wrong liquidity', Option::None(()));
+    // assert_precise(expected_liquidity, final_liquidity.into(), 'wrong liquidity',
+    // Option::None(()));
     }
 
     #[test]
@@ -385,7 +387,8 @@ mod tests {
         let _expected_liquidity = FixedTrait::sqrt(expected_amount * expected_quantity);
 
         let _final_liquidity = initial_liquidity - liquidity_remove;
-    // assert_precise(expected_liquidity, final_liquidity.into(), 'wrong liquidity', Option::None(()));
+    // assert_precise(expected_liquidity, final_liquidity.into(), 'wrong liquidity',
+    // Option::None(()));
     }
 
     #[test]
