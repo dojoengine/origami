@@ -1,9 +1,18 @@
 use starknet::ContractAddress;
 use chess::models::piece::Vec2;
+
 #[dojo::interface]
 trait IActions {
-    fn move(curr_position: Vec2, next_position: Vec2, caller: ContractAddress, game_id: u32);
-    fn spawn(white_address: ContractAddress, black_address: ContractAddress) -> u32;
+    fn move(
+        ref world: IWorldDispatcher,
+        curr_position: Vec2,
+        next_position: Vec2,
+        caller: ContractAddress,
+        game_id: u32
+    );
+    fn spawn(
+        ref world: IWorldDispatcher, white_address: ContractAddress, black_address: ContractAddress
+    ) -> u32;
 }
 
 #[dojo::contract]
@@ -16,7 +25,9 @@ mod actions {
     #[abi(embed_v0)]
     impl IActionsImpl of IActions<ContractState> {
         fn spawn(
-            world: IWorldDispatcher, white_address: ContractAddress, black_address: ContractAddress
+            ref world: IWorldDispatcher,
+            white_address: ContractAddress,
+            black_address: ContractAddress
         ) -> u32 {
             let game_id = world.uuid();
 
@@ -111,7 +122,7 @@ mod actions {
             game_id
         }
         fn move(
-            world: IWorldDispatcher,
+            ref world: IWorldDispatcher,
             curr_position: Vec2,
             next_position: Vec2,
             caller: ContractAddress,

@@ -1,6 +1,7 @@
 //
 //
-// Unique buisness logic of your world. It imports both the hex from origami and the simplex from cubit
+// Unique buisness logic of your world. It imports both the hex from origami and the simplex from
+// cubit
 //
 //
 
@@ -59,7 +60,7 @@ mod tests {
 
     #[test]
     fn test_gradient() {
-        // seems inconsistent 
+        // seems inconsistent
 
         let mut i = 5;
 
