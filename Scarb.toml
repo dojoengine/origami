@@ -6,12 +6,12 @@ members = [
     "examples/market",
     "examples/matchmaker",
     "examples/projectile",
-    # "token",
+    "token",
     "governance"
 ]
 
 [workspace.package]
-version = "0.7.0"
+version = "0.7.1"
 description = "Community-maintained libraries for Cairo"
 homepage = "https://github.com/dojoengine/origami"
 authors = ["bal7hazar@proton.me"]
