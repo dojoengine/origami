@@ -241,7 +241,7 @@ fn test_transfer_from() {
         erc721_balance_mock.contract_address, OWNER(), RECIPIENT(), TOKEN_ID
     );
 
-    // // drop StoreSetRecord ERC721TokenApprovalModel 
+    // // drop StoreSetRecord ERC721TokenApprovalModel
     utils::drop_event(world.contract_address);
     // // drop StoreSetRecord ERC721BalanceModel x3 - incl mint
     utils::drop_event(world.contract_address);
@@ -289,7 +289,7 @@ fn test_safe_transfer_from() {
         TOKEN_ID
     );
 
-    // // drop StoreSetRecord ERC721TokenApprovalModel 
+    // // drop StoreSetRecord ERC721TokenApprovalModel
     utils::drop_event(world.contract_address);
     // // drop StoreSetRecord ERC721BalanceModel x3 - incl mint
     utils::drop_event(world.contract_address);
@@ -307,7 +307,7 @@ fn test_safe_transfer_from() {
 }
 
 //
-// transferFrom 
+// transferFrom
 //
 
 #[test]
@@ -328,7 +328,7 @@ fn test_transferFrom() {
         erc721_balance_mock.contract_address, OWNER(), RECIPIENT(), TOKEN_ID
     );
 
-    // // drop StoreSetRecord ERC721TokenApprovalModel 
+    // // drop StoreSetRecord ERC721TokenApprovalModel
     utils::drop_event(world.contract_address);
     // // drop StoreSetRecord ERC721BalanceModel x3 - incl mint
     utils::drop_event(world.contract_address);
@@ -364,7 +364,7 @@ fn test_safeTransferFrom() {
         TOKEN_ID
     );
 
-    // // drop StoreSetRecord ERC721TokenApprovalModel 
+    // // drop StoreSetRecord ERC721TokenApprovalModel
     utils::drop_event(world.contract_address);
     // // drop StoreSetRecord ERC721BalanceModel x3 - incl mint
     utils::drop_event(world.contract_address);

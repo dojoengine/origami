@@ -101,7 +101,7 @@ fn setup() -> (IWorldDispatcher, IERC20BridgeablePresetDispatcher) {
 
 
 //
-// initializer 
+// initializer
 //
 
 #[test]
@@ -141,7 +141,7 @@ fn test_approve() {
 
 
 //
-// transfer 
+// transfer
 //
 
 #[test]
@@ -186,7 +186,7 @@ fn test_transfer_from() {
     assert_event_approval(erc20_bridgeable.contract_address, OWNER(), SPENDER(), 0);
     assert_only_event_transfer(erc20_bridgeable.contract_address, OWNER(), RECIPIENT(), VALUE);
 
-    // drop StoreSetRecord ERC20AllowanceModel 
+    // drop StoreSetRecord ERC20AllowanceModel
     utils::drop_event(world.contract_address);
     assert_event_approval(world.contract_address, OWNER(), SPENDER(), 0);
     // drop StoreSetRecord ERC20BalanceModel x2
