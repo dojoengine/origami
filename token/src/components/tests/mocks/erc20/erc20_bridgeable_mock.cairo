@@ -12,7 +12,7 @@ trait IERC20BridgeableMockInit<TState> {
     );
 }
 
-#[dojo::contract(allow_ref_self)]
+#[dojo::contract]
 mod erc20_bridgeable_mock {
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};

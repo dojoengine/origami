@@ -31,7 +31,7 @@ trait IERC20BalanceMockInit<TState> {
     fn initializer(ref self: TState, initial_supply: u256, recipient: ContractAddress,);
 }
 
-#[dojo::contract(allow_ref_self)]
+#[dojo::contract]
 mod erc20_balance_mock {
     use starknet::ContractAddress;
     use token::components::token::erc20::erc20_allowance::erc20_allowance_component;

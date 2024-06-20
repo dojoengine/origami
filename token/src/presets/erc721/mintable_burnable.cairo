@@ -52,7 +52,7 @@ trait IERC721MintableBurnableMintBurn<TState> {
     fn burn(ref self: TState, token_id: u256);
 }
 
-#[dojo::contract(allow_ref_self)]
+#[dojo::contract]
 mod ERC721MintableBurnable {
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};

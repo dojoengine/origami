@@ -13,7 +13,7 @@ trait IERC721ReceiverMockInit<TState> {
     fn initializer(ref self: TState);
 }
 
-#[dojo::contract(allow_ref_self)]
+#[dojo::contract]
 mod erc721_receiver_mock {
     use token::components::introspection::src5::src5_component;
     use token::components::token::erc721::erc721_receiver::erc721_receiver_component;
