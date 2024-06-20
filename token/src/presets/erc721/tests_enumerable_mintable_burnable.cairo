@@ -124,7 +124,7 @@ fn setup() -> (IWorldDispatcher, IERC721EnumMintBurnPresetDispatcher) {
 }
 
 //
-// initializer 
+// initializer
 //
 
 #[test]

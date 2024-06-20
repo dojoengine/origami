@@ -55,7 +55,7 @@ fn setup() -> erc20_bridgeable_mock::ContractState {
 }
 
 //
-// initializer 
+// initializer
 //
 
 #[test]

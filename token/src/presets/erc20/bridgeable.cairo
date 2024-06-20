@@ -71,7 +71,7 @@ trait IERC20BridgeableInitializer<TState> {
     );
 }
 
-#[dojo::contract(allow_ref_self)]
+#[dojo::contract]
 mod ERC20Bridgeable {
     use integer::BoundedInt;
     use starknet::ContractAddress;

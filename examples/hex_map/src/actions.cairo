@@ -67,16 +67,11 @@ mod actions {
     #[abi(embed_v0)]
     impl ActionsImpl of IActions<ContractState> {
         // ContractState is defined by system decorator expansion
-        fn spawn(ref world: IWorldDispatcher) { // Access the world dispatcher for reading.
-            let world = self.world_dispatcher.read();
-
+        fn spawn(ref world: IWorldDispatcher) {
             set!(world, (Position { player: get_caller_address(), vec: Vec2 { x: 10, y: 10 } }));
         }
         // Moves player in the provided direction.
         fn move(ref world: IWorldDispatcher, direction: Direction) {
-            // Access the world dispatcher for reading.
-            let world = self.world_dispatcher.read();
-
             // Get the address of the current caller, possibly the player's address.
             let player = get_caller_address();
 

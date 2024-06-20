@@ -72,7 +72,7 @@ trait IERC721EnumMintBurn<TState> {
     fn burn(ref self: TState, token_id: u256);
 }
 
-#[dojo::contract(allow_ref_self)]
+#[dojo::contract]
 mod ERC721EnumMintBurn {
     use starknet::ContractAddress;
     use starknet::{get_contract_address, get_caller_address};
