@@ -121,12 +121,19 @@ mod ERC20Bridgeable {
     #[event]
     #[derive(Copy, Drop, starknet::Event)]
     enum Event {
+        #[flat]
         InitializableEvent: initializable_component::Event,
+        #[flat]
         ERC20MetadataEvent: erc20_metadata_component::Event,
+        #[flat]
         ERC20BalanceEvent: erc20_balance_component::Event,
+        #[flat]
         ERC20AllowanceEvent: erc20_allowance_component::Event,
+        #[flat]
         ERC20MintableEvent: erc20_mintable_component::Event,
+        #[flat]
         ERC20BurnableEvent: erc20_burnable_component::Event,
+        #[flat]
         ERC20BridgeableEvent: erc20_bridgeable_component::Event,
     }
 
