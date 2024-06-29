@@ -24,7 +24,7 @@ mod timelock {
             assert!(
                 delay <= MAXIMUM_DELAY, "Timelock::initialize: Delay must not exceed maximum delay."
             );
-            let world = self.world_dispatcher.read();
+
             let contract = get_contract_address();
             let curr_params = get!(world, contract, TimelockParams);
             assert!(

@@ -88,7 +88,7 @@ fn test_erc20_allowance_approve_to_zero() {
 }
 
 //
-//  spend_allowance 
+//  spend_allowance
 //
 
 #[test]
