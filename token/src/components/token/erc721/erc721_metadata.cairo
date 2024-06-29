@@ -22,16 +22,16 @@ struct ERC721MetaModel {
 trait IERC721Metadata<TState> {
     fn name(self: @TState) -> ByteArray;
     fn symbol(self: @TState) -> ByteArray;
-    fn token_uri(ref self: TState, token_id: u256) -> ByteArray;
+    fn token_uri(self: @TState, token_id: u256) -> ByteArray;
 }
 
 #[starknet::interface]
 trait IERC721MetadataCamel<TState> {
-    fn tokenURI(ref self: TState, tokenId: u256) -> ByteArray;
+    fn tokenURI(self: @TState, tokenId: u256) -> ByteArray;
 }
 
 ///
-/// ERC20Metadata Component
+/// ERC721Metadata Component
 ///
 #[starknet::component]
 mod erc721_metadata_component {
@@ -68,7 +68,7 @@ mod erc721_metadata_component {
         fn symbol(self: @ComponentState<TContractState>) -> ByteArray {
             self.get_meta().symbol
         }
-        fn token_uri(ref self: ComponentState<TContractState>, token_id: u256) -> ByteArray {
+        fn token_uri(self: @ComponentState<TContractState>, token_id: u256) -> ByteArray {
             self.get_uri(token_id)
         }
     }
@@ -81,7 +81,7 @@ mod erc721_metadata_component {
         impl ERC721Owner: erc721_owner_comp::HasComponent<TContractState>,
         +Drop<TContractState>,
     > of IERC721MetadataCamel<ComponentState<TContractState>> {
-        fn tokenURI(ref self: ComponentState<TContractState>, tokenId: u256) -> ByteArray {
+        fn tokenURI(self: @ComponentState<TContractState>, tokenId: u256) -> ByteArray {
             self.get_uri(tokenId)
         }
     }
@@ -99,8 +99,8 @@ mod erc721_metadata_component {
             get!(self.get_contract().world(), get_contract_address(), (ERC721MetaModel))
         }
 
-        fn get_uri(ref self: ComponentState<TContractState>, token_id: u256) -> ByteArray {
-            let mut erc721_owner = get_dep_component_mut!(ref self, ERC721Owner);
+        fn get_uri(self: @ComponentState<TContractState>, token_id: u256) -> ByteArray {
+            let mut erc721_owner = get_dep_component!(self, ERC721Owner);
             assert(erc721_owner.exists(token_id), Errors::INVALID_TOKEN_ID);
             let base_uri = self.get_meta().base_uri;
             if base_uri.len() == 0 {

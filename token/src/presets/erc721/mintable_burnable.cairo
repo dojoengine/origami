@@ -6,7 +6,7 @@ trait IERC721MintableBurnablePreset<TState> {
     // IERC721
     fn name(self: @TState) -> ByteArray;
     fn symbol(self: @TState) -> ByteArray;
-    fn token_uri(ref self: TState, token_id: u256) -> ByteArray;
+    fn token_uri(self: @TState, token_id: u256) -> ByteArray;
     fn owner_of(self: @TState, account: ContractAddress) -> bool;
     fn balance_of(self: @TState, account: ContractAddress) -> u256;
     fn get_approved(self: @TState, token_id: u256) -> ContractAddress;
@@ -14,7 +14,7 @@ trait IERC721MintableBurnablePreset<TState> {
     fn approve(ref self: TState, to: ContractAddress, token_id: u256);
 
     // IERC721CamelOnly
-    fn tokenURI(ref self: TState, token_id: u256) -> ByteArray;
+    fn tokenURI(self: @TState, token_id: u256) -> ByteArray;
     fn balanceOf(self: @TState, account: ContractAddress) -> u256;
     fn transferFrom(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u256);
 
