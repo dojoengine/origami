@@ -23,6 +23,7 @@ mod components {
             mod erc721_burnable;
             mod erc721_enumerable;
             mod erc721_metadata;
+            mod erc721_metadata_hooks;
             mod erc721_mintable;
             mod erc721_owner;
             mod erc721_receiver;

@@ -61,6 +61,7 @@ mod ERC721MintableBurnable {
     use token::components::token::erc721::erc721_balance::erc721_balance_component;
     use token::components::token::erc721::erc721_burnable::erc721_burnable_component;
     use token::components::token::erc721::erc721_metadata::erc721_metadata_component;
+    use token::components::token::erc721::erc721_metadata_hooks::ERC721MetadataHooksEmptyImpl;
     use token::components::token::erc721::erc721_mintable::erc721_mintable_component;
     use token::components::token::erc721::erc721_owner::erc721_owner_component;
 
