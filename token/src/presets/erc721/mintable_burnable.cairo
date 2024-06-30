@@ -6,7 +6,7 @@ trait IERC721MintableBurnablePreset<TState> {
     // IERC721
     fn name(self: @TState) -> ByteArray;
     fn symbol(self: @TState) -> ByteArray;
-    fn token_uri(ref self: TState, token_id: u256) -> ByteArray;
+    fn token_uri(self: @TState, token_id: u256) -> ByteArray;
     fn owner_of(self: @TState, account: ContractAddress) -> bool;
     fn balance_of(self: @TState, account: ContractAddress) -> u256;
     fn get_approved(self: @TState, token_id: u256) -> ContractAddress;
@@ -14,7 +14,7 @@ trait IERC721MintableBurnablePreset<TState> {
     fn approve(ref self: TState, to: ContractAddress, token_id: u256);
 
     // IERC721CamelOnly
-    fn tokenURI(ref self: TState, token_id: u256) -> ByteArray;
+    fn tokenURI(self: @TState, token_id: u256) -> ByteArray;
     fn balanceOf(self: @TState, account: ContractAddress) -> u256;
     fn transferFrom(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u256);
 
@@ -61,6 +61,7 @@ mod ERC721MintableBurnable {
     use token::components::token::erc721::erc721_balance::erc721_balance_component;
     use token::components::token::erc721::erc721_burnable::erc721_burnable_component;
     use token::components::token::erc721::erc721_metadata::erc721_metadata_component;
+    use token::components::token::erc721::erc721_metadata_hooks::ERC721MetadataHooksEmptyImpl;
     use token::components::token::erc721::erc721_mintable::erc721_mintable_component;
     use token::components::token::erc721::erc721_owner::erc721_owner_component;
 

@@ -1,9 +1,19 @@
+use dojo::world::IWorldDispatcher;
+
+#[starknet::interface]
+// trait IERC721EnumMintBurnPreset {
+trait IERC721MetadataHooksMock<TContractState> {
+    // IWorldProvider
+    fn world(self: @TContractState,) -> IWorldDispatcher;
+}
+
 #[dojo::contract]
-mod erc721_metadata_mock {
+mod erc721_metadata_hooks_mock {
+
+    use starknet::{get_contract_address};
     use token::components::token::erc721::erc721_approval::erc721_approval_component;
     use token::components::token::erc721::erc721_balance::erc721_balance_component;
     use token::components::token::erc721::erc721_metadata::erc721_metadata_component;
-    use token::components::token::erc721::erc721_metadata_hooks::ERC721MetadataHooksEmptyImpl;
     use token::components::token::erc721::erc721_mintable::erc721_mintable_component;
     use token::components::token::erc721::erc721_owner::erc721_owner_component;
 
@@ -51,5 +61,28 @@ mod erc721_metadata_mock {
         ERC721MetadataEvent: erc721_metadata_component::Event,
         ERC721MintableEvent: erc721_mintable_component::Event,
         ERC721OwnerEvent: erc721_owner_component::Event
+    }
+
+    
+    //
+    // Metadata Hooks
+    //
+    use super::{IERC721MetadataHooksMockDispatcher, IERC721MetadataHooksMockDispatcherTrait};
+    impl ERC721MetadataHooksImpl<TContractState> of erc721_metadata_component::ERC721MetadataHooksTrait<TContractState> {
+        fn custom_uri(
+            self: @erc721_metadata_component::ComponentState<TContractState>,
+            base_uri: @ByteArray,
+            token_id: u256,
+        ) -> ByteArray {
+            //
+            // example on how to access the world
+            // (does not work for testing, throws 'CONTRACT_NOT_DEPLOYED')
+            //
+            // let contract_address = get_contract_address();
+            // let selfie = IERC721MetadataHooksMockDispatcher{ contract_address };
+            // let _world = selfie.world();
+
+            format!("CUSTOM{}{}", base_uri, token_id)
+        }
     }
 }

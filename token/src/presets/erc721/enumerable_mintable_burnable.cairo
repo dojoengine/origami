@@ -6,7 +6,7 @@ trait IERC721EnumMintBurnPreset<TState> {
     // IERC721
     fn name(self: @TState) -> ByteArray;
     fn symbol(self: @TState) -> ByteArray;
-    fn token_uri(ref self: TState, token_id: u256) -> ByteArray;
+    fn token_uri(self: @TState, token_id: u256) -> ByteArray;
     fn owner_of(self: @TState, account: ContractAddress) -> bool;
     fn get_approved(self: @TState, token_id: u256) -> ContractAddress;
     fn approve(ref self: TState, to: ContractAddress, token_id: u256);
@@ -15,7 +15,7 @@ trait IERC721EnumMintBurnPreset<TState> {
     fn token_of_owner_by_index(self: @TState, owner: ContractAddress, index: u256) -> u256;
 
     // IERC721CamelOnly
-    fn tokenURI(ref self: TState, token_id: u256) -> ByteArray;
+    fn tokenURI(self: @TState, token_id: u256) -> ByteArray;
 
     // IWorldProvider
     fn world(self: @TState,) -> IWorldDispatcher;
@@ -82,6 +82,7 @@ mod ERC721EnumMintBurn {
     use token::components::token::erc721::erc721_burnable::erc721_burnable_component;
     use token::components::token::erc721::erc721_enumerable::erc721_enumerable_component;
     use token::components::token::erc721::erc721_metadata::erc721_metadata_component;
+    use token::components::token::erc721::erc721_metadata_hooks::ERC721MetadataHooksEmptyImpl;
     use token::components::token::erc721::erc721_mintable::erc721_mintable_component;
     use token::components::token::erc721::erc721_owner::erc721_owner_component;
 
