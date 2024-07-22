@@ -31,4 +31,8 @@ mod map {
         mod hex;
         mod types;
     }
+    mod grid {
+        mod grid;
+        mod types;
+    }
 }

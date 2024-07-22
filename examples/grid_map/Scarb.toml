@@ -1,0 +1,10 @@
+[package]
+name = "grid_map"
+version = "0.0.0"
+description = "Example Grid Map using Arrays"
+homepage = "https://github.com/dojoengine/origami/tree/examples/grid_map"
+
+[dependencies]
+cubit.workspace = true
+dojo.workspace = true
+origami.workspace = true
