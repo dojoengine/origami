@@ -60,9 +60,8 @@ impl Bitmap of BitmapTrait {
 
     /// The index of the most significant bit of the number,
     /// where the least significant bit is at index 0 and the most significant bit is at index 255
-    /// Source: https://github.com/lambdaclass/yet-another-swap/blob/main/crates/yas_core/src/libraries/bit_math.cairo
-    /// # Arguments
-    /// * `x` - The value for which to compute the most significant bit, must be greater than 0.
+    /// # Arguments * `x` - The value for which to compute the most significant bit, must be greater
+    /// than 0.
     /// # Returns
     /// * The index of the most significant bit
     #[inline(always)]
@@ -108,9 +107,8 @@ impl Bitmap of BitmapTrait {
 
     /// The index of the least significant bit of the number,
     /// where the least significant bit is at index 0 and the most significant bit is at index 255
-    /// Source: https://github.com/lambdaclass/yet-another-swap/blob/main/crates/yas_core/src/libraries/bit_math.cairo
-    /// # Arguments
-    /// * `x` - The value for which to compute the least significant bit, must be greater than 0.
+    /// # Arguments * `x` - The value for which to compute the least significant bit, must be
+    /// greater than 0.
     /// # Returns
     /// * The index of the least significant bit
     #[inline(always)]

@@ -101,7 +101,7 @@ fn setup() -> (IWorldDispatcher, IERC721MintableBurnablePresetDispatcher) {
 }
 
 //
-// initializer 
+// initializer
 //
 
 #[test]

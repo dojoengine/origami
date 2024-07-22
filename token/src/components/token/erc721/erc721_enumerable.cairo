@@ -3,7 +3,7 @@ use starknet::ContractAddress;
 ///
 /// Model
 ///
-/// 
+///
 
 #[dojo::model]
 #[derive(Copy, Drop, Serde)]

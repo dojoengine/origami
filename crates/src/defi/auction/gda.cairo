@@ -91,7 +91,8 @@ mod tests {
         use super::{assert_approx_equal, TOLERANCE};
         use super::super::{ContinuousGDA, ContinuousGDATrait};
 
-        // ipynb with calculations at https://colab.research.google.com/drive/14elIFRXdG3_gyiI43tP47lUC_aClDHfB?usp=sharing
+        // ipynb with calculations at
+        // https://colab.research.google.com/drive/14elIFRXdG3_gyiI43tP47lUC_aClDHfB?usp=sharing
         #[test]
         fn test_price_1() {
             let auction = ContinuousGDA {
@@ -175,7 +176,8 @@ mod tests {
             assert_approx_equal(price, auction.initial_price, TOLERANCE)
         }
 
-        // ipynb with calculations at https://colab.research.google.com/drive/14elIFRXdG3_gyiI43tP47lUC_aClDHfB?usp=sharing
+        // ipynb with calculations at
+        // https://colab.research.google.com/drive/14elIFRXdG3_gyiI43tP47lUC_aClDHfB?usp=sharing
         #[test]
         fn test_price_1() {
             let auction = DiscreteGDA {

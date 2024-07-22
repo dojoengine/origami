@@ -52,7 +52,7 @@ trait IERC721MintableBurnableMintBurn<TState> {
     fn burn(ref self: TState, token_id: u256);
 }
 
-#[dojo::contract(allow_ref_self)]
+#[dojo::contract]
 mod ERC721MintableBurnable {
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};
@@ -139,12 +139,19 @@ mod ERC721MintableBurnable {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
+        #[flat]
         InitializableEvent: initializable_component::Event,
+        #[flat]
         ERC721ApprovalEvent: erc721_approval_component::Event,
+        #[flat]
         ERC721BalanceEvent: erc721_balance_component::Event,
+        #[flat]
         ERC721BurnableEvent: erc721_burnable_component::Event,
+        #[flat]
         ERC721MetadataEvent: erc721_metadata_component::Event,
+        #[flat]
         ERC721MintableEvent: erc721_mintable_component::Event,
+        #[flat]
         ERC721OwnerEvent: erc721_owner_component::Event,
     }
 

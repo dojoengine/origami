@@ -6,13 +6,15 @@ use hex_map::models::Position;
 // define the interface
 #[dojo::interface]
 trait IActions {
-    fn spawn();
-    fn move(direction: Direction);
+    fn spawn(ref world: IWorldDispatcher);
+    fn move(ref world: IWorldDispatcher, direction: Direction);
 }
 
 #[dojo::interface]
 trait IActionsComputed {
-    fn next_position(position: Position, direction: Direction) -> Position;
+    fn next_position(
+        world: @IWorldDispatcher, position: Position, direction: Direction
+    ) -> Position;
 }
 
 // dojo decorator
@@ -65,16 +67,11 @@ mod actions {
     #[abi(embed_v0)]
     impl ActionsImpl of IActions<ContractState> {
         // ContractState is defined by system decorator expansion
-        fn spawn() { // Access the world dispatcher for reading.
-            let world = self.world_dispatcher.read();
-
+        fn spawn(ref world: IWorldDispatcher) {
             set!(world, (Position { player: get_caller_address(), vec: Vec2 { x: 10, y: 10 } }));
         }
         // Moves player in the provided direction.
-        fn move(direction: Direction) {
-            // Access the world dispatcher for reading.
-            let world = self.world_dispatcher.read();
-
+        fn move(ref world: IWorldDispatcher, direction: Direction) {
             // Get the address of the current caller, possibly the player's address.
             let player = get_caller_address();
 
@@ -115,7 +112,7 @@ mod tests {
         let mut models = array![position::TEST_CLASS_HASH];
 
         // deploy world with models
-        let world = spawn_test_world(models);
+        let world: IWorldDispatcher = spawn_test_world(models);
 
         // deploy systems contract
         let contract_address = world

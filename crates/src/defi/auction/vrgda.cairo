@@ -25,7 +25,8 @@ impl TVRGDATrait<T, +VRGDAVarsTrait<T>, +VRGDATargetTimeTrait<T>> of VRGDATrait<
     /// # Arguments
     ///
     /// * `time_since_start`: Time since the auction started.
-    /// * `sold`: Quantity sold. (Not including this unit) eg if this the price for the first unit sold  is 0.
+    /// * `sold`: Quantity sold. (Not including this unit) eg if this the price for the first unit
+    /// sold  is 0.
     ///
     /// # Returns
     ///

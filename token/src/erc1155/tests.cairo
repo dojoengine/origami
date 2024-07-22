@@ -693,7 +693,7 @@ fn test__burn_more_than_balance() {
 
 
 //
-// Helpers 
+// Helpers
 //
 
 fn assert_state_before_transfer(

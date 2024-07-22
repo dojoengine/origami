@@ -40,7 +40,7 @@ impl Vec2Impl<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of Vec2Trait<T> {
 
     // Masks
 
-    /// Creates a vector from the elements in `if_true` and `if_false`, 
+    /// Creates a vector from the elements in `if_true` and `if_false`,
     /// selecting which to use for each element of `self`.
     ///
     /// A true element in the mask uses the corresponding element from
@@ -63,7 +63,7 @@ impl Vec2Impl<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of Vec2Trait<T> {
 
     // Math
 
-    /// Computes the dot product of `self` and `rhs` . 
+    /// Computes the dot product of `self` and `rhs` .
     // #[inline(always)] is not allowed for functions with impl generic parameters.
     fn dot<impl TMul: Mul<T>, impl TAdd: Add<T>>(self: Vec2<T>, rhs: Vec2<T>) -> T {
         (self.x * rhs.x) + (self.y * rhs.y)

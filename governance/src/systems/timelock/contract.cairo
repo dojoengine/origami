@@ -16,7 +16,7 @@ mod timelock {
 
     #[abi(embed_v0)]
     impl TimelockImpl of ITimelock<ContractState> {
-        fn initialize(admin: ContractAddress, delay: u64) {
+        fn initialize(ref world: IWorldDispatcher, admin: ContractAddress, delay: u64) {
             assert!(!admin.is_zero(), "Timelock::initialize: Admin address cannot be zero.");
             assert!(
                 delay >= MINIMUM_DELAY, "Timelock::initialize: Delay must exceed minimum delay."
@@ -24,7 +24,7 @@ mod timelock {
             assert!(
                 delay <= MAXIMUM_DELAY, "Timelock::initialize: Delay must not exceed maximum delay."
             );
-            let world = self.world_dispatcher.read();
+
             let contract = get_contract_address();
             let curr_params = get!(world, contract, TimelockParams);
             assert!(
@@ -39,7 +39,7 @@ mod timelock {
         }
 
         fn execute_transaction(
-            world: IWorldDispatcher,
+            ref world: IWorldDispatcher,
             target: ContractAddress,
             new_implementation: ClassHash,
             eta: u64
@@ -76,7 +76,7 @@ mod timelock {
         }
 
         fn que_transaction(
-            world: IWorldDispatcher,
+            ref world: IWorldDispatcher,
             target: ContractAddress,
             new_implementation: ClassHash,
             eta: u64
@@ -103,7 +103,7 @@ mod timelock {
         }
 
         fn cancel_transaction(
-            world: IWorldDispatcher,
+            ref world: IWorldDispatcher,
             target: ContractAddress,
             new_implementation: ClassHash,
             eta: u64

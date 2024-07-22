@@ -1,4 +1,5 @@
-/// adaptation of https://github.com/OpenZeppelin/cairo-contracts/blob/main/src/introspection/src5.cairo for dojo
+/// adaptation of
+/// https://github.com/OpenZeppelin/cairo-contracts/blob/main/src/introspection/src5.cairo for dojo
 
 use starknet::ContractAddress;
 
