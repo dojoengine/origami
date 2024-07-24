@@ -1,11 +1,11 @@
-use governance::libraries::traits::{ContractAddressDefault, ClassHashDefault};
+use origami_governance::libraries::traits::{ContractAddressDefault, ClassHashDefault};
 use starknet::{ContractAddress, ClassHash};
 
 #[dojo::model]
 #[derive(Copy, Drop, Serde)]
 struct GovernorParams {
     #[key]
-    contract: ContractAddress,
+    contract_selector: felt252,
     timelock: ContractAddress,
     gov_token: ContractAddress,
     guardian: ContractAddress,
@@ -15,7 +15,7 @@ struct GovernorParams {
 #[derive(Copy, Drop, Serde)]
 struct ProposalParams {
     #[key]
-    contract: ContractAddress,
+    contract_selector: felt252,
     quorum_votes: u128,
     threshold: u128,
     voting_delay: u64,
@@ -26,7 +26,7 @@ struct ProposalParams {
 #[derive(Copy, Drop, Serde)]
 struct ProposalCount {
     #[key]
-    contract: ContractAddress,
+    contract_selector: felt252,
     count: usize,
 }
 
@@ -61,7 +61,7 @@ struct Proposal {
     id: usize,
     proposer: ContractAddress,
     eta: u64,
-    target: ContractAddress,
+    target_selector: felt252,
     class_hash: ClassHash,
     start_block: u64,
     end_block: u64,

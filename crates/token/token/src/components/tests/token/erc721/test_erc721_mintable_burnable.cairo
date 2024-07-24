@@ -3,12 +3,16 @@ use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
 use origami_token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID};
 
-use origami_token::components::token::erc721::erc721_metadata::{erc_721_meta_model, ERC721MetaModel,};
+use origami_token::components::token::erc721::erc721_metadata::{
+    erc_721_meta_model, ERC721MetaModel,
+};
 use origami_token::components::token::erc721::erc721_metadata::erc721_metadata_component::{
     ERC721MetadataImpl, ERC721MetadataCamelImpl, InternalImpl as ERC721MetadataInternalImpl
 };
 
-use origami_token::components::token::erc721::erc721_balance::{erc_721_balance_model, ERC721BalanceModel,};
+use origami_token::components::token::erc721::erc721_balance::{
+    erc_721_balance_model, ERC721BalanceModel,
+};
 use origami_token::components::token::erc721::erc721_balance::erc721_balance_component::{
     ERC721BalanceImpl, InternalImpl as ERC721BalanceInternalImpl
 };

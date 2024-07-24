@@ -34,6 +34,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "origami_governance"
+version = "0.1.0"
+dependencies = [
+ "dojo",
+]
+
+[[package]]
 name = "origami_map"
 version = "0.1.0"
 

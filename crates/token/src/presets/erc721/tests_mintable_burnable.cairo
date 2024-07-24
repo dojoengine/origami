@@ -16,12 +16,16 @@ use origami_token::components::token::erc721::erc721_approval::erc721_approval_c
     Approval, ApprovalForAll, ERC721ApprovalImpl, InternalImpl as ERC721ApprovalInternalImpl
 };
 
-use origami_token::components::token::erc721::erc721_metadata::{erc_721_meta_model, ERC721MetaModel,};
+use origami_token::components::token::erc721::erc721_metadata::{
+    erc_721_meta_model, ERC721MetaModel,
+};
 use origami_token::components::token::erc721::erc721_metadata::erc721_metadata_component::{
     ERC721MetadataImpl, ERC721MetadataCamelImpl, InternalImpl as ERC721MetadataInternalImpl
 };
 
-use origami_token::components::token::erc721::erc721_balance::{erc_721_balance_model, ERC721BalanceModel,};
+use origami_token::components::token::erc721::erc721_balance::{
+    erc_721_balance_model, ERC721BalanceModel,
+};
 use origami_token::components::token::erc721::erc721_balance::erc721_balance_component::{
     ERC721BalanceImpl, InternalImpl as ERC721BalanceInternalImpl
 };
@@ -33,7 +37,9 @@ use origami_token::presets::erc721::mintable_burnable::{
     ERC721MintableBurnable, IERC721MintableBurnablePresetDispatcher,
     IERC721MintableBurnablePresetDispatcherTrait
 };
-use origami_token::presets::erc721::mintable_burnable::ERC721MintableBurnable::{ERC721InitializerImpl};
+use origami_token::presets::erc721::mintable_burnable::ERC721MintableBurnable::{
+    ERC721InitializerImpl
+};
 use starknet::storage::{StorageMemberAccessTrait};
 
 use origami_token::components::tests::token::erc721::test_erc721_approval::{

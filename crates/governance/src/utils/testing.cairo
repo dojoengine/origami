@@ -1,6 +1,6 @@
 use dojo::test_utils::{spawn_test_world};
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-use governance::models::{
+use origami_governance::models::{
     governor::{
         GovernorParams, ProposalParams, ProposalCount, LatestProposalIds, governor_params,
         proposal_params, proposal_count, latest_proposal_ids
@@ -15,7 +15,7 @@ use governance::models::{
         nonces
     }
 };
-use governance::systems::{
+use origami_governance::systems::{
     governor::{contract::governor, interface::{IGovernorDispatcher, IGovernorDispatcherTrait}},
     timelock::{contract::timelock, interface::{ITimelockDispatcher, ITimelockDispatcherTrait}},
     token::{
@@ -23,7 +23,7 @@ use governance::systems::{
         interface::{IGovernanceTokenDispatcher, IGovernanceTokenDispatcherTrait}
     }
 };
-use governance::utils::mock_contract::{
+use origami_governance::utils::mock_contract::{
     hellostarknet, IHelloStarknetDispatcher, mock_balances, MockBalances
 };
 use starknet::{ContractAddress, contract_address_const};

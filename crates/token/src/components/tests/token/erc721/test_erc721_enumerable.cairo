@@ -6,7 +6,9 @@ use dojo::test_utils::spawn_test_world;
 use origami_token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, VALUE, TOKEN_ID, TOKEN_ID_2};
 use origami_token::tests::utils;
 
-use origami_token::components::token::erc721::erc721_balance::{erc_721_balance_model, ERC721BalanceModel};
+use origami_token::components::token::erc721::erc721_balance::{
+    erc_721_balance_model, ERC721BalanceModel
+};
 use origami_token::components::token::erc721::erc721_balance::erc721_balance_component::{
     Transfer, ERC721BalanceImpl, ERC721BalanceCamelImpl, InternalImpl as ERC721BalanceInternalImpl
 };

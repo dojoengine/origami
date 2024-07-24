@@ -12,7 +12,9 @@ use origami_token::components::token::erc20::erc20_allowance::{
 use origami_token::components::token::erc20::erc20_allowance::erc20_allowance_component::{
     Approval, ERC20AllowanceImpl, InternalImpl as ERC20AllowanceInternalImpl
 };
-use origami_token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
+use origami_token::components::token::erc20::erc20_balance::{
+    erc_20_balance_model, ERC20BalanceModel,
+};
 use origami_token::components::token::erc20::erc20_balance::erc20_balance_component::{
     Transfer, ERC20BalanceImpl, ERC20BalanceCamelImpl, InternalImpl as ERC20BalanceInternalImpl
 };
@@ -219,7 +221,7 @@ fn test_transfer_from() {
     assert(erc20_balance_mock.balance_of(RECIPIENT()) == VALUE, 'Should eq amount');
     assert(erc20_balance_mock.balance_of(OWNER()) == SUPPLY - VALUE, 'Should eq suppy - amount');
     assert(erc20_balance_mock.allowance(OWNER(), SPENDER()) == 0, 'Should eq 0');
-// assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
+    // assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
 }
 
 #[test]
@@ -288,5 +290,5 @@ fn test_transferFrom() {
     assert(erc20_balance_mock.balance_of(RECIPIENT()) == VALUE, 'Should eq amount');
     assert(erc20_balance_mock.balance_of(OWNER()) == SUPPLY - VALUE, 'Should eq suppy - amount');
     assert(erc20_balance_mock.allowance(OWNER(), SPENDER()) == 0, 'Should eq 0');
-// assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
+    // assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
 }

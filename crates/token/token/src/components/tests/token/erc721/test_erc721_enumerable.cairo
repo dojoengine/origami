@@ -11,7 +11,9 @@ use origami_token::components::token::erc721::erc721_approval::{
     erc_721_token_approval_model, ERC721TokenApprovalModel
 };
 
-use origami_token::components::token::erc721::erc721_balance::{erc_721_balance_model, ERC721BalanceModel};
+use origami_token::components::token::erc721::erc721_balance::{
+    erc_721_balance_model, ERC721BalanceModel
+};
 use origami_token::components::token::erc721::erc721_balance::erc721_balance_component::{
     Transfer, ERC721BalanceImpl, ERC721BalanceCamelImpl, InternalImpl as ERC721BalanceInternalImpl
 };

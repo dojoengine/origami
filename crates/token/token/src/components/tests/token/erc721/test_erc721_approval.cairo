@@ -11,7 +11,9 @@ use origami_token::components::token::erc721::erc721_approval::{
     erc_721_token_approval_model, ERC721TokenApprovalModel, erc_721_operator_approval_model,
     ERC721OperatorApprovalModel
 };
-use origami_token::components::token::erc721::erc721_owner::{erc_721_owner_model, ERC721OwnerModel,};
+use origami_token::components::token::erc721::erc721_owner::{
+    erc_721_owner_model, ERC721OwnerModel,
+};
 use origami_token::components::token::erc721::erc721_approval::erc721_approval_component;
 use origami_token::components::token::erc721::erc721_approval::erc721_approval_component::{
     Approval, ApprovalForAll, ERC721ApprovalImpl, InternalImpl as ERC721ApprovalInternalImpl

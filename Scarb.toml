@@ -1,16 +1,14 @@
 [workspace]
 members = [
-    # Scarb dependent crates.
     "crates/algebra",
     "crates/defi",
     "crates/map",
     "crates/random",
     "crates/rating",
     "crates/security",
-
-    # Sozo dependent crates.
     "crates/token",
-#    "governance"
+# WIP porting Governance to Cairo 2.7 and Dojo 1.0.0.
+#    "crates/governance"
 ]
 
 [workspace.dependencies]

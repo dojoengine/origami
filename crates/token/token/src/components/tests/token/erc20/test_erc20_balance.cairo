@@ -12,7 +12,9 @@ use origami_token::components::token::erc20::erc20_allowance::{
 use origami_token::components::token::erc20::erc20_allowance::erc20_allowance_component::{
     Approval, ERC20AllowanceImpl, InternalImpl as ERC20AllowanceInternalImpl
 };
-use origami_token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
+use origami_token::components::token::erc20::erc20_balance::{
+    erc_20_balance_model, ERC20BalanceModel,
+};
 use origami_token::components::token::erc20::erc20_balance::erc20_balance_component::{
     Transfer, ERC20BalanceImpl, ERC20BalanceCamelImpl, InternalImpl as ERC20BalanceInternalImpl
 };

@@ -95,8 +95,9 @@ fn test_constructor() {
     assert(ERC721MetadataImpl::symbol(@state) == SYMBOL, 'Symbol should be SYMBOL');
     assert(ERC721Impl::balance_of(@state, OWNER()) == 1, 'Balance should be one');
     assert(ERC721Impl::owner_of(@state, TOKEN_ID) == OWNER(), 'OWNER should be owner');
-// assert(
-//     SRC5Impl::supports_interface(@state, erc721::interface::IERC721_ID), 'Missing interface ID'
+    // assert(
+//     SRC5Impl::supports_interface(@state, erc721::interface::IERC721_ID), 'Missing interface
+//     ID'
 // );
 // assert(
 //     SRC5Impl::supports_interface(@state, erc721::interface::IERC721_METADATA_ID),
@@ -117,8 +118,9 @@ fn test_initializer() {
     assert(ERC721MetadataImpl::symbol(@state) == SYMBOL, 'Symbol should be SYMBOL');
 
     assert(ERC721Impl::balance_of(@state, OWNER()) == 0, 'Balance should be zero');
-// assert(
-//     SRC5Impl::supports_interface(@state, erc721::interface::IERC721_ID), 'Missing interface ID'
+    // assert(
+//     SRC5Impl::supports_interface(@state, erc721::interface::IERC721_ID), 'Missing interface
+//     ID'
 // );
 // assert(
 //     SRC5Impl::supports_interface(@state, erc721::interface::IERC721_METADATA_ID),

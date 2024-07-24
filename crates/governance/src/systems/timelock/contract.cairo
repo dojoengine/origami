@@ -1,8 +1,8 @@
 #[dojo::contract]
 mod timelock {
-    use governance::libraries::events::timelockevents;
-    use governance::models::timelock::{PendingAdmin, QueuedTransactions, TimelockParams};
-    use governance::systems::timelock::interface::ITimelock;
+    use origami_governance::libraries::events::timelockevents;
+    use origami_governance::models::timelock::{PendingAdmin, QueuedTransactions, TimelockParams};
+    use origami_governance::systems::timelock::interface::ITimelock;
     use starknet::{
         ContractAddress, ClassHash, get_caller_address, get_block_timestamp, get_contract_address,
         Zeroable
@@ -25,7 +25,7 @@ mod timelock {
                 delay <= MAXIMUM_DELAY, "Timelock::initialize: Delay must not exceed maximum delay."
             );
 
-            let contract = get_contract_address();
+            let contract = self.selector();
             let curr_params = get!(world, contract, TimelockParams);
             assert!(
                 curr_params.admin == Zeroable::zero(), "Timelock::initialize: Already initialized."
@@ -40,7 +40,7 @@ mod timelock {
 
         fn execute_transaction(
             ref world: IWorldDispatcher,
-            target: ContractAddress,
+            target_selector: felt252,
             new_implementation: ClassHash,
             eta: u64
         ) {
@@ -49,7 +49,7 @@ mod timelock {
                 get_caller_address() == params.admin,
                 "Timelock::execute_transaction: Call must come from admin."
             );
-            let queued_tx = get!(world, (target, new_implementation), QueuedTransactions);
+            let queued_tx = get!(world, (target_selector, new_implementation), QueuedTransactions);
             assert!(
                 queued_tx.queued, "Timelock::execute_transaction: Transaction hasn't been queued."
             );
@@ -65,13 +65,13 @@ mod timelock {
             set!(
                 world,
                 QueuedTransactions {
-                    contract: target, class_hash: new_implementation, queued: false
+                    contract_selector: target_selector, class_hash: new_implementation, queued: false
                 }
             );
-            let upgraded_class_hash = world.upgrade_contract(target, new_implementation);
+            let upgraded_class_hash = world.upgrade_contract(target_selector, new_implementation);
             emit!(
                 world,
-                timelockevents::ExecuteTransaction { target, class_hash: upgraded_class_hash, eta }
+                timelockevents::ExecuteTransaction { target_selector, class_hash: upgraded_class_hash, eta }
             );
         }
 

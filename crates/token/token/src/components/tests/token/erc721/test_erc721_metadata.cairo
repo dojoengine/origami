@@ -3,13 +3,17 @@ use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
 use origami_token::tests::constants::{OWNER};
 
-use origami_token::components::token::erc721::erc721_metadata::{erc_721_meta_model, ERC721MetaModel,};
+use origami_token::components::token::erc721::erc721_metadata::{
+    erc_721_meta_model, ERC721MetaModel,
+};
 use origami_token::components::token::erc721::erc721_metadata::erc721_metadata_component::{
     ERC721MetadataImpl, ERC721MetadataCamelImpl, InternalImpl
 };
 use origami_token::components::token::erc721::erc721_mintable::erc721_mintable_component::InternalImpl as ERC721MintableInternalImpl;
 
-use origami_token::components::token::erc721::erc721_balance::{erc_721_balance_model, ERC721BalanceModel,};
+use origami_token::components::token::erc721::erc721_balance::{
+    erc_721_balance_model, ERC721BalanceModel,
+};
 use origami_token::components::token::erc721::erc721_owner::{erc_721_owner_model, ERC721OwnerModel};
 
 use origami_token::components::tests::mocks::erc721::erc721_metadata_mock::erc721_metadata_mock;

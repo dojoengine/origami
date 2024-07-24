@@ -13,11 +13,15 @@ use origami_token::components::token::erc721::erc721_approval::{
 use origami_token::components::token::erc721::erc721_approval::erc721_approval_component::{
     Approval, ERC721ApprovalImpl, InternalImpl as ERC721ApprovalInternalImpl
 };
-use origami_token::components::token::erc721::erc721_balance::{erc_721_balance_model, ERC721BalanceModel,};
+use origami_token::components::token::erc721::erc721_balance::{
+    erc_721_balance_model, ERC721BalanceModel,
+};
 use origami_token::components::token::erc721::erc721_balance::erc721_balance_component::{
     Transfer, ERC721BalanceImpl, ERC721BalanceCamelImpl, InternalImpl as ERC721BalanceInternalImpl
 };
-use origami_token::components::token::erc721::erc721_owner::{erc_721_owner_model, ERC721OwnerModel,};
+use origami_token::components::token::erc721::erc721_owner::{
+    erc_721_owner_model, ERC721OwnerModel,
+};
 use origami_token::components::token::erc721::erc721_owner::erc721_owner_component::{
     ERC721OwnerImpl, ERC721OwnerCamelImpl, InternalImpl as ERC721OwnerInternalImpl
 };
@@ -33,7 +37,9 @@ use origami_token::components::tests::token::erc721::test_erc721_approval::{
 };
 
 use origami_token::components::introspection::src5::{src_5_model, SRC5Model, ISRC5, ISRC5_ID};
-use origami_token::components::introspection::src5::src5_component::{InternalImpl as SRC5InternalImpl};
+use origami_token::components::introspection::src5::src5_component::{
+    InternalImpl as SRC5InternalImpl
+};
 use origami_token::components::tests::mocks::erc721::erc721_receiver_mock::{
     erc721_receiver_mock, IERC721ReceiverMockDispatcher, IERC721ReceiverMockDispatcherTrait
 };

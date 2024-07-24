@@ -5,7 +5,7 @@ use starknet::{ContractAddress, ClassHash};
 #[derive(Copy, Drop, Serde)]
 struct TimelockParams {
     #[key]
-    contract: ContractAddress,
+    contract_selector: felt252,
     admin: ContractAddress,
     delay: u64,
 }
@@ -14,7 +14,7 @@ struct TimelockParams {
 #[derive(Copy, Drop, Serde)]
 struct PendingAdmin {
     #[key]
-    contract: ContractAddress,
+    contract_selector: felt252,
     address: ContractAddress,
 }
 
@@ -22,7 +22,7 @@ struct PendingAdmin {
 #[derive(Copy, Drop, Serde)]
 struct QueuedTransactions {
     #[key]
-    contract: ContractAddress,
+    contract_selector: felt252,
     #[key]
     class_hash: ClassHash,
     queued: bool,

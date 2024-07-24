@@ -3,7 +3,9 @@ use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
 use origami_token::tests::constants::{DECIMALS};
 
-use origami_token::components::token::erc20::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
+use origami_token::components::token::erc20::erc20_metadata::{
+    erc_20_metadata_model, ERC20MetadataModel,
+};
 use origami_token::components::token::erc20::erc20_metadata::erc20_metadata_component::{
     ERC20MetadataImpl, ERC20MetadataTotalSupplyImpl, ERC20MetadataTotalSupplyCamelImpl, InternalImpl
 };

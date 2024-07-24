@@ -1,14 +1,14 @@
 #[dojo::contract]
 mod governor {
-    use governance::libraries::events::governorevents;
-    use governance::models::{
+    use origami_governance::libraries::events::governorevents;
+    use origami_governance::models::{
         governor::{
             GovernorParams, ProposalParams, ProposalCount, Proposals, Proposal, Receipt,
             ProposalState, LatestProposalIds, Receipts, Support
         },
         timelock::{QueuedTransactions, TimelockParams}
     };
-    use governance::systems::{
+    use origami_governance::systems::{
         governor::interface::IGovernor,
         timelock::{contract::timelock, interface::{ITimelockDispatcher, ITimelockDispatcherTrait}},
         token::interface::{IGovernanceTokenDispatcher, IGovernanceTokenDispatcherTrait}
@@ -24,8 +24,8 @@ mod governor {
             timelock: ContractAddress, gov_token: ContractAddress, guardian: ContractAddress
         ) {
             let world = self.world_dispatcher.read();
-            let contract = get_contract_address();
-            let curr_params = get!(world, contract, GovernorParams);
+            let contract_selector = self.selector();
+            let curr_params = get!(world, contract_selector, GovernorParams);
             assert!(
                 curr_params.timelock == Zeroable::zero()
                     && curr_params.gov_token == Zeroable::zero()
@@ -33,14 +33,15 @@ mod governor {
                     && curr_params.guardian == Zeroable::zero(),
                 "Governor::initialize: already initialized"
             );
-            set!(world, GovernorParams { contract, timelock, gov_token, guardian });
+            set!(world, GovernorParams { contract_selector, timelock, gov_token, guardian });
         }
 
         fn set_proposal_params(
             quorum_votes: u128, threshold: u128, voting_delay: u64, voting_period: u64,
         ) {
+            let contract_selector = self.selector();
             let world = self.world_dispatcher.read();
-            let params = get!(world, get_contract_address(), GovernorParams);
+            let params = get!(world, contract_selector, GovernorParams);
             assert!(
                 params.guardian == get_caller_address(),
                 "Governor::set_proposal_params: only guardian can set proposal params"
@@ -50,7 +51,7 @@ mod governor {
             set!(
                 world,
                 ProposalParams {
-                    contract: get_contract_address(),
+                    contract_selector,
                     quorum_votes,
                     threshold,
                     voting_delay,
@@ -59,14 +60,14 @@ mod governor {
             );
         }
 
-        fn propose(target: ContractAddress, class_hash: ClassHash,) -> usize {
+        fn propose(target_selector: felt252, class_hash: ClassHash,) -> usize {
             let world = self.world_dispatcher.read();
-            let contract = get_contract_address();
             let caller = get_caller_address();
-            let params = get!(world, contract, ProposalParams);
+            let contract_selector = self.selector();
+            let params = get!(world, contract_selector, ProposalParams);
             let time_now = get_block_timestamp();
             let gov_token = IGovernanceTokenDispatcher {
-                contract_address: get!(world, contract, GovernorParams).gov_token
+                contract_address: get!(world, contract_selector, GovernorParams).gov_token
             };
             let prior_votes = gov_token.get_prior_votes(caller, time_now - 1);
             assert!(
@@ -94,15 +95,15 @@ mod governor {
 
             let start_block = time_now + params.voting_delay;
             let end_block = start_block + params.voting_period;
-            let curr_proposal_count = get!(world, contract, ProposalCount).count;
-            set!(world, ProposalCount { contract, count: curr_proposal_count + 1 });
+            let curr_proposal_count = get!(world, contract_selector, ProposalCount).count;
+            set!(world, ProposalCount { contract_selector, count: curr_proposal_count + 1 });
             let proposal_id = curr_proposal_count + 1;
 
             let mut new_proposal: Proposal = Default::default();
             new_proposal.id = proposal_id;
             new_proposal.class_hash = class_hash;
             new_proposal.proposer = caller;
-            new_proposal.target = target;
+            new_proposal.target_selector = target_selector;
             new_proposal.start_block = start_block;
             new_proposal.end_block = end_block;
 
@@ -112,7 +113,7 @@ mod governor {
             emit!(
                 world,
                 governorevents::ProposalCreated {
-                    id: proposal_id, proposer: caller, target, class_hash, start_block, end_block,
+                    id: proposal_id, proposer: caller, target_selector, class_hash, start_block, end_block,
                 }
             );
             new_proposal.id
@@ -129,7 +130,7 @@ mod governor {
             let timelock_addr = get!(world, get_contract_address(), GovernorParams).timelock;
             let timelock_delay = get!(world, timelock_addr, TimelockParams).delay;
             let eta = get_block_timestamp() + timelock_delay;
-            queue_or_revert(world, proposal.target, proposal.class_hash, eta);
+            queue_or_revert(world, proposal.target_selector, proposal.class_hash, eta);
             proposal.eta = eta;
             set!(world, Proposals { id: proposal_id, proposal });
             emit!(world, governorevents::ProposalQueued { id: proposal_id, eta });
@@ -261,14 +262,14 @@ mod governor {
     }
 
     fn queue_or_revert(
-        world: IWorldDispatcher, target: ContractAddress, class_hash: ClassHash, eta: u64
+        world: IWorldDispatcher, target_selector: felt252, class_hash: ClassHash, eta: u64
     ) {
-        let queued_tx = get!(world, (target, class_hash), QueuedTransactions).queued;
+        let queued_tx = get!(world, (target_selector, class_hash), QueuedTransactions).queued;
         assert!(!queued_tx, "Governor::queue_or_revert: proposal action already queued at eta");
 
         let timelock = ITimelockDispatcher {
             contract_address: get!(world, get_contract_address(), GovernorParams).timelock
         };
-        timelock.que_transaction(target, class_hash, eta);
+        timelock.que_transaction(target_selector, class_hash, eta);
     }
 }

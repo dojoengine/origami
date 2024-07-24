@@ -1,9 +1,9 @@
 use dojo::world::IWorldDispatcherTrait;
-use governance::models::governor::{ProposalParams, Proposals, ProposalCount, Support};
-use governance::systems::governor::interface::IGovernorDispatcherTrait;
-use governance::systems::timelock::interface::ITimelockDispatcherTrait;
-use governance::systems::token::interface::IGovernanceTokenDispatcherTrait;
-use governance::utils::{
+use origami_governance::models::governor::{ProposalParams, Proposals, ProposalCount, Support};
+use origami_governance::systems::governor::interface::IGovernorDispatcherTrait;
+use origami_governance::systems::timelock::interface::ITimelockDispatcherTrait;
+use origami_governance::systems::token::interface::IGovernanceTokenDispatcherTrait;
+use origami_governance::utils::{
     mock_contract_upgraded::{
         hellostarknetupgraded, IHelloStarknetUgradedDispatcher, IHelloStarknetUgradedDispatcherTrait
     },

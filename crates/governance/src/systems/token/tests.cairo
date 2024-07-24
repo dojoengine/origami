@@ -1,9 +1,9 @@
 use dojo::world::IWorldDispatcherTrait;
-use governance::models::token::{
+use origami_governance::models::token::{
     Metadata, TotalSupply, Allowances, Balances, Delegates, Checkpoints, NumCheckpoints
 };
-use governance::systems::token::interface::IGovernanceTokenDispatcherTrait;
-use governance::utils::testing;
+use origami_governance::systems::token::interface::IGovernanceTokenDispatcherTrait;
+use origami_governance::utils::testing;
 use starknet::testing::{set_contract_address, set_block_timestamp};
 
 #[test]

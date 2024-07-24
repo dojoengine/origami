@@ -1,11 +1,11 @@
 #[dojo::contract]
 mod governancetoken {
-    use governance::libraries::events::tokenevents;
-    use governance::models::token::{
+    use origami_governance::libraries::events::tokenevents;
+    use origami_governance::models::token::{
         Allowances, Metadata, TotalSupply, Balances, Delegates, NumCheckpoints, Checkpoints,
         Checkpoint
     };
-    use governance::systems::token::interface::IGovernanceToken;
+    use origami_governance::systems::token::interface::IGovernanceToken;
     use integer::BoundedInt;
     use starknet::{ContractAddress, get_caller_address, get_contract_address, get_block_timestamp,};
 

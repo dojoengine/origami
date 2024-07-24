@@ -69,8 +69,9 @@ fn test_constructor() {
     assert(ERC1155MetadataImpl::name(@state) == NAME, 'Name should be NAME');
     assert(ERC1155MetadataImpl::symbol(@state) == SYMBOL, 'Symbol should be SYMBOL');
     assert(ERC1155MetadataImpl::uri(@state, 0) == URI, 'Uri should be URI');
-// assert(
-//     SRC5Impl::supports_interface(@state, erc1155::interface::IERC1155_ID), 'Missing interface ID'
+    // assert(
+//     SRC5Impl::supports_interface(@state, erc1155::interface::IERC1155_ID), 'Missing interface
+//     ID'
 // );
 // assert(
 //     SRC5Impl::supports_interface(@state, erc1155::interface::IERC1155_METADATA_ID),

@@ -5,15 +5,23 @@ use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::contract::{IContractDispatcherTrait, IContractDispatcher};
 use dojo::test_utils::spawn_test_world;
-use origami_token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, BRIDGE, DECIMALS, SUPPLY, VALUE};
+use origami_token::tests::constants::{
+    ZERO, OWNER, SPENDER, RECIPIENT, BRIDGE, DECIMALS, SUPPLY, VALUE
+};
 
-use origami_token::components::token::erc20::erc20_allowance::{erc_20_allowance_model, ERC20AllowanceModel};
-use origami_token::components::token::erc20::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
+use origami_token::components::token::erc20::erc20_allowance::{
+    erc_20_allowance_model, ERC20AllowanceModel
+};
+use origami_token::components::token::erc20::erc20_metadata::{
+    erc_20_metadata_model, ERC20MetadataModel,
+};
 use origami_token::components::token::erc20::erc20_metadata::erc20_metadata_component::{
     ERC20MetadataImpl, ERC20MetadataTotalSupplyImpl, InternalImpl as ERC20MetadataInternalImpl
 };
 
-use origami_token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
+use origami_token::components::token::erc20::erc20_balance::{
+    erc_20_balance_model, ERC20BalanceModel,
+};
 use origami_token::components::token::erc20::erc20_balance::erc20_balance_component::{
     ERC20BalanceImpl, InternalImpl as ERC20BalanceInternalImpl
 };
