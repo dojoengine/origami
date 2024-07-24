@@ -1,24 +1,21 @@
 [workspace]
 members = [
-    "crates",
-    "examples/chess",
-    "examples/hex_map",
-    "examples/market",
-    "examples/matchmaker",
-    "examples/projectile",
-    "token",
-    "governance"
+    # Scarb dependent crates.
+    "crates/algebra",
+    "crates/defi",
+    "crates/map",
+    "crates/random",
+    "crates/rating",
+    "crates/security",
+
+    # Sozo dependent crates.
+    "crates/token",
+#    "governance"
 ]
 
-[workspace.package]
-version = "0.7.2"
-description = "Community-maintained libraries for Cairo"
-homepage = "https://github.com/dojoengine/origami"
-authors = ["bal7hazar@proton.me"]
-
 [workspace.dependencies]
-# cubit = { git = "https://github.com/influenceth/cubit.git" }
-cubit = { git = "https://github.com/notV4l/cubit.git", branch = "cairo_2.7" }
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.7.2" }
-origami = { path = "crates" }
-token = { path = "token" }
+cubit = { git = "https://github.com/dojoengine/cubit", branch = "cairo_2.7" }
+dojo = { git = "https://github.com/dojoengine/dojo", rev = "a35ddcb" }
+starknet = "2.7.0-rc.3"
+
+# Scripts are not supported for virtual workspaces.

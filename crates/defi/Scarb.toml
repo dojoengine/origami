@@ -1,0 +1,10 @@
+[package]
+name = "origami_defi"
+version = "0.1.0"
+description = "DeFi library for Dojo based games."
+homepage = "https://github.com/dojoengine/origami/tree/main/crates/defi"
+edition = "2024_07"
+
+[dependencies]
+cubit.workspace = true
+starknet.workspace = true

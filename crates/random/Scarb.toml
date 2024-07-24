@@ -1,0 +1,9 @@
+[package]
+name = "origami_random"
+version = "0.1.0"
+description = "Random generator library for Dojo based games."
+homepage = "https://github.com/dojoengine/origami/tree/main/crates/random"
+edition = "2024_07"
+
+[dependencies]
+

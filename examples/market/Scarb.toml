@@ -1,9 +1,0 @@
-[package]
-name = "market"
-version = "0.0.0"
-description = "Example of defi crate usage."
-homepage = "https://github.com/dojoengine/origami/tree/examples/market"
-
-[dependencies]
-cubit.workspace = true
-dojo.workspace = true
