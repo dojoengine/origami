@@ -3,23 +3,23 @@ use starknet::ContractAddress;
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, VALUE, TOKEN_ID, TOKEN_ID_2};
-use token::tests::utils;
+use origami_token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, VALUE, TOKEN_ID, TOKEN_ID_2};
+use origami_token::tests::utils;
 
-use token::components::token::erc721::erc721_balance::{erc_721_balance_model, ERC721BalanceModel};
-use token::components::token::erc721::erc721_balance::erc721_balance_component::{
+use origami_token::components::token::erc721::erc721_balance::{erc_721_balance_model, ERC721BalanceModel};
+use origami_token::components::token::erc721::erc721_balance::erc721_balance_component::{
     Transfer, ERC721BalanceImpl, ERC721BalanceCamelImpl, InternalImpl as ERC721BalanceInternalImpl
 };
 
-use token::components::token::erc721::erc721_enumerable::{
+use origami_token::components::token::erc721::erc721_enumerable::{
     erc_721_enumerable_index_model, ERC721EnumerableIndexModel,
     erc_721_enumerable_owner_index_model, ERC721EnumerableOwnerIndexModel,
     erc_721_enumerable_total_model, ERC721EnumerableTotalModel
 };
-use token::components::token::erc721::erc721_enumerable::erc721_enumerable_component::{
+use origami_token::components::token::erc721::erc721_enumerable::erc721_enumerable_component::{
     ERC721EnumerableImpl, InternalImpl as ERC721EnumerableInternalImpl
 };
-use token::components::tests::mocks::erc721::erc721_enumerable_mock::{
+use origami_token::components::tests::mocks::erc721::erc721_enumerable_mock::{
     erc721_enumerable_mock, IERC721EnumerableMockDispatcher, IERC721EnumerableMockDispatcherTrait
 };
 

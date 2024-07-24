@@ -1,28 +1,28 @@
-use token::components::token::erc721::erc721_approval::IERC721Approval;
+use origami_token::components::token::erc721::erc721_approval::IERC721Approval;
 use starknet::testing;
 use starknet::ContractAddress;
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID};
-use token::tests::utils;
+use origami_token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID};
+use origami_token::tests::utils;
 
-use token::components::token::erc721::erc721_approval::{
+use origami_token::components::token::erc721::erc721_approval::{
     erc_721_token_approval_model, ERC721TokenApprovalModel, erc_721_operator_approval_model,
     ERC721OperatorApprovalModel
 };
-use token::components::token::erc721::erc721_owner::{erc_721_owner_model, ERC721OwnerModel,};
-use token::components::token::erc721::erc721_approval::erc721_approval_component;
-use token::components::token::erc721::erc721_approval::erc721_approval_component::{
+use origami_token::components::token::erc721::erc721_owner::{erc_721_owner_model, ERC721OwnerModel,};
+use origami_token::components::token::erc721::erc721_approval::erc721_approval_component;
+use origami_token::components::token::erc721::erc721_approval::erc721_approval_component::{
     Approval, ApprovalForAll, ERC721ApprovalImpl, InternalImpl as ERC721ApprovalInternalImpl
 };
 
-use token::components::token::erc721::erc721_owner::erc721_owner_component;
-use token::components::token::erc721::erc721_owner::erc721_owner_component::{
+use origami_token::components::token::erc721::erc721_owner::erc721_owner_component;
+use origami_token::components::token::erc721::erc721_owner::erc721_owner_component::{
     ERC721OwnerImpl, InternalImpl as ERC721OwnerInternalImpl
 };
 
-use token::components::tests::mocks::erc721::erc721_approval_mock::erc721_approval_mock;
+use origami_token::components::tests::mocks::erc721::erc721_approval_mock::erc721_approval_mock;
 use starknet::storage::{StorageMemberAccessTrait};
 
 use debug::PrintTrait;

@@ -94,9 +94,9 @@ mod erc721_enumerable_component {
         IWorldProvider, IWorldProviderDispatcher, IWorldDispatcher, IWorldDispatcherTrait
     };
 
-    use token::components::token::erc721::erc721_approval::erc721_approval_component as erc721_approval_comp;
-    use token::components::token::erc721::erc721_balance::erc721_balance_component as erc721_balance_comp;
-    use token::components::token::erc721::erc721_owner::erc721_owner_component as erc721_owner_comp;
+    use origami_token::components::token::erc721::erc721_approval::erc721_approval_component as erc721_approval_comp;
+    use origami_token::components::token::erc721::erc721_balance::erc721_balance_component as erc721_balance_comp;
+    use origami_token::components::token::erc721::erc721_owner::erc721_owner_component as erc721_owner_comp;
 
     use erc721_approval_comp::InternalImpl as ERC721ApprovalInternal;
     use erc721_balance_comp::InternalImpl as ERC721BalanceInternal;

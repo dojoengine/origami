@@ -1,11 +1,11 @@
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
 
-use token::components::introspection::src5::{src_5_model, SRC5Model, ISRC5, ISRC5_ID};
-use token::components::introspection::src5::src5_component::{InternalImpl};
-use token::components::tests::mocks::src5_mock::SRC5Mock;
+use origami_token::components::introspection::src5::{src_5_model, SRC5Model, ISRC5, ISRC5_ID};
+use origami_token::components::introspection::src5::src5_component::{InternalImpl};
+use origami_token::components::tests::mocks::src5_mock::SRC5Mock;
 use starknet::storage::{StorageMemberAccessTrait};
-use token::tests::constants::{OTHER_ID};
+use origami_token::tests::constants::{OTHER_ID};
 
 
 fn STATE() -> (IWorldDispatcher, SRC5Mock::ContractState) {

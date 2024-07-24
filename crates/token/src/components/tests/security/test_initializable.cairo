@@ -1,11 +1,11 @@
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
 
-use token::components::security::initializable::{initializable_model, InitializableModel};
-use token::components::security::initializable::initializable_component::{
+use origami_token::components::security::initializable::{initializable_model, InitializableModel};
+use origami_token::components::security::initializable::initializable_component::{
     InitializableImpl, InternalImpl
 };
-use token::components::tests::mocks::initializable_mock::InitializableMock;
+use origami_token::components::tests::mocks::initializable_mock::InitializableMock;
 use starknet::storage::{StorageMemberAccessTrait};
 
 fn STATE() -> (IWorldDispatcher, InitializableMock::ContractState) {

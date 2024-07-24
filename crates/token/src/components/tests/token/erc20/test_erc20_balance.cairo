@@ -2,25 +2,25 @@ use integer::BoundedInt;
 use starknet::ContractAddress;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{ADMIN, ZERO, OWNER, OTHER, SPENDER, RECIPIENT, VALUE, SUPPLY};
+use origami_token::tests::constants::{ADMIN, ZERO, OWNER, OTHER, SPENDER, RECIPIENT, VALUE, SUPPLY};
 
-use token::tests::utils;
+use origami_token::tests::utils;
 
-use token::components::token::erc20::erc20_allowance::{
+use origami_token::components::token::erc20::erc20_allowance::{
     erc_20_allowance_model, ERC20AllowanceModel,
 };
-use token::components::token::erc20::erc20_allowance::erc20_allowance_component::{
+use origami_token::components::token::erc20::erc20_allowance::erc20_allowance_component::{
     Approval, ERC20AllowanceImpl, InternalImpl as ERC20AllowanceInternalImpl
 };
-use token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
-use token::components::token::erc20::erc20_balance::erc20_balance_component::{
+use origami_token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
+use origami_token::components::token::erc20::erc20_balance::erc20_balance_component::{
     Transfer, ERC20BalanceImpl, ERC20BalanceCamelImpl, InternalImpl as ERC20BalanceInternalImpl
 };
-use token::components::tests::mocks::erc20::erc20_balance_mock::{
+use origami_token::components::tests::mocks::erc20::erc20_balance_mock::{
     erc20_balance_mock, IERC20BalanceMockDispatcher, IERC20BalanceMockDispatcherTrait
 };
 use starknet::storage::{StorageMemberAccessTrait};
-use token::components::tests::token::erc20::test_erc20_allowance::{
+use origami_token::components::tests::token::erc20::test_erc20_allowance::{
     assert_event_approval, assert_only_event_approval
 };
 

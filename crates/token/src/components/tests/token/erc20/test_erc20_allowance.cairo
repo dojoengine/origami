@@ -1,20 +1,20 @@
-use token::components::token::erc20::erc20_allowance::IERC20Allowance;
+use origami_token::components::token::erc20::erc20_allowance::IERC20Allowance;
 use starknet::testing;
 use starknet::ContractAddress;
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, VALUE, SUPPLY};
-use token::tests::utils;
+use origami_token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, VALUE, SUPPLY};
+use origami_token::tests::utils;
 
-use token::components::token::erc20::erc20_allowance::{
+use origami_token::components::token::erc20::erc20_allowance::{
     erc_20_allowance_model, ERC20AllowanceModel,
 };
-use token::components::token::erc20::erc20_allowance::erc20_allowance_component;
-use token::components::token::erc20::erc20_allowance::erc20_allowance_component::{
+use origami_token::components::token::erc20::erc20_allowance::erc20_allowance_component;
+use origami_token::components::token::erc20::erc20_allowance::erc20_allowance_component::{
     Approval, ERC20AllowanceImpl, InternalImpl
 };
-use token::components::tests::mocks::erc20::erc20_allowance_mock::erc20_allowance_mock;
+use origami_token::components::tests::mocks::erc20::erc20_allowance_mock::erc20_allowance_mock;
 use starknet::storage::{StorageMemberAccessTrait};
 use debug::PrintTrait;
 

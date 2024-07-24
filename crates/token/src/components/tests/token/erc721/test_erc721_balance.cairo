@@ -3,38 +3,38 @@ use starknet::ContractAddress;
 use starknet::testing;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{ADMIN, ZERO, OWNER, OTHER, SPENDER, RECIPIENT, TOKEN_ID};
+use origami_token::tests::constants::{ADMIN, ZERO, OWNER, OTHER, SPENDER, RECIPIENT, TOKEN_ID};
 
-use token::tests::utils;
+use origami_token::tests::utils;
 
-use token::components::token::erc721::erc721_approval::{
+use origami_token::components::token::erc721::erc721_approval::{
     erc_721_token_approval_model, ERC721TokenApprovalModel,
 };
-use token::components::token::erc721::erc721_approval::erc721_approval_component::{
+use origami_token::components::token::erc721::erc721_approval::erc721_approval_component::{
     Approval, ERC721ApprovalImpl, InternalImpl as ERC721ApprovalInternalImpl
 };
-use token::components::token::erc721::erc721_balance::{erc_721_balance_model, ERC721BalanceModel,};
-use token::components::token::erc721::erc721_balance::erc721_balance_component::{
+use origami_token::components::token::erc721::erc721_balance::{erc_721_balance_model, ERC721BalanceModel,};
+use origami_token::components::token::erc721::erc721_balance::erc721_balance_component::{
     Transfer, ERC721BalanceImpl, ERC721BalanceCamelImpl, InternalImpl as ERC721BalanceInternalImpl
 };
-use token::components::token::erc721::erc721_owner::{erc_721_owner_model, ERC721OwnerModel,};
-use token::components::token::erc721::erc721_owner::erc721_owner_component::{
+use origami_token::components::token::erc721::erc721_owner::{erc_721_owner_model, ERC721OwnerModel,};
+use origami_token::components::token::erc721::erc721_owner::erc721_owner_component::{
     ERC721OwnerImpl, ERC721OwnerCamelImpl, InternalImpl as ERC721OwnerInternalImpl
 };
-use token::components::tests::mocks::erc721::erc721_balance_mock::{
+use origami_token::components::tests::mocks::erc721::erc721_balance_mock::{
     erc721_balance_mock, IERC721BalanceMockDispatcher, IERC721BalanceMockDispatcherTrait
 };
 
-use token::components::token::erc721::erc721_mintable::erc721_mintable_component::InternalImpl as ERC721MintableInternalImpl;
+use origami_token::components::token::erc721::erc721_mintable::erc721_mintable_component::InternalImpl as ERC721MintableInternalImpl;
 use starknet::storage::{StorageMemberAccessTrait};
 
-use token::components::tests::token::erc721::test_erc721_approval::{
+use origami_token::components::tests::token::erc721::test_erc721_approval::{
     assert_event_approval, assert_only_event_approval
 };
 
-use token::components::introspection::src5::{src_5_model, SRC5Model, ISRC5, ISRC5_ID};
-use token::components::introspection::src5::src5_component::{InternalImpl as SRC5InternalImpl};
-use token::components::tests::mocks::erc721::erc721_receiver_mock::{
+use origami_token::components::introspection::src5::{src_5_model, SRC5Model, ISRC5, ISRC5_ID};
+use origami_token::components::introspection::src5::src5_component::{InternalImpl as SRC5InternalImpl};
+use origami_token::components::tests::mocks::erc721::erc721_receiver_mock::{
     erc721_receiver_mock, IERC721ReceiverMockDispatcher, IERC721ReceiverMockDispatcherTrait
 };
 

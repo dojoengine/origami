@@ -1,16 +1,16 @@
-use token::tests::utils;
-use token::tests::constants::{
+use origami_token::tests::utils;
+use origami_token::tests::constants::{
     ZERO, OWNER, SPENDER, RECIPIENT, OPERATOR, OTHER, NAME, SYMBOL, URI, TOKEN_ID, TOKEN_AMOUNT,
     TOKEN_ID_2, TOKEN_AMOUNT_2
 };
 
-use token::erc1155::ERC1155::ERC1155Impl;
-use token::erc1155::ERC1155::ERC1155CamelOnlyImpl;
-use token::erc1155::ERC1155::ERC1155MetadataImpl;
-use token::erc1155::ERC1155::InternalImpl;
-use token::erc1155::ERC1155::WorldInteractionsImpl;
-use token::erc1155::ERC1155::{TransferSingle, TransferBatch, ApprovalForAll};
-use token::erc1155::ERC1155;
+use origami_token::erc1155::ERC1155::ERC1155Impl;
+use origami_token::erc1155::ERC1155::ERC1155CamelOnlyImpl;
+use origami_token::erc1155::ERC1155::ERC1155MetadataImpl;
+use origami_token::erc1155::ERC1155::InternalImpl;
+use origami_token::erc1155::ERC1155::WorldInteractionsImpl;
+use origami_token::erc1155::ERC1155::{TransferSingle, TransferBatch, ApprovalForAll};
+use origami_token::erc1155::ERC1155;
 use starknet::ContractAddress;
 use starknet::contract_address_const;
 use starknet::testing;
@@ -18,7 +18,7 @@ use zeroable::Zeroable;
 use dojo::test_utils::spawn_test_world;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 
-use token::erc1155::models::{
+use origami_token::erc1155::models::{
     ERC1155Meta, erc_1155_meta, ERC1155OperatorApproval, erc_1155_operator_approval, ERC1155Balance,
     erc_1155_balance
 };

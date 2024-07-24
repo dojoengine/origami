@@ -4,30 +4,30 @@ use starknet::ContractAddress;
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, BRIDGE, DECIMALS, SUPPLY, VALUE};
+use origami_token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, BRIDGE, DECIMALS, SUPPLY, VALUE};
 
-use token::components::token::erc20::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
-use token::components::token::erc20::erc20_metadata::erc20_metadata_component::{
+use origami_token::components::token::erc20::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
+use origami_token::components::token::erc20::erc20_metadata::erc20_metadata_component::{
     ERC20MetadataImpl, ERC20MetadataTotalSupplyImpl, InternalImpl as ERC20MetadataInternalImpl
 };
 
-use token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
-use token::components::token::erc20::erc20_balance::erc20_balance_component::{
+use origami_token::components::token::erc20::erc20_balance::{erc_20_balance_model, ERC20BalanceModel,};
+use origami_token::components::token::erc20::erc20_balance::erc20_balance_component::{
     ERC20BalanceImpl, InternalImpl as ERC20BalanceInternalImpl
 };
 
-use token::components::token::erc20::erc20_mintable::erc20_mintable_component::InternalImpl as ERC20MintableInternalImpl;
-use token::components::token::erc20::erc20_burnable::erc20_burnable_component::InternalImpl as ERC20BurnableInternalImpl;
+use origami_token::components::token::erc20::erc20_mintable::erc20_mintable_component::InternalImpl as ERC20MintableInternalImpl;
+use origami_token::components::token::erc20::erc20_burnable::erc20_burnable_component::InternalImpl as ERC20BurnableInternalImpl;
 
-use token::components::token::erc20::erc20_bridgeable::{
+use origami_token::components::token::erc20::erc20_bridgeable::{
     erc_20_bridgeable_model, ERC20BridgeableModel
 };
-use token::components::token::erc20::erc20_bridgeable::erc20_bridgeable_component::{
+use origami_token::components::token::erc20::erc20_bridgeable::erc20_bridgeable_component::{
     ERC20BridgeableImpl
 };
 
-use token::components::tests::mocks::erc20::erc20_bridgeable_mock::erc20_bridgeable_mock;
-use token::components::tests::mocks::erc20::erc20_bridgeable_mock::erc20_bridgeable_mock::{
+use origami_token::components::tests::mocks::erc20::erc20_bridgeable_mock::erc20_bridgeable_mock;
+use origami_token::components::tests::mocks::erc20::erc20_bridgeable_mock::erc20_bridgeable_mock::{
     ERC20InitializerImpl
 };
 use starknet::storage::{StorageMemberAccessTrait};

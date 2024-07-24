@@ -20,18 +20,18 @@ use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 
 // Internal imports
 
-use token::tests::utils;
-use token::tests::constants::{
+use origami_token::tests::utils;
+use origami_token::tests::constants::{
     ZERO, OWNER, SPENDER, RECIPIENT, OPERATOR, OTHER, NAME, SYMBOL, URI, TOKEN_ID
 };
-use token::erc721::ERC721::ERC721Impl;
-use token::erc721::ERC721::ERC721CamelOnlyImpl;
-use token::erc721::ERC721::ERC721MetadataImpl;
-use token::erc721::ERC721::InternalImpl;
-use token::erc721::ERC721::WorldInteractionsImpl;
-use token::erc721::ERC721::{Approval, ApprovalForAll, Transfer};
-use token::erc721::ERC721;
-use token::erc721::models::{
+use origami_token::erc721::ERC721::ERC721Impl;
+use origami_token::erc721::ERC721::ERC721CamelOnlyImpl;
+use origami_token::erc721::ERC721::ERC721MetadataImpl;
+use origami_token::erc721::ERC721::InternalImpl;
+use origami_token::erc721::ERC721::WorldInteractionsImpl;
+use origami_token::erc721::ERC721::{Approval, ApprovalForAll, Transfer};
+use origami_token::erc721::ERC721;
+use origami_token::erc721::models::{
     ERC721Meta, erc_721_meta, ERC721OperatorApproval, erc_721_operator_approval, ERC721Owner,
     erc_721_owner, ERC721Balance, erc_721_balance, ERC721TokenApproval, erc_721_token_approval
 };

@@ -1,16 +1,16 @@
 use integer::BoundedInt;
 use integer::u256;
 use integer::u256_from_felt252;
-use token::tests::utils;
-use token::tests::constants::{
+use origami_token::tests::utils;
+use origami_token::tests::constants::{
     ZERO, OWNER, SPENDER, RECIPIENT, NAME, SYMBOL, DECIMALS, SUPPLY, VALUE
 };
-use token::erc20::ERC20::Approval;
-use token::erc20::ERC20::ERC20Impl;
-use token::erc20::ERC20::ERC20MetadataImpl;
-use token::erc20::ERC20::InternalImpl;
-use token::erc20::ERC20::Transfer;
-use token::erc20::ERC20;
+use origami_token::erc20::ERC20::Approval;
+use origami_token::erc20::ERC20::ERC20Impl;
+use origami_token::erc20::ERC20::ERC20MetadataImpl;
+use origami_token::erc20::ERC20::InternalImpl;
+use origami_token::erc20::ERC20::Transfer;
+use origami_token::erc20::ERC20;
 use starknet::ContractAddress;
 use starknet::contract_address_const;
 use starknet::testing;
@@ -18,7 +18,7 @@ use zeroable::Zeroable;
 use dojo::test_utils::spawn_test_world;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 
-use token::erc20::models::{
+use origami_token::erc20::models::{
     ERC20Allowance, erc_20_allowance, ERC20Balance, erc_20_balance, ERC20Meta, erc_20_meta
 };
 use starknet::storage::{StorageMemberAccessTrait};

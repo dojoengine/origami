@@ -1,13 +1,13 @@
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{DECIMALS};
+use origami_token::tests::constants::{DECIMALS};
 
-use token::components::token::erc20::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
-use token::components::token::erc20::erc20_metadata::erc20_metadata_component::{
+use origami_token::components::token::erc20::erc20_metadata::{erc_20_metadata_model, ERC20MetadataModel,};
+use origami_token::components::token::erc20::erc20_metadata::erc20_metadata_component::{
     ERC20MetadataImpl, ERC20MetadataTotalSupplyImpl, ERC20MetadataTotalSupplyCamelImpl, InternalImpl
 };
-use token::components::tests::mocks::erc20::erc20_metadata_mock::erc20_metadata_mock;
+use origami_token::components::tests::mocks::erc20::erc20_metadata_mock::erc20_metadata_mock;
 use starknet::storage::{StorageMemberAccessTrait};
 
 fn STATE() -> (IWorldDispatcher, erc20_metadata_mock::ContractState) {

@@ -50,7 +50,7 @@ mod erc20_balance_component {
         IWorldProvider, IWorldProviderDispatcher, IWorldDispatcher, IWorldDispatcherTrait
     };
 
-    use token::components::token::erc20::erc20_allowance::erc20_allowance_component as erc20_allowance_comp;
+    use origami_token::components::token::erc20::erc20_allowance::erc20_allowance_component as erc20_allowance_comp;
     use erc20_allowance_comp::InternalImpl as ERC20AllowanceInternal;
 
     #[storage]

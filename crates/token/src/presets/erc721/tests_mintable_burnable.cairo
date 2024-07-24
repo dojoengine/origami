@@ -1,45 +1,45 @@
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::test_utils::spawn_test_world;
-use token::tests::constants::{
+use origami_token::tests::constants::{
     ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID, TOKEN_ID_2, TOKEN_ID_3, VALUE
 };
 
-use token::tests::utils;
+use origami_token::tests::utils;
 
-use token::components::token::erc721::erc721_approval::{
+use origami_token::components::token::erc721::erc721_approval::{
     erc_721_token_approval_model, ERC721TokenApprovalModel, erc_721_operator_approval_model,
     ERC721OperatorApprovalModel
 };
-use token::components::token::erc721::erc721_approval::erc721_approval_component;
-use token::components::token::erc721::erc721_approval::erc721_approval_component::{
+use origami_token::components::token::erc721::erc721_approval::erc721_approval_component;
+use origami_token::components::token::erc721::erc721_approval::erc721_approval_component::{
     Approval, ApprovalForAll, ERC721ApprovalImpl, InternalImpl as ERC721ApprovalInternalImpl
 };
 
-use token::components::token::erc721::erc721_metadata::{erc_721_meta_model, ERC721MetaModel,};
-use token::components::token::erc721::erc721_metadata::erc721_metadata_component::{
+use origami_token::components::token::erc721::erc721_metadata::{erc_721_meta_model, ERC721MetaModel,};
+use origami_token::components::token::erc721::erc721_metadata::erc721_metadata_component::{
     ERC721MetadataImpl, ERC721MetadataCamelImpl, InternalImpl as ERC721MetadataInternalImpl
 };
 
-use token::components::token::erc721::erc721_balance::{erc_721_balance_model, ERC721BalanceModel,};
-use token::components::token::erc721::erc721_balance::erc721_balance_component::{
+use origami_token::components::token::erc721::erc721_balance::{erc_721_balance_model, ERC721BalanceModel,};
+use origami_token::components::token::erc721::erc721_balance::erc721_balance_component::{
     ERC721BalanceImpl, InternalImpl as ERC721BalanceInternalImpl
 };
 
-use token::components::token::erc721::erc721_mintable::erc721_mintable_component::InternalImpl as ERC721MintableInternalImpl;
-use token::components::token::erc721::erc721_burnable::erc721_burnable_component::InternalImpl as ERC721BurnableInternalImpl;
+use origami_token::components::token::erc721::erc721_mintable::erc721_mintable_component::InternalImpl as ERC721MintableInternalImpl;
+use origami_token::components::token::erc721::erc721_burnable::erc721_burnable_component::InternalImpl as ERC721BurnableInternalImpl;
 
-use token::presets::erc721::mintable_burnable::{
+use origami_token::presets::erc721::mintable_burnable::{
     ERC721MintableBurnable, IERC721MintableBurnablePresetDispatcher,
     IERC721MintableBurnablePresetDispatcherTrait
 };
-use token::presets::erc721::mintable_burnable::ERC721MintableBurnable::{ERC721InitializerImpl};
+use origami_token::presets::erc721::mintable_burnable::ERC721MintableBurnable::{ERC721InitializerImpl};
 use starknet::storage::{StorageMemberAccessTrait};
 
-use token::components::tests::token::erc721::test_erc721_approval::{
+use origami_token::components::tests::token::erc721::test_erc721_approval::{
     assert_event_approval, assert_only_event_approval
 };
-use token::components::tests::token::erc721::test_erc721_balance::{
+use origami_token::components::tests::token::erc721::test_erc721_balance::{
     assert_event_transfer, assert_only_event_transfer
 };
 
