@@ -6,6 +6,11 @@ use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, VALUE, TOKEN_ID, TOKEN_ID_2};
 use origami_token::tests::utils;
 
+use origami_token::components::token::erc721::erc721_owner::{erc_721_owner_model, ERC721OwnerModel};
+use origami_token::components::token::erc721::erc721_approval::{
+    erc_721_token_approval_model, ERC721TokenApprovalModel
+};
+
 use origami_token::components::token::erc721::erc721_balance::{
     erc_721_balance_model, ERC721BalanceModel
 };
@@ -16,7 +21,9 @@ use origami_token::components::token::erc721::erc721_balance::erc721_balance_com
 use origami_token::components::token::erc721::erc721_enumerable::{
     erc_721_enumerable_index_model, ERC721EnumerableIndexModel,
     erc_721_enumerable_owner_index_model, ERC721EnumerableOwnerIndexModel,
-    erc_721_enumerable_total_model, ERC721EnumerableTotalModel
+    erc_721_enumerable_total_model, ERC721EnumerableTotalModel,
+    erc_721_enumerable_owner_token_model, ERC721EnumerableOwnerTokenModel,
+    erc_721_enumerable_token_model, ERC721EnumerableTokenModel,
 };
 use origami_token::components::token::erc721::erc721_enumerable::erc721_enumerable_component::{
     ERC721EnumerableImpl, InternalImpl as ERC721EnumerableInternalImpl
@@ -37,7 +44,13 @@ fn STATE() -> (IWorldDispatcher, erc721_enumerable_mock::ContractState) {
         array![
             erc_721_enumerable_index_model::TEST_CLASS_HASH,
             erc_721_enumerable_owner_index_model::TEST_CLASS_HASH,
-            erc_721_enumerable_total_model::TEST_CLASS_HASH
+            erc_721_enumerable_total_model::TEST_CLASS_HASH,
+            erc_721_enumerable_total_model::TEST_CLASS_HASH,
+            erc_721_enumerable_owner_token_model::TEST_CLASS_HASH,
+            erc_721_balance_model::TEST_CLASS_HASH,
+            erc_721_owner_model::TEST_CLASS_HASH,
+            erc_721_enumerable_token_model::TEST_CLASS_HASH,
+            erc_721_token_approval_model::TEST_CLASS_HASH,
         ]
     );
 

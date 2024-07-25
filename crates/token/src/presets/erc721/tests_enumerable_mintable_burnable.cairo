@@ -46,6 +46,14 @@ use origami_token::components::tests::token::erc721::test_erc721_balance::{
     assert_event_transfer, assert_only_event_transfer
 };
 
+use origami_token::components::token::erc721::erc721_enumerable::{
+    erc_721_enumerable_index_model, erc_721_enumerable_owner_index_model,
+    erc_721_enumerable_token_model, erc_721_enumerable_owner_token_model,
+    erc_721_enumerable_total_model,
+};
+
+use origami_token::components::token::erc721::erc721_owner::erc_721_owner_model;
+use origami_token::components::security::initializable::initializable_model;
 
 //
 // Setup
@@ -69,48 +77,12 @@ fn setup_uninitialized() -> (IWorldDispatcher, IERC721EnumMintBurnPresetDispatch
             )
     };
 
-    // setup auth
     world
-        .grant_writer(
-            selector!("ERC721TokenApprovalModel"), erc721_enum_mint_burn_dispatcher.contract_address
+        .grant_owner(
+            starknet::get_contract_address(), dojo::utils::bytearray_hash(@"origami_token")
         );
-    world
-        .grant_writer(
-            selector!("ERC721BalanceModel"), erc721_enum_mint_burn_dispatcher.contract_address
-        );
-    world
-        .grant_writer(
-            selector!("ERC721EnumerableIndexModel"),
-            erc721_enum_mint_burn_dispatcher.contract_address
-        );
-    world
-        .grant_writer(
-            selector!("ERC721EnumerableOwnerIndexModel"),
-            erc721_enum_mint_burn_dispatcher.contract_address
-        );
-    world
-        .grant_writer(
-            selector!("ERC721EnumerableTokenModel"),
-            erc721_enum_mint_burn_dispatcher.contract_address
-        );
-    world
-        .grant_writer(
-            selector!("ERC721EnumerableOwnerTokenModel"),
-            erc721_enum_mint_burn_dispatcher.contract_address
-        );
-    world
-        .grant_writer(
-            selector!("ERC721EnumerableTotalModel"),
-            erc721_enum_mint_burn_dispatcher.contract_address
-        );
-    world
-        .grant_writer(
-            selector!("ERC721MetadataModel"), erc721_enum_mint_burn_dispatcher.contract_address
-        );
-    world
-        .grant_writer(
-            selector!("ERC721OwnerModel"), erc721_enum_mint_burn_dispatcher.contract_address
-        );
+    world.grant_owner(OWNER(), dojo::utils::bytearray_hash(@"origami_token"));
+    world.grant_owner(SPENDER(), dojo::utils::bytearray_hash(@"origami_token"));
 
     (world, erc721_enum_mint_burn_dispatcher)
 }

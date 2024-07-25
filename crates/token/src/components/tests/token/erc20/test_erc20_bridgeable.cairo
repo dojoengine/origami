@@ -2,6 +2,7 @@ use starknet::testing;
 use starknet::ContractAddress;
 
 use integer::BoundedInt;
+use dojo::contract::{IContractDispatcherTrait, IContractDispatcher};
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{
@@ -37,18 +38,35 @@ use origami_token::components::tests::mocks::erc20::erc20_bridgeable_mock::erc20
     ERC20InitializerImpl
 };
 
+use origami_token::components::token::erc20::erc20_allowance::{
+    erc_20_allowance_model, ERC20AllowanceModel
+};
+use origami_token::components::security::initializable::initializable_model;
+
 fn STATE() -> (IWorldDispatcher, erc20_bridgeable_mock::ContractState) {
     let world = spawn_test_world(
         "origami_token",
         array![
             erc_20_metadata_model::TEST_CLASS_HASH,
             erc_20_balance_model::TEST_CLASS_HASH,
-            erc_20_bridgeable_model::TEST_CLASS_HASH
+            erc_20_bridgeable_model::TEST_CLASS_HASH,
+            erc_20_bridgeable_model::TEST_CLASS_HASH,
+            erc_20_allowance_model::TEST_CLASS_HASH,
+            initializable_model::TEST_CLASS_HASH,
         ]
     );
 
+    // Deploy the contract to ensure the selector is a known resource.
+    world
+        .deploy_contract(
+            'salt', erc20_bridgeable_mock::TEST_CLASS_HASH.try_into().unwrap(), array![].span(),
+        );
+
     let mut state = erc20_bridgeable_mock::contract_state_for_testing();
     state.world_dispatcher.write(world);
+
+    world
+        .grant_owner(starknet::get_contract_address(), dojo::contract::IContract::selector(@state));
 
     (world, state)
 }

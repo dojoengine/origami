@@ -172,11 +172,13 @@ fn setup() -> (IWorldDispatcher, IERC20BalanceMockDispatcher) {
     // setup auth
     world
         .grant_writer(
-            selector!("ERC20AllowanceModel"), erc20_balance_mock_dispatcher.contract_address
+            selector_from_tag!("origami_token-ERC20AllowanceModel"),
+            erc20_balance_mock_dispatcher.contract_address
         );
     world
         .grant_writer(
-            selector!("ERC20BalanceModel"), erc20_balance_mock_dispatcher.contract_address
+            selector_from_tag!("origami_token-ERC20BalanceModel"),
+            erc20_balance_mock_dispatcher.contract_address
         );
 
     // should use constructor now

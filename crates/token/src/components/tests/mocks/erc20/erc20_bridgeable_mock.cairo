@@ -115,7 +115,7 @@ mod erc20_bridgeable_mock {
             l2_bridge_address: ContractAddress,
         ) {
             assert(
-                self.world().is_owner(get_caller_address(), get_contract_address().into()),
+                self.world().is_owner(get_caller_address(), self.selector()),
                 Errors::CALLER_IS_NOT_OWNER
             );
 
