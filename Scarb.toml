@@ -13,8 +13,7 @@ members = [
 
 [workspace.dependencies]
 cubit = { git = "https://github.com/dojoengine/cubit", branch = "cairo_2.7" }
-dojo = { git = "https://github.com/dojoengine/dojo", rev = "a35ddcb" }
-#dojo = { path = "/Users/glihm/cgg/dojo/crates/dojo-core" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.0.0-alpha.3" }
 starknet = "2.7.0-rc.3"
 
 # Scripts are not supported for virtual workspaces.

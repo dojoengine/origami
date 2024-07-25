@@ -22,7 +22,7 @@ jobs:
   build:
     needs: check
     runs-on: ubuntu-latest
-    name: Build package
+    name: Build workspace
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -34,7 +34,7 @@ jobs:
   # algebra:
   #   needs: [check, build]
   #   runs-on: ubuntu-latest
-  #   name: Test crates
+  #   name: Test origami_algebra
   #   steps:
   #     - uses: actions/checkout@v4
   #     - uses: ./.github/actions/setup
@@ -45,7 +45,7 @@ jobs:
   defi:
     needs: [check, build]
     runs-on: ubuntu-latest
-    name: Test crates
+    name: Test origami_defi
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -56,7 +56,7 @@ jobs:
   map:
     needs: [check, build]
     runs-on: ubuntu-latest
-    name: Test crates
+    name: Test origami_map
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -67,7 +67,7 @@ jobs:
   random:
     needs: [check, build]
     runs-on: ubuntu-latest
-    name: Test crates
+    name: Test origami_random
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -78,7 +78,7 @@ jobs:
   rating:
     needs: [check, build]
     runs-on: ubuntu-latest
-    name: Test crates
+    name: Test origami_rating
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -89,7 +89,7 @@ jobs:
   security:
     needs: [check, build]
     runs-on: ubuntu-latest
-    name: Test crates
+    name: Test origami_security
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -100,7 +100,7 @@ jobs:
   token:
     needs: [check, build]
     runs-on: ubuntu-latest
-    name: Test token
+    name: Test origami_token
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
