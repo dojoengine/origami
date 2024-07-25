@@ -2,82 +2,63 @@
 version = 1
 
 [[package]]
-name = "chess"
-version = "0.6.0-alpha.6"
-dependencies = [
- "dojo",
-]
-
-[[package]]
 name = "cubit"
 version = "1.3.0"
-source = "git+https://github.com/notV4l/cubit.git?branch=cairo_2.7#cadb27aa62509ad9059dfac4f075317893f1f614"
+source = "git+https://github.com/dojoengine/cubit?branch=cairo_2.7#53020b6320a10f2ab55b661be9b8d895aca945e9"
 
 [[package]]
 name = "dojo"
-version = "0.7.2"
-source = "git+https://github.com/dojoengine/dojo?tag=v0.7.2#3da5cad9fdd39b81551e0668015d88262e6c5fc4"
+version = "0.7.3"
+source = "git+https://github.com/dojoengine/dojo?tag=v1.0.0-alpha.3#a6a7724380169372336e886fb36f31f56e7d0d8a"
 dependencies = [
  "dojo_plugin",
 ]
 
 [[package]]
 name = "dojo_plugin"
-version = "0.3.11"
-source = "git+https://github.com/dojoengine/dojo?tag=v0.3.11#1e651b5d4d3b79b14a7d8aa29a92062fcb9e6659"
+version = "0.7.3"
+source = "git+https://github.com/dojoengine/dojo?rev=71b1f1a4#71b1f1a467534cbeeb901356f41e612ed4187bd1"
 
 [[package]]
-name = "governance"
-version = "0.0.0"
-dependencies = [
- "dojo",
-]
-
-[[package]]
-name = "hex_map"
-version = "0.0.0"
+name = "origami_algebra"
+version = "0.1.0"
 dependencies = [
  "cubit",
- "dojo",
- "origami",
 ]
 
 [[package]]
-name = "market"
-version = "0.0.0"
+name = "origami_defi"
+version = "0.1.0"
 dependencies = [
  "cubit",
- "dojo",
 ]
 
 [[package]]
-name = "matchmaker"
-version = "0.0.0"
+name = "origami_governance"
+version = "1.0.0-alpha.0"
 dependencies = [
  "dojo",
- "origami",
 ]
 
 [[package]]
-name = "origami"
-version = "0.7.2"
-dependencies = [
- "cubit",
- "dojo",
-]
+name = "origami_map"
+version = "0.1.0"
 
 [[package]]
-name = "projectile"
-version = "0.0.0"
-dependencies = [
- "cubit",
- "dojo",
- "origami",
-]
+name = "origami_random"
+version = "0.1.0"
 
 [[package]]
-name = "token"
-version = "0.0.0"
+name = "origami_rating"
+version = "0.1.0"
+
+[[package]]
+name = "origami_security"
+version = "0.1.0"
+
+[[package]]
+name = "origami_token"
+version = "1.0.0-alpha.0"
 dependencies = [
  "dojo",
 ]

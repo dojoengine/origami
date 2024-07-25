@@ -1,0 +1,11 @@
+[package]
+name = "origami_algebra"
+version = "0.1.0"
+description = "Algebra library for Dojo based games."
+homepage = "https://github.com/dojoengine/origami/tree/main/crates/algebra"
+
+# TODO: update to edition 2024_07, some traits are deprecated and others no longer accessible.
+# Mostly related to `AddEq` -> `AddAssign` and so on.
+
+[dependencies]
+cubit.workspace = true

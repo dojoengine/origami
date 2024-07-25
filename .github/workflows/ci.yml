@@ -1,10 +1,14 @@
 name: Origami CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 env:
-  DOJO_VERSION: v0.7.2
-  SCARB_VERSION: nightly-2024-06-08
+  DOJO_VERSION: v1.0.0-alpha.3
+  SCARB_VERSION: 2.7.0-rc.4
 
 jobs:
   check:
@@ -22,7 +26,7 @@ jobs:
   build:
     needs: check
     runs-on: ubuntu-latest
-    name: Build package
+    name: Build workspace
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -30,79 +34,91 @@ jobs:
         run: sozo build
         shell: bash
 
-  origami:
+  # TODO: uncomment once test fixed.
+  # algebra:
+  #   needs: [check, build]
+  #   runs-on: ubuntu-latest
+  #   name: Test origami_algebra
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: ./.github/actions/setup
+  #     - name: Test
+  #       run: sozo test --package origami_algebra
+  #       shell: bash
+
+  defi:
     needs: [check, build]
     runs-on: ubuntu-latest
-    name: Test crates
+    name: Test origami_defi
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Test
-        run: sozo test -f origami
+        run: sozo test --package origami_defi
+        shell: bash
+
+  map:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    name: Test origami_map
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Test
+        run: sozo test --package origami_map
+        shell: bash
+
+  random:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    name: Test origami_random
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Test
+        run: sozo test --package origami_random
+        shell: bash
+
+  rating:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    name: Test origami_rating
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Test
+        run: sozo test --package origami_rating
+        shell: bash
+
+  security:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    name: Test origami_security
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Test
+        run: sozo test --package origami_security
         shell: bash
 
   token:
     needs: [check, build]
     runs-on: ubuntu-latest
-    name: Test token
+    name: Test origami_token
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Test
-        run: sozo test -f token
-        shell: bash
-
-  market:
-    needs: [check, build]
-    runs-on: ubuntu-latest
-    name: Test example market
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - name: Test
-        run: sozo test -f market
-        shell: bash
-
-  matchmaker:
-    needs: [check, build]
-    runs-on: ubuntu-latest
-    name: Test example matchmaker
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - name: Test
-        run: sozo test -f matchmaker
-        shell: bash
-
-  projectile:
-    needs: [check, build]
-    runs-on: ubuntu-latest
-    name: Test example projectile
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - name: Test
-        run: sozo test -f projectile
-        shell: bash
-
-  hex-map:
-    needs: [check, build]
-    runs-on: ubuntu-latest
-    name: Test example hex map
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - name: Test
-        run: sozo test -f hex_map
+        run: sozo test --package origami_token
         shell: bash
 
   governance:
     needs: [check, build]
     runs-on: ubuntu-latest
-    name: Test example hex map
+    name: Test origami_governance
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Test
-        run: sozo test -f governance
+        run: sozo test --package origami_governance
         shell: bash

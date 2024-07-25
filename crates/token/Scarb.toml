@@ -1,0 +1,13 @@
+[package]
+name = "origami_token"
+version = "1.0.0-alpha.0"
+description = "Implementations of ERC standards for the Dojo framework."
+homepage = "https://github.com/dojoengine/origami/tree/crates/token"
+
+[dependencies]
+dojo.workspace = true
+
+[lib]
+
+[tool.dojo.world]
+namespace = { default = "origami_token" }
