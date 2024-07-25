@@ -30,16 +30,14 @@
 
 ### Crates
 
-- [algebra](./crates/src/algebra)
-- [defi](./crates//src/defi/)
-- [hex map](./crates/src/map/hex)
-- [random](./crates/src/random)
-- [security](./crates/src/security)
-
-### Examples using the Origami
-- [Simplex noise hex map](./examples/hex_map)
-- [Market](./examples/market)
-- [Projectile](./examples/projectile)
+- [algebra](./crates/algebra)
+- [defi](./crates/defi/)
+- [map](./crates/map)
+- [random](./crates/random)
+- [rating](./crates/rating)
+- [security](./crates/security)
+- [token](./crates/token)
+- [governance](./crates/governance)
 
 ### Easy integration into your project
 
@@ -49,7 +47,7 @@ Add the following to your `[dependencies]`:
 
 ```toml
 [dependencies]
-origami = { git = "https://github.com/dojoengine/origami.git" }
+origami_token = { git = "https://github.com/dojoengine/origami" }
 ```
 
 Now you will be able to use origami like any other Cairo package!
