@@ -1,7 +1,7 @@
 use integer::BoundedInt;
 use starknet::ContractAddress;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-use dojo::test_utils::spawn_test_world;
+use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{ADMIN, ZERO, OWNER, OTHER, SPENDER, RECIPIENT, VALUE, SUPPLY};
 
 use origami_token::tests::utils;
@@ -21,7 +21,6 @@ use origami_token::components::token::erc20::erc20_balance::erc20_balance_compon
 use origami_token::components::tests::mocks::erc20::erc20_balance_mock::{
     erc20_balance_mock, IERC20BalanceMockDispatcher, IERC20BalanceMockDispatcherTrait
 };
-use starknet::storage::{StorageMemberAccessTrait};
 use origami_token::components::tests::token::erc20::test_erc20_allowance::{
     assert_event_approval, assert_only_event_approval
 };
@@ -53,6 +52,7 @@ fn assert_only_event_transfer(
 
 fn STATE() -> (IWorldDispatcher, erc20_balance_mock::ContractState) {
     let world = spawn_test_world(
+        "origami_token",
         array![erc_20_balance_model::TEST_CLASS_HASH, erc_20_allowance_model::TEST_CLASS_HASH,]
     );
 
@@ -157,6 +157,7 @@ fn test_erc20_balance_transfer_internal_to_zero() {
 
 fn setup() -> (IWorldDispatcher, IERC20BalanceMockDispatcher) {
     let world = spawn_test_world(
+        "origami_token",
         array![erc_20_allowance_model::TEST_CLASS_HASH, erc_20_balance_model::TEST_CLASS_HASH,]
     );
 

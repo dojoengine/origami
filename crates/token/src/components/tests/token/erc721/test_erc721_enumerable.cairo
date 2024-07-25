@@ -2,7 +2,7 @@ use starknet::testing;
 use starknet::ContractAddress;
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-use dojo::test_utils::spawn_test_world;
+use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, VALUE, TOKEN_ID, TOKEN_ID_2};
 use origami_token::tests::utils;
 
@@ -25,9 +25,6 @@ use origami_token::components::tests::mocks::erc721::erc721_enumerable_mock::{
     erc721_enumerable_mock, IERC721EnumerableMockDispatcher, IERC721EnumerableMockDispatcherTrait
 };
 
-
-use starknet::storage::{StorageMemberAccessTrait};
-
 use debug::PrintTrait;
 
 //
@@ -36,6 +33,7 @@ use debug::PrintTrait;
 
 fn STATE() -> (IWorldDispatcher, erc721_enumerable_mock::ContractState) {
     let world = spawn_test_world(
+        "origami_token",
         array![
             erc_721_enumerable_index_model::TEST_CLASS_HASH,
             erc_721_enumerable_owner_index_model::TEST_CLASS_HASH,

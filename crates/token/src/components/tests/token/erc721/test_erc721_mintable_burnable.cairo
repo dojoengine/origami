@@ -1,6 +1,6 @@
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-use dojo::test_utils::spawn_test_world;
+use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID};
 
 use origami_token::components::token::erc721::erc721_metadata::{
@@ -21,11 +21,10 @@ use origami_token::components::token::erc721::erc721_mintable::erc721_mintable_c
 use origami_token::components::token::erc721::erc721_burnable::erc721_burnable_component::InternalImpl as ERC721BurnableInternalImpl;
 
 use origami_token::components::tests::mocks::erc721::erc721_mintable_burnable_mock::erc721_mintable_burnable_mock;
-use starknet::storage::{StorageMemberAccessTrait};
-
 
 fn STATE() -> (IWorldDispatcher, erc721_mintable_burnable_mock::ContractState) {
     let world = spawn_test_world(
+        "origami_token",
         array![erc_721_meta_model::TEST_CLASS_HASH, erc_721_balance_model::TEST_CLASS_HASH,]
     );
 

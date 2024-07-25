@@ -3,7 +3,7 @@ use starknet::testing;
 use starknet::ContractAddress;
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-use dojo::test_utils::spawn_test_world;
+use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID};
 use origami_token::tests::utils;
 
@@ -25,7 +25,6 @@ use origami_token::components::token::erc721::erc721_owner::erc721_owner_compone
 };
 
 use origami_token::components::tests::mocks::erc721::erc721_approval_mock::erc721_approval_mock;
-use starknet::storage::{StorageMemberAccessTrait};
 
 use debug::PrintTrait;
 
@@ -71,6 +70,7 @@ fn assert_only_event_approval_for_all(
 
 fn STATE() -> (IWorldDispatcher, erc721_approval_mock::ContractState) {
     let world = spawn_test_world(
+        "origami_token",
         array![
             erc_721_token_approval_model::TEST_CLASS_HASH,
             erc_721_operator_approval_model::TEST_CLASS_HASH,

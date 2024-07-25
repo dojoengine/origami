@@ -3,7 +3,7 @@ use starknet::testing;
 use starknet::ContractAddress;
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-use dojo::test_utils::spawn_test_world;
+use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, VALUE, SUPPLY};
 use origami_token::tests::utils;
 
@@ -15,7 +15,6 @@ use origami_token::components::token::erc20::erc20_allowance::erc20_allowance_co
     Approval, ERC20AllowanceImpl, InternalImpl
 };
 use origami_token::components::tests::mocks::erc20::erc20_allowance_mock::erc20_allowance_mock;
-use starknet::storage::{StorageMemberAccessTrait};
 use debug::PrintTrait;
 
 //
@@ -43,7 +42,7 @@ fn assert_only_event_approval(
 //
 
 fn STATE() -> (IWorldDispatcher, erc20_allowance_mock::ContractState) {
-    let world = spawn_test_world(array![erc_20_allowance_model::TEST_CLASS_HASH,]);
+    let world = spawn_test_world("origami_token", array![erc_20_allowance_model::TEST_CLASS_HASH,]);
 
     let mut state = erc20_allowance_mock::contract_state_for_testing();
     state.world_dispatcher.write(world);

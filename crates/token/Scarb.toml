@@ -10,6 +10,4 @@ dojo.workspace = true
 [lib]
 
 [tool.dojo.world]
-name = "token"
-seed = "token"
 namespace = { default = "origami_token" }

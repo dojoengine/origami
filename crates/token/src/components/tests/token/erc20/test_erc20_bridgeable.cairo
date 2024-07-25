@@ -3,7 +3,7 @@ use starknet::ContractAddress;
 
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-use dojo::test_utils::spawn_test_world;
+use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{
     ZERO, OWNER, SPENDER, RECIPIENT, BRIDGE, DECIMALS, SUPPLY, VALUE
 };
@@ -36,10 +36,10 @@ use origami_token::components::tests::mocks::erc20::erc20_bridgeable_mock::erc20
 use origami_token::components::tests::mocks::erc20::erc20_bridgeable_mock::erc20_bridgeable_mock::{
     ERC20InitializerImpl
 };
-use starknet::storage::{StorageMemberAccessTrait};
 
 fn STATE() -> (IWorldDispatcher, erc20_bridgeable_mock::ContractState) {
     let world = spawn_test_world(
+        "origami_token",
         array![
             erc_20_metadata_model::TEST_CLASS_HASH,
             erc_20_balance_model::TEST_CLASS_HASH,

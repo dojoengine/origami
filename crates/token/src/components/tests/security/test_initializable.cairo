@@ -1,15 +1,14 @@
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-use dojo::test_utils::spawn_test_world;
+use dojo::utils::test::spawn_test_world;
 
 use origami_token::components::security::initializable::{initializable_model, InitializableModel};
 use origami_token::components::security::initializable::initializable_component::{
     InitializableImpl, InternalImpl
 };
 use origami_token::components::tests::mocks::initializable_mock::InitializableMock;
-use starknet::storage::{StorageMemberAccessTrait};
 
 fn STATE() -> (IWorldDispatcher, InitializableMock::ContractState) {
-    let world = spawn_test_world(array![initializable_model::TEST_CLASS_HASH,]);
+    let world = spawn_test_world("origami_token", array![initializable_model::TEST_CLASS_HASH,]);
 
     let mut state = InitializableMock::contract_state_for_testing();
     state.world_dispatcher.write(world);

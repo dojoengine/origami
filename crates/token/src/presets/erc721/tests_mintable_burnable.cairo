@@ -1,6 +1,6 @@
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-use dojo::test_utils::spawn_test_world;
+use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{
     ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID, TOKEN_ID_2, TOKEN_ID_3, VALUE
 };
@@ -40,7 +40,6 @@ use origami_token::presets::erc721::mintable_burnable::{
 use origami_token::presets::erc721::mintable_burnable::ERC721MintableBurnable::{
     ERC721InitializerImpl
 };
-use starknet::storage::{StorageMemberAccessTrait};
 
 use origami_token::components::tests::token::erc721::test_erc721_approval::{
     assert_event_approval, assert_only_event_approval
@@ -56,6 +55,7 @@ use origami_token::components::tests::token::erc721::test_erc721_balance::{
 
 fn setup_uninitialized() -> (IWorldDispatcher, IERC721MintableBurnablePresetDispatcher) {
     let world = spawn_test_world(
+        "origami_token",
         array![
             erc_721_token_approval_model::TEST_CLASS_HASH,
             erc_721_balance_model::TEST_CLASS_HASH,

@@ -2,7 +2,7 @@ use integer::BoundedInt;
 use starknet::ContractAddress;
 use starknet::testing;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-use dojo::test_utils::spawn_test_world;
+use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{ADMIN, ZERO, OWNER, OTHER, SPENDER, RECIPIENT, TOKEN_ID};
 
 use origami_token::tests::utils;
@@ -30,7 +30,6 @@ use origami_token::components::tests::mocks::erc721::erc721_balance_mock::{
 };
 
 use origami_token::components::token::erc721::erc721_mintable::erc721_mintable_component::InternalImpl as ERC721MintableInternalImpl;
-use starknet::storage::{StorageMemberAccessTrait};
 
 use origami_token::components::tests::token::erc721::test_erc721_approval::{
     assert_event_approval, assert_only_event_approval
@@ -71,6 +70,7 @@ fn assert_only_event_transfer(
 
 fn STATE() -> (IWorldDispatcher, erc721_balance_mock::ContractState) {
     let world = spawn_test_world(
+        "origami_token",
         array![
             erc_721_balance_model::TEST_CLASS_HASH, erc_721_token_approval_model::TEST_CLASS_HASH,
         ]
@@ -171,6 +171,7 @@ fn test_erc721_balance_unauthorized() {
 
 fn setup() -> (IWorldDispatcher, IERC721BalanceMockDispatcher, IERC721ReceiverMockDispatcher) {
     let world = spawn_test_world(
+        "origami_token",
         array![
             erc_721_token_approval_model::TEST_CLASS_HASH,
             erc_721_balance_model::TEST_CLASS_HASH,

@@ -5,7 +5,7 @@ use zeroable::Zeroable;
 
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-use dojo::test_utils::spawn_test_world;
+use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{
     ZERO, OWNER, SPENDER, RECIPIENT, BRIDGE, DECIMALS, SUPPLY, VALUE
 };
@@ -47,7 +47,6 @@ use origami_token::presets::erc20::bridgeable::{
     ERC20Bridgeable, IERC20BridgeablePresetDispatcher, IERC20BridgeablePresetDispatcherTrait
 };
 use origami_token::presets::erc20::bridgeable::ERC20Bridgeable::{ERC20InitializerImpl};
-use starknet::storage::{StorageMemberAccessTrait};
 
 use origami_token::components::tests::token::erc20::test_erc20_allowance::{
     assert_event_approval, assert_only_event_approval
@@ -63,6 +62,7 @@ use origami_token::components::tests::token::erc20::test_erc20_balance::{
 
 fn setup() -> (IWorldDispatcher, IERC20BridgeablePresetDispatcher) {
     let world = spawn_test_world(
+        "origami_token",
         array![
             erc_20_allowance_model::TEST_CLASS_HASH,
             erc_20_balance_model::TEST_CLASS_HASH,

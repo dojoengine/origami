@@ -1,6 +1,6 @@
 use integer::BoundedInt;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-use dojo::test_utils::spawn_test_world;
+use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{DECIMALS};
 
 use origami_token::components::token::erc20::erc20_metadata::{
@@ -10,10 +10,9 @@ use origami_token::components::token::erc20::erc20_metadata::erc20_metadata_comp
     ERC20MetadataImpl, ERC20MetadataTotalSupplyImpl, ERC20MetadataTotalSupplyCamelImpl, InternalImpl
 };
 use origami_token::components::tests::mocks::erc20::erc20_metadata_mock::erc20_metadata_mock;
-use starknet::storage::{StorageMemberAccessTrait};
 
 fn STATE() -> (IWorldDispatcher, erc20_metadata_mock::ContractState) {
-    let world = spawn_test_world(array![erc_20_metadata_model::TEST_CLASS_HASH,]);
+    let world = spawn_test_world("origami_token", array![erc_20_metadata_model::TEST_CLASS_HASH,]);
 
     let mut state = erc20_metadata_mock::contract_state_for_testing();
     state.world_dispatcher.write(world);

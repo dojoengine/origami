@@ -4,7 +4,7 @@ use starknet::ContractAddress;
 /// Model
 ///
 
-#[dojo::model]
+#[dojo::model(namespace: "origami_token")]
 #[derive(Copy, Drop, Serde)]
 struct ERC20BalanceModel {
     #[key]
