@@ -1,9 +1,10 @@
-use dojo::test_utils::{spawn_test_world};
+use dojo::contract::{IContractDispatcherTrait, IContractDispatcher};
+use dojo::utils::test::{spawn_test_world};
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use origami_governance::models::{
     governor::{
         GovernorParams, ProposalParams, ProposalCount, LatestProposalIds, governor_params,
-        proposal_params, proposal_count, latest_proposal_ids
+        proposal_params, proposal_count, latest_proposal_ids, proposals, receipts,
     },
     timelock::{
         TimelockParams, PendingAdmin, QueuedTransactions, timelock_params, pending_admin,
@@ -64,6 +65,8 @@ fn setup() -> (Systems, IWorldDispatcher) {
         governor_params::TEST_CLASS_HASH,
         proposal_params::TEST_CLASS_HASH,
         proposal_count::TEST_CLASS_HASH,
+        proposals::TEST_CLASS_HASH,
+        receipts::TEST_CLASS_HASH,
         latest_proposal_ids::TEST_CLASS_HASH,
         timelock_params::TEST_CLASS_HASH,
         pending_admin::TEST_CLASS_HASH,
@@ -76,9 +79,9 @@ fn setup() -> (Systems, IWorldDispatcher) {
         checkpoints::TEST_CLASS_HASH,
         num_checkpoints::TEST_CLASS_HASH,
         nonces::TEST_CLASS_HASH,
-        mock_balances::TEST_CLASS_HASH
+        mock_balances::TEST_CLASS_HASH,
     ];
-    let world = spawn_test_world(models);
+    let world = spawn_test_world("origami_governance", models);
 
     let contract_address = world
         .deploy_contract(1, governor::TEST_CLASS_HASH.try_into().unwrap(), array![].span());
@@ -98,9 +101,15 @@ fn setup() -> (Systems, IWorldDispatcher) {
 
     let systems = Systems { governor, timelock, token, mock };
 
+    let timelock_selector = IContractDispatcher { contract_address: timelock.contract_address }
+        .selector();
+    let token_selector = IContractDispatcher { contract_address: token.contract_address }
+        .selector();
+
     // should use constructor now
-    systems.governor.initialize(timelock.contract_address, token.contract_address, GOVERNOR());
+    systems.governor.initialize(timelock_selector, token_selector, GOVERNOR());
     systems.token.initialize('Gov Token', 'GOV', 18, INITIAL_SUPPLY, GOVERNOR());
+    // Timelock is initialized when set_proposal_params are called on a governor.
     // systems.timelock.initialize(systems.governor.contract_address, DAY * 2);
     (systems, world)
 }

@@ -25,16 +25,16 @@ mod timelock {
                 delay <= MAXIMUM_DELAY, "Timelock::initialize: Delay must not exceed maximum delay."
             );
 
-            let contract = self.selector();
-            let curr_params = get!(world, contract, TimelockParams);
+            let contract_selector = self.selector();
+            let curr_params = get!(world, contract_selector, TimelockParams);
             assert!(
                 curr_params.admin == Zeroable::zero(), "Timelock::initialize: Already initialized."
             );
-            set!(world, TimelockParams { contract, admin, delay });
+            set!(world, TimelockParams { contract_selector, admin, delay });
             emit!(
                 world,
-                timelockevents::NewAdmin { contract, address: admin },
-                timelockevents::NewDelay { contract, value: delay }
+                timelockevents::NewAdmin { contract_selector, address: admin },
+                timelockevents::NewDelay { contract_selector, value: delay }
             );
         }
 
@@ -44,7 +44,7 @@ mod timelock {
             new_implementation: ClassHash,
             eta: u64
         ) {
-            let params = get!(world, get_contract_address(), TimelockParams);
+            let params = get!(world, self.selector(), TimelockParams);
             assert!(
                 get_caller_address() == params.admin,
                 "Timelock::execute_transaction: Call must come from admin."
@@ -65,23 +65,27 @@ mod timelock {
             set!(
                 world,
                 QueuedTransactions {
-                    contract_selector: target_selector, class_hash: new_implementation, queued: false
+                    contract_selector: target_selector,
+                    class_hash: new_implementation,
+                    queued: false
                 }
             );
             let upgraded_class_hash = world.upgrade_contract(target_selector, new_implementation);
             emit!(
                 world,
-                timelockevents::ExecuteTransaction { target_selector, class_hash: upgraded_class_hash, eta }
+                timelockevents::ExecuteTransaction {
+                    target_selector, class_hash: upgraded_class_hash, eta
+                }
             );
         }
 
         fn que_transaction(
             ref world: IWorldDispatcher,
-            target: ContractAddress,
+            target_selector: felt252,
             new_implementation: ClassHash,
             eta: u64
         ) {
-            let params = get!(world, get_contract_address(), TimelockParams);
+            let params = get!(world, self.selector(), TimelockParams);
             assert!(
                 get_caller_address() == params.admin,
                 "Timelock::queue_transaction: Call must come from admin."
@@ -93,18 +97,20 @@ mod timelock {
             set!(
                 world,
                 QueuedTransactions {
-                    contract: target, class_hash: new_implementation, queued: true
+                    contract_selector: target_selector, class_hash: new_implementation, queued: true
                 }
             );
             emit!(
                 world,
-                timelockevents::QueueTransaction { target, class_hash: new_implementation, eta }
+                timelockevents::QueueTransaction {
+                    target_selector, class_hash: new_implementation, eta
+                }
             );
         }
 
         fn cancel_transaction(
             ref world: IWorldDispatcher,
-            target: ContractAddress,
+            target_selector: felt252,
             new_implementation: ClassHash,
             eta: u64
         ) {
@@ -116,12 +122,16 @@ mod timelock {
             set!(
                 world,
                 QueuedTransactions {
-                    contract: target, class_hash: new_implementation, queued: false
+                    contract_selector: target_selector,
+                    class_hash: new_implementation,
+                    queued: false
                 }
             );
             emit!(
                 world,
-                timelockevents::CancelTransaction { target, class_hash: new_implementation, eta }
+                timelockevents::CancelTransaction {
+                    target_selector, class_hash: new_implementation, eta
+                }
             );
         }
     }

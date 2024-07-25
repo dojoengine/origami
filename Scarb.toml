@@ -7,8 +7,7 @@ members = [
     "crates/rating",
     "crates/security",
     "crates/token",
-# WIP porting Governance to Cairo 2.7 and Dojo 1.0.0.
-#    "crates/governance"
+    "crates/governance"
 ]
 
 [workspace.dependencies]

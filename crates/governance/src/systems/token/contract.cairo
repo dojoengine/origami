@@ -1,13 +1,13 @@
 #[dojo::contract]
 mod governancetoken {
+    use integer::BoundedInt;
     use origami_governance::libraries::events::tokenevents;
     use origami_governance::models::token::{
         Allowances, Metadata, TotalSupply, Balances, Delegates, NumCheckpoints, Checkpoints,
         Checkpoint
     };
     use origami_governance::systems::token::interface::IGovernanceToken;
-    use integer::BoundedInt;
-    use starknet::{ContractAddress, get_caller_address, get_contract_address, get_block_timestamp,};
+    use starknet::{ContractAddress, get_caller_address, get_block_timestamp,};
 
     #[abi(embed_v0)]
     impl GovernanceTokenImpl of IGovernanceToken<ContractState> {
@@ -19,9 +19,9 @@ mod governancetoken {
             recipient: ContractAddress
         ) {
             let world = self.world_dispatcher.read();
-            let token = get_contract_address();
-            let metadata = get!(world, token, Metadata);
-            let total_supply = get!(world, token, TotalSupply).amount;
+            let token_selector = self.selector();
+            let metadata = get!(world, token_selector, Metadata);
+            let total_supply = get!(world, token_selector, TotalSupply).amount;
             assert!(
                 metadata.name.is_zero()
                     && metadata.symbol.is_zero()
@@ -32,8 +32,8 @@ mod governancetoken {
             set!(
                 world,
                 (
-                    Metadata { token, name, symbol, decimals },
-                    TotalSupply { token, amount: initial_supply },
+                    Metadata { token_selector, name, symbol, decimals },
+                    TotalSupply { token_selector, amount: initial_supply },
                     Balances { account: recipient, amount: initial_supply }
                 )
             );

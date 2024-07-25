@@ -6,8 +6,8 @@ use starknet::{ContractAddress, ClassHash};
 struct GovernorParams {
     #[key]
     contract_selector: felt252,
-    timelock: ContractAddress,
-    gov_token: ContractAddress,
+    timelock: felt252,
+    gov_token: felt252,
     guardian: ContractAddress,
 }
 

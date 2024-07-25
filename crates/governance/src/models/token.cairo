@@ -4,7 +4,7 @@ use starknet::ContractAddress;
 #[derive(Copy, Drop, Serde)]
 struct Metadata {
     #[key]
-    token: ContractAddress,
+    token_selector: felt252,
     name: felt252,
     symbol: felt252,
     decimals: u8,
@@ -14,7 +14,7 @@ struct Metadata {
 #[derive(Copy, Drop, Serde)]
 struct TotalSupply {
     #[key]
-    token: ContractAddress,
+    token_selector: felt252,
     amount: u128,
 }
 

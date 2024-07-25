@@ -1,3 +1,4 @@
+use dojo::contract::{IContractDispatcherTrait, IContractDispatcher};
 use dojo::world::IWorldDispatcherTrait;
 use origami_governance::models::token::{
     Metadata, TotalSupply, Allowances, Balances, Delegates, Checkpoints, NumCheckpoints
@@ -10,12 +11,15 @@ use starknet::testing::{set_contract_address, set_block_timestamp};
 fn test_initialize_token() {
     let (systems, world) = testing::setup();
 
-    let metadata = get!(world, systems.token.contract_address, Metadata);
+    let token_selector = IContractDispatcher { contract_address: systems.token.contract_address }
+        .selector();
+
+    let metadata = get!(world, token_selector, Metadata);
     assert!(metadata.name == 'Gov Token', "Name is incorrect");
     assert!(metadata.symbol == 'GOV', "Symbol is incorrect");
     assert!(metadata.decimals == 18, "Decimals is incorrect");
 
-    let total_supply = get!(world, systems.token.contract_address, TotalSupply).amount;
+    let total_supply = get!(world, token_selector, TotalSupply).amount;
     assert!(total_supply == 100_000_000 * testing::E18, "Total supply is incorrect");
 
     let governor_balance = get!(world, testing::GOVERNOR(), Balances).amount;

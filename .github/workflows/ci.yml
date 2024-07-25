@@ -111,3 +111,14 @@ jobs:
       - name: Test
         run: sozo test --package origami_token
         shell: bash
+
+  governance:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    name: Test origami_governance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Test
+        run: sozo test --package origami_governance
+        shell: bash
