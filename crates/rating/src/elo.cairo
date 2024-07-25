@@ -114,10 +114,6 @@ impl Private of PrivateTrait {
 
 #[cfg(test)]
 mod tests {
-    // Core imports
-
-    use debug::PrintTrait;
-
     // Local imports
 
     use super::EloTrait;

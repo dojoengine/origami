@@ -39,8 +39,7 @@ pub impl CommitmentImpl of CommitmentTrait {
 mod tests {
     // Core imports
 
-    use debug::PrintTrait;
-    use poseidon::poseidon_hash_span;
+    use core::poseidon::poseidon_hash_span;
 
     // Local imports
 

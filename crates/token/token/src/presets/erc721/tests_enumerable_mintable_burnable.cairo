@@ -16,7 +16,6 @@ use origami_token::components::token::erc721::erc721_approval::erc721_approval_c
     Approval, ApprovalForAll, ERC721ApprovalImpl, InternalImpl as ERC721ApprovalInternalImpl
 };
 
-
 use origami_token::components::token::erc721::erc721_metadata::{
     erc_721_meta_model, ERC721MetaModel,
 };

@@ -154,10 +154,6 @@ pub impl DeckImpl of DeckTrait {
 
 #[cfg(test)]
 mod tests {
-    // Core imports
-
-    use debug::PrintTrait;
-
     // Local imports
 
     use super::DeckTrait;
