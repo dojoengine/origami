@@ -1,0 +1,50 @@
+[package]
+cairo-version = "2.7.0-rc.3"
+name = "dojo_world"
+version = "0.0.1"
+
+[cairo]
+sierra-replace-ids = true
+
+[scripts]
+migrate = "sozo build && sozo migrate apply"
+
+[dependencies]
+dojo = { path = "../../dojo/crates/dojo-core" }
+origami_quest = { path = "../" }
+
+[[target.dojo]]
+build-external-contracts = [
+    "origami_quest::models::quest::Quest",
+    "origami_quest::models::quest::QuestCounter",
+    "origami_quest::models::quest::QuestClaimed",
+]
+
+
+[tool.dojo]
+initializer_class_hash = "0xbeef"
+
+[tool.dojo.env]
+rpc_url = "http://localhost:5050/"
+# Second account
+account_address = "0xe29882a1fcba1e7e10cad46212257fea5c752a4f9b1b1ec683c503a2cf5c8a"
+private_key = "0x14d6672dcb4b77ca36a887e9a11cd9d637d5012468175829e9c6e770c61642"
+# #world_address = "0xb4079627ebab1cd3cf9fd075dda1ad2454a7a448bf659591f259efa2519b18"  # Uncomment and update this line with your world address.
+
+[tool.dojo.world.namespace]
+default = "dojo_world"
+mappings = { "origami_quest" = "dojo_world"}
+
+[tool.dojo.world]
+seed = "dojo_world"
+name = "Dojo starter"
+description = "The official Dojo Starter guide, the quickest and most streamlined way to get your Dojo Autonomous World up and running. This guide will assist you with the initial setup, from cloning the repository to deploying your world."
+cover_uri = "file://assets/cover.png"
+icon_uri = "file://assets/icon.png"
+website = "https://github.com/dojoengine/dojo-starter"
+
+[tool.dojo.world.socials]
+x = "https://x.com/ohayo_dojo"
+discord = "https://discord.gg/FB2wR6uF"
+github = "https://github.com/dojoengine/dojo-starter"
+telegram = "https://t.me/dojoengine"

@@ -9,7 +9,6 @@ source = "git+https://github.com/dojoengine/cubit?branch=cairo_2.7#53020b6320a10
 [[package]]
 name = "dojo"
 version = "0.7.3"
-source = "git+https://github.com/dojoengine/dojo?tag=v1.0.0-alpha.3#a6a7724380169372336e886fb36f31f56e7d0d8a"
 dependencies = [
  "dojo_plugin",
 ]
@@ -43,6 +42,13 @@ dependencies = [
 [[package]]
 name = "origami_map"
 version = "0.1.0"
+
+[[package]]
+name = "origami_quest"
+version = "1.0.0-alpha.0"
+dependencies = [
+ "dojo",
+]
 
 [[package]]
 name = "origami_random"

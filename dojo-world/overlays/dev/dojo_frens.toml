@@ -1,0 +1,4 @@
+tag = "dojo_world-dojo_frens"
+reads = []
+writes = ["dojo_world-DojoFren"]
+init_calldata = []

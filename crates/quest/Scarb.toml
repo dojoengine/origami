@@ -1,0 +1,19 @@
+[package]
+name = "origami_quest"
+version = "1.0.0-alpha.0"
+description = "Quests"
+homepage = "https://github.com/dojoengine/origami/tree/crates/quest"
+
+[dependencies]
+dojo.workspace = true
+
+[scripts]
+build = "sozo build --manifest-path ./Scarb.toml"
+plan = "sozo migrate plan --manifest-path ./Scarb.toml"
+migrate = "sozo migrate apply --manifest-path ./Scarb.toml"
+
+[lib]
+
+[tool.dojo.world]
+namespace = { default = "origami_quest" }
+
