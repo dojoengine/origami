@@ -50,7 +50,10 @@ mod presets {
     }
 }
 
-#[cfg(test)]
+// This ensures that the tests libs are also available
+// for downstream crates using origami_token, without running
+// origami tokens.
+#[cfg(target: "test")]
 mod tests {
     mod constants;
     mod utils;
