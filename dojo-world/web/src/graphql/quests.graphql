@@ -1,0 +1,19 @@
+query Quests {
+  dojoWorldQuestModels {
+    edges {
+      node {
+        id
+        name
+        desc
+        image_uri {
+          Some
+        }
+        quest_type
+        external {
+          Some
+        }
+      }
+    }
+  }
+}
+

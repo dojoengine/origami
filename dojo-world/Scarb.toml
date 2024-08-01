@@ -25,11 +25,16 @@ build-external-contracts = [
 initializer_class_hash = "0xbeef"
 
 [tool.dojo.env]
-rpc_url = "http://localhost:5050/"
-# Second account
-account_address = "0xe29882a1fcba1e7e10cad46212257fea5c752a4f9b1b1ec683c503a2cf5c8a"
-private_key = "0x14d6672dcb4b77ca36a887e9a11cd9d637d5012468175829e9c6e770c61642"
-# #world_address = "0xb4079627ebab1cd3cf9fd075dda1ad2454a7a448bf659591f259efa2519b18"  # Uncomment and update this line with your world address.
+rpc_url = "http://localhost:8001/x/starknet/sepolia/0_7"
+account_address = "0x6bd82a20984e638c8e1d45770e2924e274e315b9609eb15c26384eac0094cf1"
+private_key = "0x15ffe6ee85bcd75f93b395ec4471819d5dbebb77ea2f2a50b30ce7f67372ce4"
+# #world_address = "0x30d038e8f6236e35f26d22858c58b89c373ea35adf7ce3dba37eca01bd07ee7"
+
+# # rpc_url = "http://localhost:5050/"
+# # Second account
+# account_address = "0xe29882a1fcba1e7e10cad46212257fea5c752a4f9b1b1ec683c503a2cf5c8a"
+# private_key = "0x14d6672dcb4b77ca36a887e9a11cd9d637d5012468175829e9c6e770c61642"
+# # #world_address = "0xb4079627ebab1cd3cf9fd075dda1ad2454a7a448bf659591f259efa2519b18"  # Uncomment and update this line with your world address.
 
 [tool.dojo.world.namespace]
 default = "dojo_world"
