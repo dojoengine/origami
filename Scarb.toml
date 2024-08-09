@@ -1,5 +1,4 @@
 [workspace]
-version = "1.0.0-alpha.4"
 members = [
     "crates/algebra",
     "crates/defi",
@@ -10,6 +9,9 @@ members = [
     "crates/token",
     "crates/governance",
 ]
+
+[workspace.package]
+version = "1.0.0-alpha.4"
 
 [workspace.dependencies]
 cubit = { git = "https://github.com/dojoengine/cubit", branch = "cairo_2.7" }
