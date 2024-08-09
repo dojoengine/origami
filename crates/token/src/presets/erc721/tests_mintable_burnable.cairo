@@ -89,10 +89,10 @@ fn setup_uninitialized() -> (IWorldDispatcher, IERC721MintableBurnablePresetDisp
 
     world
         .grant_owner(
-            starknet::get_contract_address(), dojo::utils::bytearray_hash(@"origami_token")
+            dojo::utils::bytearray_hash(@"origami_token"), starknet::get_contract_address()
         );
-    world.grant_owner(OWNER(), dojo::utils::bytearray_hash(@"origami_token"));
-    world.grant_owner(SPENDER(), dojo::utils::bytearray_hash(@"origami_token"));
+    world.grant_owner(dojo::utils::bytearray_hash(@"origami_token"), OWNER());
+    world.grant_owner(dojo::utils::bytearray_hash(@"origami_token"), SPENDER());
 
     (world, erc721_mintable_burnable_dispatcher)
 }
