@@ -7,12 +7,12 @@ members = [
     "crates/rating",
     "crates/security",
     "crates/token",
-    "crates/governance"
+    "crates/governance",
 ]
 
 [workspace.dependencies]
 cubit = { git = "https://github.com/dojoengine/cubit", branch = "cairo_2.7" }
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.0.0-alpha.3" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.0.0-alpha.4" }
 starknet = "2.7.0-rc.3"
 
 # Scripts are not supported for virtual workspaces.
