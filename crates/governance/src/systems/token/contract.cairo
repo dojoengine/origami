@@ -1,6 +1,6 @@
 #[dojo::contract]
 mod governancetoken {
-    use integer::BoundedInt;
+    use core::num::traits::Bounded;
     use origami_governance::libraries::events::tokenevents;
     use origami_governance::models::token::{
         Allowances, Metadata, TotalSupply, Balances, Delegates, NumCheckpoints, Checkpoints,
@@ -61,7 +61,7 @@ mod governancetoken {
             let spender = get_caller_address();
             let spender_allowance = get!(world, (from, spender), Allowances).amount;
 
-            if spender != from && spender_allowance != BoundedInt::max() {
+            if spender != from && spender_allowance != Bounded::<u128>::MAX {
                 assert!(
                     spender_allowance >= amount,
                     "Governance Token: transfer amount exceeds spender allowance"

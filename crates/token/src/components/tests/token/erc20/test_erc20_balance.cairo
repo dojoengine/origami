@@ -1,4 +1,4 @@
-use integer::BoundedInt;
+use core::num::traits::Bounded;
 use starknet::ContractAddress;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::utils::test::spawn_test_world;
@@ -108,7 +108,7 @@ fn test_erc20_balance_update_balance_sub_overflow() {
 fn test_erc20_balance_update_balance_add_overflow() {
     let (_world, mut state) = STATE();
 
-    state.erc20_balance.update_balance(ZERO(), 0, BoundedInt::max());
+    state.erc20_balance.update_balance(ZERO(), 0, Bounded::<u256>::MAX);
     state.erc20_balance.update_balance(ZERO(), 0, 1);
 }
 

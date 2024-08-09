@@ -1,4 +1,4 @@
-use integer::BoundedInt;
+use core::num::traits::Bounded;
 use starknet::ContractAddress;
 use starknet::testing;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};

@@ -3,7 +3,7 @@ use starknet::ContractAddress;
 use starknet::testing;
 use zeroable::Zeroable;
 
-use integer::BoundedInt;
+use core::num::traits::Bounded;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{
@@ -85,9 +85,9 @@ fn setup() -> (IWorldDispatcher, IERC20BridgeablePresetDispatcher) {
         .grant_owner(
             dojo::utils::bytearray_hash(@"origami_token"), starknet::get_contract_address()
         );
-    world.grant_owner(dojo::utils::bytearray_hash(@"origami_token"), OWNER());
-    world.grant_owner(dojo::utils::bytearray_hash(@"origami_token"), BRIDGE());
-    world.grant_owner(dojo::utils::bytearray_hash(@"origami_token"), SPENDER());
+    world.grant_owner( dojo::utils::bytearray_hash(@"origami_token"), OWNER());
+    world.grant_owner( dojo::utils::bytearray_hash(@"origami_token"),BRIDGE());
+    world.grant_owner( dojo::utils::bytearray_hash(@"origami_token"),SPENDER());
 
     // initialize contracts
     erc20_bridgeable_dispatcher.initializer("NAME", "SYMBOL", SUPPLY, OWNER(), BRIDGE());

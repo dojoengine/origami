@@ -1,7 +1,7 @@
 use starknet::testing;
 use starknet::ContractAddress;
 
-use integer::BoundedInt;
+use core::num::traits::Bounded;
 use dojo::contract::{IContractDispatcherTrait, IContractDispatcher};
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::utils::test::spawn_test_world;

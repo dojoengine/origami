@@ -1,4 +1,4 @@
-use integer::BoundedInt;
+use core::num::traits::Bounded;
 use integer::u256;
 use integer::u256_from_felt252;
 use origami_token::tests::utils;
