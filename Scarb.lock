@@ -35,7 +35,7 @@ dependencies = [
 
 [[package]]
 name = "origami_governance"
-version = "1.0.0-alpha.0"
+version = "1.0.0-alpha.4"
 dependencies = [
  "dojo",
 ]
@@ -58,7 +58,7 @@ version = "0.1.0"
 
 [[package]]
 name = "origami_token"
-version = "1.0.0-alpha.0"
+version = "1.0.0-alpha.4"
 dependencies = [
  "dojo",
 ]
