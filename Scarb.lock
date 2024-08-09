@@ -9,7 +9,7 @@ source = "git+https://github.com/dojoengine/cubit?branch=cairo_2.7#53020b6320a10
 [[package]]
 name = "dojo"
 version = "0.7.3"
-source = "git+https://github.com/dojoengine/dojo?tag=v1.0.0-alpha.3#a6a7724380169372336e886fb36f31f56e7d0d8a"
+source = "git+https://github.com/dojoengine/dojo?tag=v1.0.0-alpha.4#d08c46191fc1b4c4f90816cef4787cb8db02988f"
 dependencies = [
  "dojo_plugin",
 ]
@@ -21,44 +21,44 @@ source = "git+https://github.com/dojoengine/dojo?rev=71b1f1a4#71b1f1a467534cbeeb
 
 [[package]]
 name = "origami_algebra"
-version = "0.1.0"
+version = "1.0.0-alpha.4"
 dependencies = [
  "cubit",
 ]
 
 [[package]]
 name = "origami_defi"
-version = "0.1.0"
+version = "1.0.0-alpha.4"
 dependencies = [
  "cubit",
 ]
 
 [[package]]
 name = "origami_governance"
-version = "1.0.0-alpha.0"
+version = "1.0.0-alpha.4"
 dependencies = [
  "dojo",
 ]
 
 [[package]]
 name = "origami_map"
-version = "0.1.0"
+version = "1.0.0-alpha.4"
 
 [[package]]
 name = "origami_random"
-version = "0.1.0"
+version = "1.0.0-alpha.4"
 
 [[package]]
 name = "origami_rating"
-version = "0.1.0"
+version = "1.0.0-alpha.4"
 
 [[package]]
 name = "origami_security"
-version = "0.1.0"
+version = "1.0.0-alpha.4"
 
 [[package]]
 name = "origami_token"
-version = "1.0.0-alpha.0"
+version = "1.0.0-alpha.4"
 dependencies = [
  "dojo",
 ]

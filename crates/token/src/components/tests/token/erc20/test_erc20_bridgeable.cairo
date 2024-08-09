@@ -66,7 +66,7 @@ fn STATE() -> (IWorldDispatcher, erc20_bridgeable_mock::ContractState) {
     state.world_dispatcher.write(world);
 
     world
-        .grant_owner(starknet::get_contract_address(), dojo::contract::IContract::selector(@state));
+        .grant_owner(dojo::contract::IContract::selector(@state), starknet::get_contract_address());
 
     (world, state)
 }
