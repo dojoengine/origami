@@ -85,6 +85,11 @@ fn setup_uninitialized() -> (IWorldDispatcher, IERC721MintableBurnablePresetDisp
             .deploy_contract('salt', ERC721MintableBurnable::TEST_CLASS_HASH.try_into().unwrap())
     };
 
+    world
+        .grant_owner(
+            dojo::utils::bytearray_hash(@"origami_token"),
+            erc721_mintable_burnable_dispatcher.contract_address
+        );
 
     (world, erc721_mintable_burnable_dispatcher)
 }

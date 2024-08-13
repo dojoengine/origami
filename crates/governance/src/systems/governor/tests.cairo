@@ -126,9 +126,6 @@ fn test_queue_proposal() {
     let proposal = get!(world, 1, Proposals).proposal;
     assert!(proposal.eta == 'ts1' + DELAY * 2 + PERIOD + 1, "eta is not correct");
 }
-
-
-
 // TODO: update later
 // #[test]
 // fn test_execute_proposal() {
@@ -167,3 +164,5 @@ fn test_queue_proposal() {
 //     IHelloStarknetUgradedDispatcher { contract_address: systems.mock.contract_address }
 //         .decrease_balance(1000);
 // }
+
+

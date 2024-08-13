@@ -222,7 +222,7 @@ fn test_transfer_from() {
     assert(erc20_balance_mock.balance_of(RECIPIENT()) == VALUE, 'Should eq amount');
     assert(erc20_balance_mock.balance_of(OWNER()) == SUPPLY - VALUE, 'Should eq suppy - amount');
     assert(erc20_balance_mock.allowance(OWNER(), SPENDER()) == 0, 'Should eq 0');
-// assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
+    // assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
 }
 
 #[test]
@@ -291,5 +291,5 @@ fn test_transferFrom() {
     assert(erc20_balance_mock.balance_of(RECIPIENT()) == VALUE, 'Should eq amount');
     assert(erc20_balance_mock.balance_of(OWNER()) == SUPPLY - VALUE, 'Should eq suppy - amount');
     assert(erc20_balance_mock.allowance(OWNER(), SPENDER()) == 0, 'Should eq 0');
-// assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
+    // assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
 }

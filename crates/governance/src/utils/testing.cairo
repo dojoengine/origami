@@ -105,33 +105,6 @@ fn setup() -> (Systems, IWorldDispatcher) {
     let token_selector = IContractDispatcher { contract_address: token.contract_address }
         .selector();
 
-   
-
-    // let selectors = array![
-    //     selector_from_tag!("origami_governance-GovernorParams"),
-    //     selector_from_tag!("origami_governance-ProposalParams"),
-    //     selector_from_tag!("origami_governance-ProposalCount"),
-    //     selector_from_tag!("origami_governance-Proposals"),
-    //     selector_from_tag!("origami_governance-Receipts"),
-    //     selector_from_tag!("origami_governance-LatestProposalIds"),
-    //     //
-    //     selector_from_tag!("origami_governance-TimelockParams"),
-    //     selector_from_tag!("origami_governance-PendingAdmin"),
-    //     selector_from_tag!("origami_governance-QueuedTransactions"),
-    //     //
-    //     selector_from_tag!("origami_governance-Metadata"),
-    //     selector_from_tag!("origami_governance-TotalSupply"),
-    //     selector_from_tag!("origami_governance-Allowances"),
-    //     selector_from_tag!("origami_governance-Balances"),
-    //     selector_from_tag!("origami_governance-Delegates"),
-    //     selector_from_tag!("origami_governance-Checkpoints"),
-    //     selector_from_tag!("origami_governance-NumCheckpoints"),
-    //     selector_from_tag!("origami_governance-Nonces"),
-    //     //
-    //     selector_from_tag!("origami_governance-MockBalances"),
-
-    // ];
-
     let contract_addresses = array![
         governor.contract_address,
         timelock.contract_address,
@@ -139,7 +112,11 @@ fn setup() -> (Systems, IWorldDispatcher) {
         mock.contract_address,
     ];
 
-    world_utils::grant_writer(world, array![dojo::utils::bytearray_hash(@"origami_governance")].span(), contract_addresses.span());
+    world_utils::grant_writer(
+        world,
+        array![dojo::utils::bytearray_hash(@"origami_governance")].span(),
+        contract_addresses.span()
+    );
 
     // should use constructor now
     systems.governor.initialize(timelock_selector, token_selector, GOVERNOR());

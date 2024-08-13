@@ -1,5 +1,5 @@
-use starknet::{ClassHash, ContractAddress};
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
+use starknet::{ClassHash, ContractAddress};
 
 pub fn get_contract_infos(
     world: IWorldDispatcher, resource: felt252

@@ -286,7 +286,9 @@ mod governor {
             let queued_tx = get!(world, (target_selector, class_hash), QueuedTransactions).queued;
             assert!(!queued_tx, "Governor::queue_or_revert: proposal action already queued at eta");
 
-            let (_, timelock_addr) = world_utils::get_contract_infos(world, get!(world, self.selector(), GovernorParams).timelock);
+            let (_, timelock_addr) = world_utils::get_contract_infos(
+                world, get!(world, self.selector(), GovernorParams).timelock
+            );
             let timelock = ITimelockDispatcher { contract_address: timelock_addr };
             timelock.que_transaction(target_selector, class_hash, eta);
         }

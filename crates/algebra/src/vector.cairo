@@ -20,7 +20,7 @@ trait VectorTrait<T> {
     fn dot(self: Vector<T>, vector: Vector<T>) -> T;
 }
 
-impl VectorImpl<T, +Mul<T>, +AddAssign<T,T>, +Zeroable<T>, +Copy<T>, +Drop<T>,> of VectorTrait<T> {
+impl VectorImpl<T, +Mul<T>, +AddAssign<T, T>, +Zeroable<T>, +Copy<T>, +Drop<T>,> of VectorTrait<T> {
     fn new(data: Span<T>) -> Vector<T> {
         Vector { data }
     }
@@ -51,7 +51,7 @@ impl VectorImpl<T, +Mul<T>, +AddAssign<T,T>, +Zeroable<T>, +Copy<T>, +Drop<T>,> 
 }
 
 impl VectorAdd<
-    T, +Mul<T>, +AddAssign<T,T>, +Add<T>, +Zeroable<T>, +Copy<T>, +Drop<T>,
+    T, +Mul<T>, +AddAssign<T, T>, +Add<T>, +Zeroable<T>, +Copy<T>, +Drop<T>,
 > of Add<Vector<T>> {
     fn add(mut lhs: Vector<T>, mut rhs: Vector<T>) -> Vector<T> {
         // [Check] Dimesions are compatible
@@ -71,7 +71,7 @@ impl VectorAdd<
 }
 
 impl VectorSub<
-    T, +Mul<T>, +AddAssign<T,T>, +Sub<T>, +Zeroable<T>, +Copy<T>, +Drop<T>,
+    T, +Mul<T>, +AddAssign<T, T>, +Sub<T>, +Zeroable<T>, +Copy<T>, +Drop<T>,
 > of Sub<Vector<T>> {
     fn sub(mut lhs: Vector<T>, mut rhs: Vector<T>) -> Vector<T> {
         // [Check] Dimesions are compatible

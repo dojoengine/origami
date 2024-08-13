@@ -82,7 +82,11 @@ fn setup_uninitialized() -> (IWorldDispatcher, IERC721EnumMintBurnPresetDispatch
             .deploy_contract('salt', ERC721EnumMintBurn::TEST_CLASS_HASH.try_into().unwrap())
     };
 
-    world.grant_owner(dojo::utils::bytearray_hash(@"origami_token"), erc721_enum_mint_burn_dispatcher.contract_address);
+    world
+        .grant_owner(
+            dojo::utils::bytearray_hash(@"origami_token"),
+            erc721_enum_mint_burn_dispatcher.contract_address
+        );
     world.grant_owner(dojo::utils::bytearray_hash(@"origami_token"), OWNER());
 
     (world, erc721_enum_mint_burn_dispatcher)
