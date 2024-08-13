@@ -1,7 +1,7 @@
 use origami_token::components::token::erc721::erc721_approval::IERC721Approval;
 use starknet::testing;
 use starknet::ContractAddress;
-use integer::BoundedInt;
+use core::num::traits::Bounded;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, TOKEN_ID};

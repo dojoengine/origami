@@ -1,4 +1,4 @@
-use integer::BoundedInt;
+use core::num::traits::Bounded;
 use starknet::ContractAddress;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::utils::test::spawn_test_world;
@@ -108,7 +108,7 @@ fn test_erc20_balance_update_balance_sub_overflow() {
 fn test_erc20_balance_update_balance_add_overflow() {
     let (_world, mut state) = STATE();
 
-    state.erc20_balance.update_balance(ZERO(), 0, BoundedInt::max());
+    state.erc20_balance.update_balance(ZERO(), 0, Bounded::<u256>::MAX);
     state.erc20_balance.update_balance(ZERO(), 0, 1);
 }
 
@@ -164,9 +164,7 @@ fn setup() -> (IWorldDispatcher, IERC20BalanceMockDispatcher) {
     // deploy contract
     let mut erc20_balance_mock_dispatcher = IERC20BalanceMockDispatcher {
         contract_address: world
-            .deploy_contract(
-                'salt', erc20_balance_mock::TEST_CLASS_HASH.try_into().unwrap(), array![].span()
-            )
+            .deploy_contract('salt', erc20_balance_mock::TEST_CLASS_HASH.try_into().unwrap())
     };
 
     // setup auth

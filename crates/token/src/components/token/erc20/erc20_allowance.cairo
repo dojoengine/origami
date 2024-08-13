@@ -33,7 +33,7 @@ trait IERC20Allowance<TState> {
 mod erc20_allowance_component {
     use super::ERC20AllowanceModel;
     use super::IERC20Allowance;
-    use integer::BoundedInt;
+    use core::num::traits::Bounded;
     use starknet::ContractAddress;
     use starknet::{get_contract_address, get_caller_address};
     use dojo::world::{

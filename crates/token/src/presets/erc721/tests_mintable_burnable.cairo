@@ -1,4 +1,4 @@
-use integer::BoundedInt;
+use core::num::traits::Bounded;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{
@@ -82,17 +82,14 @@ fn setup_uninitialized() -> (IWorldDispatcher, IERC721MintableBurnablePresetDisp
     // deploy contract
     let mut erc721_mintable_burnable_dispatcher = IERC721MintableBurnablePresetDispatcher {
         contract_address: world
-            .deploy_contract(
-                'salt', ERC721MintableBurnable::TEST_CLASS_HASH.try_into().unwrap(), array![].span()
-            )
+            .deploy_contract('salt', ERC721MintableBurnable::TEST_CLASS_HASH.try_into().unwrap())
     };
 
     world
         .grant_owner(
-            dojo::utils::bytearray_hash(@"origami_token"), starknet::get_contract_address()
+            dojo::utils::bytearray_hash(@"origami_token"),
+            erc721_mintable_burnable_dispatcher.contract_address
         );
-    world.grant_owner(dojo::utils::bytearray_hash(@"origami_token"), OWNER());
-    world.grant_owner(dojo::utils::bytearray_hash(@"origami_token"), SPENDER());
 
     (world, erc721_mintable_burnable_dispatcher)
 }

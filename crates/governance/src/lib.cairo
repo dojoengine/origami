@@ -35,5 +35,6 @@ mod utils {
     mod mock_contract_upgraded;
     #[cfg(test)]
     mod testing;
+    mod world_utils;
 }
 

@@ -5,7 +5,7 @@ mod ERC721 {
     };
     use origami_token::erc721::interface;
     use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
-    use integer::BoundedInt;
+    use core::num::traits::Bounded;
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};
     use zeroable::Zeroable;

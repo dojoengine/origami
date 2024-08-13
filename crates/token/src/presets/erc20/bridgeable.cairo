@@ -73,7 +73,7 @@ trait IERC20BridgeableInitializer<TState> {
 
 #[dojo::contract]
 mod ERC20Bridgeable {
-    use integer::BoundedInt;
+    use core::num::traits::Bounded;
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};
     use zeroable::Zeroable;
