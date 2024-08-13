@@ -79,17 +79,11 @@ fn setup_uninitialized() -> (IWorldDispatcher, IERC721EnumMintBurnPresetDispatch
     // deploy contract
     let mut erc721_enum_mint_burn_dispatcher = IERC721EnumMintBurnPresetDispatcher {
         contract_address: world
-            .deploy_contract(
-                'salt', ERC721EnumMintBurn::TEST_CLASS_HASH.try_into().unwrap(), array![].span()
-            )
+            .deploy_contract('salt', ERC721EnumMintBurn::TEST_CLASS_HASH.try_into().unwrap())
     };
 
-    world
-        .grant_owner(
-            dojo::utils::bytearray_hash(@"origami_token"),  starknet::get_contract_address()
-        );
-    world.grant_owner(dojo::utils::bytearray_hash(@"origami_token"),OWNER());
-    world.grant_owner( dojo::utils::bytearray_hash(@"origami_token"), SPENDER());
+    world.grant_owner(dojo::utils::bytearray_hash(@"origami_token"), erc721_enum_mint_burn_dispatcher.contract_address);
+    world.grant_owner(dojo::utils::bytearray_hash(@"origami_token"), OWNER());
 
     (world, erc721_enum_mint_burn_dispatcher)
 }

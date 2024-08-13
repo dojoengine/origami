@@ -164,9 +164,7 @@ fn setup() -> (IWorldDispatcher, IERC20BalanceMockDispatcher) {
     // deploy contract
     let mut erc20_balance_mock_dispatcher = IERC20BalanceMockDispatcher {
         contract_address: world
-            .deploy_contract(
-                'salt', erc20_balance_mock::TEST_CLASS_HASH.try_into().unwrap(), array![].span()
-            )
+            .deploy_contract('salt', erc20_balance_mock::TEST_CLASS_HASH.try_into().unwrap())
     };
 
     // setup auth
@@ -224,7 +222,7 @@ fn test_transfer_from() {
     assert(erc20_balance_mock.balance_of(RECIPIENT()) == VALUE, 'Should eq amount');
     assert(erc20_balance_mock.balance_of(OWNER()) == SUPPLY - VALUE, 'Should eq suppy - amount');
     assert(erc20_balance_mock.allowance(OWNER(), SPENDER()) == 0, 'Should eq 0');
-    // assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
+// assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
 }
 
 #[test]
@@ -293,5 +291,5 @@ fn test_transferFrom() {
     assert(erc20_balance_mock.balance_of(RECIPIENT()) == VALUE, 'Should eq amount');
     assert(erc20_balance_mock.balance_of(OWNER()) == SUPPLY - VALUE, 'Should eq suppy - amount');
     assert(erc20_balance_mock.allowance(OWNER(), SPENDER()) == 0, 'Should eq 0');
-    // assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
+// assert(erc20_balance_mock.total_supply() == SUPPLY, 'Total supply should not change');
 }

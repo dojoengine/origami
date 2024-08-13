@@ -1,0 +1,7 @@
+[world]
+name = "origami_governance"
+seed = "seed"
+
+
+[namespace]
+default = "origami_governance"

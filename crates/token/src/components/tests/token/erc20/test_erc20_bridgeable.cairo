@@ -50,17 +50,13 @@ fn STATE() -> (IWorldDispatcher, erc20_bridgeable_mock::ContractState) {
             erc_20_metadata_model::TEST_CLASS_HASH,
             erc_20_balance_model::TEST_CLASS_HASH,
             erc_20_bridgeable_model::TEST_CLASS_HASH,
-            erc_20_bridgeable_model::TEST_CLASS_HASH,
             erc_20_allowance_model::TEST_CLASS_HASH,
             initializable_model::TEST_CLASS_HASH,
         ]
     );
 
     // Deploy the contract to ensure the selector is a known resource.
-    world
-        .deploy_contract(
-            'salt', erc20_bridgeable_mock::TEST_CLASS_HASH.try_into().unwrap(), array![].span(),
-        );
+    world.deploy_contract('salt', erc20_bridgeable_mock::TEST_CLASS_HASH.try_into().unwrap(),);
 
     let mut state = erc20_bridgeable_mock::contract_state_for_testing();
     state.world_dispatcher.write(world);

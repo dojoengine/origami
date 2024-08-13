@@ -45,7 +45,6 @@ fn STATE() -> (IWorldDispatcher, erc721_enumerable_mock::ContractState) {
             erc_721_enumerable_index_model::TEST_CLASS_HASH,
             erc_721_enumerable_owner_index_model::TEST_CLASS_HASH,
             erc_721_enumerable_total_model::TEST_CLASS_HASH,
-            erc_721_enumerable_total_model::TEST_CLASS_HASH,
             erc_721_enumerable_owner_token_model::TEST_CLASS_HASH,
             erc_721_balance_model::TEST_CLASS_HASH,
             erc_721_owner_model::TEST_CLASS_HASH,

@@ -14,8 +14,8 @@ members = [
 version = "1.0.0-alpha.4"
 
 [workspace.dependencies]
-# dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.0.0-alpha.4" }
-dojo = { path = "../dojo/crates/dojo-core" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.0.0-alpha.5" }
+# dojo = { path = "../dojo/crates/dojo-core" }
 cubit = { git = "https://github.com/dojoengine/cubit", branch = "update_to_2.7.0" }
 starknet = "^2.7.0"
 cairo_test = "^2.7.0"

@@ -11,6 +11,3 @@ dojo.workspace = true
 sort-module-level-items = true
 
 [lib]
-
-[tool.dojo.world]
-namespace = { default = "origami_governance" }

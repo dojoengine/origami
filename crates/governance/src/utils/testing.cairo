@@ -27,7 +27,8 @@ use origami_governance::systems::{
 use origami_governance::utils::mock_contract::{
     hellostarknet, IHelloStarknetDispatcher, mock_balances, MockBalances
 };
-use starknet::{ContractAddress, contract_address_const};
+use origami_governance::utils::world_utils;
+use starknet::{ContractAddress, contract_address_const, get_contract_address};
 
 const DAY: u64 = 86400;
 const E18: u128 = 1_000_000_000_000_000_000;
@@ -83,20 +84,18 @@ fn setup() -> (Systems, IWorldDispatcher) {
     ];
     let world = spawn_test_world("origami_governance", models);
 
-    let contract_address = world
-        .deploy_contract(1, governor::TEST_CLASS_HASH.try_into().unwrap(), array![].span());
+    let contract_address = world.deploy_contract(1, governor::TEST_CLASS_HASH.try_into().unwrap());
     let governor = IGovernorDispatcher { contract_address };
 
-    let contract_address = world
-        .deploy_contract(2, timelock::TEST_CLASS_HASH.try_into().unwrap(), array![].span());
+    let contract_address = world.deploy_contract(2, timelock::TEST_CLASS_HASH.try_into().unwrap());
     let timelock = ITimelockDispatcher { contract_address };
 
     let contract_address = world
-        .deploy_contract(3, governancetoken::TEST_CLASS_HASH.try_into().unwrap(), array![].span());
+        .deploy_contract(3, governancetoken::TEST_CLASS_HASH.try_into().unwrap());
     let token = IGovernanceTokenDispatcher { contract_address };
 
     let contract_address = world
-        .deploy_contract(4, hellostarknet::TEST_CLASS_HASH.try_into().unwrap(), array![].span());
+        .deploy_contract(4, hellostarknet::TEST_CLASS_HASH.try_into().unwrap());
     let mock = IHelloStarknetDispatcher { contract_address };
 
     let systems = Systems { governor, timelock, token, mock };
@@ -105,6 +104,42 @@ fn setup() -> (Systems, IWorldDispatcher) {
         .selector();
     let token_selector = IContractDispatcher { contract_address: token.contract_address }
         .selector();
+
+   
+
+    // let selectors = array![
+    //     selector_from_tag!("origami_governance-GovernorParams"),
+    //     selector_from_tag!("origami_governance-ProposalParams"),
+    //     selector_from_tag!("origami_governance-ProposalCount"),
+    //     selector_from_tag!("origami_governance-Proposals"),
+    //     selector_from_tag!("origami_governance-Receipts"),
+    //     selector_from_tag!("origami_governance-LatestProposalIds"),
+    //     //
+    //     selector_from_tag!("origami_governance-TimelockParams"),
+    //     selector_from_tag!("origami_governance-PendingAdmin"),
+    //     selector_from_tag!("origami_governance-QueuedTransactions"),
+    //     //
+    //     selector_from_tag!("origami_governance-Metadata"),
+    //     selector_from_tag!("origami_governance-TotalSupply"),
+    //     selector_from_tag!("origami_governance-Allowances"),
+    //     selector_from_tag!("origami_governance-Balances"),
+    //     selector_from_tag!("origami_governance-Delegates"),
+    //     selector_from_tag!("origami_governance-Checkpoints"),
+    //     selector_from_tag!("origami_governance-NumCheckpoints"),
+    //     selector_from_tag!("origami_governance-Nonces"),
+    //     //
+    //     selector_from_tag!("origami_governance-MockBalances"),
+
+    // ];
+
+    let contract_addresses = array![
+        governor.contract_address,
+        timelock.contract_address,
+        token.contract_address,
+        mock.contract_address,
+    ];
+
+    world_utils::grant_writer(world, array![dojo::utils::bytearray_hash(@"origami_governance")].span(), contract_addresses.span());
 
     // should use constructor now
     systems.governor.initialize(timelock_selector, token_selector, GOVERNOR());
