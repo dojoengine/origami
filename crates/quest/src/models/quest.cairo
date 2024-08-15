@@ -39,7 +39,7 @@ pub struct Quest {
     //
     availability: QuestRules,
     //
-    external: Option<ContractAddress>
+    // external: Option<ContractAddress>
 // data: Array<felt252>
 }
 

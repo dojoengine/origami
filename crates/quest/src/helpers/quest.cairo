@@ -43,18 +43,15 @@ impl QuestHelperImpl of QuestHelperTrait {
         let quest = QuestStore::get(*self.world, quest_id);
         if quest.is_available(*self.world, player_id) {
             // progress
-            match quest.external {
-                Option::Some(ext) => {
-                    IQuestDispatcher { contract_address: ext }
-                        .progress(*self.world, quest_id, player_id);
-                },
-                Option::None => { (*self.quest_registry).progress(quest_id, player_id); }
-            };
-            // // trigger event if completed ? set some storage ?
-        // let quest = QuestStore::get(*self.world, quest_id);
-        // if quest.completed {
-        //     // emit!
-        // }
+            // match quest.external {
+            //     Option::Some(ext) => {
+            //         IQuestDispatcher { contract_address: ext }
+            //             .progress(*self.world, quest_id, player_id);
+            //     },
+            //     Option::None => { (*self.quest_registry).progress(quest_id, player_id); }
+            // };
+
+            (*self.quest_registry).progress(quest_id, player_id);
         }
     }
 }
@@ -75,19 +72,21 @@ impl QuestImpl of QuestTrait {
     //
 
     fn is_available(self: @Quest, world: IWorldDispatcher, player_id: ContractAddress) -> bool {
-        match self.external {
-            Option::Some(ext) => IQuestDispatcher { contract_address: *ext }
-                .is_available(world, *self.id, player_id),
-            Option::None => Self::check_rules(self.availability, world, player_id)
-        }
+        // match self.external {
+        //     Option::Some(ext) => IQuestDispatcher { contract_address: *ext }
+        //         .is_available(world, *self.id, player_id),
+        //     Option::None => Self::check_rules(self.availability, world, player_id)
+        // }
+        Self::check_rules(self.availability, world, player_id)
     }
 
     fn is_completed(self: @Quest, world: IWorldDispatcher, player_id: ContractAddress) -> bool {
-        match self.external {
-            Option::Some(ext) => IQuestDispatcher { contract_address: *ext }
-                .is_completed(world, *self.id, player_id),
-            Option::None => Self::check_rules(self.completion, world, player_id)
-        }
+        // match self.external {
+        //     Option::Some(ext) => IQuestDispatcher { contract_address: *ext }
+        //         .is_completed(world, *self.id, player_id),
+        //     Option::None => Self::check_rules(self.completion, world, player_id)
+        // }
+        Self::check_rules(self.completion, world, player_id)
     }
 
 
@@ -96,19 +95,22 @@ impl QuestImpl of QuestTrait {
     //
 
     fn claimed(self: @Quest, world: IWorldDispatcher, player_id: ContractAddress) -> bool {
-        match self.external {
-            Option::Some(ext) => IQuestDispatcher { contract_address: *ext }
-                .claimed(world, *self.id, player_id),
-            Option::None => QuestClaimedStore::get(world, *self.id, player_id).claimed
-        }
+        // match self.external {
+        //     Option::Some(ext) => IQuestDispatcher { contract_address: *ext }
+        //         .claimed(world, *self.id, player_id),
+        //     Option::None => QuestClaimedStore::get(world, *self.id, player_id).claimed
+        // }
+        QuestClaimedStore::get(world, *self.id, player_id).claimed
     }
 
     fn claimable(self: @Quest, world: IWorldDispatcher, player_id: ContractAddress) -> bool {
-        match self.external {
-            Option::Some(ext) => IQuestDispatcher { contract_address: *ext }
-                .claimable(world, *self.id, player_id),
-            Option::None => !self.claimed(world, player_id) && self.is_completed(world, player_id)
-        }
+        // match self.external {
+        //     Option::Some(ext) => IQuestDispatcher { contract_address: *ext }
+        //         .claimable(world, *self.id, player_id),
+        //     Option::None => !self.claimed(world, player_id) && self.is_completed(world,
+        //     player_id)
+        // }
+        !self.claimed(world, player_id) && self.is_completed(world, player_id)
     }
 
 

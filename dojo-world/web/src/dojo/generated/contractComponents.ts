@@ -19,19 +19,19 @@ export function defineContractComponents(world: World) {
         }
       );
     })(),
-    Quest: (() => {
-      return defineComponent(
-        world,
-        { id: RecsType.BigInt, name: RecsType.String, desc: RecsType.String, image_uri: RecsType.Number, quest_type: RecsType.Number, completion: { all: RecsType.StringArray, any: RecsType.StringArray }, availability: { all: RecsType.StringArray, any: RecsType.StringArray }, external: RecsType.Number },
-        {
-          metadata: {
-            name: "dojo_world-Quest",
-            types: ["felt252","enum","enum","enum"],
-            customTypes: ["Option<T>","QuestType","QuestRules","QuestRules","Option<T>"],
-          },
-        }
-      );
-    })(),
+    // Quest: (() => {
+    //   return defineComponent(
+    //     world,
+    //     { id: RecsType.BigInt, name: RecsType.String, desc: RecsType.String, image_uri: RecsType.Number, quest_type: RecsType.Number, completion: { all: RecsType.StringArray, any: RecsType.StringArray }, availability: { all: RecsType.StringArray, any: RecsType.StringArray }, external: RecsType.Number },
+    //     {
+    //       metadata: {
+    //         name: "dojo_world-Quest",
+    //         types: ["felt252","enum","enum","enum"],
+    //         customTypes: ["Option<T>","QuestType","QuestRules","QuestRules","Option<T>"],
+    //       },
+    //     }
+    //   );
+    // })(),
     QuestClaimed: (() => {
       return defineComponent(
         world,

@@ -8,15 +8,15 @@ source = "git+https://github.com/dojoengine/cubit?branch=cairo_2.7#53020b6320a10
 
 [[package]]
 name = "dojo"
-version = "0.7.3"
+version = "1.0.0-alpha.4"
 dependencies = [
  "dojo_plugin",
 ]
 
 [[package]]
 name = "dojo_plugin"
-version = "0.7.3"
-source = "git+https://github.com/dojoengine/dojo?rev=71b1f1a4#71b1f1a467534cbeeb901356f41e612ed4187bd1"
+version = "1.0.0-alpha.4"
+source = "git+https://github.com/dojoengine/dojo?rev=dc46e9c#dc46e9c689b2571a51200964ffc927b883a081eb"
 
 [[package]]
 name = "origami_algebra"

@@ -49,7 +49,7 @@ const ETH_TOKEN_ADDRESS =
 //   "0x0410466536b5ae074f7fea81e5533b8134a9fa08b3dd077dd9db08f64997d113";
 
 const DOJO_FREN_ADDRESS =
-  "0x57548723ef2aaa0ecd4845b08063bef34c78c06ab9b7a0692ffcdc44f87b545";
+  "0x2d83f954ec3e284017d3b7f4a818c8d00343787c6b537bd882b480a1ab72b99";
 
 const connectors = [
   new CartridgeConnector(
