@@ -3,7 +3,7 @@ use starknet::ContractAddress;
 use starknet::testing;
 use zeroable::Zeroable;
 
-use integer::BoundedInt;
+use core::num::traits::Bounded;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{
@@ -76,18 +76,15 @@ fn setup() -> (IWorldDispatcher, IERC20BridgeablePresetDispatcher) {
     // deploy contract
     let mut erc20_bridgeable_dispatcher = IERC20BridgeablePresetDispatcher {
         contract_address: world
-            .deploy_contract(
-                'salt', ERC20Bridgeable::TEST_CLASS_HASH.try_into().unwrap(), array![].span()
-            )
+            .deploy_contract('salt', ERC20Bridgeable::TEST_CLASS_HASH.try_into().unwrap())
     };
-
     world
         .grant_owner(
-            starknet::get_contract_address(), dojo::utils::bytearray_hash(@"origami_token")
+            dojo::utils::bytearray_hash(@"origami_token"),
+            erc20_bridgeable_dispatcher.contract_address
         );
-    world.grant_owner(OWNER(), dojo::utils::bytearray_hash(@"origami_token"));
-    world.grant_owner(BRIDGE(), dojo::utils::bytearray_hash(@"origami_token"));
-    world.grant_owner(SPENDER(), dojo::utils::bytearray_hash(@"origami_token"));
+
+    world.grant_owner(dojo::utils::bytearray_hash(@"origami_token"), OWNER());
 
     // initialize contracts
     erc20_bridgeable_dispatcher.initializer("NAME", "SYMBOL", SUPPLY, OWNER(), BRIDGE());

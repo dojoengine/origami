@@ -1,6 +1,6 @@
 [package]
 name = "origami_security"
-version = "0.1.0"
+version.workspace = true
 description = "Security library for Dojo based games."
 homepage = "https://github.com/dojoengine/origami/tree/main/crates/security"
 edition = "2024_07"

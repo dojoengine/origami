@@ -1,4 +1,4 @@
-use integer::BoundedInt;
+use core::num::traits::Bounded;
 use starknet::ContractAddress;
 use starknet::testing;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
@@ -177,18 +177,15 @@ fn setup() -> (IWorldDispatcher, IERC721BalanceMockDispatcher, IERC721ReceiverMo
         array![
             erc_721_token_approval_model::TEST_CLASS_HASH,
             erc_721_balance_model::TEST_CLASS_HASH,
-            src_5_model::TEST_CLASS_HASH,
-            erc_721_token_approval_model::TEST_CLASS_HASH,
             erc_721_owner_model::TEST_CLASS_HASH,
+            src_5_model::TEST_CLASS_HASH,
         ]
     );
 
     // deploy balance mock contract
     let mut erc721_balance_mock_dispatcher = IERC721BalanceMockDispatcher {
         contract_address: world
-            .deploy_contract(
-                'salt', erc721_balance_mock::TEST_CLASS_HASH.try_into().unwrap(), array![].span()
-            )
+            .deploy_contract('salt', erc721_balance_mock::TEST_CLASS_HASH.try_into().unwrap())
     };
 
     // setup balance auth
@@ -218,9 +215,7 @@ fn setup() -> (IWorldDispatcher, IERC721BalanceMockDispatcher, IERC721ReceiverMo
     // deploy erc721 receiver contract
     let mut erc721_receiver_mock_dispatcher = IERC721ReceiverMockDispatcher {
         contract_address: world
-            .deploy_contract(
-                'salt2', erc721_receiver_mock::TEST_CLASS_HASH.try_into().unwrap(), array![].span()
-            )
+            .deploy_contract('salt2', erc721_receiver_mock::TEST_CLASS_HASH.try_into().unwrap())
     };
 
     // setup erc721 receiver auth

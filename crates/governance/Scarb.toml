@@ -1,6 +1,6 @@
 [package]
 name = "origami_governance"
-version = "1.0.0-alpha.0"
+version.workspace = true
 description = "Implementations of Compound Governance standards for the Dojo framework."
 homepage = "https://github.com/dojoengine/origami/tree/governance"
 
@@ -11,6 +11,3 @@ dojo.workspace = true
 sort-module-level-items = true
 
 [lib]
-
-[tool.dojo.world]
-namespace = { default = "origami_governance" }

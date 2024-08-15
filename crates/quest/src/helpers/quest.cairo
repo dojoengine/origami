@@ -10,6 +10,7 @@ use origami_quest::models::quest::{
 use origami_quest::components::quest_registry::{
     IQuestRegistryDispatcher, IQuestRegistryDispatcherTrait
 };
+use origami_quest::utils::get_contract_infos;
 
 
 #[derive(Drop)]
@@ -23,9 +24,7 @@ pub struct QuestHelper {
 #[generate_trait]
 impl QuestHelperImpl of QuestHelperTrait {
     fn new(world: IWorldDispatcher, namespace: ByteArray, registry: ByteArray) -> QuestHelper {
-        let (_, quest_registry_address) = world
-            .contract(selector_from_names(@namespace, @registry));
-
+        let (_, quest_registry_address) = get_contract_infos(world, selector_from_names(@namespace, @registry));
         let quest_registry = IQuestRegistryDispatcher { contract_address: quest_registry_address };
         QuestHelper { world, namespace, registry, quest_registry }
     }

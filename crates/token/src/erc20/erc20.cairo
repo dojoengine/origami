@@ -3,7 +3,7 @@ mod ERC20 {
     use origami_token::erc20::models::{ERC20Allowance, ERC20Balance, ERC20Meta};
     use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
     use origami_token::erc20::interface;
-    use integer::BoundedInt;
+    use core::num::traits::Bounded;
     use starknet::ContractAddress;
     use starknet::{get_caller_address, get_contract_address};
     use zeroable::Zeroable;

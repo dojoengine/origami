@@ -1,6 +1,6 @@
 [package]
 name = "origami_rating"
-version = "0.1.0"
+version.workspace = true
 description = "Rating related algorithm library for Dojo based games."
 homepage = "https://github.com/dojoengine/origami/tree/main/crates/rating"
 edition = "2024_07"

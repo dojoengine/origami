@@ -1,4 +1,4 @@
-use integer::BoundedInt;
+use core::num::traits::Bounded;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{DECIMALS};
@@ -62,6 +62,6 @@ fn test_erc20_metadata_update_total_supply_sub_overflow() {
 fn test_erc20_metadata_update_total_supply_add_overflow() {
     let (_world, mut state) = STATE();
 
-    state.erc20_metadata.update_total_supply(0, BoundedInt::max());
+    state.erc20_metadata.update_total_supply(0, Bounded::<u256>::MAX);
     state.erc20_metadata.update_total_supply(0, 1);
 }

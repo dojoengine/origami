@@ -1,7 +1,7 @@
 use origami_token::components::token::erc20::erc20_allowance::IERC20Allowance;
 use starknet::testing;
 use starknet::ContractAddress;
-use integer::BoundedInt;
+use core::num::traits::Bounded;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::utils::test::spawn_test_world;
 use origami_token::tests::constants::{ZERO, OWNER, SPENDER, RECIPIENT, VALUE, SUPPLY};

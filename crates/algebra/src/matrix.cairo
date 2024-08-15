@@ -1,4 +1,6 @@
 use zeroable::Zeroable;
+use core::ops::{AddAssign, SubAssign};
+
 
 #[derive(Copy, Drop)]
 struct Matrix<T> {
@@ -32,9 +34,9 @@ impl MatrixImpl<
     +Mul<T>,
     +Div<T>,
     +Add<T>,
-    +AddEq<T>,
+    +AddAssign<T, T>,
     +Sub<T>,
-    +SubEq<T>,
+    +SubAssign<T, T>,
     +Neg<T>,
     +Zeroable<T>,
     +Copy<T>,
@@ -160,9 +162,9 @@ impl MatrixAdd<
     +Mul<T>,
     +Div<T>,
     +Add<T>,
-    +AddEq<T>,
+    +AddAssign<T, T>,
     +Sub<T>,
-    +SubEq<T>,
+    +SubAssign<T, T>,
     +Neg<T>,
     +Zeroable<T>,
     +Copy<T>,
@@ -192,9 +194,9 @@ impl MatrixSub<
     +Mul<T>,
     +Div<T>,
     +Add<T>,
-    +AddEq<T>,
+    +AddAssign<T, T>,
     +Sub<T>,
-    +SubEq<T>,
+    +SubAssign<T, T>,
     +Neg<T>,
     +Zeroable<T>,
     +Copy<T>,
@@ -224,9 +226,9 @@ impl MatrixMul<
     +Mul<T>,
     +Div<T>,
     +Add<T>,
-    +AddEq<T>,
+    +AddAssign<T, T>,
     +Sub<T>,
-    +SubEq<T>,
+    +SubAssign<T, T>,
     +Neg<T>,
     +Zeroable<T>,
     +Copy<T>,
@@ -282,14 +284,14 @@ mod tests {
         }
     }
 
-    impl I128Div of Div<i128> {
-        fn div(lhs: i128, rhs: i128) -> i128 {
-            let lhs_u256: u256 = Into::<felt252, u256>::into(lhs.into());
-            let rhs_u256: u256 = Into::<felt252, u256>::into(rhs.into());
-            let div: felt252 = (lhs_u256 / rhs_u256).try_into().unwrap();
-            div.try_into().unwrap()
-        }
-    }
+    // impl I128Div of Div<i128> {
+    //     fn div(lhs: i128, rhs: i128) -> i128 {
+    //         let lhs_u256: u256 = Into::<felt252, u256>::into(lhs.into());
+    //         let rhs_u256: u256 = Into::<felt252, u256>::into(rhs.into());
+    //         let div: felt252 = (lhs_u256 / rhs_u256).try_into().unwrap();
+    //         div.try_into().unwrap()
+    //     }
+    // }
 
     #[test]
     fn test_matrix_get() {

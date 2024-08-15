@@ -21,6 +21,7 @@ mod quest_registry_comp {
         Quest, QuestStore, QuestCounter, QuestCounterStore, QuestType
     };
     use origami_quest::helpers::quest::{QuestTrait, QuestHelperTrait};
+    use origami_quest::utils::get_contract_infos;
 
     #[storage]
     struct Storage {}
@@ -101,7 +102,7 @@ mod quest_registry_comp {
             // check caller is a contract registered in world / for selector
             let caller_selector = caller_disp.selector();
             // panic if not exists
-            let (_, caller_selector_address) = world.contract(caller_selector);
+            let (_, caller_selector_address) = get_contract_infos(world, caller_selector);
             // check retrieved address == caller address
             assert(caller_selector_address == caller, Errors::INVALID_CALLER);
 

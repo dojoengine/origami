@@ -56,7 +56,7 @@ mod erc721_approval_component {
     use super::ERC721OperatorApprovalModel;
     use super::IERC721Approval;
     use super::IERC721ApprovalCamel;
-    use integer::BoundedInt;
+    use core::num::traits::Bounded;
     use starknet::ContractAddress;
     use starknet::{get_contract_address, get_caller_address};
     use dojo::world::{

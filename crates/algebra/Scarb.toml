@@ -1,6 +1,6 @@
 [package]
 name = "origami_algebra"
-version = "0.1.0"
+version.workspace = true
 description = "Algebra library for Dojo based games."
 homepage = "https://github.com/dojoengine/origami/tree/main/crates/algebra"
 

@@ -170,7 +170,7 @@ mod ERC721MintableBurnable {
             token_ids: Span<u256>
         ) {
             assert(
-                self.world().is_owner(get_caller_address(), self.selector()),
+                self.world().is_owner(self.selector(), get_caller_address()),
                 Errors::CALLER_IS_NOT_OWNER
             );
 

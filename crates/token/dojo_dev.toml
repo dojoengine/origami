@@ -1,0 +1,7 @@
+[world]
+name = "origami_token"
+seed = "seed"
+
+
+[namespace]
+default = "origami_token"
