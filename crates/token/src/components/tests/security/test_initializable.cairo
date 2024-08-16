@@ -8,7 +8,9 @@ use origami_token::components::security::initializable::initializable_component:
 use origami_token::components::tests::mocks::initializable_mock::InitializableMock;
 
 fn STATE() -> (IWorldDispatcher, InitializableMock::ContractState) {
-    let world = spawn_test_world("origami_token", array![initializable_model::TEST_CLASS_HASH,]);
+    let world = spawn_test_world(
+        ["origami_token"].span(), [initializable_model::TEST_CLASS_HASH,].span()
+    );
 
     let mut state = InitializableMock::contract_state_for_testing();
     state.world_dispatcher.write(world);

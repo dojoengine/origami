@@ -21,12 +21,12 @@ use origami_token::components::tests::mocks::erc721::erc721_metadata_mock::erc72
 
 fn STATE() -> (IWorldDispatcher, erc721_metadata_mock::ContractState) {
     let world = spawn_test_world(
-        "origami_token",
-        array![
+        ["origami_token"].span(),
+        [
             erc_721_meta_model::TEST_CLASS_HASH,
             erc_721_balance_model::TEST_CLASS_HASH,
             erc_721_owner_model::TEST_CLASS_HASH,
-        ]
+        ].span()
     );
 
     let mut state = erc721_metadata_mock::contract_state_for_testing();

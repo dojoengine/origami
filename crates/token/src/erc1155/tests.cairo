@@ -32,11 +32,12 @@ use debug::PrintTrait;
 
 fn STATE() -> (IWorldDispatcher, ERC1155::ContractState) {
     let world = spawn_test_world(
-        array![
+        [].span(),
+        [
             erc_1155_meta::TEST_CLASS_HASH,
             erc_1155_operator_approval::TEST_CLASS_HASH,
             erc_1155_balance::TEST_CLASS_HASH,
-        ]
+        ].span()
     );
     let mut state = ERC1155::contract_state_for_testing();
     state._world.write(world.contract_address);

@@ -44,13 +44,14 @@ use starknet::storage::{StorageMemberAccessTrait};
 
 fn STATE() -> (IWorldDispatcher, ERC721::ContractState) {
     let world = spawn_test_world(
-        array![
+        [].span(),
+        [
             erc_721_meta::TEST_CLASS_HASH,
             erc_721_operator_approval::TEST_CLASS_HASH,
             erc_721_owner::TEST_CLASS_HASH,
             erc_721_balance::TEST_CLASS_HASH,
             erc_721_token_approval::TEST_CLASS_HASH,
-        ]
+        ].span()
     );
     let mut state = ERC721::contract_state_for_testing();
     state._world.write(world.contract_address);

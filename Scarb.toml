@@ -11,10 +11,10 @@ members = [
 ]
 
 [workspace.package]
-version = "1.0.0-alpha.5"
+version = "1.0.0-alpha.6"
 
 [workspace.dependencies]
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.0.0-alpha.5" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.0.0-alpha.6" }
 # dojo = { path = "../dojo/crates/dojo-core" }
 cubit = { git = "https://github.com/dojoengine/cubit", branch = "update_to_2.7.0" }
 starknet = "^2.7.0"

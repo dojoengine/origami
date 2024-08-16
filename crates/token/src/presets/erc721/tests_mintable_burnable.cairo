@@ -64,8 +64,8 @@ use origami_token::components::token::erc721::erc721_owner::erc_721_owner_model;
 
 fn setup_uninitialized() -> (IWorldDispatcher, IERC721MintableBurnablePresetDispatcher) {
     let world = spawn_test_world(
-        "origami_token",
-        array![
+        ["origami_token"].span(),
+        [
             erc_721_token_approval_model::TEST_CLASS_HASH,
             erc_721_balance_model::TEST_CLASS_HASH,
             erc_721_meta_model::TEST_CLASS_HASH,
@@ -76,7 +76,7 @@ fn setup_uninitialized() -> (IWorldDispatcher, IERC721MintableBurnablePresetDisp
             erc_721_enumerable_total_model::TEST_CLASS_HASH,
             erc_721_owner_model::TEST_CLASS_HASH,
             initializable_model::TEST_CLASS_HASH,
-        ]
+        ].span()
     );
 
     // deploy contract

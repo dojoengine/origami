@@ -70,12 +70,12 @@ fn assert_only_event_approval_for_all(
 
 fn STATE() -> (IWorldDispatcher, erc721_approval_mock::ContractState) {
     let world = spawn_test_world(
-        "origami_token",
-        array![
+        ["origami_token"].span(),
+        [
             erc_721_token_approval_model::TEST_CLASS_HASH,
             erc_721_operator_approval_model::TEST_CLASS_HASH,
             erc_721_owner_model::TEST_CLASS_HASH
-        ]
+        ].span()
     );
 
     let mut state = erc721_approval_mock::contract_state_for_testing();

@@ -70,12 +70,12 @@ fn assert_only_event_transfer(
 
 fn STATE() -> (IWorldDispatcher, erc721_balance_mock::ContractState) {
     let world = spawn_test_world(
-        "origami_token",
-        array![
+        ["origami_token"].span(),
+        [
             erc_721_balance_model::TEST_CLASS_HASH,
             erc_721_token_approval_model::TEST_CLASS_HASH,
             erc_721_owner_model::TEST_CLASS_HASH,
-        ]
+        ].span()
     );
 
     let mut state = erc721_balance_mock::contract_state_for_testing();
@@ -173,13 +173,13 @@ fn test_erc721_balance_unauthorized() {
 
 fn setup() -> (IWorldDispatcher, IERC721BalanceMockDispatcher, IERC721ReceiverMockDispatcher) {
     let world = spawn_test_world(
-        "origami_token",
-        array![
+        ["origami_token"].span(),
+        [
             erc_721_token_approval_model::TEST_CLASS_HASH,
             erc_721_balance_model::TEST_CLASS_HASH,
             erc_721_owner_model::TEST_CLASS_HASH,
             src_5_model::TEST_CLASS_HASH,
-        ]
+        ].span()
     );
 
     // deploy balance mock contract

@@ -82,7 +82,7 @@ fn setup() -> (Systems, IWorldDispatcher) {
         nonces::TEST_CLASS_HASH,
         mock_balances::TEST_CLASS_HASH,
     ];
-    let world = spawn_test_world("origami_governance", models);
+    let world = spawn_test_world(["origami_governance"].span(), models.span());
 
     let contract_address = world.deploy_contract(1, governor::TEST_CLASS_HASH.try_into().unwrap());
     let governor = IGovernorDispatcher { contract_address };
