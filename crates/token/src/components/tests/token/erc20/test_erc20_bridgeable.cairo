@@ -45,14 +45,14 @@ use origami_token::components::security::initializable::initializable_model;
 
 fn STATE() -> (IWorldDispatcher, erc20_bridgeable_mock::ContractState) {
     let world = spawn_test_world(
-        "origami_token",
-        array![
+        ["origami_token"].span(),
+        [
             erc_20_metadata_model::TEST_CLASS_HASH,
             erc_20_balance_model::TEST_CLASS_HASH,
             erc_20_bridgeable_model::TEST_CLASS_HASH,
             erc_20_allowance_model::TEST_CLASS_HASH,
             initializable_model::TEST_CLASS_HASH,
-        ]
+        ].span()
     );
 
     // Deploy the contract to ensure the selector is a known resource.

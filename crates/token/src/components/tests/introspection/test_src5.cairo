@@ -8,7 +8,7 @@ use origami_token::tests::constants::{OTHER_ID};
 
 
 fn STATE() -> (IWorldDispatcher, SRC5Mock::ContractState) {
-    let world = spawn_test_world("origami_token", array![src_5_model::TEST_CLASS_HASH,]);
+    let world = spawn_test_world(["origami_token"].span(), [src_5_model::TEST_CLASS_HASH,].span());
     let mut state = SRC5Mock::contract_state_for_testing();
     state.world_dispatcher.write(world);
 

@@ -24,8 +24,8 @@ use origami_token::components::tests::mocks::erc20::erc20_mintable_burnable_mock
 
 fn STATE() -> (IWorldDispatcher, erc20_mintable_burnable_mock::ContractState) {
     let world = spawn_test_world(
-        "origami_token",
-        array![erc_20_metadata_model::TEST_CLASS_HASH, erc_20_balance_model::TEST_CLASS_HASH,]
+        ["origami_token"].span(),
+        [erc_20_metadata_model::TEST_CLASS_HASH, erc_20_balance_model::TEST_CLASS_HASH,].span()
     );
 
     let mut state = erc20_mintable_burnable_mock::contract_state_for_testing();

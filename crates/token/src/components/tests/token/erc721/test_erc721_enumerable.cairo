@@ -40,8 +40,8 @@ use debug::PrintTrait;
 
 fn STATE() -> (IWorldDispatcher, erc721_enumerable_mock::ContractState) {
     let world = spawn_test_world(
-        "origami_token",
-        array![
+        ["origami_token"].span(),
+        [
             erc_721_enumerable_index_model::TEST_CLASS_HASH,
             erc_721_enumerable_owner_index_model::TEST_CLASS_HASH,
             erc_721_enumerable_total_model::TEST_CLASS_HASH,
@@ -50,7 +50,7 @@ fn STATE() -> (IWorldDispatcher, erc721_enumerable_mock::ContractState) {
             erc_721_owner_model::TEST_CLASS_HASH,
             erc_721_enumerable_token_model::TEST_CLASS_HASH,
             erc_721_token_approval_model::TEST_CLASS_HASH,
-        ]
+        ].span()
     );
 
     let mut state = erc721_enumerable_mock::contract_state_for_testing();

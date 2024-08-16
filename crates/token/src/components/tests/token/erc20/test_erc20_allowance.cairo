@@ -42,7 +42,9 @@ fn assert_only_event_approval(
 //
 
 fn STATE() -> (IWorldDispatcher, erc20_allowance_mock::ContractState) {
-    let world = spawn_test_world("origami_token", array![erc_20_allowance_model::TEST_CLASS_HASH,]);
+    let world = spawn_test_world(
+        ["origami_token"].span(), [erc_20_allowance_model::TEST_CLASS_HASH,].span()
+    );
 
     let mut state = erc20_allowance_mock::contract_state_for_testing();
     state.world_dispatcher.write(world);

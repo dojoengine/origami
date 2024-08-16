@@ -12,7 +12,9 @@ use origami_token::components::token::erc20::erc20_metadata::erc20_metadata_comp
 use origami_token::components::tests::mocks::erc20::erc20_metadata_mock::erc20_metadata_mock;
 
 fn STATE() -> (IWorldDispatcher, erc20_metadata_mock::ContractState) {
-    let world = spawn_test_world("origami_token", array![erc_20_metadata_model::TEST_CLASS_HASH,]);
+    let world = spawn_test_world(
+        ["origami_token"].span(), [erc_20_metadata_model::TEST_CLASS_HASH,].span()
+    );
 
     let mut state = erc20_metadata_mock::contract_state_for_testing();
     state.world_dispatcher.write(world);

@@ -31,7 +31,8 @@ use debug::PrintTrait;
 
 fn STATE() -> (IWorldDispatcher, ERC20::ContractState) {
     let world = spawn_test_world(
-        array![
+        [].span(),
+        [
             erc_20_allowance::TEST_CLASS_HASH,
             erc_20_balance::TEST_CLASS_HASH,
             erc_20_meta::TEST_CLASS_HASH,
