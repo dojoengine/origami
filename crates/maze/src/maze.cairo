@@ -2,7 +2,6 @@
 
 // Core imports
 
-use core::debug::PrintTrait;
 use core::hash::HashStateTrait;
 use core::poseidon::PoseidonTrait;
 
@@ -530,10 +529,6 @@ impl MazeAssert of AssertTrait {
 
 #[cfg(test)]
 mod tests {
-    // Core imports
-
-    use core::debug::PrintTrait;
-
     // Local imports
 
     use super::{Maze, MazeTrait};
