@@ -554,7 +554,10 @@ mod tests {
         // 000000010000010
         // 011111111111010
         // 000000000000010
-        let maze: Maze = MazeTrait::new(15, 15, 1, SEED);
+        let width = 15;
+        let height = 15;
+        let start_index: u8 = 1;
+        let mut maze: Maze = MazeTrait::new(width, height, start_index, SEED);
         assert_eq!(maze.grid, 0x17df2a82757c0a89f75200a5ffc8021ff720207f7c0209ffd0002);
     }
 
@@ -575,7 +578,10 @@ mod tests {
         // 000000010000010
         // 011111111111010
         // 000000000000010
-        let mut maze: Maze = MazeTrait::new(15, 15, 1, SEED);
+        let width = 15;
+        let height = 15;
+        let start_index: u8 = 1;
+        let mut maze: Maze = MazeTrait::new(width, height, start_index, SEED);
         maze.add_exit(222);
         assert_eq!(maze.grid, 0x4001fdf2a82757c0a89f75200a5ffc8021ff720207f7c0209ffd0002);
     }
@@ -597,7 +603,10 @@ mod tests {
         // 000000010000010
         // 011111111111010
         // 000000000000010
-        let mut maze: Maze = MazeTrait::new(15, 15, 1, SEED);
+        let width = 15;
+        let height = 15;
+        let start_index: u8 = 1;
+        let mut maze: Maze = MazeTrait::new(width, height, start_index, SEED);
         maze.add_exit(222);
         maze.add_exit(209);
         assert_eq!(maze.grid, 0x4003fdf2a82757c0a89f75200a5ffc8021ff720207f7c0209ffd0002);
