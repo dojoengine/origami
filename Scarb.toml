@@ -3,6 +3,7 @@ members = [
     "crates/algebra",
     "crates/defi",
     "crates/map",
+    "crates/maze",
     "crates/random",
     "crates/rating",
     "crates/security",
