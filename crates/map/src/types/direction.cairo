@@ -6,12 +6,12 @@ pub struct HexTile {
 
 #[derive(Drop, Copy, Serde)]
 pub enum Direction {
-    East: (),
-    NorthEast: (),
-    NorthWest: (),
-    West: (),
-    SouthWest: (),
-    SouthEast: (),
+    East,
+    NorthEast,
+    NorthWest,
+    West,
+    SouthWest,
+    SouthEast,
 }
 
 pub impl DirectionIntoFelt252 of Into<Direction, felt252> {

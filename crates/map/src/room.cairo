@@ -7,7 +7,7 @@ use core::poseidon::PoseidonTrait;
 
 // Internal imports
 
-use origami_maze::helpers::powers::{TwoPower, TwoPowerTrait};
+use origami_map::helpers::powers::{TwoPower, TwoPowerTrait};
 
 // Constants
 

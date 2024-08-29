@@ -1,8 +1,0 @@
-[package]
-name = "origami_maze"
-version.workspace = true
-description = "Maze generator library for Dojo based games."
-homepage = "https://github.com/dojoengine/origami/tree/main/crates/maze"
-edition = "2024_07"
-
-[dependencies]
