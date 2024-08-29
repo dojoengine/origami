@@ -43,6 +43,7 @@ pub impl MazeImpl of MazeTrait {
         maze.assert_on_edge(start);
         // [Effect] Add start position
         maze.grid = Self::set(0, start);
+        let start = maze.start(start);
         // [Compute] Generate the maze
         Self::generate(ref maze, start);
         // [Return] Maze
@@ -56,43 +57,43 @@ pub impl MazeImpl of MazeTrait {
         // [Assess] Direction 1
         let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
         directions /= DIRECTION_SIZE;
-        if maze.check_neighbor(start, direction) {
+        if maze.check(start, direction) {
             // [Compute] Add neighbor
-            let start = maze.add_neighbor(start, direction);
+            let start = maze.walk(start, direction);
             maze.seed = Self::reseed(maze.seed);
             Self::generate(ref maze, start);
         }
         // [Assess] Direction 2
         let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
         directions /= DIRECTION_SIZE;
-        if maze.check_neighbor(start, direction) {
+        if maze.check(start, direction) {
             // [Compute] Add neighbor
-            let start = maze.add_neighbor(start, direction);
+            let start = maze.walk(start, direction);
             maze.seed = Self::reseed(maze.seed);
             Self::generate(ref maze, start);
         }
         // [Assess] Direction 3
         let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
         directions /= DIRECTION_SIZE;
-        if maze.check_neighbor(start, direction) {
+        if maze.check(start, direction) {
             // [Compute] Add neighbor
-            let start = maze.add_neighbor(start, direction);
+            let start = maze.walk(start, direction);
             maze.seed = Self::reseed(maze.seed);
             Self::generate(ref maze, start);
         }
         // [Assess] Direction 4
         let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
         directions /= DIRECTION_SIZE;
-        if maze.check_neighbor(start, direction) {
+        if maze.check(start, direction) {
             // [Compute] Add neighbor
-            let start = maze.add_neighbor(start, direction);
+            let start = maze.walk(start, direction);
             maze.seed = Self::reseed(maze.seed);
             Self::generate(ref maze, start);
         }
     }
 
     #[inline]
-    fn add_exit(ref self: Maze, exit: u8) {
+    fn add(ref self: Maze, exit: u8) {
         // [Check] Exit is not a corner and on edge
         self.assert_not_corner(exit);
         self.assert_on_edge(exit);
@@ -124,74 +125,63 @@ pub impl MazeImpl of MazeTrait {
     }
 
     #[inline]
-    fn check_neighbor(ref self: Maze, position: u8, direction: u8) -> bool {
+    fn check(ref self: Maze, position: u8, direction: u8) -> bool {
         let (x, y) = (position % self.width, position / self.width);
         match direction {
-            0 => (y <= self.height - 4)
+            0 => (y <= self.height - 3)
                 && (x != 0)
                 && (x != self.width - 1)
-                && (y != self.height - 1)
-                && (Self::get(self.grid, position + 2 * self.width) == 0),
-            1 => (x <= self.width - 4)
+                && (Self::get(self.grid, position + 2 * self.width) == 0)
+                && (Self::get(self.grid, position + self.width + 1) == 0)
+                && (Self::get(self.grid, position + self.width - 1) == 0),
+            1 => (x <= self.width - 3)
                 && (y != 0)
                 && (y != self.height - 1)
-                && (x != self.width - 1)
-                && (Self::get(self.grid, position + 2) == 0),
-            2 => (y >= 3)
+                && (Self::get(self.grid, position + 2) == 0)
+                && (Self::get(self.grid, position + self.width + 1) == 0)
+                && (Self::get(self.grid, position - self.width + 1) == 0),
+            2 => (y >= 2)
                 && (x != 0)
                 && (x != self.width - 1)
-                && (y != 0)
-                && (Self::get(self.grid, position - 2 * self.width) == 0),
-            _ => (x >= 3)
+                && (Self::get(self.grid, position - 2 * self.width) == 0)
+                && (Self::get(self.grid, position - self.width + 1) == 0)
+                && (Self::get(self.grid, position - self.width - 1) == 0),
+            _ => (x >= 2)
                 && (y != 0)
                 && (y != self.height - 1)
-                && (x != 0)
-                && (Self::get(self.grid, position - 2) == 0),
+                && (Self::get(self.grid, position - 2) == 0)
+                && (Self::get(self.grid, position + self.width - 1) == 0)
+                && (Self::get(self.grid, position - self.width - 1) == 0),
         }
     }
 
     #[inline]
-    fn add_neighbor(ref self: Maze, position: u8, direction: u8) -> u8 {
+    fn start(ref self: Maze, position: u8) -> u8 {
         let (x, y) = (position % self.width, position / self.width);
-        let edge = x == 0 || y == 0 || x == self.width - 1 || y == self.height - 1;
-        match direction {
-            0 => {
-                let mut new_position = position + self.width;
-                self.grid = Self::set(self.grid, new_position);
-                if !edge {
-                    new_position = position + 2 * self.width;
-                    self.grid = Self::set(self.grid, new_position);
-                }
-                new_position
-            },
-            1 => {
-                let mut new_position = position + 1;
-                self.grid = Self::set(self.grid, new_position);
-                if !edge {
-                    new_position = position + 2;
-                    self.grid = Self::set(self.grid, new_position);
-                }
-                new_position
-            },
-            2 => {
-                let mut new_position = position - self.width;
-                self.grid = Self::set(self.grid, new_position);
-                if !edge {
-                    new_position = position - 2 * self.width;
-                    self.grid = Self::set(self.grid, new_position);
-                }
-                new_position
-            },
-            _ => {
-                let mut new_position = position - 1;
-                self.grid = Self::set(self.grid, new_position);
-                if !edge {
-                    new_position = position - 2;
-                    self.grid = Self::set(self.grid, new_position);
-                }
-                new_position
-            },
-        }
+        let new_position = if y == 0 {
+            position + self.width
+        } else if x == 0 {
+            position + 1
+        } else if y == self.height - 1 {
+            position - self.width
+        } else {
+            position - 1
+        };
+        self.grid = Self::set(self.grid, new_position);
+        new_position
+    }
+
+    #[inline]
+    fn walk(ref self: Maze, position: u8, direction: u8) -> u8 {
+        let width = self.width;
+        let new_position = match direction {
+            0 => { position + width },
+            1 => { position + 1 },
+            2 => { position - width },
+            _ => { position - 1 },
+        };
+        self.grid = Self::set(self.grid, new_position);
+        new_position
     }
 
     #[inline]
@@ -285,75 +275,73 @@ mod tests {
     #[test]
     fn test_maze_new_seed() {
         // 000000000000000
-        // 010111110111110
-        // 010101010000010
-        // 011101010111110
-        // 000001010100010
-        // 011111011101010
-        // 010000000001010
-        // 010111111111110
-        // 010000000001000
-        // 011111111101110
-        // 010000000100000
-        // 011111110111110
-        // 000000010000010
-        // 011111111111010
+        // 010111101110110
+        // 011100100011100
+        // 010100111100110
+        // 010111000111010
+        // 011001011101010
+        // 010111010110110
+        // 011001010101100
+        // 001101011011010
+        // 010101101110110
+        // 010110100000010
+        // 011010111110110
+        // 010010000011100
+        // 011111111100110
         // 000000000000010
         let width = 15;
         let height = 15;
         let start_index: u8 = 1;
         let mut maze: Maze = MazeTrait::new(width, height, start_index, SEED);
-        assert_eq!(maze.grid, 0x17df2a82757c0a89f75200a5ffc8021ff720207f7c0209ffd0002);
+        assert_eq!(maze.grid, 0x17BB391C53CCB8E99752EB665586B695BB2D026BEC9071FF30002);
     }
 
     #[test]
-    fn test_maze_add_exit() {
+    fn test_maze_add_exits() {
         // 001000000000000
-        // 011111110111110
-        // 010101010000010
-        // 011101010111110
-        // 000001010100010
-        // 011111011101010
-        // 010000000001010
-        // 010111111111110
-        // 010000000001000
-        // 011111111101110
-        // 010000000100000
-        // 011111110111110
-        // 000000010000010
-        // 011111111111010
+        // 111111101110110
+        // 011100100011100
+        // 010100111100110
+        // 010111000111010
+        // 011001011101010
+        // 010111010110110
+        // 011001010101100
+        // 001101011011010
+        // 010101101110110
+        // 010110100000010
+        // 011010111110110
+        // 010010000011100
+        // 011111111100110
         // 000000000000010
         let width = 15;
         let height = 15;
         let start_index: u8 = 1;
         let mut maze: Maze = MazeTrait::new(width, height, start_index, SEED);
-        maze.add_exit(222);
-        assert_eq!(maze.grid, 0x4001fdf2a82757c0a89f75200a5ffc8021ff720207f7c0209ffd0002);
+        maze.add(222);
+        maze.add(209);
+        assert_eq!(maze.grid, 0x4003FBB391C53CCB8E99752EB665586B695BB2D026BEC9071FF30002);
     }
 
     #[test]
-    fn test_maze_add_exit_twice() {
-        // 001000000000000
-        // 111111110111110
-        // 010101010000010
-        // 011101010111110
-        // 000001010100010
-        // 011111011101010
-        // 010000000001010
-        // 010111111111110
-        // 010000000001000
-        // 011111111101110
-        // 010000000100000
-        // 011111110111110
-        // 000000010000010
-        // 011111111111010
-        // 000000000000010
-        let width = 15;
-        let height = 15;
+    fn test_maze_wider() {
+        // 000000000000000000
+        // 010111111101101110
+        // 011100100110111010
+        // 010010111011101010
+        // 011011001101010110
+        // 001110101010110100
+        // 010011101011100100
+        // 010101011001011110
+        // 011101101101110010
+        // 010011010100001110
+        // 010010110111110010
+        // 011111101000011100
+        // 010100111111100110
+        // 000000000000000010
+        let width = 18;
+        let height = 14;
         let start_index: u8 = 1;
         let mut maze: Maze = MazeTrait::new(width, height, start_index, SEED);
-        maze.add_exit(222);
-        maze.add_exit(209);
-        assert_eq!(maze.grid, 0x4003fdf2a82757c0a89f75200a5ffc8021ff720207f7c0209ffd0002);
+        assert_eq!(maze.grid, 0x17F6E726E92EEA6CD58EAB44EB91565E76DC9350E4B7C9FA1C53F980002);
     }
 }
