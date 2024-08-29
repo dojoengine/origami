@@ -1,6 +1,6 @@
 // Powers of two
 
-const TWO_POWERS: [
+const TWO_POWER: [
     u256
     ; 252] = [
     0x1,
@@ -261,6 +261,6 @@ const TWO_POWERS: [
 pub impl TwoPower of TwoPowerTrait {
     #[inline]
     fn power(exp: u8) -> u256 {
-        *TWO_POWERS.span().at(exp.into())
+        *TWO_POWER.span().at(exp.into())
     }
 }

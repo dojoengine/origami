@@ -7,6 +7,8 @@ pub mod types {
 }
 
 pub mod helpers {
-    pub mod powers;
+    pub mod bitmap;
+    pub mod power;
+    pub mod seeder;
 }
 
