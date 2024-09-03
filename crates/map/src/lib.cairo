@@ -1,4 +1,5 @@
 pub mod hex;
+pub mod cave;
 pub mod maze;
 pub mod room;
 

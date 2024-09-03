@@ -15,17 +15,28 @@ pub impl Bitmap of BitmapTrait {
     }
 
     #[inline]
-    fn get(value: felt252, index: u8) -> u8 {
-        let value: u256 = value.into();
+    fn get(map: felt252, index: u8) -> u8 {
+        let map: u256 = map.into();
         let offset: u256 = TwoPower::power(index);
-        (value / offset % 2).try_into().unwrap()
+        (map / offset % 2).try_into().unwrap()
     }
 
     #[inline]
-    fn set(value: felt252, index: u8) -> felt252 {
-        let value: u256 = value.into();
+    fn set(map: felt252, index: u8) -> felt252 {
+        let map: u256 = map.into();
         let offset: u256 = TwoPower::power(index);
-        (value | offset).try_into().unwrap()
+        let bit = map / offset % 2;
+        let offset: u256 = offset * (1 - bit);
+        (map + offset).try_into().unwrap()
+    }
+
+    #[inline]
+    fn unset(map: felt252, index: u8) -> felt252 {
+        let map: u256 = map.into();
+        let offset: u256 = TwoPower::power(index);
+        let bit = map / offset % 2;
+        let offset: u256 = offset * bit;
+        (map - offset).try_into().unwrap()
     }
 }
 
@@ -53,9 +64,40 @@ mod tests {
         let count = Bitmap::popcount(0x4003FBB391C53CCB8E99752EB665586B695BB2D026BEC9071FF30002);
         assert_eq!(count, 109);
     }
+
     #[test]
     fn test_bitmap_popcount_small() {
         let count = Bitmap::popcount(0b101);
         assert_eq!(count, 2);
+    }
+
+    #[test]
+    fn test_bitmap_get() {
+        let bit = Bitmap::get(0b1001011, 0);
+        assert_eq!(bit, 1);
+    }
+
+    #[test]
+    fn test_bitmap_set() {
+        let bit = Bitmap::set(0b1001010, 0);
+        assert_eq!(bit, 0b1001011);
+    }
+
+    #[test]
+    fn test_bitmap_set_unchanged() {
+        let bit = Bitmap::set(0b1001011, 0);
+        assert_eq!(bit, 0b1001011);
+    }
+
+    #[test]
+    fn test_bitmap_unset() {
+        let bit = Bitmap::unset(0b1001011, 0);
+        assert_eq!(bit, 0b1001010);
+    }
+
+    #[test]
+    fn test_bitmap_unset_unchanged() {
+        let bit = Bitmap::unset(0b1001010, 0);
+        assert_eq!(bit, 0b1001010);
     }
 }

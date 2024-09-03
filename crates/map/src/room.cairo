@@ -10,15 +10,6 @@ use origami_map::helpers::seeder::Seeder;
 const MAX_SIZE: u8 = 252;
 const MULTIPLIER: u256 = 10000;
 
-/// Room struct.
-#[derive(Destruct)]
-pub struct Room {
-    pub width: u8,
-    pub height: u8,
-    pub grid: felt252,
-    pub seed: felt252,
-}
-
 /// Errors module.
 pub mod errors {
     pub const ROOM_NOT_ENOUGH_PLACE: felt252 = 'Room: not enough place';
@@ -73,7 +64,7 @@ pub impl RoomImpl of RoomTrait {
 mod tests {
     // Local imports
 
-    use super::{Room, RoomTrait};
+    use super::RoomTrait;
 
     // Constants
 

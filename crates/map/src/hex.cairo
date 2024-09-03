@@ -27,6 +27,7 @@ pub impl HexImpl of HexTrait {
             Direction::West(()) => Hex { col: self.col - 1, row: self.row },
             Direction::SouthWest(()) => Hex { col: self.col, row: self.row + 1 },
             Direction::SouthEast(()) => Hex { col: self.col + 1, row: self.row + 1 },
+            _ => self,
         }
     }
 
@@ -39,6 +40,7 @@ pub impl HexImpl of HexTrait {
             Direction::West(()) => Hex { col: self.col - 1, row: self.row },
             Direction::SouthWest(()) => Hex { col: self.col - 1, row: self.row - 1 },
             Direction::SouthEast(()) => Hex { col: self.col, row: self.row - 1 },
+            _ => self,
         }
     }
 
