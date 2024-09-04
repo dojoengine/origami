@@ -45,9 +45,10 @@ pub impl RoomImpl of RoomTrait {
             Method::Full => Private::empty(width, height),
             Method::Maze => Mazer::generate(width, height, seed),
             Method::Cave => Caver::generate(width, height, DEFAULT_CAVE_ORDER, seed),
-            Method::RandomWalk => Walker::generate(
-                width, height, 2 * (width * height).into(), seed
-            ),
+            Method::RandomWalk => {
+                let steps: u16 = 2 * (width * height).into();
+                Walker::generate(width, height, steps, seed)
+            },
         };
         // [Effect] Create room
         Room { width, height, grid, seed }
