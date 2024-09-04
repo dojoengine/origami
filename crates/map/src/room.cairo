@@ -1,62 +1,70 @@
-//! Room generation methods.
+//! Room struct and generation methods.
 
 // Internal imports
 
-use origami_map::helpers::bitmap::Bitmap;
-use origami_map::helpers::seeder::Seeder;
+use origami_map::helpers::power::TwoPower;
+use origami_map::helpers::mazer::Mazer;
+use origami_map::helpers::asserter::Asserter;
+use origami_map::helpers::walker::Walker;
+use origami_map::helpers::caver::Caver;
+use origami_map::helpers::digger::Digger;
 
-// Constants
-
-const MAX_SIZE: u8 = 252;
-const MULTIPLIER: u256 = 10000;
-
-/// Errors module.
-pub mod errors {
-    pub const ROOM_NOT_ENOUGH_PLACE: felt252 = 'Room: not enough place';
-    pub const ROOM_INVALID_DIMENSION: felt252 = 'Room: invalid dimension';
+/// Types.
+#[derive(Copy, Drop)]
+pub struct Room {
+    pub width: u8,
+    pub height: u8,
+    pub grid: felt252,
+    pub seed: felt252,
 }
 
 /// Implementation of the `RoomTrait` trait for the `Room` struct.
 #[generate_trait]
 pub impl RoomImpl of RoomTrait {
-    #[inline(always)]
-    fn new(grid: felt252, width: u8, height: u8, count: u8, seed: felt252) -> felt252 {
+    #[inline]
+    fn new(width: u8, height: u8, seed: felt252) -> Room {
         // [Check] Valid dimensions
-        assert(width * height <= MAX_SIZE, errors::ROOM_INVALID_DIMENSION);
-        // [Check] Ensure there is enough space for the objects
-        let mut total = width * height;
-        // [Info] Remove one since felt252 cannot handle 2^253 - 1
-        if total == MAX_SIZE {
-            total -= 1;
+        Asserter::assert_valid_dimension(width, height);
+        // [Effect] Generate empty room
+        let offset: u256 = TwoPower::power(width);
+        let row: felt252 = ((offset - 1) / 2).try_into().unwrap() - 1; // Remove head and tail bits
+        let offset: felt252 = offset.try_into().unwrap();
+        let mut index = height - 2;
+        let mut default: felt252 = 0;
+        loop {
+            if index == 0 {
+                break;
+            };
+            default += row;
+            default *= offset;
+            index -= 1;
         };
-        assert(count <= total, errors::ROOM_NOT_ENOUGH_PLACE);
-        // [Effect] Deposite objects uniformly
-        Self::generate(grid, 0, total, count, seed)
+        // [Effect] Create room
+        Room { width, height, grid: default, seed }
     }
 
     #[inline]
-    fn generate(
-        mut grid: felt252, index: u8, total: u8, mut count: u8, mut seed: felt252
-    ) -> felt252 {
-        // [Checl] Stop if all objects are placed
-        if count == 0 || index >= total {
-            return grid;
-        };
-        // [Check] Skip if the position is already occupied
-        seed = Seeder::reseed(seed, seed);
-        if Bitmap::get(grid, index) == 1 {
-            return Self::generate(grid, index + 1, total, count, seed);
-        };
-        // [Compute] Uniform random number between 0 and MULTIPLIER
-        let random = seed.into() % MULTIPLIER;
-        let probability: u256 = count.into() * MULTIPLIER / (total - index).into();
-        // [Check] Probability of being an object
-        if random <= probability {
-            // [Compute] Update grid
-            count -= 1;
-            grid = Bitmap::set(grid, index);
-        };
-        Self::generate(grid, index + 1, total, count, seed)
+    fn maze(width: u8, height: u8, seed: felt252) -> Room {
+        let grid = Mazer::generate(width, height, seed);
+        Room { width, height, grid, seed }
+    }
+
+    #[inline]
+    fn cave(width: u8, height: u8, order: u8, seed: felt252) -> Room {
+        let grid = Caver::generate(width, height, order, seed);
+        Room { width, height, grid, seed }
+    }
+
+    #[inline]
+    fn random_walk(width: u8, height: u8, steps: u16, seed: felt252) -> Room {
+        let grid = Walker::generate(width, height, steps, seed);
+        Room { width, height, grid, seed }
+    }
+
+    #[inline]
+    fn add_exit(ref self: Room, position: u8) {
+        // [Effect] Add exit to the room
+        self.grid = Digger::dig(self.width, self.height, position, self.grid, self.seed);
     }
 }
 
@@ -64,31 +72,102 @@ pub impl RoomImpl of RoomTrait {
 mod tests {
     // Local imports
 
-    use super::RoomTrait;
+    use super::{Room, RoomTrait};
+    use origami_map::helpers::seeder::Seeder;
 
     // Constants
 
-    const SEED: felt252 = 'SEED';
+    const SEED: felt252 = 'S33D';
 
     #[test]
-    fn test_room_new_generation() {
-        // 000000000000100000
-        // 000010100000000000
-        // 000010000100000000
-        // 000000101000000000
-        // 011001000000100000
-        // 000000100001000000
-        // 000100000000001100
-        // 000000100000000000
-        // 010000110000100011
-        // 000000000000000010
-        // 010000010000111000
-        // 000001000010000000
-        // 001000000000000000
-        // 001000000100100000
+    fn test_room_new() {
+        // 000000000000000000
+        // 011111111111111110
+        // 011111111111111110
+        // 011111111111111110
+        // 011111111111111110
+        // 011111111111111110
+        // 011111111111111110
+        // 011111111111111110
+        // 011111111111111110
+        // 011111111111111110
+        // 011111111111111110
+        // 011111111111111110
+        // 011111111111111110
+        // 000000000000000000
         let width = 18;
         let height = 14;
-        let room = RoomTrait::new(0, width, height, 35, SEED);
-        assert_eq!(room, 0x802800084000A006408008401003008004308C0002410E01080200008120);
+        let room: Room = RoomTrait::new(width, height, SEED);
+        assert_eq!(room.grid, 0x1FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF80000);
+    }
+
+    #[test]
+    fn test_room_maze() {
+        // 000000000000000000
+        // 010111011111110110
+        // 011101101000011100
+        // 001011011011101010
+        // 001100110010011110
+        // 011011100111101010
+        // 010110011101011010
+        // 011011101011010110
+        // 001000110110011010
+        // 001111011010110110
+        // 011001110011000100
+        // 010110101101011100
+        // 011101111011110110
+        // 000000000000000010
+        let width = 18;
+        let height = 14;
+        let mut room: Room = RoomTrait::maze(width, height, SEED);
+        room.add_exit(1);
+        assert_eq!(room.grid, 0x177F676870B6EA33279B9EA59D69BAD623668F6B6673116B5C77BD80002);
+    }
+
+    #[test]
+    fn test_room_cave() {
+        // 000000000000000000
+        // 001100001100000000
+        // 011111001100000000
+        // 011111000110000110
+        // 011111100111000110
+        // 011111100011000000
+        // 011111100000000000
+        // 011111110000000000
+        // 011111111100000000
+        // 011111111111000000
+        // 011111111111100110
+        // 001111111111111110
+        // 001111111111111110
+        // 000000000000000010
+        let width = 18;
+        let height = 14;
+        let seed: felt252 = Seeder::reseed(SEED, SEED);
+        let mut room: Room = RoomTrait::cave(width, height, 3, seed);
+        room.add_exit(1);
+        assert_eq!(room.grid, 0xC3007CC01F1867E719F8C07E001FC007FC01FFC07FF98FFFE3FFF80002);
+    }
+
+    #[test]
+    fn test_room_random_walk() {
+        // 000000000000000000
+        // 000000000011000000
+        // 000000000111001100
+        // 000001000111111110
+        // 000011100011111110
+        // 000011111111111110
+        // 000010011111111110
+        // 000010011101111110
+        // 000011111111111110
+        // 000011111111111110
+        // 000011111111111110
+        // 000011111111100000
+        // 000001111111111110
+        // 000000000000000010
+        let width = 18;
+        let height = 14;
+        let mut room: Room = RoomTrait::random_walk(width, height, 500, SEED);
+        room.add_exit(1);
+        assert_eq!(room.grid, 0xC00073011FE0E3F83FFE09FF8277E0FFF83FFE0FFF83FE007FF80002);
     }
 }
