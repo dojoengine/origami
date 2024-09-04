@@ -9,6 +9,10 @@ use origami_map::helpers::walker::Walker;
 use origami_map::helpers::caver::Caver;
 use origami_map::helpers::digger::Digger;
 
+// Constants
+
+pub const DEFAULT_CAVE_ORDER: u8 = 3;
+
 /// Types.
 #[derive(Copy, Drop)]
 pub struct Room {
@@ -18,29 +22,35 @@ pub struct Room {
     pub seed: felt252,
 }
 
+// Enums.
+#[derive(Copy, Drop)]
+pub enum Method {
+    None,
+    Full,
+    Maze,
+    Cave,
+    RandomWalk,
+}
+
 /// Implementation of the `RoomTrait` trait for the `Room` struct.
 #[generate_trait]
 pub impl RoomImpl of RoomTrait {
     #[inline]
-    fn new(width: u8, height: u8, seed: felt252) -> Room {
+    fn new(width: u8, height: u8, method: Method, seed: felt252) -> Room {
         // [Check] Valid dimensions
         Asserter::assert_valid_dimension(width, height);
-        // [Effect] Generate empty room
-        let offset: u256 = TwoPower::power(width);
-        let row: felt252 = ((offset - 1) / 2).try_into().unwrap() - 1; // Remove head and tail bits
-        let offset: felt252 = offset.try_into().unwrap();
-        let mut index = height - 2;
-        let mut default: felt252 = 0;
-        loop {
-            if index == 0 {
-                break;
-            };
-            default += row;
-            default *= offset;
-            index -= 1;
+        // [Effect] Generate room according to the method
+        let grid = match method {
+            Method::None => 0,
+            Method::Full => Private::empty(width, height),
+            Method::Maze => Mazer::generate(width, height, seed),
+            Method::Cave => Caver::generate(width, height, DEFAULT_CAVE_ORDER, seed),
+            Method::RandomWalk => Walker::generate(
+                width, height, 2 * (width * height).into(), seed
+            ),
         };
         // [Effect] Create room
-        Room { width, height, grid: default, seed }
+        Room { width, height, grid, seed }
     }
 
     #[inline]
@@ -68,11 +78,33 @@ pub impl RoomImpl of RoomTrait {
     }
 }
 
+#[generate_trait]
+impl Private of PrivateTrait {
+    #[inline]
+    fn empty(width: u8, height: u8) -> felt252 {
+        // [Effect] Generate empty room
+        let offset: u256 = TwoPower::power(width);
+        let row: felt252 = ((offset - 1) / 2).try_into().unwrap() - 1; // Remove head and tail bits
+        let offset: felt252 = offset.try_into().unwrap();
+        let mut index = height - 2;
+        let mut default: felt252 = 0;
+        loop {
+            if index == 0 {
+                break;
+            };
+            default += row;
+            default *= offset;
+            index -= 1;
+        };
+        default
+    }
+}
+
 #[cfg(test)]
 mod tests {
     // Local imports
 
-    use super::{Room, RoomTrait};
+    use super::{Room, RoomTrait, Method};
     use origami_map::helpers::seeder::Seeder;
 
     // Constants
@@ -94,11 +126,12 @@ mod tests {
         // 011111111111111110
         // 011111111111111110
         // 011111111111111110
-        // 000000000000000000
+        // 000000000000000010
         let width = 18;
         let height = 14;
-        let room: Room = RoomTrait::new(width, height, SEED);
-        assert_eq!(room.grid, 0x1FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF80000);
+        let mut room: Room = RoomTrait::new(width, height, Method::Full, SEED);
+        room.add_exit(1);
+        assert_eq!(room.grid, 0x1FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF80002);
     }
 
     #[test]
@@ -119,7 +152,7 @@ mod tests {
         // 000000000000000010
         let width = 18;
         let height = 14;
-        let mut room: Room = RoomTrait::maze(width, height, SEED);
+        let mut room: Room = RoomTrait::new(width, height, Method::Maze, SEED);
         room.add_exit(1);
         assert_eq!(room.grid, 0x177F676870B6EA33279B9EA59D69BAD623668F6B6673116B5C77BD80002);
     }
@@ -143,7 +176,7 @@ mod tests {
         let width = 18;
         let height = 14;
         let seed: felt252 = Seeder::reseed(SEED, SEED);
-        let mut room: Room = RoomTrait::cave(width, height, 3, seed);
+        let mut room: Room = RoomTrait::new(width, height, Method::Cave, seed);
         room.add_exit(1);
         assert_eq!(room.grid, 0xC3007CC01F1867E719F8C07E001FC007FC01FFC07FF98FFFE3FFF80002);
     }
@@ -166,7 +199,7 @@ mod tests {
         // 000000000000000010
         let width = 18;
         let height = 14;
-        let mut room: Room = RoomTrait::random_walk(width, height, 500, SEED);
+        let mut room: Room = RoomTrait::new(width, height, Method::RandomWalk, SEED);
         room.add_exit(1);
         assert_eq!(room.grid, 0xC00073011FE0E3F83FFE09FF8277E0FFF83FFE0FFF83FE007FF80002);
     }
