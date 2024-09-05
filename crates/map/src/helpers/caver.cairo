@@ -1,4 +1,5 @@
 //! Brogue's algorithm customized to generate Cave.
+//! See also https://www.rockpapershotgun.com/how-do-roguelikes-generate-levels
 
 // Internal imports
 
@@ -15,19 +16,34 @@ const FLOOR_TO_WALL_THRESHOLD: u8 = 3;
 /// Implementation of the `CaverTrait` trait.
 #[generate_trait]
 pub impl Caver of CaverTrait {
+    /// Generate a cave.
+    /// # Arguments
+    /// * `width` - The width of the cave
+    /// * `height` - The height of the cave
+    /// * `order` - The order of the cave, which is the number of smoothing iterations
+    /// * `seed` - The seed to generate the cave
+    /// # Returns
+    /// * The generated cave
     #[inline]
     fn generate(width: u8, height: u8, order: u8, seed: felt252) -> felt252 {
         // [Check] Valid dimensions
         Asserter::assert_valid_dimension(width, height);
         // [Effect] Remove leading bits
         let size = width * height;
-        let default: u256 = seed.into() / TwoPower::power(252 - size);
+        let default: u256 = seed.into() / TwoPower::pow(252 - size);
         let mut grid: felt252 = default.try_into().unwrap();
         Self::iter(width, height, size, order.into(), ref grid);
         // [Return] Cave
         grid
     }
 
+    /// Recursive function to generate the cave.
+    /// # Arguments
+    /// * `width` - The width of the cave
+    /// * `height` - The height of the cave
+    /// * `size` - The size of the cave
+    /// * `order` - The order of the cave
+    /// * `grid` - The grid of the cave to update
     #[inline]
     fn iter(width: u8, height: u8, size: u8, order: u16, ref grid: felt252) {
         // [Check] Stop if the loop count is zero
@@ -38,6 +54,13 @@ pub impl Caver of CaverTrait {
         };
     }
 
+    /// Assess the grid at the specified index.
+    /// # Arguments
+    /// * `width` - The width of the cave
+    /// * `height` - The height of the cave
+    /// * `index` - The index of the grid to assess
+    /// * `size` - The size of the cave
+    /// * `grid` - The grid of the cave to update
     #[inline]
     fn assess(width: u8, height: u8, index: u8, size: u8, ref grid: felt252) {
         let is_wall = Bitmap::get(grid, index) == 0;
@@ -54,6 +77,15 @@ pub impl Caver of CaverTrait {
         }
     }
 
+    /// Count the number of direct floor neighbors (adjacent).
+    /// # Arguments
+    /// * `width` - The width of the cave
+    /// * `height` - The height of the cave
+    /// * `x` - The x-coordinate of the grid
+    /// * `y` - The y-coordinate of the grid
+    /// * `grid` - The grid of the cave
+    /// # Returns
+    /// * The number of direct floor neighbors
     #[inline]
     fn count_direct_floor(width: u8, height: u8, x: u8, y: u8, grid: felt252) -> u8 {
         // [Compute] Neighbors
@@ -81,6 +113,15 @@ pub impl Caver of CaverTrait {
         floor_count
     }
 
+    /// Count the number of indirect floor neighbors (diagnoal).
+    /// # Arguments
+    /// * `width` - The width of the cave
+    /// * `height` - The height of the cave
+    /// * `x` - The x-coordinate of the grid
+    /// * `y` - The y-coordinate of the grid
+    /// * `grid` - The grid of the cave
+    /// # Returns
+    /// * The number of indirect floor neighbors
     #[inline]
     fn count_indirect_floor(width: u8, height: u8, x: u8, y: u8, grid: felt252) -> u8 {
         // [Compute] Neighbors
@@ -184,7 +225,7 @@ mod tests {
         let width = 18;
         let height = 14;
         let order = 2;
-        let seed: felt252 = Seeder::reseed(SEED, SEED);
+        let seed: felt252 = Seeder::shuffle(SEED, SEED);
         let cave = Caver::generate(width, height, order, seed);
         assert_eq!(cave, 0xC039F01E7E07FF81FFE0FFF87FFE1FFF83FFE0FDF81E3E038700000);
     }
@@ -284,7 +325,7 @@ mod tests {
         let width = 18;
         let height = 14;
         let order = 2;
-        let seed: felt252 = Seeder::reseed(SEED + SEED, SEED + SEED);
+        let seed: felt252 = Seeder::shuffle(SEED + SEED, SEED + SEED);
         let cave = Caver::generate(width, height, order, seed);
         assert_eq!(cave, 0x78001E000F80038FC0E3F8383E0F0703F0C1FC303F9E0FFFC3FFF00000);
     }

@@ -11,6 +11,15 @@ use origami_map::helpers::asserter::Asserter;
 /// Implementation of the `DiggerTrait` trait.
 #[generate_trait]
 pub impl Digger of DiggerTrait {
+    /// Dig a maze from the edge to the grid with a single contact point.
+    /// # Arguments
+    /// * `width` - The width of the grid
+    /// * `height` - The height of the grid
+    /// * `start` - The starting position
+    /// * `grid` - The original grid
+    /// * `seed` - The seed to generate the maze
+    /// # Returns
+    /// * The grid with the maze to the exit
     #[inline]
     fn maze(width: u8, height: u8, start: u8, mut grid: felt252, mut seed: felt252) -> felt252 {
         // [Check] Position is not a corner and is on an edge
@@ -35,6 +44,15 @@ pub impl Digger of DiggerTrait {
         grid.try_into().unwrap()
     }
 
+    /// Dig a corridor from the edge to the grid with a single contact point.
+    /// # Arguments
+    /// * `width` - The width of the grid
+    /// * `height` - The height of the grid
+    /// * `start` - The starting position
+    /// * `grid` - The original grid
+    /// * `seed` - The seed to generate the maze
+    /// # Returns
+    /// * The grid with the maze to the exit
     #[inline]
     fn corridor(width: u8, height: u8, start: u8, grid: felt252, mut seed: felt252) -> felt252 {
         // [Check] Position is not a corner and is on an edge
@@ -60,6 +78,15 @@ pub impl Digger of DiggerTrait {
         grid.try_into().unwrap()
     }
 
+    /// Recursive function to generate the corridor on an existing grid.
+    /// # Arguments
+    /// * `width` - The width of the corridor
+    /// * `height` - The height of the corridor
+    /// * `start` - The starting position
+    /// * `grid` - The original grid
+    /// * `stop` - The stop criteria
+    /// * `maze` - The generated corridor
+    /// * `seed` - The seed to generate the corridor
     #[inline]
     fn iter(
         width: u8,
@@ -78,7 +105,7 @@ pub impl Digger of DiggerTrait {
         // [Effect] Set the position
         maze = Bitmap::set(maze, start);
         // [Compute] Generate shuffled neighbors
-        seed = Seeder::reseed(seed, seed);
+        seed = Seeder::shuffle(seed, seed);
         let mut directions = Mazer::compute_shuffled_directions(seed);
         // [Assess] Direction 1
         let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
@@ -110,6 +137,16 @@ pub impl Digger of DiggerTrait {
         };
     }
 
+    /// Check if the position can be visited in the specified direction.
+    /// # Arguments
+    /// * `maze` - The maze
+    /// * `width` - The width of the maze
+    /// * `height` - The height of the maze
+    /// * `position` - The current position
+    /// * `direction` - The direction to check
+    /// * `stop` - The stop criteria
+    /// # Returns
+    /// * Whether the position can be visited in the specified direction
     #[inline]
     fn check(
         grid: felt252, width: u8, height: u8, position: u8, direction: u8, stop: bool

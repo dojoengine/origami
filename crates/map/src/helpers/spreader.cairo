@@ -19,6 +19,15 @@ pub mod errors {
 /// Implementation of the `SpreaderTrait` trait.
 #[generate_trait]
 pub impl Spreader of SpreaderTrait {
+    /// Spread objects into a map.
+    /// # Arguments
+    /// * `grid` - The grid where to spread the objects
+    /// * `width` - The width of the grid
+    /// * `height` - The height of the grid
+    /// * `count` - The number of objects to spread
+    /// * `seed` - The seed to spread the objects
+    /// # Returns
+    /// * The grid with the objects spread
     #[inline]
     fn generate(grid: felt252, width: u8, height: u8, count: u8, mut seed: felt252) -> felt252 {
         // [Check] Valid dimensions
@@ -33,6 +42,15 @@ pub impl Spreader of SpreaderTrait {
         objects.try_into().unwrap()
     }
 
+    /// Recursive function to spread objects into the grid.
+    /// # Arguments
+    /// * `grid` - The grid where to spread the objects
+    /// * `index` - The current index
+    /// * `total` - The total number of objects
+    /// * `count` - The number of objects to spread
+    /// * `seed` - The seed to spread the objects
+    /// # Returns
+    /// * The original grid with the objects spread set to 0
     #[inline]
     fn iter(mut grid: felt252, index: u8, total: u8, mut count: u8, seed: felt252) -> felt252 {
         // [Checl] Stop if all objects are placed
@@ -40,7 +58,7 @@ pub impl Spreader of SpreaderTrait {
             return grid;
         };
         // [Check] Skip if the position is already occupied
-        let seed = Seeder::reseed(seed, seed);
+        let seed = Seeder::shuffle(seed, seed);
         if Bitmap::get(grid, index) == 0 {
             return Self::iter(grid, index + 1, total, count, seed);
         };

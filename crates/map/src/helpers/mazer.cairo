@@ -1,4 +1,5 @@
 //! Prim's algorithm to generate Maze.
+//! See also https://en.wikipedia.org/wiki/Prim%27s_algorithm
 
 // Internal imports
 
@@ -13,6 +14,13 @@ pub const DIRECTION_SIZE: u32 = 0x10;
 /// Implementation of the `MazerTrait` trait.
 #[generate_trait]
 pub impl Mazer of MazerTrait {
+    /// Generate a maze.
+    /// # Arguments
+    /// * `width` - The width of the maze
+    /// * `height` - The height of the maze
+    /// * `seed` - The seed to generate the maze
+    /// # Returns
+    /// * The generated maze
     #[inline]
     fn generate(width: u8, height: u8, mut seed: felt252) -> felt252 {
         // [Check] Valid dimensions
@@ -26,6 +34,14 @@ pub impl Mazer of MazerTrait {
         maze
     }
 
+    /// Recursive function to generate the maze on an existing grid allowing a single contact point.
+    /// # Arguments
+    /// * `width` - The width of the maze
+    /// * `height` - The height of the maze
+    /// * `start` - The starting position
+    /// * `grid` - The original grid
+    /// * `maze` - The generated maze
+    /// * `seed` - The seed to generate the maze
     #[inline]
     fn iter(
         width: u8, height: u8, start: u8, ref grid: felt252, ref maze: felt252, ref seed: felt252
@@ -40,7 +56,7 @@ pub impl Mazer of MazerTrait {
         // [Effect] Set the position
         maze = Bitmap::set(maze, start);
         // [Compute] Generate shuffled neighbors
-        seed = Seeder::reseed(seed, seed);
+        seed = Seeder::shuffle(seed, seed);
         let mut directions = Self::compute_shuffled_directions(seed);
         // [Assess] Direction 1
         let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
@@ -72,6 +88,15 @@ pub impl Mazer of MazerTrait {
         };
     }
 
+    /// Check if the position can be visited in the specified direction.
+    /// # Arguments
+    /// * `maze` - The maze
+    /// * `width` - The width of the maze
+    /// * `height` - The height of the maze
+    /// * `position` - The current position
+    /// * `direction` - The direction to check
+    /// # Returns
+    /// * Whether the position can be visited in the specified direction
     #[inline]
     fn check(maze: felt252, width: u8, height: u8, position: u8, direction: u8) -> bool {
         let (x, y) = (position % width, position / width);
@@ -103,6 +128,13 @@ pub impl Mazer of MazerTrait {
         }
     }
 
+    /// Get the next position in the specified direction.
+    /// # Arguments
+    /// * `width` - The width of the maze
+    /// * `position` - The current position
+    /// * `direction` - The direction to move
+    /// # Returns
+    /// * The next position in the specified direction
     #[inline]
     fn next(width: u8, position: u8, direction: u8) -> u8 {
         let new_position = match direction {
@@ -114,12 +146,18 @@ pub impl Mazer of MazerTrait {
         new_position
     }
 
+    /// Compute shuffled directions.
+    /// # Arguments
+    /// * `seed` - The seed to generate the shuffled directions
+    /// # Returns
+    /// * The shuffled directions
+    /// # Info
+    /// * 0: North, 1: East, 2: South, 3: West
     #[inline]
     fn compute_shuffled_directions(seed: felt252) -> u32 {
         // [Compute] Random number
         let mut random: u32 = (seed.into() % 24_u256).try_into().unwrap();
         // [Return] Pickup a random permutation
-        // [Info] 0:Top, 1:Right, 2:Bottom, 3:Left
         match random {
             0 => 0x0123,
             1 => 0x0132,

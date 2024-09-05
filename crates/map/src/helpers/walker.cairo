@@ -1,4 +1,4 @@
-//! Prim's algorithm to generate Maze.
+//! Random walk algorithm to generate a grid.
 
 // Internal imports
 
@@ -11,75 +11,90 @@ use origami_map::helpers::asserter::Asserter;
 
 const DIRECTION_SIZE: u32 = 0x10;
 
-/// Implementation of the `MazerTrait` trait.
+/// Implementation of the `WalkerTrait` trait.
 #[generate_trait]
-pub impl Walker of MazerTrait {
+pub impl Walker of WalkerTrait {
+    /// Generate a random walk.
+    /// # Arguments
+    /// * `width` - The width of the walk
+    /// * `height` - The height of the walk
+    /// * `steps` - The number of steps to walk
+    /// * `seed` - The seed to generate the walk
+    /// # Returns
+    /// * The generated walk
     #[inline]
-    fn generate(width: u8, height: u8, mut steps: u16, seed: felt252) -> felt252 {
+    fn generate(width: u8, height: u8, steps: u16, seed: felt252) -> felt252 {
         // [Check] Valid dimensions
         Asserter::assert_valid_dimension(width, height);
         // [Effect] Add start position
-        let start = Seeder::random_position(width, height, seed);
-        let mut grid = Bitmap::set(0, start);
         // [Compute] Engage the random walk
-        let mut seed = Seeder::reseed(seed, seed);
-        Self::iter(width, height, start, ref steps, ref grid, ref seed);
+        let start = Seeder::random_position(width, height, seed);
+        let mut grid = 0;
+        Self::iter(width, height, start, steps, ref grid, seed);
         grid
     }
 
+    /// Recursive function to generate the random walk.
+    /// # Arguments
+    /// * `width` - The width of the walk
+    /// * `height` - The height of the walk
+    /// * `start` - The starting position
+    /// * `steps` - The number of steps to walk
+    /// * `grid` - The original grid
+    /// * `seed` - The seed to generate the walk
+    /// # Returns
+    /// * The original grid with the walk
     #[inline]
-    fn iter(
-        width: u8, height: u8, start: u8, ref steps: u16, ref grid: felt252, ref seed: felt252
-    ) {
+    fn iter(width: u8, height: u8, start: u8, mut steps: u16, ref grid: felt252, seed: felt252) {
         // [Check] Stop if the recursion runs out of steps
         if steps == 0 {
             return;
         }
         steps -= 1;
+        // [Effect] Set the position
+        grid = Bitmap::set(grid, start);
         // [Compute] Generate shuffled neighbors
+        let seed = Seeder::shuffle(seed, seed);
         let mut directions = Mazer::compute_shuffled_directions(seed);
         // [Assess] Direction 1
         let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
         directions /= DIRECTION_SIZE;
         if Self::check(grid, width, height, start, direction) {
-            // [Compute] Add neighbor
             let start = Mazer::next(width, start, direction);
-            grid = Bitmap::set(grid, start);
-            seed = Seeder::reseed(seed, seed);
-            return Self::iter(width, height, start, ref steps, ref grid, ref seed);
+            return Self::iter(width, height, start, steps, ref grid, seed);
         }
         // [Assess] Direction 2
         let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
         directions /= DIRECTION_SIZE;
         if Self::check(grid, width, height, start, direction) {
-            // [Compute] Add neighbor
             let start = Mazer::next(width, start, direction);
-            grid = Bitmap::set(grid, start);
-            seed = Seeder::reseed(seed, seed);
-            return Self::iter(width, height, start, ref steps, ref grid, ref seed);
+            return Self::iter(width, height, start, steps, ref grid, seed);
         }
         // [Assess] Direction 3
         let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
         directions /= DIRECTION_SIZE;
         if Self::check(grid, width, height, start, direction) {
-            // [Compute] Add neighbor
             let start = Mazer::next(width, start, direction);
-            grid = Bitmap::set(grid, start);
-            seed = Seeder::reseed(seed, seed);
-            return Self::iter(width, height, start, ref steps, ref grid, ref seed);
+            return Self::iter(width, height, start, steps, ref grid, seed);
         }
         // [Assess] Direction 4
         let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
         directions /= DIRECTION_SIZE;
         if Self::check(grid, width, height, start, direction) {
-            // [Compute] Add neighbor
             let start = Mazer::next(width, start, direction);
-            grid = Bitmap::set(grid, start);
-            seed = Seeder::reseed(seed, seed);
-            return Self::iter(width, height, start, ref steps, ref grid, ref seed);
+            return Self::iter(width, height, start, steps, ref grid, seed);
         };
     }
 
+    /// Check if the position can be visited in the specified direction.
+    /// # Arguments
+    /// * `grid` - The grid
+    /// * `width` - The width of the grid
+    /// * `height` - The height of the grid
+    /// * `position` - The current position
+    /// * `direction` - The direction to check
+    /// # Returns
+    /// * Whether the position can be visited
     #[inline]
     fn check(grid: felt252, width: u8, height: u8, position: u8, direction: u8) -> bool {
         let (x, y) = (position % width, position / width);

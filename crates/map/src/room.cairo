@@ -22,6 +22,13 @@ pub struct Room {
 /// Implementation of the `RoomTrait` trait for the `Room` struct.
 #[generate_trait]
 pub impl RoomImpl of RoomTrait {
+    /// Create an empty room.
+    /// # Arguments
+    /// * `width` - The width of the room
+    /// * `height` - The height of the room
+    /// * `seed` - The seed to generate the room
+    /// # Returns
+    /// * The generated room
     #[inline]
     fn new_empty(width: u8, height: u8, seed: felt252) -> Room {
         // [Check] Valid dimensions
@@ -32,36 +39,74 @@ pub impl RoomImpl of RoomTrait {
         Room { width, height, grid, seed }
     }
 
+    /// Create a room with a maze.
+    /// # Arguments
+    /// * `width` - The width of the room
+    /// * `height` - The height of the room
+    /// * `seed` - The seed to generate the room
+    /// # Returns
+    /// * The generated room
     #[inline]
     fn new_maze(width: u8, height: u8, seed: felt252) -> Room {
         let grid = Mazer::generate(width, height, seed);
         Room { width, height, grid, seed }
     }
 
+    /// Create a room with a cave.
+    /// # Arguments
+    /// * `width` - The width of the room
+    /// * `height` - The height of the room
+    /// * `order` - The order of the cave
+    /// * `seed` - The seed to generate the room
+    /// # Returns
+    /// * The generated room
     #[inline]
     fn new_cave(width: u8, height: u8, order: u8, seed: felt252) -> Room {
         let grid = Caver::generate(width, height, order, seed);
         Room { width, height, grid, seed }
     }
 
+    /// Create a room with a random walk.
+    /// # Arguments
+    /// * `width` - The width of the room
+    /// * `height` - The height of the room
+    /// * `steps` - The number of steps to walk
+    /// * `seed` - The seed to generate the room
+    /// # Returns
+    /// * The generated room
     #[inline]
     fn new_random_walk(width: u8, height: u8, steps: u16, seed: felt252) -> Room {
         let grid = Walker::generate(width, height, steps, seed);
         Room { width, height, grid, seed }
     }
 
+    /// Open the room with a corridor.
+    /// # Arguments
+    /// * `position` - The position of the corridor
+    /// # Returns
+    /// * The room with the corridor
     #[inline]
     fn open_with_corridor(ref self: Room, position: u8) {
         // [Effect] Add a corridor to open the room
         self.grid = Digger::corridor(self.width, self.height, position, self.grid, self.seed);
     }
 
+    /// Open the room with a maze.
+    /// # Arguments
+    /// * `position` - The position of the maze
+    /// # Returns
+    /// * The room with the maze
     #[inline]
     fn open_with_maze(ref self: Room, position: u8) {
         // [Effect] Add a maze to open the room
         self.grid = Digger::maze(self.width, self.height, position, self.grid, self.seed);
     }
 
+    /// Compute a distribution of objects in the room.
+    /// # Arguments
+    /// * `count` - The number of objects to distribute
+    /// # Returns
+    /// * The distribution of objects
     #[inline]
     fn compute_distribution(ref self: Room, count: u8, seed: felt252) -> felt252 {
         Spreader::generate(self.grid, self.width, self.height, count, seed)
@@ -70,10 +115,16 @@ pub impl RoomImpl of RoomTrait {
 
 #[generate_trait]
 impl Private of PrivateTrait {
+    /// Generate an empty room.
+    /// # Arguments
+    /// * `width` - The width of the room
+    /// * `height` - The height of the room
+    /// # Returns
+    /// * The generated empty room
     #[inline]
     fn empty(width: u8, height: u8) -> felt252 {
         // [Effect] Generate empty room
-        let offset: u256 = TwoPower::power(width);
+        let offset: u256 = TwoPower::pow(width);
         let row: felt252 = ((offset - 1) / 2).try_into().unwrap() - 1; // Remove head and tail bits
         let offset: felt252 = offset.try_into().unwrap();
         let mut index = height - 2;
@@ -166,7 +217,7 @@ mod tests {
         let width = 18;
         let height = 14;
         let order = 3;
-        let seed: felt252 = Seeder::reseed(SEED, SEED);
+        let seed: felt252 = Seeder::shuffle(SEED, SEED);
         let mut room: Room = RoomTrait::new_cave(width, height, order, seed);
         room.open_with_corridor(1);
         assert_eq!(room.grid, 0xC3007CC01F1867E719F8C07E001FC007FC01FFC07FF98FFFE3FFF80002);

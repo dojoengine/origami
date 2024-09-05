@@ -259,8 +259,13 @@ const TWO_POWER: [
 
 #[generate_trait]
 pub impl TwoPower of TwoPowerTrait {
+    /// Get the power of two at the specified exponent
+    /// # Arguments
+    /// * `exp` - The exponent of the power of two
+    /// # Returns
+    /// * The power of two at the specified exponent
     #[inline]
-    fn power(exp: u8) -> u256 {
+    fn pow(exp: u8) -> u256 {
         *TWO_POWER.span().at(exp.into())
     }
 }

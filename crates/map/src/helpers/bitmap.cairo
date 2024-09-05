@@ -4,6 +4,11 @@ use origami_map::helpers::power::{TwoPower, TwoPowerTrait};
 
 #[generate_trait]
 pub impl Bitmap of BitmapTrait {
+    /// Count the number of bits set to 1 in the number
+    /// # Arguments
+    /// * `x` - The value for which to count the number of bits set to 1
+    /// # Returns
+    /// * The number of bits set to 1
     #[inline]
     fn popcount(x: felt252) -> u8 {
         let mut x: u256 = x.into();
@@ -15,29 +20,47 @@ pub impl Bitmap of BitmapTrait {
         count
     }
 
+    /// Get the bit at the specified index
+    /// # Arguments
+    /// * `x` - The bitmap
+    /// * `index` - The index of the bit to get
+    /// # Returns
+    /// * The value of the bit at the specified index
     #[inline]
-    fn get(map: felt252, index: u8) -> u8 {
-        let map: u256 = map.into();
-        let offset: u256 = TwoPower::power(index);
-        (map / offset % 2).try_into().unwrap()
+    fn get(x: felt252, index: u8) -> u8 {
+        let x: u256 = x.into();
+        let offset: u256 = TwoPower::pow(index);
+        (x / offset % 2).try_into().unwrap()
     }
 
+    /// Set the bit at the specified index
+    /// # Arguments
+    /// * `x` - The bitmap
+    /// * `index` - The index of the bit to set
+    /// # Returns
+    /// * The bitmap with the bit at the specified index set to 1
     #[inline]
-    fn set(map: felt252, index: u8) -> felt252 {
-        let map: u256 = map.into();
-        let offset: u256 = TwoPower::power(index);
-        let bit = map / offset % 2;
+    fn set(x: felt252, index: u8) -> felt252 {
+        let x: u256 = x.into();
+        let offset: u256 = TwoPower::pow(index);
+        let bit = x / offset % 2;
         let offset: u256 = offset * (1 - bit);
-        (map + offset).try_into().unwrap()
+        (x + offset).try_into().unwrap()
     }
 
+    /// Unset the bit at the specified index
+    /// # Arguments
+    /// * `x` - The bitmap
+    /// * `index` - The index of the bit to unset
+    /// # Returns
+    /// * The bitmap with the bit at the specified index set to 0
     #[inline]
-    fn unset(map: felt252, index: u8) -> felt252 {
-        let map: u256 = map.into();
-        let offset: u256 = TwoPower::power(index);
-        let bit = map / offset % 2;
+    fn unset(x: felt252, index: u8) -> felt252 {
+        let x: u256 = x.into();
+        let offset: u256 = TwoPower::pow(index);
+        let bit = x / offset % 2;
         let offset: u256 = offset * bit;
-        (map - offset).try_into().unwrap()
+        (x - offset).try_into().unwrap()
     }
 
     /// The index of the least significant bit of the number,
@@ -45,10 +68,10 @@ pub impl Bitmap of BitmapTrait {
     /// # Arguments
     /// * `x` - The value for which to compute the least significant bit, must be greater than 0.
     /// # Returns
-    /// * The index of the least significant bit
-    #[inline(always)]
-    fn least_significant_bit(map: felt252) -> u8 {
-        let mut x: u256 = map.into();
+    /// * The index of the least significant bit, if 0 returns the index 0
+    #[inline]
+    fn least_significant_bit(x: felt252) -> u8 {
+        let mut x: u256 = x.into();
         if x == 0 {
             return 0;
         }
@@ -98,6 +121,11 @@ pub impl Bitmap of BitmapTrait {
 
 #[generate_trait]
 impl Private of PrivateTrait {
+    /// Count the number of bits set to 1 in the number for a u32
+    /// # Arguments
+    /// * `x` - The value for which to count the number of bits set to 1
+    /// # Returns
+    /// * The number of bits set to 1
     #[inline]
     fn _popcount(mut x: u32) -> u8 {
         x -= ((x / 2) & 0x55555555);
