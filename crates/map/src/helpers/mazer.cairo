@@ -20,75 +20,86 @@ pub impl Mazer of MazerTrait {
         // [Compute] Generate the maze
         let start = Seeder::random_position(width, height, seed);
         let mut grid = 0;
-        Self::iter(width, height, start, ref grid, ref seed);
-        grid
+        let mut maze = 0;
+        Self::iter(width, height, start, ref grid, ref maze, ref seed);
+        // [Return] The maze
+        maze
     }
 
     #[inline]
-    fn iter(width: u8, height: u8, start: u8, ref grid: felt252, ref seed: felt252) {
+    fn iter(
+        width: u8, height: u8, start: u8, ref grid: felt252, ref maze: felt252, ref seed: felt252
+    ) {
+        // [Check] Stop criteria, the position collides with the original grid
+        if Bitmap::get(grid, start) == 1 {
+            // [Effect] Merge the maze with the grid
+            let merge: u256 = grid.into() | maze.into();
+            maze = merge.try_into().unwrap();
+            return;
+        }
         // [Effect] Set the position
-        grid = Bitmap::set(grid, start);
+        maze = Bitmap::set(maze, start);
         // [Compute] Generate shuffled neighbors
         seed = Seeder::reseed(seed, seed);
         let mut directions = Self::compute_shuffled_directions(seed);
         // [Assess] Direction 1
         let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
         directions /= DIRECTION_SIZE;
-        if Self::check(grid, width, height, start, direction) {
+        if Self::check(maze, width, height, start, direction) {
             let next = Self::next(width, start, direction);
-            Self::iter(width, height, next, ref grid, ref seed);
+            Self::iter(width, height, next, ref grid, ref maze, ref seed);
         }
         // [Assess] Direction 2
         let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
         directions /= DIRECTION_SIZE;
-        if Self::check(grid, width, height, start, direction) {
+        if Self::check(maze, width, height, start, direction) {
             let next = Self::next(width, start, direction);
-            Self::iter(width, height, next, ref grid, ref seed);
+            Self::iter(width, height, next, ref grid, ref maze, ref seed);
         }
         // [Assess] Direction 3
         let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
         directions /= DIRECTION_SIZE;
-        if Self::check(grid, width, height, start, direction) {
+        if Self::check(maze, width, height, start, direction) {
             let next = Self::next(width, start, direction);
-            Self::iter(width, height, next, ref grid, ref seed);
+            Self::iter(width, height, next, ref grid, ref maze, ref seed);
         }
         // [Assess] Direction 4
         let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
         directions /= DIRECTION_SIZE;
-        if Self::check(grid, width, height, start, direction) {
+        if Self::check(maze, width, height, start, direction) {
             let next = Self::next(width, start, direction);
-            Self::iter(width, height, next, ref grid, ref seed);
+            Self::iter(width, height, next, ref grid, ref maze, ref seed);
         };
     }
 
     #[inline]
-    fn check(grid: felt252, width: u8, height: u8, position: u8, direction: u8) -> bool {
+    fn check(maze: felt252, width: u8, height: u8, position: u8, direction: u8) -> bool {
         let (x, y) = (position % width, position / width);
         match direction {
             0 => (y <= height - 3)
                 && (x != 0)
                 && (x != width - 1)
-                && (Bitmap::get(grid, position + 2 * width) == 0)
-                && (Bitmap::get(grid, position + width + 1) == 0)
-                && (Bitmap::get(grid, position + width - 1) == 0),
+                && (Bitmap::get(maze, position + 2 * width) == 0)
+                && (Bitmap::get(maze, position + width + 1) == 0)
+                && (Bitmap::get(maze, position + width - 1) == 0),
             1 => (x <= width - 3)
                 && (y != 0)
                 && (y != height - 1)
-                && (Bitmap::get(grid, position + 2) == 0)
-                && (Bitmap::get(grid, position + width + 1) == 0)
-                && (Bitmap::get(grid, position - width + 1) == 0),
+                && (Bitmap::get(maze, position + 2) == 0)
+                && (Bitmap::get(maze, position + width + 1) == 0)
+                && (Bitmap::get(maze, position - width + 1) == 0),
             2 => (y >= 2)
                 && (x != 0)
                 && (x != width - 1)
-                && (Bitmap::get(grid, position - 2 * width) == 0)
-                && (Bitmap::get(grid, position - width + 1) == 0)
-                && (Bitmap::get(grid, position - width - 1) == 0),
+                && (Bitmap::get(maze, position - 2 * width) == 0)
+                && (Bitmap::get(maze, position - width + 1) == 0)
+                && (Bitmap::get(maze, position - width - 1) == 0),
             _ => (x >= 2)
                 && (y != 0)
                 && (y != height - 1)
-                && (Bitmap::get(grid, position - 2) == 0)
-                && (Bitmap::get(grid, position + width - 1) == 0)
-                && (Bitmap::get(grid, position - width - 1) == 0),
+                && (Bitmap::get(maze, position - 2) == 0)
+                && (Bitmap::get(maze, position + width - 1) == 0)
+                && (Bitmap::get(maze, position - width - 1) == 0),
         }
     }
 

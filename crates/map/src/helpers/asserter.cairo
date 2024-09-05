@@ -27,6 +27,8 @@ pub impl Asserter of AssertTrait {
 
     #[inline]
     fn assert_valid_dimension(width: u8, height: u8) {
+        assert(width > 2, errors::ASSERTER_INVALID_DIMENSION);
+        assert(height > 2, errors::ASSERTER_INVALID_DIMENSION);
         assert(width * height <= MAX_SIZE, errors::ASSERTER_INVALID_DIMENSION);
     }
 

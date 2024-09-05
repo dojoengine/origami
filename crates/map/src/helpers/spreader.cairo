@@ -20,29 +20,28 @@ pub mod errors {
 #[generate_trait]
 pub impl Spreader of SpreaderTrait {
     #[inline]
-    fn generate(grid: felt252, width: u8, height: u8, count: u8, seed: felt252) -> felt252 {
+    fn generate(grid: felt252, width: u8, height: u8, count: u8, mut seed: felt252) -> felt252 {
         // [Check] Valid dimensions
         Asserter::assert_valid_dimension(width, height);
         // [Check] Ensure there is enough space for the objects
-        let mut total = width * height;
-        // [Info] Remove one since felt252 cannot handle 2^253 - 1
-        if total == MAX_SIZE {
-            total -= 1;
-        };
+        let total = Bitmap::popcount(grid);
         assert(count <= total, errors::SPREADER_NOT_ENOUGH_PLACE);
         // [Effect] Deposite objects uniformly
-        Self::iter(grid, 0, total, count, seed)
+        let start = Bitmap::least_significant_bit(grid);
+        let merge = Self::iter(grid, start, total, count, seed);
+        let objects: u256 = grid.into() ^ merge.into();
+        objects.try_into().unwrap()
     }
 
     #[inline]
-    fn iter(mut grid: felt252, index: u8, total: u8, mut count: u8, mut seed: felt252) -> felt252 {
+    fn iter(mut grid: felt252, index: u8, total: u8, mut count: u8, seed: felt252) -> felt252 {
         // [Checl] Stop if all objects are placed
         if count == 0 || index >= total {
             return grid;
         };
         // [Check] Skip if the position is already occupied
-        seed = Seeder::reseed(seed, seed);
-        if Bitmap::get(grid, index) == 1 {
+        let seed = Seeder::reseed(seed, seed);
+        if Bitmap::get(grid, index) == 0 {
             return Self::iter(grid, index + 1, total, count, seed);
         };
         // [Compute] Uniform random number between 0 and MULTIPLIER
@@ -52,7 +51,8 @@ pub impl Spreader of SpreaderTrait {
         if random <= probability {
             // [Compute] Update grid
             count -= 1;
-            grid = Bitmap::set(grid, index);
+            // [Effect] Set bit to 0
+            grid = Bitmap::unset(grid, index);
         };
         Self::iter(grid, index + 1, total, count, seed)
     }
@@ -86,7 +86,8 @@ mod tests {
         // 001000000100100000
         let width = 18;
         let height = 14;
-        let room = Spreader::generate(0, width, height, 35, SEED);
+        let grid: felt252 = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+        let room = Spreader::generate(grid, width, height, 35, SEED);
         assert_eq!(room, 0x802800084000A006408008401003008004308C0002410E01080200008120);
     }
 }

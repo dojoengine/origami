@@ -5,7 +5,8 @@ use origami_map::helpers::power::{TwoPower, TwoPowerTrait};
 #[generate_trait]
 pub impl Bitmap of BitmapTrait {
     #[inline]
-    fn popcount(mut x: u256) -> u8 {
+    fn popcount(x: felt252) -> u8 {
+        let mut x: u256 = x.into();
         let mut count: u8 = 0;
         while (x > 0) {
             count += PrivateTrait::_popcount((x % 0x100000000).try_into().unwrap());
@@ -37,6 +38,61 @@ pub impl Bitmap of BitmapTrait {
         let bit = map / offset % 2;
         let offset: u256 = offset * bit;
         (map - offset).try_into().unwrap()
+    }
+
+    /// The index of the least significant bit of the number,
+    /// where the least significant bit is at index 0 and the most significant bit is at index 255
+    /// # Arguments
+    /// * `x` - The value for which to compute the least significant bit, must be greater than 0.
+    /// # Returns
+    /// * The index of the least significant bit
+    #[inline(always)]
+    fn least_significant_bit(map: felt252) -> u8 {
+        let mut x: u256 = map.into();
+        if x == 0 {
+            return 0;
+        }
+        let mut r: u8 = 255;
+
+        if (x & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) > 0 {
+            r -= 128;
+        } else {
+            x /= 0x100000000000000000000000000000000;
+        }
+        if (x & 0xFFFFFFFFFFFFFFFF) > 0 {
+            r -= 64;
+        } else {
+            x /= 0x10000000000000000;
+        }
+        if (x & 0xFFFFFFFF) > 0 {
+            r -= 32;
+        } else {
+            x /= 0x100000000;
+        }
+        if (x & 0xFFFF) > 0 {
+            r -= 16;
+        } else {
+            x /= 0x10000;
+        }
+        if (x & 0xFF) > 0 {
+            r -= 8;
+        } else {
+            x /= 0x100;
+        }
+        if (x & 0xF) > 0 {
+            r -= 4;
+        } else {
+            x /= 0x10;
+        }
+        if (x & 0x3) > 0 {
+            r -= 2;
+        } else {
+            x /= 0x4;
+        }
+        if (x & 0x1) > 0 {
+            r -= 1;
+        }
+        r
     }
 }
 
