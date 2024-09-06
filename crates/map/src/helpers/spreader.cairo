@@ -54,7 +54,7 @@ pub impl Spreader of SpreaderTrait {
     #[inline]
     fn iter(mut grid: felt252, index: u8, total: u8, mut count: u8, seed: felt252) -> felt252 {
         // [Checl] Stop if all objects are placed
-        if count == 0 || index >= total {
+        if count == 0 {
             return grid;
         };
         // [Check] Skip if the position is already occupied
@@ -64,7 +64,7 @@ pub impl Spreader of SpreaderTrait {
         };
         // [Compute] Uniform random number between 0 and MULTIPLIER
         let random = seed.into() % MULTIPLIER;
-        let probability: u256 = count.into() * MULTIPLIER / (total - index).into();
+        let probability: u256 = count.into() * MULTIPLIER / total.into();
         // [Check] Probability of being an object
         if random <= probability {
             // [Compute] Update grid
@@ -72,7 +72,7 @@ pub impl Spreader of SpreaderTrait {
             // [Effect] Set bit to 0
             grid = Bitmap::unset(grid, index);
         };
-        Self::iter(grid, index + 1, total, count, seed)
+        Self::iter(grid, index + 1, total - 1, count, seed)
     }
 }
 
@@ -87,7 +87,7 @@ mod tests {
     const SEED: felt252 = 'SEED';
 
     #[test]
-    fn test_spreader_generate() {
+    fn test_spreader_generate_large() {
         // 000000000000100000
         // 000010100000000000
         // 000010000100000000
@@ -107,6 +107,22 @@ mod tests {
         let grid: felt252 = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
         let room = Spreader::generate(grid, width, height, 35, SEED);
         assert_eq!(room, 0x802800084000A006408008401003008004308C0002410E01080200008120);
+    }
+
+    #[test]
+    fn test_spreader_generate_small() {
+        // 000000001110000000
+        // 000000001110000000
+        // 000000001110000000
+        // Output:
+        // 000000000110000000
+        // 000000000000000000
+        // 000000001100000000
+        let width = 18;
+        let height = 14;
+        let grid: felt252 = 0x38000E000380;
+        let room = Spreader::generate(grid, width, height, 4, SEED);
+        assert_eq!(room, 0x180000000300);
     }
 }
 
