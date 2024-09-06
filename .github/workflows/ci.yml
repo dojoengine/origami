@@ -67,6 +67,17 @@ jobs:
         run: sozo test --package origami_map
         shell: bash
 
+  pathfinding:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    name: Test origami_map
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Test
+        run: sozo test --package origami_pathfinding
+        shell: bash
+
   random:
     needs: [check, build]
     runs-on: ubuntu-latest

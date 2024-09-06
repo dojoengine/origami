@@ -1,0 +1,8 @@
+[package]
+name = "origami_pathfinding"
+version.workspace = true
+description = "Pathfinding library for Dojo based games."
+homepage = "https://github.com/dojoengine/origami/tree/main/crates/pathfinding"
+edition = "2024_07"
+
+[dependencies]
