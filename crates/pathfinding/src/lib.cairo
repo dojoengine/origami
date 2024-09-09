@@ -6,5 +6,7 @@ pub mod types {
 
 pub mod helpers {
     pub mod astar;
+    pub mod bitmap;
+    pub mod power;
     pub mod heap;
 }
