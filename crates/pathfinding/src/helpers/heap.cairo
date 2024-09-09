@@ -6,6 +6,10 @@ use core::dict::{Felt252Dict, Felt252DictTrait};
 
 use origami_pathfinding::types::node::Node;
 
+// Constants
+
+const KEY_OFFSET: felt252 = 252;
+
 /// Traits.
 pub trait HeapTrait<T> {
     fn new() -> Heap<T>;
@@ -29,7 +33,6 @@ pub trait ItemTrait<T> {
 pub struct Heap<T> {
     pub len: u8,
     pub keys: Felt252Dict<u8>,
-    pub indexes: Felt252Dict<u8>,
     pub data: Felt252Dict<Nullable<T>>,
 }
 
@@ -39,9 +42,7 @@ pub impl HeapImpl<
 > of HeapTrait<T> {
     #[inline]
     fn new() -> Heap<T> {
-        Heap {
-            len: 0, keys: Default::default(), indexes: Default::default(), data: Default::default(),
-        }
+        Heap { len: 0, keys: Default::default(), data: Default::default(), }
     }
 
     #[inline]
@@ -66,7 +67,7 @@ pub impl HeapImpl<
 
     #[inline]
     fn contains(ref self: Heap<T>, key: u8) -> bool {
-        let index = self.indexes.get(key.into());
+        let index = self.keys.get(key.into() + KEY_OFFSET);
         let item_key = self.keys.get(index.into());
         index < self.len && item_key == key
     }
@@ -80,7 +81,7 @@ pub impl HeapImpl<
         // [Effect] Insert item at the end
         self.data.insert(key.into(), NullableTrait::new(item));
         self.keys.insert(index.into(), key);
-        self.indexes.insert(key.into(), index);
+        self.keys.insert(key.into() + KEY_OFFSET, index);
         // [Effect] Sort up
         self.sort_up(key);
     }
@@ -114,7 +115,7 @@ pub impl HeapImpl<
     fn sort_up(ref self: Heap<T>, item_key: u8) {
         // [Compute] Item
         let item: T = self.data.get(item_key.into()).deref();
-        let mut index = self.indexes.get(item_key.into());
+        let mut index = self.keys.get(item_key.into() + KEY_OFFSET);
         // [Compute] Peform swaps until the item is in the right place
         while index != 0 {
             index = (index - 1) / 2;
@@ -132,7 +133,7 @@ pub impl HeapImpl<
     fn sort_down(ref self: Heap<T>, item_key: u8) {
         // [Compute] Item
         let item: T = self.data.get(item_key.into()).deref();
-        let mut index: u8 = self.indexes.get(item_key.into());
+        let mut index: u8 = self.keys.get(item_key.into() + KEY_OFFSET);
         // [Compute] Peform swaps until the item is in the right place
         let mut lhs_index = index * 2 + 1;
         while lhs_index < self.len {
@@ -165,10 +166,10 @@ pub impl HeapImpl<
     #[inline]
     fn swap(ref self: Heap<T>, lhs: u8, rhs: u8) {
         // [Effect] Swap keys
-        let lhs_index = self.indexes.get(lhs.into());
-        let rhs_index = self.indexes.get(rhs.into());
-        self.indexes.insert(lhs.into(), rhs_index);
-        self.indexes.insert(rhs.into(), lhs_index);
+        let lhs_index = self.keys.get(lhs.into() + KEY_OFFSET);
+        let rhs_index = self.keys.get(rhs.into() + KEY_OFFSET);
+        self.keys.insert(lhs.into() + KEY_OFFSET, rhs_index);
+        self.keys.insert(rhs.into() + KEY_OFFSET, lhs_index);
         self.keys.insert(lhs_index.into(), rhs);
         self.keys.insert(rhs_index.into(), lhs);
     }

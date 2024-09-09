@@ -56,7 +56,6 @@ pub impl Astar of AstarTrait {
             path.append(current.position);
             current = heap.at(current.source);
         };
-        println!("path: {:?}", path);
 
         // [Return] The path from the start to the target
         path.span()
