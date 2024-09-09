@@ -46,19 +46,8 @@ pub impl Astar of AstarTrait {
             }
         };
 
-        // [Compute] Reconstruct the path from the target to the start
-        let mut path: Array<u8> = array![];
-        let mut current = heap.at(target.position);
-        loop {
-            if current.position == start.position {
-                break;
-            }
-            path.append(current.position);
-            current = heap.at(current.source);
-        };
-
         // [Return] The path from the start to the target
-        path.span()
+        Self::path(ref heap, start, target)
     }
 
     #[inline]
@@ -127,6 +116,27 @@ pub impl Astar of AstarTrait {
         };
         (dx + dy).into()
     }
+
+    #[inline]
+    fn path(ref heap: Heap<Node>, start: Node, target: Node) -> Span<u8> {
+        // [Check] The heap contains the target
+        let mut path: Array<u8> = array![];
+        match heap.get(target.position) {
+            Option::None => { path.span() },
+            Option::Some(mut current) => {
+                // [Compute] Reconstruct the path from the target to the start
+                loop {
+                    if current.position == start.position {
+                        break;
+                    }
+                    path.append(current.position);
+                    current = heap.at(current.source);
+                };
+                // [Return] The path from the start to the target
+                path.span()
+            },
+        }
+    }
 }
 
 #[cfg(test)]
@@ -147,6 +157,20 @@ mod test {
         let to = 8;
         let mut path = Astar::search(grid, width, height, from, to);
         assert_eq!(path, array![8, 7, 6, 3].span());
+    }
+
+    #[test]
+    fn test_astar_search_impossible() {
+        // x 1 0
+        // 1 0 1
+        // 0 1 s
+        let grid: felt252 = 0x1AB;
+        let width = 3;
+        let height = 3;
+        let from = 0;
+        let to = 8;
+        let mut path = Astar::search(grid, width, height, from, to);
+        assert_eq!(path, array![].span());
     }
 
     #[test]
