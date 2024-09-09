@@ -13,33 +13,102 @@ const KEY_OFFSET: felt252 = 252;
 /// Traits.
 pub trait HeapTrait<T> {
     fn new() -> Heap<T>;
+    /// Create if the heap is empty.
+    /// # Arguments
+    /// * `self` - The heap
+    /// # Returns
+    /// * `true` if the heap is empty, `false` otherwise
     fn is_empty(self: @Heap<T>) -> bool;
+    /// Get an item from the heap if it exists.
+    /// # Arguments
+    /// * `self` - The heap
+    /// * `key` - The key of the item
+    /// # Returns
+    /// * The item if it exists, `None` otherwise
     fn get(ref self: Heap<T>, key: u8) -> Option<T>;
+    /// Get an item from the heap.
+    /// # Arguments
+    /// * `self` - The heap
+    /// * `key` - The key of the item
+    /// # Returns
+    /// * The item
+    /// # Panics
+    /// * If the item does not exist
     fn at(ref self: Heap<T>, key: u8) -> T;
+    /// Check if the heap contains an item.
+    /// # Arguments
+    /// * `self` - The heap
+    /// * `key` - The key of the item
+    /// # Returns
+    /// * `true` if the item exists, `false` otherwise
     fn contains(ref self: Heap<T>, key: u8) -> bool;
+    /// Add an item to the heap.
+    /// # Arguments
+    /// * `self` - The heap
+    /// * `item` - The item to add
+    /// # Effects
+    /// * The item is added at the end of the heap and the heap is sorted up
     fn add(ref self: Heap<T>, item: T);
+    /// Update an item in the heap.
+    /// # Arguments
+    /// * `self` - The heap
+    /// * `item` - The item to update
+    /// # Effects
+    /// * The item is updated and the heap is sorted up since it cannot be updated with a lower
+    /// score in case of A* algorithm
     fn update(ref self: Heap<T>, item: T);
+    /// Pop the first item from the heap.
+    /// # Arguments
+    /// * `self` - The heap
+    /// # Returns
+    /// * The first item if the heap is not empty, `None` otherwise
     fn pop_front(ref self: Heap<T>) -> Option<T>;
+    /// Sort an item up in the heap.
+    /// # Arguments
+    /// * `self` - The heap
+    /// * `item_key` - The key of the item to sort up
+    /// # Effects
+    /// * The items are swapped until the item is in the right place
     fn sort_up(ref self: Heap<T>, item_key: u8);
+    /// Sort an item down in the heap.
+    /// # Arguments
+    /// * `self` - The heap
+    /// * `item_key` - The key of the item to sort down
+    /// # Effects
+    /// * The items are swapped until the item is in the right place
     fn sort_down(ref self: Heap<T>, item_key: u8);
+    /// Swap two items in the heap.
+    /// # Arguments
+    /// * `self` - The heap
+    /// * `lhs` - The key of the first item
+    /// * `rhs` - The key of the second item
+    /// # Effects
+    /// * The items are swapped
     fn swap(ref self: Heap<T>, lhs: u8, rhs: u8);
 }
 
 pub trait ItemTrait<T> {
+    /// Get the key of the item.
+    /// # Arguments
+    /// * `self` - The item
+    /// # Returns
+    /// * The key of the item
     fn key(self: T) -> u8;
 }
 
 /// Types.
 pub struct Heap<T> {
+    /// The length of the heap.
     pub len: u8,
+    /// The keys of the items in the heap and also the indexes of the items in the data.
+    /// Both information is stored in the same map to save gas.
     pub keys: Felt252Dict<u8>,
+    /// The items.
     pub data: Felt252Dict<Nullable<T>>,
 }
 
 /// Implementations.
-pub impl HeapImpl<
-    T, +ItemTrait<T>, +PartialOrd<T>, +PartialEq<T>, +Copy<T>, +Drop<T>
-> of HeapTrait<T> {
+pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapTrait<T> {
     #[inline]
     fn new() -> Heap<T> {
         Heap { len: 0, keys: Default::default(), data: Default::default(), }
