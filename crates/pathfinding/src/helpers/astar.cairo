@@ -56,6 +56,7 @@ pub impl Astar of AstarTrait {
             path.append(current.position);
             current = heap.at(current.source);
         };
+        println!("path: {:?}", path);
 
         // [Return] The path from the start to the target
         path.span()
@@ -137,8 +138,8 @@ mod test {
 
     #[test]
     fn test_astar_search_small() {
-        // x 1 1
-        // 1 0 1
+        // x───┐
+        // 1 0 │
         // 0 1 s
         let grid: felt252 = 0x1EB;
         let width = 3;
@@ -146,15 +147,14 @@ mod test {
         let from = 0;
         let to = 8;
         let mut path = Astar::search(grid, width, height, from, to);
-        assert_eq!(path.len(), 4);
         assert_eq!(path, array![8, 7, 6, 3].span());
     }
 
     #[test]
     fn test_astar_search_medium() {
-        // 1 x 0 0
-        // 1 0 1 1
-        // 1 1 1 1
+        // ┌─x 0 0
+        // │ 0 1 1
+        // └─────┐
         // 1 1 1 s
         let grid: felt252 = 0xCBFF;
         let width = 4;
@@ -162,7 +162,6 @@ mod test {
         let from = 0;
         let to = 14;
         let mut path = Astar::search(grid, width, height, from, to);
-        assert_eq!(path.len(), 7);
         assert_eq!(path, array![14, 15, 11, 7, 6, 5, 4].span());
     }
 
@@ -180,7 +179,7 @@ mod test {
         // 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 │ 0
         // 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 │ 0
         // 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 │ 0
-        // 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 x 0
+        // 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 s 0
         // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
         let grid: felt252 = 0x7F003F800FB001FC003C481F1F0FFFE1EEF83FFE1FFF81FFE03FF80000;
         let width = 18;
@@ -188,6 +187,33 @@ mod test {
         let from = 19;
         let to = 224;
         let mut path = Astar::search(grid, width, height, from, to);
-        assert_eq!(path.len(), 22);
+        assert_eq!(
+            path,
+            array![
+                224,
+                225,
+                207,
+                189,
+                171,
+                172,
+                154,
+                136,
+                118,
+                117,
+                116,
+                115,
+                114,
+                113,
+                112,
+                94,
+                93,
+                75,
+                57,
+                56,
+                55,
+                37
+            ]
+                .span()
+        );
     }
 }
