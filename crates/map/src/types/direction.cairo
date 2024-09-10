@@ -69,6 +69,8 @@ pub impl DirectionImpl of DirectionTrait {
     /// * `directions` - The packed directions
     /// # Returns
     /// * The next direction
+    /// # Effects
+    /// * The packed directions is updated
     #[inline]
     fn pop_front(ref directions: u32) -> Direction {
         let direciton: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
