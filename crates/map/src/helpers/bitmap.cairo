@@ -184,4 +184,17 @@ mod tests {
         let bit = Bitmap::unset(0b1001010, 0);
         assert_eq!(bit, 0b1001010);
     }
+
+    #[test]
+    fn test_bitmap_least_significant_bit_null() {
+        let msb = Bitmap::least_significant_bit(0);
+        assert!(msb == 0, "Bitmap: least significant bit");
+    }
+
+    #[test]
+    fn test_bitmap_least_significant_bit() {
+        let bitmap: felt252 = 1234; // 10011010010
+        let msb = Bitmap::least_significant_bit(bitmap);
+        assert!(msb == 1, "Bitmap: least significant bit");
+    }
 }
