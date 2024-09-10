@@ -4,20 +4,35 @@ use core::dict::{Felt252Dict, Felt252DictTrait};
 
 // Internal imports
 
-use origami_pathfinding::helpers::heap::{Heap, HeapTrait};
-use origami_pathfinding::helpers::bitmap::Bitmap;
-use origami_pathfinding::types::node::{Node, NodeTrait};
+use origami_map::helpers::heap::{Heap, HeapTrait};
+use origami_map::helpers::bitmap::Bitmap;
+use origami_map::types::node::{Node, NodeTrait};
+use origami_map::types::direction::Direction;
 
 #[generate_trait]
 pub impl Astar of AstarTrait {
+    /// Search for the shortest path from a start to a target position.
+    /// # Arguments
+    /// * `grid` - The grid to search (1 is walkable and 0 is not)
+    /// * `width` - The width of the grid
+    /// * `height` - The height of the grid
+    /// * `from` - The starting position
+    /// * `to` - The target position
+    /// # Returns
+    /// * The path from the target (incl.) to the start (excl.)
     #[inline]
     fn search(grid: felt252, width: u8, height: u8, from: u8, to: u8) -> Span<u8> {
+        // [Check] The start and target are walkable
+        if Bitmap::get(grid, from) == 0 || Bitmap::get(grid, to) == 0 {
+            return array![].span();
+        }
+        // [Effect] Initialize the start and target nodes
         let mut start = NodeTrait::new(from, 0, 0, 0);
         let target = NodeTrait::new(to, 0, 0, 0);
+        // [Effect] Initialize the heap and the visited nodes
         let mut heap: Heap<Node> = HeapTrait::new();
         let mut visited: Felt252Dict<bool> = Default::default();
         heap.add(start);
-
         // [Compute] Evaluate the path until the target is reached
         while !heap.is_empty() {
             // [Compute] Get the less expensive node
@@ -27,20 +42,20 @@ pub impl Astar of AstarTrait {
             if current.position == target.position {
                 break;
             }
-            // [Compute] Evaluate the neighbors
-            if Self::check(grid, width, height, current.position, 0, ref visited) {
+            // [Compute] Evaluate the neighbors for all 4 directions
+            if Self::check(grid, width, height, current.position, Direction::North, ref visited) {
                 let neighbor_position = current.position + width;
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
-            if Self::check(grid, width, height, current.position, 1, ref visited) {
+            if Self::check(grid, width, height, current.position, Direction::East, ref visited) {
                 let neighbor_position = current.position + 1;
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
-            if Self::check(grid, width, height, current.position, 2, ref visited) {
+            if Self::check(grid, width, height, current.position, Direction::South, ref visited) {
                 let neighbor_position = current.position - width;
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
-            if Self::check(grid, width, height, current.position, 3, ref visited) {
+            if Self::check(grid, width, height, current.position, Direction::West, ref visited) {
                 let neighbor_position = current.position - 1;
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
@@ -56,23 +71,24 @@ pub impl Astar of AstarTrait {
         width: u8,
         height: u8,
         position: u8,
-        direction: u8,
+        direction: Direction,
         ref visisted: Felt252Dict<bool>
     ) -> bool {
         let (x, y) = (position % width, position / width);
         match direction {
-            0 => (y < height - 1)
+            Direction::North => (y < height - 1)
                 && (Bitmap::get(grid, position + width) == 1)
                 && !visisted.get((position + width).into()),
-            1 => (x < width - 1)
+            Direction::East => (x < width - 1)
                 && (Bitmap::get(grid, position + 1) == 1)
                 && !visisted.get((position + 1).into()),
-            2 => (y > 0)
+            Direction::South => (y > 0)
                 && (Bitmap::get(grid, position - width) == 1)
                 && !visisted.get((position - width).into()),
-            _ => (x > 0)
+            Direction::West => (x > 0)
                 && (Bitmap::get(grid, position - 1) == 1)
                 && !visisted.get((position - 1).into()),
+            _ => false,
         }
     }
 
@@ -93,10 +109,9 @@ pub impl Astar of AstarTrait {
             neighbor.gcost = neighbor_gcost;
             neighbor.source = current.position;
             if !heap.contains(neighbor.position) {
-                heap.add(neighbor);
-            } else {
-                heap.update(neighbor);
+                return heap.add(neighbor);
             }
+            return heap.update(neighbor);
         }
     }
 

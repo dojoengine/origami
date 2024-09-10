@@ -1,6 +1,6 @@
 // Internal imports
 
-use origami_pathfinding::helpers::heap::ItemTrait;
+use origami_map::helpers::heap::ItemTrait;
 
 // Types.
 #[derive(Copy, Drop)]

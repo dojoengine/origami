@@ -9,6 +9,7 @@ use origami_map::helpers::walker::Walker;
 use origami_map::helpers::caver::Caver;
 use origami_map::helpers::digger::Digger;
 use origami_map::helpers::spreader::Spreader;
+use origami_map::helpers::astar::Astar;
 
 /// Types.
 #[derive(Copy, Drop)]
@@ -22,6 +23,19 @@ pub struct Room {
 /// Implementation of the `RoomTrait` trait for the `Room` struct.
 #[generate_trait]
 pub impl RoomImpl of RoomTrait {
+    /// Create a room.
+    /// # Arguments
+    /// * `grid` - The grid of the room
+    /// * `width` - The width of the room
+    /// * `height` - The height of the room
+    /// * `seed` - The seed to generate the room
+    /// # Returns
+    /// * The corresponding room
+    #[inline]
+    fn new(grid: felt252, width: u8, height: u8, seed: felt252) -> Room {
+        Room { width, height, grid, seed }
+    }
+
     /// Create an empty room.
     /// # Arguments
     /// * `width` - The width of the room
@@ -108,8 +122,20 @@ pub impl RoomImpl of RoomTrait {
     /// # Returns
     /// * The distribution of objects
     #[inline]
-    fn compute_distribution(ref self: Room, count: u8, seed: felt252) -> felt252 {
+    fn compute_distribution(self: Room, count: u8, seed: felt252) -> felt252 {
         Spreader::generate(self.grid, self.width, self.height, count, seed)
+    }
+
+    /// Search a path in the room.
+    /// # Arguments
+    /// * `from` - The starting position
+    /// * `to` - The target position
+    /// # Returns
+    /// * The path from the target (incl.) to the start (excl.)
+    /// * If the path is empty, the target is not reachable
+    #[inline]
+    fn search_path(self: Room, from: u8, to: u8) -> Span<u8> {
+        Astar::search(self.grid, self.width, self.height, from, to)
     }
 }
 
@@ -154,6 +180,18 @@ mod tests {
 
     #[test]
     fn test_room_new() {
+        let width = 18;
+        let height = 14;
+        let grid = 0x1FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF80002;
+        let room: Room = RoomTrait::new(grid, width, height, SEED);
+        assert_eq!(room.width, width);
+        assert_eq!(room.height, height);
+        assert_eq!(room.grid, grid);
+        assert_eq!(room.seed, SEED);
+    }
+
+    #[test]
+    fn test_room_new_empty() {
         // 000000000000000000
         // 011111111111111110
         // 011111111111111110
@@ -284,5 +322,29 @@ mod tests {
         let mut room: Room = RoomTrait::new_random_walk(width, height, steps, SEED);
         let distribution = room.compute_distribution(10, SEED);
         assert_eq!(distribution, 0x8021002008000000000001200100000000420000000000);
+    }
+
+    #[test]
+    fn test_room_search_path() {
+        // 000000000000000000
+        // 000000000011000000
+        // 000000000111001100
+        // 000001000111111110
+        // 000011100011111110
+        // 000011111111111110
+        // 0000100111x─┐11110
+        // 000010011101│11110
+        // 000011111111│11110
+        // 000011111111│11110
+        // 000011111111│11110
+        // 000011111111│00000
+        // 000001111111x00000
+        // 000000000000000000
+        let width = 18;
+        let height = 14;
+        let steps: u16 = 2 * width.into() * height.into();
+        let mut room: Room = RoomTrait::new_random_walk(width, height, steps, SEED);
+        let path = room.search_path(23, 133);
+        assert_eq!(path, array![133, 132, 131, 113, 95, 77, 59, 41].span());
     }
 }

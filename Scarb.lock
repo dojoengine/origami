@@ -45,10 +45,6 @@ name = "origami_map"
 version = "1.0.0-alpha.11"
 
 [[package]]
-name = "origami_pathfinding"
-version = "1.0.0-alpha.11"
-
-[[package]]
 name = "origami_random"
 version = "1.0.0-alpha.11"
 

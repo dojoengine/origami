@@ -4,7 +4,7 @@ use core::dict::{Felt252Dict, Felt252DictTrait};
 
 // Internal imports
 
-use origami_pathfinding::types::node::Node;
+use origami_map::types::node::Node;
 
 // Constants
 
@@ -123,10 +123,9 @@ pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapT
     fn get(ref self: Heap<T>, key: u8) -> Option<T> {
         let nullable: Nullable<T> = self.data.get(key.into());
         if nullable.is_null() {
-            Option::None
-        } else {
-            Option::Some(nullable.deref())
+            return Option::None;
         }
+        Option::Some(nullable.deref())
     }
 
     #[inline]
@@ -190,11 +189,10 @@ pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapT
             index = (index - 1) / 2;
             let parent_key = self.keys.get(index.into());
             let mut parent: T = self.data.get(parent_key.into()).deref();
-            if parent > item {
-                self.swap(parent_key, item_key);
-            } else {
+            if parent <= item {
                 break;
             }
+            self.swap(parent_key, item_key);
         }
     }
 
@@ -222,11 +220,10 @@ pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapT
                 };
             }
             // [Effect] Swap if necessary
-            if item > child {
-                self.swap(item_key, child_key);
-            } else {
+            if item <= child {
                 break;
-            }
+            };
+            self.swap(item_key, child_key);
             // [Check] Stop criteria, assess left child side
             lhs_index = index * 2 + 1;
         }
