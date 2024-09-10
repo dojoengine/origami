@@ -1,3 +1,5 @@
+//! Heap implementation.
+
 // Core imports
 
 use core::dict::{Felt252Dict, Felt252DictTrait};
