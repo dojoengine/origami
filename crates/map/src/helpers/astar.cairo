@@ -1,3 +1,5 @@
+//! A* algorithm implementation for pathfinding.
+
 // Core imports
 
 use core::dict::{Felt252Dict, Felt252DictTrait};
@@ -65,6 +67,16 @@ pub impl Astar of AstarTrait {
         Self::path(ref heap, start, target)
     }
 
+    /// Check if the position can be visited in the specified direction.
+    /// # Arguments
+    /// * `grid` - The grid to search (1 is walkable and 0 is not)
+    /// * `width` - The width of the grid
+    /// * `height` - The height of the grid
+    /// * `position` - The current position
+    /// * `direction` - The direction to check
+    /// * `visited` - The visited nodes
+    /// # Returns
+    /// * Whether the position can be visited in the specified direction
     #[inline]
     fn check(
         grid: felt252,
@@ -92,6 +104,15 @@ pub impl Astar of AstarTrait {
         }
     }
 
+    /// Assess the neighbor node and update the heap.
+    /// # Arguments
+    /// * `width` - The width of the grid
+    /// * `neighbor_position` - The position of the neighbor
+    /// * `current` - The current node
+    /// * `target` - The target node
+    /// * `heap` - The heap of nodes
+    /// # Effects
+    /// * Update the heap with the neighbor node
     #[inline]
     fn assess(
         width: u8, neighbor_position: u8, current: Node, target: Node, ref heap: Heap<Node>,
@@ -115,6 +136,13 @@ pub impl Astar of AstarTrait {
         }
     }
 
+    /// Compute the heuristic cost between two positions.
+    /// # Arguments
+    /// * `position` - The current position
+    /// * `target` - The target position
+    /// * `width` - The width of the grid
+    /// # Returns
+    /// * The heuristic cost between the two positions
     #[inline]
     fn heuristic(position: u8, target: u8, width: u8) -> u16 {
         let (x1, y1) = (position % width, position / width);
@@ -132,6 +160,13 @@ pub impl Astar of AstarTrait {
         (dx + dy).into()
     }
 
+    /// Reconstruct the path from the target to the start.
+    /// # Arguments
+    /// * `heap` - The heap of nodes
+    /// * `start` - The starting node
+    /// * `target` - The target node
+    /// # Returns
+    /// * The span of positions from the target to the start
     #[inline]
     fn path(ref heap: Heap<Node>, start: Node, target: Node) -> Span<u8> {
         // [Check] The heap contains the target
