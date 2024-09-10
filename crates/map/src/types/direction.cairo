@@ -29,8 +29,6 @@ pub impl DirectionImpl of DirectionTrait {
     /// * `seed` - The seed to generate the shuffled directions
     /// # Returns
     /// * The shuffled directions
-    /// # Info
-    /// * 0: North, 1: East, 2: South, 3: West
     #[inline]
     fn compute_shuffled_directions(seed: felt252) -> u32 {
         // [Compute] Random number
