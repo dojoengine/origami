@@ -6,6 +6,7 @@ use origami_map::helpers::bitmap::Bitmap;
 use origami_map::helpers::seeder::Seeder;
 use origami_map::helpers::mazer::Mazer;
 use origami_map::helpers::asserter::Asserter;
+use origami_map::types::direction::{Direction, DirectionTrait};
 
 // Constants
 
@@ -55,31 +56,27 @@ pub impl Walker of WalkerTrait {
         grid = Bitmap::set(grid, start);
         // [Compute] Generate shuffled neighbors
         let seed = Seeder::shuffle(seed, seed);
-        let mut directions = Mazer::compute_shuffled_directions(seed);
+        let mut directions = DirectionTrait::compute_shuffled_directions(seed);
         // [Assess] Direction 1
-        let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
-        directions /= DIRECTION_SIZE;
+        let direction: Direction = DirectionTrait::pop_front(ref directions);
         if Self::check(grid, width, height, start, direction) {
             let start = Mazer::next(width, start, direction);
             return Self::iter(width, height, start, steps, ref grid, seed);
         }
         // [Assess] Direction 2
-        let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
-        directions /= DIRECTION_SIZE;
+        let direction: Direction = DirectionTrait::pop_front(ref directions);
         if Self::check(grid, width, height, start, direction) {
             let start = Mazer::next(width, start, direction);
             return Self::iter(width, height, start, steps, ref grid, seed);
         }
         // [Assess] Direction 3
-        let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
-        directions /= DIRECTION_SIZE;
+        let direction: Direction = DirectionTrait::pop_front(ref directions);
         if Self::check(grid, width, height, start, direction) {
             let start = Mazer::next(width, start, direction);
             return Self::iter(width, height, start, steps, ref grid, seed);
         }
         // [Assess] Direction 4
-        let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
-        directions /= DIRECTION_SIZE;
+        let direction: Direction = DirectionTrait::pop_front(ref directions);
         if Self::check(grid, width, height, start, direction) {
             let start = Mazer::next(width, start, direction);
             return Self::iter(width, height, start, steps, ref grid, seed);
@@ -96,13 +93,14 @@ pub impl Walker of WalkerTrait {
     /// # Returns
     /// * Whether the position can be visited
     #[inline]
-    fn check(grid: felt252, width: u8, height: u8, position: u8, direction: u8) -> bool {
+    fn check(grid: felt252, width: u8, height: u8, position: u8, direction: Direction) -> bool {
         let (x, y) = (position % width, position / width);
         match direction {
-            0 => (y < height - 2) && (x != 0) && (x != width - 1),
-            1 => (x < width - 2) && (y != 0) && (y != height - 1),
-            2 => (y > 1) && (x != 0) && (x != width - 1),
-            _ => (x > 1) && (y != 0) && (y != height - 1),
+            Direction::North => (y < height - 2) && (x != 0) && (x != width - 1),
+            Direction::East => (x < width - 2) && (y != 0) && (y != height - 1),
+            Direction::South => (y > 1) && (x != 0) && (x != width - 1),
+            Direction::West => (x > 1) && (y != 0) && (y != height - 1),
+            _ => false,
         }
     }
 }

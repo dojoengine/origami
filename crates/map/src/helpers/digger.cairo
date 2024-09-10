@@ -5,8 +5,9 @@
 use origami_map::helpers::bitmap::Bitmap;
 use origami_map::helpers::caver::Caver;
 use origami_map::helpers::seeder::Seeder;
-use origami_map::helpers::mazer::{Mazer, DIRECTION_SIZE};
+use origami_map::helpers::mazer::Mazer;
 use origami_map::helpers::asserter::Asserter;
+use origami_map::types::direction::{Direction, DirectionTrait};
 
 /// Implementation of the `DiggerTrait` trait.
 #[generate_trait]
@@ -28,13 +29,13 @@ pub impl Digger of DiggerTrait {
         // [Effect] Dig the edge and compute the next position
         let (x, y) = (start % width, start / width);
         let next: u8 = if x == 0 {
-            Mazer::next(width, start, 1)
+            Mazer::next(width, start, Direction::East)
         } else if x == width - 1 {
-            Mazer::next(width, start, 3)
+            Mazer::next(width, start, Direction::West)
         } else if y == 0 {
-            Mazer::next(width, start, 0)
+            Mazer::next(width, start, Direction::North)
         } else {
-            Mazer::next(width, start, 2)
+            Mazer::next(width, start, Direction::South)
         };
         // [Compute] Generate the maze from the exit to the grid
         let mut maze = Bitmap::set(0, start);
@@ -61,13 +62,13 @@ pub impl Digger of DiggerTrait {
         // [Effect] Dig the edge and compute the next position
         let (x, y) = (start % width, start / width);
         let next: u8 = if x == 0 {
-            Mazer::next(width, start, 1)
+            Mazer::next(width, start, Direction::East)
         } else if x == width - 1 {
-            Mazer::next(width, start, 3)
+            Mazer::next(width, start, Direction::West)
         } else if y == 0 {
-            Mazer::next(width, start, 0)
+            Mazer::next(width, start, Direction::North)
         } else {
-            Mazer::next(width, start, 2)
+            Mazer::next(width, start, Direction::South)
         };
         // [Compute] Generate the maze from the exit to the grid
         let mut maze = Bitmap::set(0, start);
@@ -106,31 +107,27 @@ pub impl Digger of DiggerTrait {
         maze = Bitmap::set(maze, start);
         // [Compute] Generate shuffled neighbors
         seed = Seeder::shuffle(seed, seed);
-        let mut directions = Mazer::compute_shuffled_directions(seed);
+        let mut directions = DirectionTrait::compute_shuffled_directions(seed);
         // [Assess] Direction 1
-        let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
-        directions /= DIRECTION_SIZE;
+        let direction: Direction = DirectionTrait::pop_front(ref directions);
         if Self::check(maze, width, height, start, direction, stop) {
             let next = Mazer::next(width, start, direction);
             Self::iter(width, height, next, grid, ref stop, ref maze, ref seed);
         }
         // [Assess] Direction 2
-        let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
-        directions /= DIRECTION_SIZE;
+        let direction: Direction = DirectionTrait::pop_front(ref directions);
         if Self::check(maze, width, height, start, direction, stop) {
             let next = Mazer::next(width, start, direction);
             Self::iter(width, height, next, grid, ref stop, ref maze, ref seed);
         }
         // [Assess] Direction 3
-        let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
-        directions /= DIRECTION_SIZE;
+        let direction: Direction = DirectionTrait::pop_front(ref directions);
         if Self::check(maze, width, height, start, direction, stop) {
             let next = Mazer::next(width, start, direction);
             Self::iter(width, height, next, grid, ref stop, ref maze, ref seed);
         }
         // [Assess] Direction 4
-        let direction: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();
-        directions /= DIRECTION_SIZE;
+        let direction: Direction = DirectionTrait::pop_front(ref directions);
         if Self::check(maze, width, height, start, direction, stop) {
             let next = Mazer::next(width, start, direction);
             Self::iter(width, height, next, grid, ref stop, ref maze, ref seed);
@@ -149,7 +146,7 @@ pub impl Digger of DiggerTrait {
     /// * Whether the position can be visited in the specified direction
     #[inline]
     fn check(
-        grid: felt252, width: u8, height: u8, position: u8, direction: u8, stop: bool
+        grid: felt252, width: u8, height: u8, position: u8, direction: Direction, stop: bool
     ) -> bool {
         !stop && Mazer::check(grid, width, height, position, direction)
     }
