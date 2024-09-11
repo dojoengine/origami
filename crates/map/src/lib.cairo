@@ -1,5 +1,5 @@
 pub mod hex;
-pub mod room;
+pub mod map;
 
 pub mod types {
     pub mod direction;
