@@ -29,8 +29,6 @@ pub impl DirectionImpl of DirectionTrait {
     /// * `seed` - The seed to generate the shuffled directions
     /// # Returns
     /// * The shuffled directions
-    /// # Info
-    /// * 0: North, 1: East, 2: South, 3: West
     #[inline]
     fn compute_shuffled_directions(seed: felt252) -> u32 {
         // [Compute] Random number
@@ -69,6 +67,8 @@ pub impl DirectionImpl of DirectionTrait {
     /// * `directions` - The packed directions
     /// # Returns
     /// * The next direction
+    /// # Effects
+    /// * The packed directions is updated
     #[inline]
     fn pop_front(ref directions: u32) -> Direction {
         let direciton: u8 = (directions % DIRECTION_SIZE).try_into().unwrap();

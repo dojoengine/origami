@@ -105,8 +105,8 @@ mod tests {
         let width = 18;
         let height = 14;
         let grid: felt252 = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
-        let room = Spreader::generate(grid, width, height, 35, SEED);
-        assert_eq!(room, 0x802800084000A006408008401003008004308C0002410E01080200008120);
+        let map = Spreader::generate(grid, width, height, 35, SEED);
+        assert_eq!(map, 0x802800084000A006408008401003008004308C0002410E01080200008120);
     }
 
     #[test]
@@ -121,8 +121,8 @@ mod tests {
         let width = 18;
         let height = 14;
         let grid: felt252 = 0x38000E000380;
-        let room = Spreader::generate(grid, width, height, 4, SEED);
-        assert_eq!(room, 0x180000000300);
+        let map = Spreader::generate(grid, width, height, 4, SEED);
+        assert_eq!(map, 0x180000000300);
     }
 }
 

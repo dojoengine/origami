@@ -1,8 +1,9 @@
 pub mod hex;
-pub mod room;
+pub mod map;
 
 pub mod types {
     pub mod direction;
+    pub mod node;
 }
 
 pub mod helpers {
@@ -15,5 +16,10 @@ pub mod helpers {
     pub mod caver;
     pub mod walker;
     pub mod spreader;
+    pub mod astar;
+    pub mod heap;
+
+    #[cfg(target: "test")]
+    pub mod printer;
 }
 
