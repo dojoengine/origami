@@ -18,5 +18,8 @@ pub mod helpers {
     pub mod spreader;
     pub mod astar;
     pub mod heap;
+
+    #[cfg(target: "test")]
+    pub mod printer;
 }
 
