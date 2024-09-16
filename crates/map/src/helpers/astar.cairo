@@ -36,9 +36,8 @@ pub impl Astar of AstarTrait {
         let mut visited: Felt252Dict<bool> = Default::default();
         heap.add(start);
         // [Compute] Evaluate the path until the target is reached
-        while !heap.is_empty() {
+        while let Option::Some(current) = heap.pop_front() {
             // [Compute] Get the less expensive node
-            let current: Node = heap.pop_front().unwrap();
             visited.insert(current.position.into(), true);
             // [Check] Stop if we reached the target
             if current.position == target.position {
@@ -50,7 +49,7 @@ pub impl Astar of AstarTrait {
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
             if Self::check(grid, width, height, current.position, Direction::East, ref visited) {
-                let neighbor_position = current.position + 1;
+                let neighbor_position = current.position - 1;
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
             if Self::check(grid, width, height, current.position, Direction::South, ref visited) {
@@ -58,7 +57,7 @@ pub impl Astar of AstarTrait {
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
             if Self::check(grid, width, height, current.position, Direction::West, ref visited) {
-                let neighbor_position = current.position - 1;
+                let neighbor_position = current.position + 1;
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
         };
@@ -91,15 +90,15 @@ pub impl Astar of AstarTrait {
             Direction::North => (y < height - 1)
                 && (Bitmap::get(grid, position + width) == 1)
                 && !visisted.get((position + width).into()),
-            Direction::East => (x < width - 1)
-                && (Bitmap::get(grid, position + 1) == 1)
-                && !visisted.get((position + 1).into()),
+            Direction::East => (x > 0)
+                && (Bitmap::get(grid, position - 1) == 1)
+                && !visisted.get((position - 1).into()),
             Direction::South => (y > 0)
                 && (Bitmap::get(grid, position - width) == 1)
                 && !visisted.get((position - width).into()),
-            Direction::West => (x > 0)
-                && (Bitmap::get(grid, position - 1) == 1)
-                && !visisted.get((position - 1).into()),
+            Direction::West => (x < width - 1)
+                && (Bitmap::get(grid, position + 1) == 1)
+                && !visisted.get((position + 1).into()),
             _ => false,
         }
     }
@@ -247,10 +246,10 @@ mod test {
         // 0 0 0 1 1 1 1 ┌───x 0 0 0 0 0 0 0 0
         // 0 0 0 0 1 1 1 │ 0 0 0 1 0 0 1 0 0 0
         // 0 0 0 1 1 1 1 │ 0 0 0 1 1 1 1 1 0 0
-        // 0 0 1 1 1 1 1 └───┐ 1 1 1 1 1 1 1 0
-        // 0 0 0 1 1 1 1 0 1 │ 1 0 1 1 1 1 1 0
-        // 0 0 0 0 1 1 1 1 1 └─┐ 1 1 1 1 1 1 0
-        // 0 0 0 1 1 1 1 1 1 1 └───────────s 0
+        // 0 0 1 1 1 1 1 └─────────────────┐ 0
+        // 0 0 0 1 1 1 1 0 1 1 1 0 1 1 1 1 │ 0
+        // 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 │ 0
+        // 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 s 0
         // 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0
         // 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 0
         // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -262,7 +261,63 @@ mod test {
         let mut path = Astar::search(grid, width, height, from, to);
         assert_eq!(
             path,
-            array![170, 171, 172, 154, 136, 118, 117, 116, 98, 80, 79, 61, 60, 59, 58, 57, 56]
+            array![
+                170, 171, 172, 154, 136, 118, 117, 116, 115, 114, 113, 112, 111, 110, 109, 91, 73
+            ]
+                .span()
+        );
+    }
+
+    #[test]
+    fn test_astar_search_issue() {
+        // 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0
+        // 0 1 1 1 1 1 1 1 0 1 1 0 0 1 0
+        // 0 1 1 1 1 1 1 1 0 0 E * 1 1 0  <-- 180 + 4 = 184
+        // 0 1 1 1 1 1 1 1 1 1 0 * 0 1 0
+        // 0 1 1 1 1 1 1 1 1 1 0 * 0 1 0
+        // 0 1 1 1 0 0 1 0 0 0 1 * * 0 0
+        // 0 1 1 1 1 0 0 1 1 1 1 0 * * 0
+        // 1 1 1 1 0 1 1 1 0 0 1 1 0 * 1
+        // 0 1 1 1 1 0 0 0 0 1 0 0 * * 0
+        // 0 1 1 1 0 0 * * * * * * * 0 0
+        // 0 1 1 1 0 0 * 1 0 1 1 1 0 0 0
+        // 0 1 1 * * * * 0 1 0 1 1 1 1 0
+        // 0 1 1 S 1 1 1 0 1 0 1 1 1 1 0  <-- 30 + 11 = 41
+        // 0 1 1 1 1 1 1 1 1 1 0 1 1 1 0
+        // 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0
+        let grid: felt252 = 0x201fd93f9e7fd4ffa9c8e3cf6f736f099cfe39b87ebcfd79ff70080;
+        let width = 15;
+        let height = 15;
+        let from = 41;
+        let to = 184;
+        let mut path = Astar::search(grid, width, height, from, to);
+        assert_eq!(
+            path,
+            array![
+                184,
+                183,
+                168,
+                153,
+                138,
+                137,
+                122,
+                121,
+                106,
+                91,
+                92,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83,
+                68,
+                53,
+                54,
+                55,
+                56,
+            ]
                 .span()
         );
     }
