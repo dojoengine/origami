@@ -8,8 +8,9 @@ use core::dict::{Felt252Dict, Felt252DictTrait};
 
 use origami_map::helpers::heap::{Heap, HeapTrait};
 use origami_map::helpers::bitmap::Bitmap;
+use origami_map::helpers::seeder::Seeder;
 use origami_map::types::node::{Node, NodeTrait};
-use origami_map::types::direction::Direction;
+use origami_map::types::direction::{Direction, DirectionTrait};
 
 #[generate_trait]
 pub impl Astar of AstarTrait {
@@ -44,20 +45,26 @@ pub impl Astar of AstarTrait {
                 break;
             }
             // [Compute] Evaluate the neighbors for all 4 directions
-            if Self::check(grid, width, height, current.position, Direction::North, ref visited) {
-                let neighbor_position = current.position + width;
+            let seed = Seeder::shuffle(grid, current.position.into());
+            let mut directions = DirectionTrait::compute_shuffled_directions(seed);
+            let direction: Direction = DirectionTrait::pop_front(ref directions);
+            if Self::check(grid, width, height, current.position, direction, ref visited) {
+                let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
-            if Self::check(grid, width, height, current.position, Direction::East, ref visited) {
-                let neighbor_position = current.position - 1;
+            let direction: Direction = DirectionTrait::pop_front(ref directions);
+            if Self::check(grid, width, height, current.position, direction, ref visited) {
+                let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
-            if Self::check(grid, width, height, current.position, Direction::South, ref visited) {
-                let neighbor_position = current.position - width;
+            let direction: Direction = DirectionTrait::pop_front(ref directions);
+            if Self::check(grid, width, height, current.position, direction, ref visited) {
+                let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
-            if Self::check(grid, width, height, current.position, Direction::West, ref visited) {
-                let neighbor_position = current.position + 1;
+            let direction: Direction = DirectionTrait::pop_front(ref directions);
+            if Self::check(grid, width, height, current.position, direction, ref visited) {
+                let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
         };
@@ -246,10 +253,10 @@ mod test {
         // 0 0 0 1 1 1 1 ┌───x 0 0 0 0 0 0 0 0
         // 0 0 0 0 1 1 1 │ 0 0 0 1 0 0 1 0 0 0
         // 0 0 0 1 1 1 1 │ 0 0 0 1 1 1 1 1 0 0
-        // 0 0 1 1 1 1 1 └─────────────────┐ 0
-        // 0 0 0 1 1 1 1 0 1 1 1 0 1 1 1 1 │ 0
-        // 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 │ 0
-        // 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 s 0
+        // 0 0 1 1 1 1 1 └─────────────┐ 1 1 0
+        // 0 0 0 1 1 1 1 0 1 1 1 0 1 1 └─┐ 1 0
+        // 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 │ 1 0
+        // 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 └─s 0
         // 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0
         // 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 0
         // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -261,9 +268,7 @@ mod test {
         let mut path = Astar::search(grid, width, height, from, to);
         assert_eq!(
             path,
-            array![
-                170, 171, 172, 154, 136, 118, 117, 116, 115, 114, 113, 112, 111, 110, 109, 91, 73
-            ]
+            array![170, 171, 172, 154, 136, 118, 117, 116, 115, 114, 113, 112, 94, 93, 75, 74, 56]
                 .span()
         );
     }
