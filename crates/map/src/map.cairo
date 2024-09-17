@@ -57,7 +57,7 @@ pub impl MapImpl of MapTrait {
     /// # Arguments
     /// * `width` - The width of the map
     /// * `height` - The height of the map
-    /// * `order` - The order of the maze, if must be 0 or 1, the higher the order the less dense
+    /// * `order` - The order of the maze, it must be 0 or 1, the higher the order the less dense
     /// the maze will be
     /// * `seed` - The seed to generate the map
     /// # Returns
@@ -100,7 +100,7 @@ pub impl MapImpl of MapTrait {
     /// Open the map with a corridor.
     /// # Arguments
     /// * `position` - The position of the corridor
-    /// * `order` - The order of the corridor, if must be 0 or 1, the higher the order the less
+    /// * `order` - The order of the corridor, it must be 0 or 1, the higher the order the less
     /// dense the correlated maze will be
     /// # Returns
     /// * The map with the corridor
@@ -115,7 +115,7 @@ pub impl MapImpl of MapTrait {
     /// Open the map with a maze.
     /// # Arguments
     /// * `position` - The position of the maze
-    /// * `order` - The order of the maze, if must be 0 or 1, the higher the order the less dense
+    /// * `order` - The order of the maze, it must be 0 or 1, the higher the order the less dense
     /// the maze will be
     /// # Returns
     /// * The map with the maze

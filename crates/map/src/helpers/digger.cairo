@@ -16,7 +16,7 @@ pub impl Digger of DiggerTrait {
     /// # Arguments
     /// * `width` - The width of the grid
     /// * `height` - The height of the grid
-    /// * `order` - The order of the maze, if must be 0 or 1, the higher the order the less dense
+    /// * `order` - The order of the maze, it must be 0 or 1, the higher the order the less dense
     /// the maze will be
     /// * `start` - The starting position
     /// * `grid` - The original grid
@@ -53,7 +53,7 @@ pub impl Digger of DiggerTrait {
     /// # Arguments
     /// * `width` - The width of the grid
     /// * `height` - The height of the grid
-    /// * `order` - The order of the corridor, if must be 0 or 1, the higher the order the less
+    /// * `order` - The order of the corridor, it must be 0 or 1, the higher the order the less
     /// dense the correlated maze will be
     /// * `start` - The starting position
     /// * `grid` - The original grid
@@ -91,7 +91,7 @@ pub impl Digger of DiggerTrait {
     /// # Arguments
     /// * `width` - The width of the corridor
     /// * `height` - The height of the corridor
-    /// * `order` - The order of the corridor, if must be 0 or 1, the higher the order the less
+    /// * `order` - The order of the corridor, it must be 0 or 1, the higher the order the less
     /// dense the correlated maze will be
     /// * `start` - The starting position
     /// * `grid` - The original grid
@@ -150,7 +150,7 @@ pub impl Digger of DiggerTrait {
     /// * `maze` - The maze
     /// * `width` - The width of the maze
     /// * `height` - The height of the maze
-    /// * `order` - The order of the corridor, if must be 0 or 1, the higher the order the less
+    /// * `order` - The order of the corridor, it must be 0 or 1, the higher the order the less
     /// dense the correlated maze will be
     /// * `position` - The current position
     /// * `direction` - The direction to check
