@@ -57,12 +57,14 @@ pub impl MapImpl of MapTrait {
     /// # Arguments
     /// * `width` - The width of the map
     /// * `height` - The height of the map
+    /// * `order` - The order of the maze, if must be 0 or 1, the higher the order the less dense
+    /// the maze will be
     /// * `seed` - The seed to generate the map
     /// # Returns
     /// * The generated map
     #[inline]
-    fn new_maze(width: u8, height: u8, seed: felt252) -> Map {
-        let grid = Mazer::generate(width, height, seed);
+    fn new_maze(width: u8, height: u8, order: u8, seed: felt252) -> Map {
+        let grid = Mazer::generate(width, height, order, seed);
         Map { width, height, grid, seed }
     }
 
@@ -70,7 +72,8 @@ pub impl MapImpl of MapTrait {
     /// # Arguments
     /// * `width` - The width of the map
     /// * `height` - The height of the map
-    /// * `order` - The order of the cave
+    /// * `order` - The order of the cave, the higher the order the more contiguous the cave will be
+    /// but also more expensive to generate
     /// * `seed` - The seed to generate the map
     /// # Returns
     /// * The generated map
@@ -97,23 +100,29 @@ pub impl MapImpl of MapTrait {
     /// Open the map with a corridor.
     /// # Arguments
     /// * `position` - The position of the corridor
+    /// * `order` - The order of the corridor, if must be 0 or 1, the higher the order the less
+    /// dense the correlated maze will be
     /// # Returns
     /// * The map with the corridor
     #[inline]
-    fn open_with_corridor(ref self: Map, position: u8) {
+    fn open_with_corridor(ref self: Map, position: u8, order: u8) {
         // [Effect] Add a corridor to open the map
-        self.grid = Digger::corridor(self.width, self.height, position, self.grid, self.seed);
+        self
+            .grid =
+                Digger::corridor(self.width, self.height, order, position, self.grid, self.seed);
     }
 
     /// Open the map with a maze.
     /// # Arguments
     /// * `position` - The position of the maze
+    /// * `order` - The order of the maze, if must be 0 or 1, the higher the order the less dense
+    /// the maze will be
     /// # Returns
     /// * The map with the maze
     #[inline]
-    fn open_with_maze(ref self: Map, position: u8) {
+    fn open_with_maze(ref self: Map, position: u8, order: u8) {
         // [Effect] Add a maze to open the map
-        self.grid = Digger::maze(self.width, self.height, position, self.grid, self.seed);
+        self.grid = Digger::maze(self.width, self.height, order, position, self.grid, self.seed);
     }
 
     /// Compute a distribution of objects in the map.
@@ -208,8 +217,9 @@ mod tests {
         // 000000000000000010
         let width = 18;
         let height = 14;
+        let order = 0;
         let mut map: Map = MapTrait::new_empty(width, height, SEED);
-        map.open_with_corridor(1);
+        map.open_with_corridor(1, order);
         assert_eq!(map.grid, 0x1FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF9FFFE7FFF80002);
     }
 
@@ -231,8 +241,9 @@ mod tests {
         // 000000000000000010
         let width = 18;
         let height = 14;
-        let mut map: Map = MapTrait::new_maze(width, height, SEED);
-        map.open_with_corridor(1);
+        let order = 0;
+        let mut map: Map = MapTrait::new_maze(width, height, order, SEED);
+        map.open_with_corridor(1, order);
         assert_eq!(map.grid, 0x177F676870B6EA33279B9EA59D69BAD623668F6B6673116B5C77BD80002);
     }
 
@@ -254,10 +265,11 @@ mod tests {
         // 000000000000000010
         let width = 18;
         let height = 14;
-        let order = 3;
+        let cave_order = 3;
+        let corridor_order = 0;
         let seed: felt252 = Seeder::shuffle(SEED, SEED);
-        let mut map: Map = MapTrait::new_cave(width, height, order, seed);
-        map.open_with_corridor(1);
+        let mut map: Map = MapTrait::new_cave(width, height, cave_order, seed);
+        map.open_with_corridor(1, corridor_order);
         assert_eq!(map.grid, 0xC3007CC01F1867E719F8C07E001FC007FC01FFC07FF98FFFE3FFF80002);
     }
 
@@ -280,8 +292,9 @@ mod tests {
         let width = 18;
         let height = 14;
         let steps: u16 = 2 * width.into() * height.into();
+        let order = 0;
         let mut map: Map = MapTrait::new_random_walk(width, height, steps, SEED);
-        map.open_with_maze(250);
+        map.open_with_maze(250, order);
         assert_eq!(map.grid, 0x4000100C060730D1FE6E3F8FFFE69FF8A77E6FFF93FFE4FFF9BFE037F800000);
     }
 
