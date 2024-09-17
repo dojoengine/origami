@@ -4,49 +4,11 @@
 use core::dict::{Felt252Dict, Felt252DictTrait};
 
 // Internal imports
+use origami_map::helpers::queue::{Queue, QueueTrait};
 use origami_map::helpers::bitmap::Bitmap;
 use origami_map::types::node::{Node, NodeTrait};
 use origami_map::types::direction::Direction;
 
-// Custom Queue implementation
-#[derive(Drop)]
-struct Queue<T> {
-    elements: Array<T>,
-}
-
-/// Trait defining the Queue operations
-trait QueueTrait<T> {
-    /// Creates a new empty queue
-    fn new() -> Queue<T>;
-    /// Adds an element to the back of the queue
-    fn enqueue(ref self: Queue<T>, value: T);
-    /// Removes and returns the front element of the queue
-    fn dequeue(ref self: Queue<T>) -> Option<T>;
-
-    fn is_empty(self: @Queue<T>) -> bool;
-}
-
-/// Implementation of QueueTrait
-impl QueueImpl<T, impl TDrop: Drop<T>> of QueueTrait<T> {
-    fn new() -> Queue<T> {
-        Queue { elements: ArrayTrait::new() }
-    }
-
-    fn enqueue(ref self: Queue<T>, value: T) {
-        self.elements.append(value);
-    }
-
-    fn dequeue(ref self: Queue<T>) -> Option<T> {
-        if self.elements.is_empty() {
-            return Option::None;
-        }
-        Option::Some(self.elements.pop_front().unwrap())
-    }
-
-    fn is_empty(self: @Queue<T>) -> bool {
-        self.elements.is_empty()
-    }
-}
 
 /// BFS implementation for pathfinding
 #[generate_trait]
