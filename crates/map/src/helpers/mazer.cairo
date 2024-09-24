@@ -116,6 +116,7 @@ pub impl Mazer of MazerTrait {
         // [Check] Check the position
         let (x, y) = (position % width, position / width);
         match direction {
+            // Check at one before edge position (height - 1) - 1
             Direction::North => (y < height - 2)
                 && (x != 0)
                 && (x != width - 1)
@@ -124,6 +125,7 @@ pub impl Mazer of MazerTrait {
                 && (Bitmap::get(maze, position + width - 1) == 0)
                 && (order == 0 || Bitmap::get(maze, position + 2 * width + 1) == 0)
                 && (order == 0 || Bitmap::get(maze, position + 2 * width - 1) == 0),
+            // Check at one before edge position (width - 1) - 1
             Direction::East => (x < width - 2)
                 && (y != 0)
                 && (y != height - 1)
