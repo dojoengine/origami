@@ -14,8 +14,11 @@ const KEY_OFFSET: felt252 = 252;
 
 /// Traits.
 pub trait HeapTrait<T> {
+    /// Create a new heap.
+    /// # Returns
+    /// * The heap
     fn new() -> Heap<T>;
-    /// Create if the heap is empty.
+    /// Check if the heap is empty.
     /// # Arguments
     /// * `self` - The heap
     /// # Returns
@@ -87,6 +90,14 @@ pub trait HeapTrait<T> {
     /// # Effects
     /// * The items are swapped
     fn swap(ref self: Heap<T>, lhs: u8, rhs: u8);
+    /// Print the heap.
+    /// # Arguments
+    /// * `self` - The heap to print
+    /// # Effects
+    /// * The heap is printed
+    /// # Note
+    /// * This function is only for debugging purposes
+    fn print(ref self: Heap<T>);
 }
 
 pub trait ItemTrait<T> {
@@ -111,30 +122,16 @@ pub struct Heap<T> {
 
 /// Implementations.
 pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapTrait<T> {
-    /// Create a new heap.
-    /// # Returns
-    /// * The heap
     #[inline]
     fn new() -> Heap<T> {
         Heap { len: 0, keys: Default::default(), data: Default::default(), }
     }
 
-    /// Check if the heap is empty.
-    /// # Arguments
-    /// * `self` - The heap
-    /// # Returns
-    /// * `true` if the heap is empty, `false` otherwise
     #[inline]
     fn is_empty(self: @Heap<T>) -> bool {
         *self.len == 0
     }
 
-    /// Get an item from the heap if it exists.
-    /// # Arguments
-    /// * `self` - The heap
-    /// * `key` - The key of the item
-    /// # Returns
-    /// * The item if it exists, `None` otherwise
     #[inline]
     fn get(ref self: Heap<T>, key: u8) -> Option<T> {
         let nullable: Nullable<T> = self.data.get(key.into());
@@ -144,25 +141,11 @@ pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapT
         Option::Some(nullable.deref())
     }
 
-    /// Get an item from the heap.
-    /// # Arguments
-    /// * `self` - The heap
-    /// * `key` - The key of the item
-    /// # Returns
-    /// * The item
-    /// # Panics
-    /// * If the item does not exist
     #[inline]
     fn at(ref self: Heap<T>, key: u8) -> T {
         self.data.get(key.into()).deref()
     }
 
-    /// Check if the heap contains an item.
-    /// # Arguments
-    /// * `self` - The heap
-    /// * `key` - The key of the item
-    /// # Returns
-    /// * `true` if the item exists, `false` otherwise
     #[inline]
     fn contains(ref self: Heap<T>, key: u8) -> bool {
         let index = self.keys.get(key.into() + KEY_OFFSET);
@@ -170,12 +153,6 @@ pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapT
         index < self.len && item_key == key
     }
 
-    /// Add an item to the heap.
-    /// # Arguments
-    /// * `self` - The heap
-    /// * `item` - The item to add
-    /// # Effects
-    /// * The item is added at the end of the heap and the heap is sorted up
     #[inline]
     fn add(ref self: Heap<T>, item: T) {
         // [Effect] Update heap length
@@ -190,15 +167,6 @@ pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapT
         self.sort_up(key);
     }
 
-    /// Update an item in the heap.
-    /// # Arguments
-    /// * `self` - The heap
-    /// * `item` - The item to update
-    /// # Effects
-    /// * The item is updated and the heap is sorted up
-    /// # Info
-    /// * The heap is only sorted up since it cannot be updated with a lower score in case of A*
-    /// algorithm
     #[inline]
     fn update(ref self: Heap<T>, item: T) {
         // [Effect] Update item
@@ -208,13 +176,6 @@ pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapT
         self.sort_up(key);
     }
 
-    /// Pop the first item from the heap.
-    /// # Arguments
-    /// * `self` - The heap
-    /// # Returns
-    /// * The first item if the heap is not empty, `None` otherwise
-    /// # Effects
-    /// * The first item is removed, replaced by the last item and the heap is sorted down
     #[inline]
     fn pop_front(ref self: Heap<T>) -> Option<T> {
         if self.is_empty() {
@@ -231,12 +192,6 @@ pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapT
         Option::Some(first)
     }
 
-    /// Sort an item up in the heap.
-    /// # Arguments
-    /// * `self` - The heap
-    /// * `item_key` - The key of the item to sort up
-    /// # Effects
-    /// * The items are swapped from bottom to top until the item is in the right place
     #[inline]
     fn sort_up(ref self: Heap<T>, item_key: u8) {
         // [Compute] Item
@@ -254,12 +209,6 @@ pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapT
         }
     }
 
-    /// Sort an item down in the heap.
-    /// # Arguments
-    /// * `self` - The heap
-    /// * `item_key` - The key of the item to sort down
-    /// # Effects
-    /// * The items are swapped from top to bottom until the item is in the right place
     #[inline]
     fn sort_down(ref self: Heap<T>, item_key: u8) {
         // [Compute] Item
@@ -273,7 +222,7 @@ pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapT
             let mut child_key: u8 = self.keys.get(index.into());
             let mut child: T = self.data.get(child_key.into()).deref();
             // [Compute] Assess right child side
-            let rhs_index = index * 2 + 2;
+            let rhs_index = lhs_index + 1;
             if rhs_index < self.len {
                 let rhs_key: u8 = self.keys.get(rhs_index.into());
                 let rhs: T = self.data.get(rhs_key.into()).deref();
@@ -293,13 +242,6 @@ pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapT
         }
     }
 
-    /// Swap two items in the heap.
-    /// # Arguments
-    /// * `self` - The heap
-    /// * `lhs` - The key of the first item
-    /// * `rhs` - The key of the second item
-    /// # Effects
-    /// * The items are swapped
     #[inline]
     fn swap(ref self: Heap<T>, lhs: u8, rhs: u8) {
         // [Effect] Swap keys
@@ -310,9 +252,21 @@ pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapT
         self.keys.insert(lhs_index.into(), rhs);
         self.keys.insert(rhs_index.into(), lhs);
     }
+
+    #[inline]
+    fn print(ref self: Heap<T>) {
+        println!("");
+        let mut index = 0;
+        while index < self.len {
+            let key = self.keys.get(index.into());
+            println!("{} : {}", index, key);
+            index += 1;
+        };
+        println!("");
+    }
 }
 
-impl DestructHeap<T, +Drop<T>> of Destruct<Heap<T>> {
+pub impl DestructHeap<T, +Drop<T>> of Destruct<Heap<T>> {
     fn destruct(self: Heap<T>) nopanic {
         self.keys.squash();
         self.data.squash();
