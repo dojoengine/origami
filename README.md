@@ -22,13 +22,15 @@
 
 </div>
 
+# Origami - Primitives for onchain Gaming
+
+> _The magic of origami is in seeing a single piece of cairo evolve into a masterpiece through careful folds_
+>
+> <p align="right">Sensei</p>
+
 <div align="center">
   <img src="./docs/videos/usage.gif" height="400">
 </div>
-
-# Origami - Primitives for onchain Gaming
-
-#### "The magic of origami is in seeing a single piece of cairo evolve into a masterpiece through careful folds" - Sensei
 
 ---
 
