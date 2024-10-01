@@ -22,7 +22,9 @@
 
 </div>
 
+<div align="center">
 ![usage](./docs/videos/usage.gif)
+</div>
 
 # Origami - Primitives for onchain Gaming
 
@@ -32,14 +34,13 @@
 
 ### Crates
 
-- [algebra](./crates/algebra)
-- [defi](./crates/defi/)
-- [map](./crates/map)
-- [random](./crates/random)
-- [rating](./crates/rating)
-- [security](./crates/security)
-- [token](./crates/token)
-- [governance](./crates/governance)
+- [Algebra](./crates/algebra)
+- [Defi](./crates/defi/)
+- [Map](./crates/map)
+- [Physics](./crates/physics)
+- [Random](./crates/random)
+- [Rating](./crates/rating)
+- [Security](./crates/security)
 
 ### Easy integration into your project
 
