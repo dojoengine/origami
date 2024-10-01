@@ -1,17 +1,17 @@
 <!-- markdownlint-disable -->
 <div align="center">
-  <img src=".github/Origami.svg" height="128">
+  <img src="./docs/images/origami.svg" height="128">
 </div>
 <div align="center">
-<br />
-<!-- markdownlint-restore -->
+  <br />
+  <!-- markdownlint-restore -->
 
-<a href="https://twitter.com/dojostarknet">
-<img src="https://img.shields.io/twitter/follow/dojostarknet?style=social"/>
-</a>
-<a href="https://github.com/dojoengine/dojo">
-<img src="https://img.shields.io/github/stars/dojoengine/dojo?style=social"/>
-</a>
+  <a href="https://twitter.com/dojostarknet">
+    <img src="https://img.shields.io/twitter/follow/dojostarknet?style=social"/>
+  </a>
+  <a href="https://github.com/dojoengine/dojo">
+    <img src="https://img.shields.io/github/stars/dojoengine/dojo?style=social"/>
+  </a>
 
 [![discord](https://img.shields.io/badge/join-dojo-green?logo=discord&logoColor=white)](https://discord.gg/PwDa2mKhR4)
 ![Github Actions][gha-badge] [![Telegram Chat][tg-badge]][tg-url]
@@ -21,6 +21,8 @@
 [tg-url]: https://t.me/dojoengine
 
 </div>
+
+![usage](./docs/videos/usage.gif)
 
 # Origami - Primitives for onchain Gaming
 
