@@ -23,7 +23,7 @@
 </div>
 
 <div align="center">
-![usage](./docs/videos/usage.gif)
+  <img src="./docs/videos/usage.gif" height="400">
 </div>
 
 # Origami - Primitives for onchain Gaming
