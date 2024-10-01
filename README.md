@@ -22,7 +22,10 @@
 
 </div>
 
-# Origami - Primitives for onchain Gaming
+# Origami
+
+Origami is a collection of essential primitives designed to facilitate the development of onchain games using the Dojo engine.
+It provides a set of powerful tools and libraries that enable game developers to create complex, engaging, and efficient fully onchain games.
 
 > _The magic of origami is in seeing a single piece of cairo evolve into a masterpiece through careful folds_
 >
