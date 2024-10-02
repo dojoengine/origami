@@ -42,7 +42,7 @@ It provides a set of powerful tools and libraries that enable game developers to
 - [Algebra](./crates/algebra)
 - [Defi](./crates/defi/)
 - [Map](./crates/map)
-- [Physics](./crates/physics)
+- Physics (WIP)
 - [Random](./crates/random)
 - [Rating](./crates/rating)
 - [Security](./crates/security)
@@ -55,7 +55,8 @@ Add the following to your `[dependencies]`:
 
 ```toml
 [dependencies]
-origami_token = { git = "https://github.com/dojoengine/origami" }
+origami_random = { git = "https://github.com/dojoengine/origami" }
+origami_map = { git = "https://github.com/dojoengine/origami" }
 ```
 
 Now you will be able to use origami like any other Cairo package!
