@@ -1,4 +1,4 @@
-# Map
+# Random
 
 The Origami Random crate is a library that provides pseudo-random generation functionality for Dojo-based games. It offers efficient implementations of random number generation and randomization techniques commonly used in game development.
 
@@ -100,4 +100,4 @@ while count > 0 {
 }
 ```
 
-Remember to import the necessary traits and types when using the Map crate in your project.
+Remember to import the necessary traits and types when using the Random crate in your project.
