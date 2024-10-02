@@ -1,0 +1,7 @@
+
+[namespace]
+default = "origami_quest"
+
+[world]
+seed = "origami_quest"
+name = "origami_quest"

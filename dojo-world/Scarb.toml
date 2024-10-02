@@ -1,0 +1,22 @@
+[package]
+cairo-version = "2.7.0-rc.3"
+name = "dojo_world"
+version = "0.0.1"
+
+[cairo]
+sierra-replace-ids = true
+
+[scripts]
+migrate = "sozo build && sozo migrate apply"
+
+[dependencies]
+dojo = { path = "../../dojo/crates/dojo-core" }
+origami_quest = { path = "../" }
+
+[[target.dojo]]
+build-external-contracts = [
+    "origami_quest::models::quest::Quest",
+    "origami_quest::models::quest::QuestCounter",
+    "origami_quest::models::quest::QuestClaimed",
+]
+

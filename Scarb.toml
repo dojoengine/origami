@@ -7,7 +7,8 @@ members = [
     "crates/rating",
     "crates/security",
     "crates/token",
-    "crates/governance",
+    "crates/quest",
+    "crates/governance"
 ]
 
 [workspace.package]
