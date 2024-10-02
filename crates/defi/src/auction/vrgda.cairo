@@ -49,9 +49,9 @@ pub impl TVRGDATrait<T, +VRGDAVarsTrait<T>, +VRGDATargetTimeTrait<T>> of VRGDATr
 /// decay constant, and per-time-unit rate.
 #[derive(Copy, Drop, Serde, starknet::Store)]
 pub struct LinearVRGDA {
-    target_price: Fixed,
-    decay_constant: Fixed,
-    target_units_per_time: Fixed,
+    pub target_price: Fixed,
+    pub decay_constant: Fixed,
+    pub target_units_per_time: Fixed,
 }
 
 
@@ -84,10 +84,10 @@ pub impl LinearVRGDAImpl = TVRGDATrait<LinearVRGDA>;
 
 #[derive(Copy, Drop, Serde, starknet::Store)]
 pub struct LogisticVRGDA {
-    target_price: Fixed,
-    decay_constant: Fixed,
-    max_sellable: Fixed,
-    time_scale: Fixed, // target time to sell 46% of units
+    pub target_price: Fixed,
+    pub decay_constant: Fixed,
+    pub max_sellable: Fixed,
+    pub time_scale: Fixed, // target time to sell 46% of units
 }
 
 impl LogisticVRGDAVarsImpl of VRGDAVarsTrait<LogisticVRGDA> {
