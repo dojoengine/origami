@@ -56,9 +56,7 @@ pub impl BFS of BFSTrait {
             while directions != 0 {
                 let direction = DirectionTrait::pop_front(ref directions);
                 if Astar::check(grid, width, height, current.position, direction, ref visited) {
-                    let neighbor_position = Self::get_neighbor_position(
-                        current.position, direction, width
-                    );
+                    let neighbor_position = direction.next(current.position, width);
                     parents.insert(neighbor_position.into(), current.position);
                     let neighbor = NodeTrait::new(neighbor_position, current.position, 0, 0);
                     queue.append(neighbor);
@@ -72,18 +70,6 @@ pub impl BFS of BFSTrait {
             return array![].span();
         };
         Self::path(parents, start, target)
-    }
-
-    /// Calculates the position of a neighbor in the given direction
-    #[inline]
-    fn get_neighbor_position(position: u8, direction: Direction, width: u8) -> u8 {
-        match direction {
-            Direction::North => position + width,
-            Direction::East => position + 1,
-            Direction::South => position - width,
-            Direction::West => position - 1,
-            _ => 0,
-        }
     }
 
     /// Reconstructs the path from start to target using the parents dictionary
@@ -149,7 +135,7 @@ mod test {
         let from = 0;
         let to = 14;
         let path = BFS::search(grid, width, height, from, to);
-        assert_eq!(path, array![14, 15, 11, 7, 6, 5, 1].span());
+        assert_eq!(path, array![14, 15, 11, 7, 6, 5, 4].span());
     }
 
     #[test]
