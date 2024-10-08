@@ -75,6 +75,28 @@ pub impl DirectionImpl of DirectionTrait {
         directions /= DIRECTION_SIZE;
         direciton.into()
     }
+
+    /// Get the next direction from a given position and direction.
+    /// # Arguments
+    /// * `self` - The current direction
+    /// * `position` - The current position
+    /// * `width` - The width of the grid
+    /// # Returns
+    /// * The next position
+    #[inline]
+    fn next(self: Direction, position: u8, width: u8) -> u8 {
+        match self {
+            Direction::None => position,
+            Direction::NorthWest => position + width + 1,
+            Direction::North => position + width,
+            Direction::NorthEast => position + width - 1,
+            Direction::East => position - 1,
+            Direction::SouthEast => position - width - 1,
+            Direction::South => position - width,
+            Direction::SouthWest => position - width + 1,
+            Direction::West => position + 1,
+        }
+    }
 }
 
 pub impl DirectionIntoFelt252 of Into<Direction, felt252> {

@@ -32,6 +32,17 @@ The process works by incrementally making more assets available for sale, splitt
 
 It's possible to compute the purchase price for any quantity of tokens gas-efficiently, using specific mathematical expressions.
 
+## Installation
+
+To add the Origami DeFi crate as a dependency in your project, you need to modify your Scarb.toml file. Add the following to your [dependencies] section:
+
+```toml
+[dependencies]
+origami_defi = { git = "https://github.com/dojoengine/origami" }
+```
+
+Make sure you have dojo installed and configured in your project.
+
 ## How to Use
 
 ### Discrete Gradual Dutch Auction
@@ -97,7 +108,7 @@ GDAs present a powerful tool for selling both fungible and non-fungible tokens i
 
 ## Overview
 
-Variable Rate GDAs ([VRGDAs](https://www.paradigm.xyz/2022/08/vrgda)) enable the selling of tokens according to a custom schedule, raising or lowering prices based on the sales pace. VRGDA is a generalization of the GDA mechanism. 
+Variable Rate GDAs ([VRGDAs](https://www.paradigm.xyz/2022/08/vrgda)) enable the selling of tokens according to a custom schedule, raising or lowering prices based on the sales pace. VRGDA is a generalization of the GDA mechanism.
 
 ## How to Use
 
