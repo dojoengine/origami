@@ -1,13 +1,17 @@
 //! Greedy algorithm implementation for pathfinding.
 
 // Core imports
+
 use core::dict::{Felt252Dict, Felt252DictTrait};
 
 // Internal imports
+
 use origami_map::helpers::heap::{Heap, HeapTrait};
+use origami_map::helpers::astar::Astar;
 use origami_map::helpers::bitmap::Bitmap;
+use origami_map::helpers::seeder::Seeder;
 use origami_map::types::node::{Node, NodeTrait};
-use origami_map::types::direction::Direction;
+use origami_map::types::direction::{Direction, DirectionTrait};
 
 #[generate_trait]
 pub impl Greedy of GreedyTrait {
@@ -34,72 +38,40 @@ pub impl Greedy of GreedyTrait {
         let mut visited: Felt252Dict<bool> = Default::default();
         heap.add(start);
         // [Compute] Evaluate the path until the target is reached
-        while !heap.is_empty() {
-            // [Compute] Get the node with the smallest heuristic cost (to the target)
-            let current: Node = heap.pop_front().unwrap();
+        while let Option::Some(current) = heap.pop_front() {
+            // [Compute] Get the less expensive node
             visited.insert(current.position.into(), true);
             // [Check] Stop if we reached the target
             if current.position == target.position {
                 break;
             }
             // [Compute] Evaluate the neighbors for all 4 directions
-            if Self::check(grid, width, height, current.position, Direction::North, ref visited) {
-                let neighbor_position = current.position + width;
+            let seed = Seeder::shuffle(grid, current.position.into());
+            let mut directions = DirectionTrait::compute_shuffled_directions(seed);
+            let direction: Direction = DirectionTrait::pop_front(ref directions);
+            if Astar::check(grid, width, height, current.position, direction, ref visited) {
+                let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
-            if Self::check(grid, width, height, current.position, Direction::East, ref visited) {
-                let neighbor_position = current.position + 1;
+            let direction: Direction = DirectionTrait::pop_front(ref directions);
+            if Astar::check(grid, width, height, current.position, direction, ref visited) {
+                let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
-            if Self::check(grid, width, height, current.position, Direction::South, ref visited) {
-                let neighbor_position = current.position - width;
+            let direction: Direction = DirectionTrait::pop_front(ref directions);
+            if Astar::check(grid, width, height, current.position, direction, ref visited) {
+                let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
-            if Self::check(grid, width, height, current.position, Direction::West, ref visited) {
-                let neighbor_position = current.position - 1;
+            let direction: Direction = DirectionTrait::pop_front(ref directions);
+            if Astar::check(grid, width, height, current.position, direction, ref visited) {
+                let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
         };
 
         // [Return] The path from the start to the target
-        Self::path(ref heap, start, target)
-    }
-
-    /// Check if the position can be visited in the specified direction.
-    /// # Arguments
-    /// * `grid` - The grid to search (1 is walkable and 0 is not)
-    /// * `width` - The width of the grid
-    /// * `height` - The height of the grid
-    /// * `position` - The current position
-    /// * `direction` - The direction to check
-    /// * `visited` - The visited nodes
-    /// # Returns
-    /// * Whether the position can be visited in the specified direction
-    #[inline]
-    fn check(
-        grid: felt252,
-        width: u8,
-        height: u8,
-        position: u8,
-        direction: Direction,
-        ref visited: Felt252Dict<bool>
-    ) -> bool {
-        let (x, y) = (position % width, position / width);
-        match direction {
-            Direction::North => (y < height - 1)
-                && (Bitmap::get(grid, position + width) == 1)
-                && !visited.get((position + width).into()),
-            Direction::East => (x < width - 1)
-                && (Bitmap::get(grid, position + 1) == 1)
-                && !visited.get((position + 1).into()),
-            Direction::South => (y > 0)
-                && (Bitmap::get(grid, position - width) == 1)
-                && !visited.get((position - width).into()),
-            Direction::West => (x > 0)
-                && (Bitmap::get(grid, position - 1) == 1)
-                && !visited.get((position - 1).into()),
-            _ => false,
-        }
+        Astar::path(ref heap, start, target)
     }
 
     /// Assess the neighbor node and update the heap.
@@ -115,7 +87,7 @@ pub impl Greedy of GreedyTrait {
     fn assess(
         width: u8, neighbor_position: u8, current: Node, target: Node, ref heap: Heap<Node>,
     ) {
-        let neighbor_hcost = Self::heuristic(neighbor_position, target.position, width);
+        let neighbor_hcost = Astar::heuristic(neighbor_position, target.position, width);
         let mut neighbor = match heap.get(neighbor_position.into()) {
             Option::Some(node) => node,
             Option::None => NodeTrait::new(neighbor_position, current.position, 0, neighbor_hcost),
@@ -126,49 +98,6 @@ pub impl Greedy of GreedyTrait {
         }
         return heap.update(neighbor);
     }
-
-    /// Compute the heuristic cost between two positions.
-    /// # Arguments
-    /// * `position` - The current position
-    /// * `target` - The target position
-    /// * `width` - The width of the grid
-    /// # Returns
-    /// * The heuristic cost between the two positions
-    #[inline]
-    fn heuristic(position: u8, target: u8, width: u8) -> u16 {
-        let (x1, y1) = (position % width, position / width);
-        let (x2, y2) = (target % width, target / width);
-        let dx = if x1 > x2 {
-            x1 - x2
-        } else {
-            x2 - x1
-        };
-        let dy = if y1 > y2 {
-            y1 - y2
-        } else {
-            y2 - y1
-        };
-        (dx + dy).into()
-    }
-
-    /// Reconstruct the path from the target to the start.
-    #[inline]
-    fn path(ref heap: Heap<Node>, start: Node, target: Node) -> Span<u8> {
-        let mut path: Array<u8> = array![];
-        match heap.get(target.position) {
-            Option::None => { path.span() },
-            Option::Some(mut current) => {
-                loop {
-                    if current.position == start.position {
-                        break;
-                    }
-                    path.append(current.position);
-                    current = heap.at(current.source);
-                };
-                path.span()
-            },
-        }
-    }
 }
 
 #[cfg(test)]
@@ -177,6 +106,9 @@ mod test {
 
     #[test]
     fn test_greedy_search_small() {
+        // x * *
+        // 1 0 *
+        // 0 1 s
         let grid: felt252 = 0x1EB;
         let width = 3;
         let height = 3;
@@ -188,6 +120,9 @@ mod test {
 
     #[test]
     fn test_greedy_search_impossible() {
+        // x 1 0
+        // 1 0 1
+        // 0 1 s
         let grid: felt252 = 0x1AB;
         let width = 3;
         let height = 3;
@@ -203,13 +138,13 @@ mod test {
         // 0 0 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0
         // 0 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0
         // 0 0 1 1 1 1 1 0 1 1 0 0 0 0 0 0 0 0
-        // 0 0 0 1 1 1 1 ┌───x 0 0 0 0 0 0 0 0
-        // 0 0 0 0 1 1 1 │ 0 0 0 1 0 0 1 0 0 0
-        // 0 0 0 1 1 1 1 │ 0 0 0 ┌───────┐ 0 0
-        // 0 0 1 1 1 1 1 └───────┘ 1 1 1 └─┐ 0
-        // 0 0 0 1 1 1 1 0 1 1 1 0 1 1 1 1 │ 0
-        // 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 │ 0
-        // 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 s 0
+        // 0 0 0 1 1 1 1 * * x 0 0 0 0 0 0 0 0
+        // 0 0 0 0 1 1 1 * 0 0 0 1 0 0 1 0 0 0
+        // 0 0 0 1 1 1 1 * 0 0 0 * * * 1 1 0 0
+        // 0 0 1 1 1 1 1 * * * * * 1 * 1 1 1 0
+        // 0 0 0 1 1 1 1 0 1 1 1 0 1 * * 1 1 0
+        // 0 0 0 0 1 1 1 1 1 1 1 1 1 1 * * 1 0
+        // 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 * s 0
         // 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0
         // 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 0
         // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -236,12 +171,12 @@ mod test {
                 132,
                 131,
                 130,
-                129,
-                128,
-                110,
-                109,
-                91,
-                73
+                112,
+                94,
+                93,
+                75,
+                74,
+                56
             ]
                 .span()
         );
