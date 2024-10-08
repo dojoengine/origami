@@ -3,10 +3,10 @@
 // Internal imports
 
 use origami_map::helpers::bitmap::Bitmap;
-use origami_map::helpers::caver::Caver;
 use origami_map::helpers::seeder::Seeder;
-use origami_map::helpers::mazer::Mazer;
 use origami_map::helpers::asserter::Asserter;
+use origami_map::generators::caver::Caver;
+use origami_map::generators::mazer::Mazer;
 use origami_map::types::direction::{Direction, DirectionTrait};
 
 /// Implementation of the `DiggerTrait` trait.

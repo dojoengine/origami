@@ -7,7 +7,7 @@ use core::dict::{Felt252Dict, Felt252DictTrait};
 // Internal imports
 
 use origami_map::helpers::heap::{Heap, HeapTrait};
-use origami_map::helpers::astar::Astar;
+use origami_map::finders::finder::Finder;
 use origami_map::helpers::bitmap::Bitmap;
 use origami_map::helpers::seeder::Seeder;
 use origami_map::types::node::{Node, NodeTrait};
@@ -49,29 +49,29 @@ pub impl Greedy of GreedyTrait {
             let seed = Seeder::shuffle(grid, current.position.into());
             let mut directions = DirectionTrait::compute_shuffled_directions(seed);
             let direction: Direction = DirectionTrait::pop_front(ref directions);
-            if Astar::check(grid, width, height, current.position, direction, ref visited) {
+            if Finder::check(grid, width, height, current.position, direction, ref visited) {
                 let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
             let direction: Direction = DirectionTrait::pop_front(ref directions);
-            if Astar::check(grid, width, height, current.position, direction, ref visited) {
+            if Finder::check(grid, width, height, current.position, direction, ref visited) {
                 let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
             let direction: Direction = DirectionTrait::pop_front(ref directions);
-            if Astar::check(grid, width, height, current.position, direction, ref visited) {
+            if Finder::check(grid, width, height, current.position, direction, ref visited) {
                 let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
             let direction: Direction = DirectionTrait::pop_front(ref directions);
-            if Astar::check(grid, width, height, current.position, direction, ref visited) {
+            if Finder::check(grid, width, height, current.position, direction, ref visited) {
                 let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
         };
 
         // [Return] The path from the start to the target
-        Astar::path(ref heap, start, target)
+        Finder::path_with_heap(ref heap, start, target)
     }
 
     /// Assess the neighbor node and update the heap.
@@ -87,7 +87,7 @@ pub impl Greedy of GreedyTrait {
     fn assess(
         width: u8, neighbor_position: u8, current: Node, target: Node, ref heap: Heap<Node>,
     ) {
-        let neighbor_hcost = Astar::heuristic(neighbor_position, target.position, width);
+        let neighbor_hcost = Finder::manhattan(neighbor_position, target.position, width);
         let mut neighbor = match heap.get(neighbor_position.into()) {
             Option::Some(node) => node,
             Option::None => NodeTrait::new(neighbor_position, current.position, 0, neighbor_hcost),

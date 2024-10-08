@@ -6,20 +6,27 @@ pub mod types {
     pub mod node;
 }
 
-pub mod helpers {
-    pub mod asserter;
-    pub mod bitmap;
-    pub mod power;
-    pub mod seeder;
+pub mod finders {
+    pub mod finder;
+    pub mod astar;
+    pub mod bfs;
+    pub mod greedy;
+}
+
+pub mod generators {
     pub mod digger;
     pub mod mazer;
     pub mod caver;
     pub mod walker;
     pub mod spreader;
-    pub mod astar;
+}
+
+pub mod helpers {
+    pub mod asserter;
+    pub mod bitmap;
+    pub mod power;
+    pub mod seeder;
     pub mod heap;
-    pub mod greedy;
-    pub mod bfs;
 
     #[cfg(target: "test")]
     pub mod printer;
