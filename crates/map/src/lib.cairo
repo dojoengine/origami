@@ -19,8 +19,8 @@ pub mod helpers {
     pub mod astar;
     pub mod heap;
     pub mod greedy;
+    pub mod bfs;
 
     #[cfg(target: "test")]
     pub mod printer;
 }
-
