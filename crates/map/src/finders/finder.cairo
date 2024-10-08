@@ -99,7 +99,7 @@ pub impl Finder of FinderTrait {
         (dx + dy).into()
     }
 
-    /// Reconstructs the path from start to target using the parents dictionary
+    /// Reconstructs the path from start to target using the parents dictionary.
     /// # Arguments
     /// * `parents` - The parents dictionary
     /// * `start` - The starting node
@@ -120,7 +120,7 @@ pub impl Finder of FinderTrait {
         path.span()
     }
 
-    /// Reconstruct the path from the target to the start.
+    /// Reconstruct the path from the target to the start using a heap.
     /// # Arguments
     /// * `heap` - The heap of nodes
     /// * `start` - The starting node
