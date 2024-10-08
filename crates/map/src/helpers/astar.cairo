@@ -90,22 +90,22 @@ pub impl Astar of AstarTrait {
         height: u8,
         position: u8,
         direction: Direction,
-        ref visisted: Felt252Dict<bool>
+        ref visited: Felt252Dict<bool>
     ) -> bool {
         let (x, y) = (position % width, position / width);
         match direction {
             Direction::North => (y < height - 1)
                 && (Bitmap::get(grid, position + width) == 1)
-                && !visisted.get((position + width).into()),
+                && !visited.get((position + width).into()),
             Direction::East => (x > 0)
                 && (Bitmap::get(grid, position - 1) == 1)
-                && !visisted.get((position - 1).into()),
+                && !visited.get((position - 1).into()),
             Direction::South => (y > 0)
                 && (Bitmap::get(grid, position - width) == 1)
-                && !visisted.get((position - width).into()),
+                && !visited.get((position - width).into()),
             Direction::West => (x < width - 1)
                 && (Bitmap::get(grid, position + 1) == 1)
-                && !visisted.get((position + 1).into()),
+                && !visited.get((position + 1).into()),
             _ => false,
         }
     }
@@ -203,8 +203,8 @@ mod test {
 
     #[test]
     fn test_astar_search_small() {
-        // x───┐
-        // 1 0 │
+        // x* *
+        // 1 0 *
         // 0 1 s
         let grid: felt252 = 0x1EB;
         let width = 3;
@@ -231,9 +231,9 @@ mod test {
 
     #[test]
     fn test_astar_search_medium() {
-        // ┌─x 0 0
-        // │ 0 1 1
-        // └─────┐
+        // * x 0 0
+        // * 0 1 1
+        // * * * *
         // 1 1 1 s
         let grid: felt252 = 0xCBFF;
         let width = 4;
@@ -250,13 +250,13 @@ mod test {
         // 0 0 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0
         // 0 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0
         // 0 0 1 1 1 1 1 0 1 1 0 0 0 0 0 0 0 0
-        // 0 0 0 1 1 1 1 ┌───x 0 0 0 0 0 0 0 0
-        // 0 0 0 0 1 1 1 │ 0 0 0 1 0 0 1 0 0 0
-        // 0 0 0 1 1 1 1 │ 0 0 0 1 1 1 1 1 0 0
-        // 0 0 1 1 1 1 1 └─────────────┐ 1 1 0
-        // 0 0 0 1 1 1 1 0 1 1 1 0 1 1 └─┐ 1 0
-        // 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 │ 1 0
-        // 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 └─s 0
+        // 0 0 0 1 1 1 1 * * x 0 0 0 0 0 0 0 0
+        // 0 0 0 0 1 1 1 * 0 0 0 1 0 0 1 0 0 0
+        // 0 0 0 1 1 1 1 * 0 0 0 1 1 1 1 1 0 0
+        // 0 0 1 1 1 1 1 * * * * * * * * 1 1 0
+        // 0 0 0 1 1 1 1 0 1 1 1 0 1 1 * * 1 0
+        // 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 * 1 0
+        // 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 * s 0
         // 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0
         // 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 0
         // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
