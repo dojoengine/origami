@@ -4,10 +4,11 @@
 use core::dict::{Felt252Dict, Felt252DictTrait};
 
 // Internal imports
-use origami_map::helpers::queue::{Queue, QueueTrait};
+use origami_map::helpers::astar::Astar;
 use origami_map::helpers::bitmap::Bitmap;
+use origami_map::helpers::seeder::Seeder;
 use origami_map::types::node::{Node, NodeTrait};
-use origami_map::types::direction::Direction;
+use origami_map::types::direction::{Direction, DirectionTrait};
 
 
 /// BFS implementation for pathfinding
@@ -36,93 +37,41 @@ pub impl BFS of BFSTrait {
         let target = NodeTrait::new(to, 0, 0, 0);
 
         // [Effect] Initialize the queue and the visited nodes
-        let mut queue: Queue<Node> = QueueTrait::new();
+        let mut queue: Array<Node> = array![start];
         let mut visited: Felt252Dict<bool> = Default::default();
         let mut parents: Felt252Dict<u8> = Default::default();
-
-        queue.enqueue(start);
         visited.insert(start.position.into(), true);
 
         // [Compute] BFS until the target is reached or queue is empty
         let mut path_found = false;
-        loop {
-            if queue.is_empty() {
-                break;
-            }
-
-            let current = queue.dequeue().unwrap();
-
+        while let Option::Some(current) = queue.pop_front() {
             // [Check] Stop if we reached the target
             if current.position == target.position {
                 path_found = true;
                 break;
             }
-
             // [Compute] Evaluate the neighbors for all 4 directions
-            let directions = array![
-                Direction::North, Direction::East, Direction::South, Direction::West
-            ];
-            let mut i = 0;
-            loop {
-                if i >= directions.len() {
-                    break;
-                }
-                let direction = *directions.at(i);
-                if Self::check(grid, width, height, current.position, direction, ref visited) {
+            let seed = Seeder::shuffle(grid, current.position.into());
+            let mut directions = DirectionTrait::compute_shuffled_directions(seed);
+            while directions != 0 {
+                let direction = DirectionTrait::pop_front(ref directions);
+                if Astar::check(grid, width, height, current.position, direction, ref visited) {
                     let neighbor_position = Self::get_neighbor_position(
                         current.position, direction, width
                     );
                     parents.insert(neighbor_position.into(), current.position);
                     let neighbor = NodeTrait::new(neighbor_position, current.position, 0, 0);
-                    queue.enqueue(neighbor);
+                    queue.append(neighbor);
                     visited.insert(neighbor_position.into(), true);
                 }
-                i += 1;
             };
         };
 
         // Reconstruct and return the path if found
-        if path_found {
-            Self::path(parents, start, target)
-        } else {
-            array![].span()
-        }
-    }
-
-    /// Checks if a neighbor in the given direction is valid and unvisited
-    #[inline]
-    fn check(
-        grid: felt252,
-        width: u8,
-        height: u8,
-        position: u8,
-        direction: Direction,
-        ref visited: Felt252Dict<bool>
-    ) -> bool {
-        let (x, y) = (position % width, position / width);
-        match direction {
-            Direction::North => {
-                y < height
-                    - 1
-                        && Bitmap::get(grid, position + width.into()) == 1
-                        && !visited.get((position + width.into()).into())
-            },
-            Direction::East => {
-                x < width
-                    - 1
-                        && Bitmap::get(grid, position + 1) == 1
-                        && !visited.get((position + 1).into())
-            },
-            Direction::South => {
-                y > 0
-                    && Bitmap::get(grid, position - width.into()) == 1
-                    && !visited.get((position - width.into()).into())
-            },
-            Direction::West => {
-                x > 0 && Bitmap::get(grid, position - 1) == 1 && !visited.get((position - 1).into())
-            },
-            _ => false,
-        }
+        if !path_found {
+            return array![].span();
+        };
+        Self::path(parents, start, target)
     }
 
     /// Calculates the position of a neighbor in the given direction
@@ -200,7 +149,7 @@ mod test {
         let from = 0;
         let to = 14;
         let path = BFS::search(grid, width, height, from, to);
-        assert_eq!(path, array![14, 15, 11, 7, 6, 5, 4].span());
+        assert_eq!(path, array![14, 15, 11, 7, 6, 5, 1].span());
     }
 
     #[test]
@@ -224,13 +173,13 @@ mod test {
         // 0 1 1 1 0
         // 0 0 0 1 0
         // 1 1 1 1 s
-        let grid: felt252 = 0x1F1F0F43;
+        let grid: felt252 = 0xC385F;
         let width = 5;
         let height = 4;
         let from = 0;
         let to = 19;
         let path = BFS::search(grid, width, height, from, to);
-        assert_eq!(path, array![19, 18, 17, 16, 11, 6, 1].span());
+        assert_eq!(path, array![19, 18, 13, 12, 11, 6, 1].span());
     }
 
     #[test]
@@ -249,10 +198,10 @@ mod test {
     #[test]
     fn test_bfs_all_obstacles() {
         // Grid representation:
+        // x 0 0
         // 0 0 0
-        // 0 0 0
-        // 0 0 0
-        let grid: felt252 = 0x0;
+        // 0 0 s
+        let grid: felt252 = 0x101;
         let width = 3;
         let height = 3;
         let from = 0;
