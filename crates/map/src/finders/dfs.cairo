@@ -4,16 +4,16 @@
 use core::dict::{Felt252Dict, Felt252DictTrait};
 
 // Internal imports
-use origami_map::finders::astar::Astar;
+use origami_map::finders::finder::Finder;
 use origami_map::helpers::bitmap::Bitmap;
 use origami_map::helpers::seeder::Seeder;
 use origami_map::types::node::{Node, NodeTrait};
 use origami_map::types::direction::{Direction, DirectionTrait};
 
-/// DFS implementation for pathfinding
+/// DepthFirstSearch implementation for pathfinding
 #[generate_trait]
-pub impl DFS of DFSTrait {
-    /// Searches for a path from 'from' to 'to' on the given grid using DFS
+pub impl DepthFirstSearch of DepthFirstSearchTrait {
+    /// Searches for a path from 'from' to 'to' on the given grid using DepthFirstSearch
     ///
     /// # Arguments
     /// * `grid` - The grid represented as a felt252
@@ -32,91 +32,100 @@ pub impl DFS of DFSTrait {
         }
 
         // [Effect] Initialize the start and target nodes
-        let mut start = NodeTrait::new(from, 0, 0, 0);
+        let start = NodeTrait::new(from, 0, 0, 0);
         let target = NodeTrait::new(to, 0, 0, 0);
 
-        // [Effect] Initialize the stack and the visited nodes
-        let mut stack: Array<Node> = array![start];
+        // [Effect] Initialize visited nodes and parents
         let mut visited: Felt252Dict<bool> = Default::default();
         let mut parents: Felt252Dict<u8> = Default::default();
 
-        // [Compute] DFS until the target is reached or stack is empty
-        let mut path_found = false;
-        while let Option::Some(current) = stack.pop_front() {
-            // [Check] Stop if we reached the target
-            if current.position == target.position {
-                path_found = true;
-                break;
-            }
-
-            // [Check] Skip if already visited
-            if visited.get(current.position.into()) {
-                continue;
-            }
-
-            // [Effect] Mark as visited
-            visited.insert(current.position.into(), true);
-
-            // [Compute] Evaluate the neighbors for all 4 directions
-            let seed = Seeder::shuffle(grid, current.position.into());
-            let mut directions = DirectionTrait::compute_shuffled_directions(seed);
-            while directions != 0 {
-                let direction = DirectionTrait::pop_front(ref directions);
-                if Astar::check(grid, width, height, current.position, direction, ref visited) {
-                    let neighbor_position = direction.next(current.position, width);
-                    parents.insert(neighbor_position.into(), current.position);
-                    let neighbor = NodeTrait::new(neighbor_position, current.position, 0, 0);
-                    stack.append(neighbor);
-                }
-            };
-        };
+        // [Compute] Start the recursive DFS
+        let found = Self::dfs_recursive(
+            grid, width, height, start, target, ref visited, ref parents
+        );
 
         // Reconstruct and return the path if found
-        if !path_found {
-            return array![].span();
-        };
-        Self::path(parents, start, target)
+        if found {
+            Finder::path_with_parents(ref parents, start, target)
+        } else {
+            array![].span()
+        }
     }
 
-    /// Reconstructs the path from start to target using the parents dictionary
+    /// Recursive helper function for DFS
     #[inline]
-    fn path(mut parents: Felt252Dict<u8>, start: Node, target: Node) -> Span<u8> {
-        let mut path: Array<u8> = array![];
-        let mut current = target.position;
+    fn dfs_recursive(
+        grid: felt252,
+        width: u8,
+        height: u8,
+        current: Node,
+        target: Node,
+        ref visited: Felt252Dict<bool>,
+        ref parents: Felt252Dict<u8>
+    ) -> bool {
+        // [Check] Mark current node as visited
+        visited.insert(current.position.into(), true);
+
+        // [Check] If we've reached the target, we're done
+        if current.position == target.position {
+            return true;
+        }
+
+        // [Compute] Evaluate the neighbors for all 4 directions
+        let seed = Seeder::shuffle(grid, current.position.into());
+        let mut directions = DirectionTrait::compute_shuffled_directions(seed);
+        let mut found = false;
 
         loop {
-            if current == start.position {
+            if directions == 0 {
                 break;
             }
-            path.append(current);
-            current = parents.get(current.into());
+            let direction = DirectionTrait::pop_front(ref directions);
+            if Finder::check(grid, width, height, current.position, direction, ref visited) {
+                let neighbor_position = direction.next(current.position, width);
+                let neighbor = NodeTrait::new(neighbor_position, current.position, 0, 0);
+
+                // [Effect] Set parent for the neighbor
+                parents.insert(neighbor_position.into(), current.position);
+
+                // [Recurse] Continue DFS from the neighbor
+                found =
+                    Self::dfs_recursive(
+                        grid, width, height, neighbor, target, ref visited, ref parents
+                    );
+
+                if found {
+                    break;
+                }
+            }
         };
 
-        path.span()
+        // [Check] Return whether we've found the target
+        found
     }
 }
+
 #[cfg(test)]
 mod test {
-    // Local imports
-    use super::DFS;
+    use super::DepthFirstSearch;
 
     #[test]
     fn test_dfs_search_small() {
-        // x───┐
-        // 1 0 │
-        // 0 1 s
+        // x───┐   111    8 7 6 
+        // 1 0 │   101    5 4 3
+        // 0 1 s   011    2 1 0  
         let grid: felt252 = 0x1EB;
         let width = 3;
         let height = 3;
         let from = 0;
         let to = 8;
-        let path = DFS::search(grid, width, height, from, to);
+        let path = DepthFirstSearch::search(grid, width, height, from, to);
         assert_eq!(path, array![8, 7, 6, 3].span());
     }
 
     #[test]
     fn test_dfs_search_impossible() {
-        // x 1 0
+        // x 1 0  
         // 1 0 1
         // 0 1 s
         let grid: felt252 = 0x1AB;
@@ -124,25 +133,23 @@ mod test {
         let height = 3;
         let from = 0;
         let to = 8;
-        let path = DFS::search(grid, width, height, from, to);
+        let path = DepthFirstSearch::search(grid, width, height, from, to);
         assert_eq!(path, array![].span());
     }
 
     #[test]
     fn test_dfs_search_medium() {
-        // ┌─x 0 0
-        // │ 0 1 1
-        // └─────┐
-        // 1 1 1 s
+        //  1 x 0 0    15 14 13 12 
+        //  1 0 1 1    11 10 9  8 
+        //  1 1 1 1    7  6  5  4
+        //  1 1 1 s    3  2  1  0 
         let grid: felt252 = 0xCBFF;
         let width = 4;
         let height = 4;
         let from = 0;
         let to = 14;
-        let path = DFS::search(grid, width, height, from, to);
-        assert!(
-            path.len() > 0
-        ); // DFS may not find the shortest path, so we just check if a path is found
+        let path = DepthFirstSearch::search(grid, width, height, from, to);
+        assert_eq!(path, array![14, 15, 11, 7, 3, 2, 1, 5, 9, 8, 4].span());
     }
 
     #[test]
@@ -153,10 +160,10 @@ mod test {
         let grid: felt252 = 0xF;
         let width = 2;
         let height = 2;
-        let from = 0;
-        let to = 1;
-        let path = DFS::search(grid, width, height, from, to);
-        assert_eq!(path, array![1].span());
+        let from = 3;
+        let to = 2;
+        let path = DepthFirstSearch::search(grid, width, height, from, to);
+        assert_eq!(path, array![2].span());
     }
 
     #[test]
@@ -171,9 +178,7 @@ mod test {
         let height = 4;
         let from = 0;
         let to = 19;
-        let path = DFS::search(grid, width, height, from, to);
-        assert!(
-            path.len() > 0
-        ); // DFS may not find the shortest path, so we just check if a path is found
+        let path = DepthFirstSearch::search(grid, width, height, from, to);
+        assert_eq!(path, array![19, 18, 13, 12, 11, 6, 1].span());
     }
 }
