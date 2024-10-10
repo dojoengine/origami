@@ -11,6 +11,7 @@ pub mod finders {
     pub mod astar;
     pub mod bfs;
     pub mod greedy;
+    pub mod dfs;
 }
 
 pub mod generators {
