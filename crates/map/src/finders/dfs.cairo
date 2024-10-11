@@ -12,7 +12,7 @@ use origami_map::types::direction::{Direction, DirectionTrait};
 
 /// DepthFirstSearch implementation for pathfinding
 #[generate_trait]
-pub impl DFS of DFSTrait {
+pub impl DepthFirstSearch of DepthFirstSearchTrait {
     /// Searches for a path from 'from' to 'to' on the given grid using DepthFirstSearch
     ///
     /// # Arguments
@@ -40,9 +40,7 @@ pub impl DFS of DFSTrait {
         let mut parents: Felt252Dict<u8> = Default::default();
 
         // [Compute] Start the recursive DFS
-        let found = Self::dfs_recursive(
-            grid, width, height, start, target, ref visited, ref parents
-        );
+        let found = Self::iter(grid, width, height, start, target, ref visited, ref parents);
 
         // Reconstruct and return the path if found
         if found {
@@ -54,7 +52,7 @@ pub impl DFS of DFSTrait {
 
     /// Recursive helper function for DFS
     #[inline]
-    fn dfs_recursive(
+    fn iter(
         grid: felt252,
         width: u8,
         height: u8,
@@ -63,6 +61,11 @@ pub impl DFS of DFSTrait {
         ref visited: Felt252Dict<bool>,
         ref parents: Felt252Dict<u8>
     ) -> bool {
+        // [Check] If the current node has already been visited, return false
+        if visited.get(current.position.into()) {
+            return false;
+        }
+
         // [Check] Mark current node as visited
         visited.insert(current.position.into(), true);
 
@@ -89,10 +92,7 @@ pub impl DFS of DFSTrait {
                 parents.insert(neighbor_position.into(), current.position);
 
                 // [Recurse] Continue DFS from the neighbor
-                found =
-                    Self::dfs_recursive(
-                        grid, width, height, neighbor, target, ref visited, ref parents
-                    );
+                found = Self::iter(grid, width, height, neighbor, target, ref visited, ref parents);
 
                 if found {
                     break;
@@ -107,19 +107,19 @@ pub impl DFS of DFSTrait {
 
 #[cfg(test)]
 mod test {
-    use super::DFS;
+    use super::DepthFirstSearch;
 
     #[test]
     fn test_dfs_search_small() {
-        // x───┐   111    8 7 6
-        // 1 0 │   101    5 4 3
-        // 0 1 s   011    2 1 0
+        // x * *
+        // 1 0 *
+        // 0 1 s
         let grid: felt252 = 0x1EB;
         let width = 3;
         let height = 3;
         let from = 0;
         let to = 8;
-        let path = DFS::search(grid, width, height, from, to);
+        let path = DepthFirstSearch::search(grid, width, height, from, to);
         assert_eq!(path, array![8, 7, 6, 3].span());
     }
 
@@ -133,22 +133,22 @@ mod test {
         let height = 3;
         let from = 0;
         let to = 8;
-        let path = DFS::search(grid, width, height, from, to);
+        let path = DepthFirstSearch::search(grid, width, height, from, to);
         assert_eq!(path, array![].span());
     }
 
     #[test]
     fn test_dfs_search_medium() {
-        //  1 x 0 0    15 14 13 12
-        //  1 0 1 1    11 10 9  8
-        //  1 1 1 1    7  6  5  4
-        //  1 1 1 s    3  2  1  0
+        //  * x 0 0
+        //  * 0 * *
+        //  * 1 * *
+        //  * * * s
         let grid: felt252 = 0xCBFF;
         let width = 4;
         let height = 4;
         let from = 0;
         let to = 14;
-        let path = DFS::search(grid, width, height, from, to);
+        let path = DepthFirstSearch::search(grid, width, height, from, to);
         assert_eq!(path, array![14, 15, 11, 7, 3, 2, 1, 5, 9, 8, 4].span());
     }
 
@@ -162,7 +162,7 @@ mod test {
         let height = 2;
         let from = 3;
         let to = 2;
-        let path = DFS::search(grid, width, height, from, to);
+        let path = DepthFirstSearch::search(grid, width, height, from, to);
         assert_eq!(path, array![2].span());
     }
 
@@ -178,7 +178,7 @@ mod test {
         let height = 4;
         let from = 0;
         let to = 19;
-        let path = DFS::search(grid, width, height, from, to);
+        let path = DepthFirstSearch::search(grid, width, height, from, to);
         assert_eq!(path, array![19, 18, 13, 12, 11, 6, 1].span());
     }
 }
