@@ -169,10 +169,10 @@ mod test {
     #[test]
     fn test_dfs_maze() {
         // Grid representation:
-        // x 1 0 0 0
-        // 0 1 1 1 0
-        // 0 0 0 1 0
-        // 1 1 1 1 s
+        // x * 0 0 0
+        // 0 * * * 0
+        // 0 0 0 * 0
+        // 1 1 1 * s
         let grid: felt252 = 0xC385F;
         let width = 5;
         let height = 4;
