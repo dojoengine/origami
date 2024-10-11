@@ -1,0 +1,8 @@
+tag = "dojo_world-quest_registry"
+reads = []
+writes = [
+    "dojo_world-Quest",
+    "dojo_world-QuestCounter",
+    "dojo_world-QuestClaimed",
+]
+init_calldata = []

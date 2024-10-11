@@ -37,6 +37,13 @@ name = "origami_map"
 version = "1.0.0-alpha.15"
 
 [[package]]
+name = "origami_quest"
+version = "1.0.0-alpha.0"
+dependencies = [
+ "dojo",
+]
+
+[[package]]
 name = "origami_random"
 version = "1.0.0-alpha.15"
 
