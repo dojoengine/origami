@@ -28,7 +28,7 @@ trait IERC721<TState> {
 
 #[starknet::interface]
 trait IERC721Metadata<TState> {
-    fn name(self: @TState) -> ByteArray;
+    fn nameXXX(self: @TState) -> ByteArray;
     fn symbol(self: @TState) -> ByteArray;
     fn token_uri(self: @TState, token_id: u256) -> ByteArray;
 }
@@ -80,7 +80,7 @@ trait ERC721ABI<TState> {
     ) -> bool;
 
     // IERC721Metadata
-    fn name(self: @TState) -> felt252;
+    fn nameXXX(self: @TState) -> felt252;
     fn symbol(self: @TState) -> felt252;
     fn token_uri(self: @TState, token_id: u256) -> felt252;
 

@@ -45,7 +45,7 @@ fn test_erc721_metadata_initialize() {
 
     state.erc721_metadata.initialize(NAME, SYMBOL, URI);
 
-    assert(state.erc721_metadata.name() == "NAME", 'Should be NAME');
+    assert(state.erc721_metadata.nameXXX() == "NAME", 'Should be NAME');
     assert(state.erc721_metadata.symbol() == "SYMBOL", 'Should be SYMBOL');
 
     state.erc721_mintable.mint(OWNER(), 1);

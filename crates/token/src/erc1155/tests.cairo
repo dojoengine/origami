@@ -67,7 +67,7 @@ fn test_constructor() {
     let (world, mut state) = STATE();
     ERC1155::constructor(ref state, world.contract_address, NAME, SYMBOL, URI);
 
-    assert(ERC1155MetadataImpl::name(@state) == NAME, 'Name should be NAME');
+    assert(ERC1155MetadataImpl::nameXXX(@state) == NAME, 'Name should be NAME');
     assert(ERC1155MetadataImpl::symbol(@state) == SYMBOL, 'Symbol should be SYMBOL');
     assert(ERC1155MetadataImpl::uri(@state, 0) == URI, 'Uri should be URI');
     // assert(
@@ -89,7 +89,7 @@ fn test_initializer() {
     let (_world, mut state) = STATE();
     InternalImpl::initializer(ref state, NAME, SYMBOL, URI);
 
-    assert(ERC1155MetadataImpl::name(@state) == NAME, 'Name should be NAME');
+    assert(ERC1155MetadataImpl::nameXXX(@state) == NAME, 'Name should be NAME');
     assert(ERC1155MetadataImpl::symbol(@state) == SYMBOL, 'Symbol should be SYMBOL');
 
     assert(ERC1155Impl::balance_of(@state, OWNER(), 0) == 0, 'Balance should be zero');

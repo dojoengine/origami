@@ -21,7 +21,7 @@ struct ERC20MetadataModel {
 
 #[starknet::interface]
 trait IERC20Metadata<TState> {
-    fn name(self: @TState) -> ByteArray;
+    fn nameXXX(self: @TState) -> ByteArray;
     fn symbol(self: @TState) -> ByteArray;
     fn decimals(self: @TState) -> u8;
 }
@@ -61,7 +61,7 @@ mod erc20_metadata_component {
         +IWorldProvider<TContractState>,
         +Drop<TContractState>,
     > of IERC20Metadata<ComponentState<TContractState>> {
-        fn name(self: @ComponentState<TContractState>) -> ByteArray {
+        fn nameXXX(self: @ComponentState<TContractState>) -> ByteArray {
             self.get_metadata().name
         }
         fn symbol(self: @ComponentState<TContractState>) -> ByteArray {

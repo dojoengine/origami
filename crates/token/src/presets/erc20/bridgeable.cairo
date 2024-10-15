@@ -11,7 +11,7 @@ trait IERC20BridgeablePreset<TState> {
 
     // IERC20Metadata
     fn decimals(self: @TState,) -> u8;
-    fn name(self: @TState,) -> ByteArray;
+    fn nameXXX(self: @TState,) -> ByteArray;
     fn symbol(self: @TState,) -> ByteArray;
 
     // IERC20MetadataTotalSupply

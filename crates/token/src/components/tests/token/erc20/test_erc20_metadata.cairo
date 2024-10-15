@@ -28,7 +28,7 @@ fn test_erc20_metadata_initialize() {
 
     state.erc20_metadata.initialize("NAME", "SYMBOL", DECIMALS);
 
-    assert(state.erc20_metadata.name() == "NAME", 'Should be NAME');
+    assert(state.erc20_metadata.nameXXX() == "NAME", 'Should be NAME');
     assert(state.erc20_metadata.symbol() == "SYMBOL", 'Should be SYMBOL');
     assert(state.erc20_metadata.decimals() == DECIMALS, 'Should be 18');
     assert(state.erc20_metadata.total_supply() == 0, 'Should be 0');

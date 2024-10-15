@@ -116,7 +116,7 @@ fn test_initializer() {
     let (_world, mut mintable_burnable) = setup();
 
     assert(mintable_burnable.balance_of(OWNER()) == 2, 'Should eq 2');
-    assert(mintable_burnable.name() == "NAME", 'Name should be NAME');
+    assert(mintable_burnable.nameXXX() == "NAME", 'Name should be NAME');
     assert(mintable_burnable.symbol() == "SYMBOL", 'Symbol should be SYMBOL');
     assert(mintable_burnable.token_uri(TOKEN_ID) == "URI21", 'Uri should be URI21');
 }
