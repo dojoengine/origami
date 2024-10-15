@@ -14,7 +14,7 @@ trait IERC20<TState> {
 
 #[starknet::interface]
 trait IERC20Metadata<TState> {
-    fn name(self: @TState) -> felt252;
+    fn nameXXX(self: @TState) -> felt252;
     fn symbol(self: @TState) -> felt252;
     fn decimals(self: @TState) -> u8;
 }
@@ -53,7 +53,7 @@ trait ERC20ABI<TState> {
     fn approve(ref self: TState, spender: ContractAddress, amount: u256) -> bool;
 
     // IERC20Metadata
-    fn name(self: @TState) -> felt252;
+    fn nameXXX(self: @TState) -> felt252;
     fn symbol(self: @TState) -> felt252;
     fn decimals(self: @TState) -> u8;
 

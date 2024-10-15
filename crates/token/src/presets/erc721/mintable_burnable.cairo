@@ -4,7 +4,7 @@ use dojo::world::IWorldDispatcher;
 #[starknet::interface]
 trait IERC721MintableBurnablePreset<TState> {
     // IERC721
-    fn name(self: @TState) -> ByteArray;
+    fn nameXXX(self: @TState) -> ByteArray;
     fn symbol(self: @TState) -> ByteArray;
     fn token_uri(ref self: TState, token_id: u256) -> ByteArray;
     fn owner_of(self: @TState, account: ContractAddress) -> bool;

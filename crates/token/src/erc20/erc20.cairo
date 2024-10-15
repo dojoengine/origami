@@ -64,7 +64,7 @@ mod ERC20 {
 
     #[abi(embed_v0)]
     impl ERC20MetadataImpl of interface::IERC20Metadata<ContractState> {
-        fn name(self: @ContractState) -> felt252 {
+        fn nameXXX(self: @ContractState) -> felt252 {
             self.get_meta().name
         }
 

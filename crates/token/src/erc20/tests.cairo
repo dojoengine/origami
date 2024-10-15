@@ -59,7 +59,7 @@ fn test_initializer() {
     let (_world, mut state) = STATE();
     InternalImpl::initializer(ref state, NAME, SYMBOL);
 
-    assert(ERC20MetadataImpl::name(@state) == NAME, 'Name should be NAME');
+    assert(ERC20MetadataImpl::nameXXX(@state) == NAME, 'Name should be NAME');
     assert(ERC20MetadataImpl::symbol(@state) == SYMBOL, 'Symbol should be SYMBOL');
     assert(ERC20MetadataImpl::decimals(@state) == DECIMALS, 'Decimals should be 18');
     assert(ERC20Impl::total_supply(@state) == 0, 'Supply should eq 0');
@@ -75,7 +75,7 @@ fn test_constructor() {
 
     assert(ERC20Impl::balance_of(@state, OWNER()) == SUPPLY, 'Should eq inital_supply');
     assert(ERC20Impl::total_supply(@state) == SUPPLY, 'Should eq inital_supply');
-    assert(ERC20MetadataImpl::name(@state) == NAME, 'Name should be NAME');
+    assert(ERC20MetadataImpl::nameXXX(@state) == NAME, 'Name should be NAME');
     assert(ERC20MetadataImpl::symbol(@state) == SYMBOL, 'Symbol should be SYMBOL');
     assert(ERC20MetadataImpl::decimals(@state) == DECIMALS, 'Decimals should be 18');
 }

@@ -92,7 +92,7 @@ fn test_constructor() {
     let (world, mut state) = STATE();
     ERC721::constructor(ref state, world.contract_address, NAME, SYMBOL, URI, OWNER(), TOKEN_ID);
 
-    assert(ERC721MetadataImpl::name(@state) == NAME, 'Name should be NAME');
+    assert(ERC721MetadataImpl::nameXXX(@state) == NAME, 'Name should be NAME');
     assert(ERC721MetadataImpl::symbol(@state) == SYMBOL, 'Symbol should be SYMBOL');
     assert(ERC721Impl::balance_of(@state, OWNER()) == 1, 'Balance should be one');
     assert(ERC721Impl::owner_of(@state, TOKEN_ID) == OWNER(), 'OWNER should be owner');
@@ -115,7 +115,7 @@ fn test_initializer() {
     let (_world, mut state) = STATE();
     InternalImpl::initializer(ref state, NAME, SYMBOL, URI);
 
-    assert(ERC721MetadataImpl::name(@state) == NAME, 'Name should be NAME');
+    assert(ERC721MetadataImpl::nameXXX(@state) == NAME, 'Name should be NAME');
     assert(ERC721MetadataImpl::symbol(@state) == SYMBOL, 'Symbol should be SYMBOL');
 
     assert(ERC721Impl::balance_of(@state, OWNER()) == 0, 'Balance should be zero');

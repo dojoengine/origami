@@ -107,7 +107,7 @@ fn test_initializer() {
 
     assert(erc20_bridgeable.balance_of(OWNER()) == SUPPLY, 'Should eq inital_supply');
     assert(erc20_bridgeable.total_supply() == SUPPLY, 'Should eq inital_supply');
-    assert(erc20_bridgeable.name() == "NAME", 'Name should be NAME');
+    assert(erc20_bridgeable.nameXXX() == "NAME", 'Name should be NAME');
     assert(erc20_bridgeable.symbol() == "SYMBOL", 'Symbol should be SYMBOL');
     assert(erc20_bridgeable.decimals() == DECIMALS, 'Decimals should be 18');
     assert(erc20_bridgeable.l2_bridge_address() == BRIDGE(), 'Decimals should be BRIDGE');

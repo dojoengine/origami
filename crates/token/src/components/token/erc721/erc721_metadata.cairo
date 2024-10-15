@@ -20,7 +20,7 @@ struct ERC721MetaModel {
 
 #[starknet::interface]
 trait IERC721Metadata<TState> {
-    fn name(self: @TState) -> ByteArray;
+    fn nameXXX(self: @TState) -> ByteArray;
     fn symbol(self: @TState) -> ByteArray;
     fn token_uri(ref self: TState, token_id: u256) -> ByteArray;
 }
@@ -62,7 +62,7 @@ mod erc721_metadata_component {
         impl ERC721Owner: erc721_owner_comp::HasComponent<TContractState>,
         +Drop<TContractState>,
     > of IERC721Metadata<ComponentState<TContractState>> {
-        fn name(self: @ComponentState<TContractState>) -> ByteArray {
+        fn nameXXX(self: @ComponentState<TContractState>) -> ByteArray {
             self.get_meta().name
         }
         fn symbol(self: @ComponentState<TContractState>) -> ByteArray {

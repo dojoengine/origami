@@ -115,7 +115,7 @@ fn test_initializer() {
     let (_world, mut enum_mint_burn) = setup();
 
     assert(enum_mint_burn.balance_of(OWNER()) == 2, 'Should eq 2');
-    assert(enum_mint_burn.name() == "NAME", 'Name should be NAME');
+    assert(enum_mint_burn.nameXXX() == "NAME", 'Name should be NAME');
     assert(enum_mint_burn.symbol() == "SYMBOL", 'Symbol should be SYMBOL');
     assert(enum_mint_burn.token_uri(TOKEN_ID) == "URI21", 'Uri should be URI21');
 }

@@ -75,7 +75,7 @@ mod ERC721 {
 
     #[abi(embed_v0)]
     impl ERC721MetadataImpl of interface::IERC721Metadata<ContractState> {
-        fn name(self: @ContractState) -> felt252 {
+        fn nameXXX(self: @ContractState) -> felt252 {
             self.get_meta().name
         }
 
