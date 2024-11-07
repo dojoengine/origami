@@ -158,7 +158,7 @@ mod tests {
     mod discrete {
         // Local imports
 
-        use super::{Fixed, FixedTrait};
+        use super::FixedTrait;
         use super::{assert_approx_equal, TOLERANCE};
         use super::super::{DiscreteGDA, DiscreteGDATrait};
 

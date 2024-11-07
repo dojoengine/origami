@@ -148,7 +148,7 @@ pub impl Astar of AstarTrait {
 mod test {
     // Local imports
 
-    use super::{Astar, Node, NodeTrait};
+    use super::Astar;
 
     #[test]
     fn test_astar_search_small() {

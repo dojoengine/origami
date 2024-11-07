@@ -1,5 +1,4 @@
 //! Module for printing maps.
-use core::fmt::Formatter;
 
 #[generate_trait]
 pub impl MapPrinter of MapPrinterTrait {
