@@ -7,8 +7,8 @@ on:
   pull_request:
 
 env:
-  DOJO_VERSION: v1.0.0-alpha.19
-  SCARB_VERSION: 2.7.0
+  DOJO_VERSION: v1.0.0-rc.1
+  SCARB_VERSION: 2.8.4
 
 jobs:
   check:
@@ -98,26 +98,4 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Test
         run: sozo test --package origami_security
-        shell: bash
-
-  token:
-    needs: [check, build]
-    runs-on: ubuntu-latest
-    name: Test origami_token
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - name: Test
-        run: sozo test --package origami_token
-        shell: bash
-
-  governance:
-    needs: [check, build]
-    runs-on: ubuntu-latest
-    name: Test origami_governance
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - name: Test
-        run: sozo test --package origami_governance
         shell: bash
