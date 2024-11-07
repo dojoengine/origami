@@ -14,7 +14,7 @@ pub fn from_days_fp(x: Fixed) -> Fixed {
 mod tests {
     // External imports
 
-    use cubit::f128::types::fixed::{Fixed, FixedTrait};
+    use cubit::f128::types::fixed::FixedTrait;
 
     // Local imports
 

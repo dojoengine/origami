@@ -43,7 +43,7 @@ mod tests {
 
     // Local imports
 
-    use super::{Commitment, CommitmentTrait};
+    use super::CommitmentTrait;
 
     #[test]
     fn test_security_commit_reveal() {

@@ -4,7 +4,7 @@
 
 use origami_map::helpers::bitmap::Bitmap;
 use origami_map::helpers::seeder::Seeder;
-use origami_map::helpers::asserter::{Asserter, MAX_SIZE};
+use origami_map::helpers::asserter::Asserter;
 
 // Constants
 

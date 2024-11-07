@@ -1,6 +1,6 @@
 // External imports
 
-use cubit::f128::math::ops::{ln, abs, exp};
+use cubit::f128::math::ops::ln;
 use cubit::f128::types::fixed::{Fixed, FixedTrait};
 
 // Based on https://www.paradigm.xyz/2022/08/vrgda
@@ -153,8 +153,7 @@ mod tests {
     mod linear {
         // Local imports
 
-        use cubit::f128::types::fixed::{Fixed, FixedTrait, HALF_u128};
-        use super::{to_days_fp, from_days_fp};
+        use cubit::f128::types::fixed::{FixedTrait, HALF_u128};
         use super::assert_rel_approx_eq;
         use super::super::{LinearVRGDA, VRGDATrait};
 
@@ -197,7 +196,6 @@ mod tests {
         // Local imports
 
         use super::{Fixed, FixedTrait};
-        use super::{to_days_fp, from_days_fp};
         use super::assert_rel_approx_eq;
         use super::super::{LogisticVRGDA, VRGDATrait};
 

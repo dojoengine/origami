@@ -102,7 +102,7 @@ pub impl Greedy of GreedyTrait {
 
 #[cfg(test)]
 mod test {
-    use super::{Greedy, Node, NodeTrait};
+    use super::Greedy;
 
     #[test]
     fn test_greedy_search_small() {

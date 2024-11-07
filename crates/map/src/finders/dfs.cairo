@@ -8,7 +8,7 @@ use origami_map::finders::finder::Finder;
 use origami_map::helpers::bitmap::Bitmap;
 use origami_map::helpers::seeder::Seeder;
 use origami_map::types::node::{Node, NodeTrait};
-use origami_map::types::direction::{Direction, DirectionTrait};
+use origami_map::types::direction::DirectionTrait;
 
 /// DepthFirstSearch implementation for pathfinding
 #[generate_trait]

@@ -1,6 +1,6 @@
 // Internal imports
 
-use origami_map::helpers::power::{TwoPower, TwoPowerTrait};
+use origami_map::helpers::power::TwoPower;
 
 #[generate_trait]
 pub impl Bitmap of BitmapTrait {

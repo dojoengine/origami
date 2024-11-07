@@ -10,7 +10,7 @@ use core::num::traits::Sqrt;
 use origami_map::helpers::heap::{Heap, HeapTrait};
 use origami_map::helpers::bitmap::Bitmap;
 use origami_map::types::node::{Node, NodeTrait};
-use origami_map::types::direction::{Direction, DirectionTrait};
+use origami_map::types::direction::Direction;
 
 #[generate_trait]
 pub impl Finder of FinderTrait {
