@@ -8,30 +8,30 @@ source = "git+https://github.com/bal7hazar/cubit?branch=cairo-2.8.4#6bce623d5c73
 
 [[package]]
 name = "origami_algebra"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "cubit",
 ]
 
 [[package]]
 name = "origami_defi"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "cubit",
 ]
 
 [[package]]
 name = "origami_map"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 
 [[package]]
 name = "origami_random"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 
 [[package]]
 name = "origami_rating"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 
 [[package]]
 name = "origami_security"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
