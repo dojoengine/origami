@@ -12,7 +12,7 @@ members = [
 version = "1.0.0-rc.2"
 
 [workspace.dependencies]
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.0.0-rc.2" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.0.0" }
 # dojo = { path = "../dojo/crates/dojo-core" }
 cubit = { git = "https://github.com/bal7hazar/cubit", branch = "cairo-2.8.4" }
 starknet = "^2.8.4"
