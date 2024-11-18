@@ -7,7 +7,7 @@ on:
   pull_request:
 
 env:
-  DOJO_VERSION: v1.0.0
+  DOJO_VERSION: v1.0.1
   SCARB_VERSION: 2.8.4
 
 jobs:
