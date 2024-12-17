@@ -7,6 +7,66 @@ version = "1.3.0"
 source = "git+https://github.com/bal7hazar/cubit?branch=cairo-2.8.4#6bce623d5c735c097be47a4045c0e0432bad38e7"
 
 [[package]]
+name = "openzeppelin_access"
+version = "0.17.0"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:541bb8fdf1ad17fe0d275b00acb9f0d7f56ea5534741e21535ac3fda2c600281"
+dependencies = [
+ "openzeppelin_introspection",
+ "openzeppelin_utils",
+]
+
+[[package]]
+name = "openzeppelin_account"
+version = "0.17.0"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:c4e11609fdd1f4c3d3004cd1468711bd2ea664739c9e59a4b270567fe4c23ee3"
+dependencies = [
+ "openzeppelin_introspection",
+ "openzeppelin_utils",
+]
+
+[[package]]
+name = "openzeppelin_governance"
+version = "0.17.0"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:b7e0142d88d69a8c367aea8c9dc7f659f27372551efc23f39a0cf71a189c1302"
+dependencies = [
+ "openzeppelin_access",
+ "openzeppelin_introspection",
+]
+
+[[package]]
+name = "openzeppelin_introspection"
+version = "0.17.0"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:892433a4a1ea0fc9cf7cdb01e06ddc2782182abcc188e4ea5dd480906d006cf8"
+
+[[package]]
+name = "openzeppelin_token"
+version = "0.17.0"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:77997a7e217b69674c34b402dc0c7b2210540db66a56087572679c31896eaabb"
+dependencies = [
+ "openzeppelin_account",
+ "openzeppelin_governance",
+ "openzeppelin_introspection",
+]
+
+[[package]]
+name = "openzeppelin_utils"
+version = "0.17.0"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:36d93e353f42fd6b824abcd8b4b51c3f5d02c893c5f886ae81403b0368aa5fde"
+
+[[package]]
+name = "orgami_token_bound_accounts"
+version = "1.0.0-rc.2"
+dependencies = [
+ "token_bound_accounts",
+]
+
+[[package]]
 name = "origami_algebra"
 version = "1.0.0-rc.2"
 dependencies = [
@@ -35,3 +95,13 @@ version = "1.0.0-rc.2"
 [[package]]
 name = "origami_security"
 version = "1.0.0-rc.2"
+
+[[package]]
+name = "token_bound_accounts"
+version = "0.3.0"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:a3b25f192bb88f16415f0c76e3a9dd317fd85129eea172548305354a9dd90346"
+dependencies = [
+ "openzeppelin_introspection",
+ "openzeppelin_token",
+]

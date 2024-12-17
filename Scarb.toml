@@ -6,6 +6,7 @@ members = [
     "crates/random",
     "crates/rating",
     "crates/security",
+    "crates/tba",
 ]
 
 [workspace.package]

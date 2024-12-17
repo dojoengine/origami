@@ -1,0 +1,9 @@
+[package]
+name = "orgami_token_bound_accounts"
+version.workspace = true
+description = "tba library for Dojo based games."
+homepage = "https://www.tbaexplorer.com/"
+edition = "2024_07"
+
+[dependencies]
+token_bound_accounts = "0.3.0"
