@@ -98,9 +98,9 @@ version = "1.0.0-rc.2"
 
 [[package]]
 name = "token_bound_accounts"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://scarbs.xyz/"
-checksum = "sha256:a3b25f192bb88f16415f0c76e3a9dd317fd85129eea172548305354a9dd90346"
+checksum = "sha256:75e6ce74837d9d3199a1ce22cefcf464995ebeb3c86595eb9147b00a0c20e890"
 dependencies = [
  "openzeppelin_introspection",
  "openzeppelin_token",
