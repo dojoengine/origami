@@ -60,13 +60,6 @@ source = "registry+https://scarbs.xyz/"
 checksum = "sha256:36d93e353f42fd6b824abcd8b4b51c3f5d02c893c5f886ae81403b0368aa5fde"
 
 [[package]]
-name = "orgami_token_bound_accounts"
-version = "1.0.0-rc.2"
-dependencies = [
- "token_bound_accounts",
-]
-
-[[package]]
 name = "origami_algebra"
 version = "1.0.0-rc.2"
 dependencies = [
@@ -95,6 +88,13 @@ version = "1.0.0-rc.2"
 [[package]]
 name = "origami_security"
 version = "1.0.0-rc.2"
+
+[[package]]
+name = "origami_token_bound_accounts"
+version = "1.0.0-rc.2"
+dependencies = [
+ "token_bound_accounts",
+]
 
 [[package]]
 name = "token_bound_accounts"
