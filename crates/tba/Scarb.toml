@@ -1,0 +1,17 @@
+[package]
+name = "origami_token_bound_accounts"
+version.workspace = true
+description = "A port of ERC6551 to Starknet (SNIP-14)"
+homepage = "https//www.tbaexplorer.com/"
+edition = "2024_07"
+
+[dependencies]
+token_bound_accounts = "0.3.1"
+
+
+
+# name = "token_bound_accounts"
+# version.workspace = true
+# description = "A port of ERC6551 to Starknet (SNIP-14)"
+# homepage = "https://www.tbaexplorer.com/"
+# edition = "2024_07"
