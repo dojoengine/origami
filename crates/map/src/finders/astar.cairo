@@ -14,7 +14,7 @@ use origami_map::types::node::{Node, NodeTrait};
 use origami_map::types::direction::{Direction, DirectionTrait};
 
 #[generate_trait]
-pub impl Astar of AstarTrait { 
+pub impl Astar of AstarTrait {
     /// Search for the shortest path from a start to a target position.
     /// # Arguments
     /// * `grid` - The grid to search (1 is walkable and 0 is not)
