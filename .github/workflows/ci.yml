@@ -7,8 +7,8 @@ on:
   pull_request:
 
 env:
-  DOJO_VERSION: v1.0.1
-  SCARB_VERSION: 2.8.4
+  DOJO_VERSION: v1.1.2
+  SCARB_VERSION: 2.9.2
 
 jobs:
   check:
@@ -40,6 +40,9 @@ jobs:
     name: Test origami_algebra
     steps:
       - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
       - uses: ./.github/actions/setup
       - name: Test
         run: sozo test --package origami_algebra
@@ -51,6 +54,9 @@ jobs:
     name: Test origami_defi
     steps:
       - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
       - uses: ./.github/actions/setup
       - name: Test
         run: sozo test --package origami_defi
@@ -62,6 +68,9 @@ jobs:
     name: Test origami_map
     steps:
       - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
       - uses: ./.github/actions/setup
       - name: Test
         run: sozo test --package origami_map
@@ -73,6 +82,9 @@ jobs:
     name: Test origami_random
     steps:
       - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
       - uses: ./.github/actions/setup
       - name: Test
         run: sozo test --package origami_random
@@ -84,6 +96,9 @@ jobs:
     name: Test origami_rating
     steps:
       - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
       - uses: ./.github/actions/setup
       - name: Test
         run: sozo test --package origami_rating
@@ -95,6 +110,9 @@ jobs:
     name: Test origami_security
     steps:
       - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
       - uses: ./.github/actions/setup
       - name: Test
         run: sozo test --package origami_security

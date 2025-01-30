@@ -3,7 +3,7 @@ use core::num::traits::Zero;
 
 #[derive(Copy, Drop, Default, Serde)]
 pub struct Commitment {
-    pub hash: felt252
+    pub hash: felt252,
 }
 
 /// Errors module.

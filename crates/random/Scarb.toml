@@ -1,8 +1,9 @@
 [package]
 name = "origami_random"
 version.workspace = true
+edition.workspace = true
 description = "Random generator library for Dojo based games."
 homepage = "https://github.com/dojoengine/origami/tree/main/crates/random"
-edition = "2024_07"
 
 [dependencies]
+cairo_test.workspace = true

@@ -74,7 +74,7 @@ pub impl DeckImpl of DeckTrait {
     #[inline(always)]
     fn new(seed: felt252, number: u32) -> Deck {
         Deck {
-            seed, cards: Default::default(), keys: Default::default(), remaining: number, nonce: 0
+            seed, cards: Default::default(), keys: Default::default(), remaining: number, nonce: 0,
         }
     }
 

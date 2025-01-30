@@ -53,7 +53,7 @@ pub impl HexImpl of HexTrait {
                 self.neighbor_even_y(Direction::NorthWest(())),
                 self.neighbor_even_y(Direction::West(())),
                 self.neighbor_even_y(Direction::SouthWest(())),
-                self.neighbor_even_y(Direction::SouthEast(()))
+                self.neighbor_even_y(Direction::SouthEast(())),
             ];
         }
         return array![
@@ -62,7 +62,7 @@ pub impl HexImpl of HexTrait {
             self.neighbor(Direction::NorthWest(())),
             self.neighbor(Direction::West(())),
             self.neighbor(Direction::SouthWest(())),
-            self.neighbor(Direction::SouthEast(()))
+            self.neighbor(Direction::SouthEast(())),
         ];
     }
 
@@ -190,21 +190,22 @@ mod tests {
         assert(hex_tile.is_neighbor(Hex { col: hex_tile.col + 1, row: hex_tile.row }), 'east');
 
         assert(
-            hex_tile.is_neighbor(Hex { col: hex_tile.col, row: hex_tile.row + 1 }), 'north east'
+            hex_tile.is_neighbor(Hex { col: hex_tile.col, row: hex_tile.row + 1 }), 'north east',
         );
 
         assert(
-            hex_tile.is_neighbor(Hex { col: hex_tile.col, row: hex_tile.row - 1 }), 'north west'
+            hex_tile.is_neighbor(Hex { col: hex_tile.col, row: hex_tile.row - 1 }), 'north west',
         );
 
         assert(hex_tile.is_neighbor(Hex { col: hex_tile.col - 1, row: hex_tile.row }), 'west');
 
         assert(
-            hex_tile.is_neighbor(Hex { col: hex_tile.col, row: hex_tile.row - 1 }), 'south west'
+            hex_tile.is_neighbor(Hex { col: hex_tile.col, row: hex_tile.row - 1 }), 'south west',
         );
 
         assert(
-            hex_tile.is_neighbor(Hex { col: hex_tile.col + 1, row: hex_tile.row - 1 }), 'south east'
+            hex_tile.is_neighbor(Hex { col: hex_tile.col + 1, row: hex_tile.row - 1 }),
+            'south east',
         );
     }
 

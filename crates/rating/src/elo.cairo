@@ -47,7 +47,7 @@ pub impl EloImpl of EloTrait {
         C,
         +Into<u32, C>,
     >(
-        rating_a: T, rating_b: T, score: S, k: K
+        rating_a: T, rating_b: T, score: S, k: K,
     ) -> (C, bool) {
         // [Check] Checks against overflow/underflow
         // Large rating diffs leads to 10 ** rating_diff being too large to fit in a u256
@@ -65,7 +65,7 @@ pub impl EloImpl of EloTrait {
         // [Info] Order should be less or equal to 77 to fit a u256
         let powered: u256 = PrivateTrait::pow(10, order);
         let rooted: u16 = Sqrt::<
-            u32
+            u32,
         >::sqrt(Sqrt::<u64>::sqrt(Sqrt::<u128>::sqrt(Sqrt::<u256>::sqrt(powered))));
 
         // [Compute] Change = k * (score - expectedScore)
@@ -86,7 +86,7 @@ pub impl EloImpl of EloTrait {
 #[generate_trait]
 impl Private of PrivateTrait {
     fn pow<T, +Sub<T>, +Mul<T>, +Div<T>, +Rem<T>, +PartialEq<T>, +Into<u8, T>, +Drop<T>, +Copy<T>>(
-        base: T, exp: T
+        base: T, exp: T,
     ) -> T {
         if exp == 0_u8.into() {
             1_u8.into()
@@ -100,9 +100,9 @@ impl Private of PrivateTrait {
     }
 
     fn round_div<
-        T, +Add<T>, +Sub<T>, +Div<T>, +Rem<T>, +PartialOrd<T>, +Into<u8, T>, +Drop<T>, +Copy<T>
+        T, +Add<T>, +Sub<T>, +Div<T>, +Rem<T>, +PartialOrd<T>, +Into<u8, T>, +Drop<T>, +Copy<T>,
     >(
-        a: T, b: T
+        a: T, b: T,
     ) -> T {
         let remained = a % b;
         if b - remained <= remained {

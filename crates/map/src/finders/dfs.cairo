@@ -59,7 +59,7 @@ pub impl DepthFirstSearch of DepthFirstSearchTrait {
         current: Node,
         target: Node,
         ref visited: Felt252Dict<bool>,
-        ref parents: Felt252Dict<u8>
+        ref parents: Felt252Dict<u8>,
     ) -> bool {
         // [Check] If the current node has already been visited, return false
         if visited.get(current.position.into()) {

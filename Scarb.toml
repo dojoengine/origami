@@ -9,12 +9,12 @@ members = [
 ]
 
 [workspace.package]
-version = "1.0.0-rc.2"
+version = "1.1.2"
+edition = "2024_07"
 
 [workspace.dependencies]
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.0.1" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.1.2" }
 # dojo = { path = "../dojo/crates/dojo-core" }
-cubit = { git = "https://github.com/bal7hazar/cubit", branch = "cairo-2.8.4" }
-starknet = "^2.8.4"
-cairo_test = "^2.8.4"
-# Scripts are not supported for virtual workspaces.
+cubit = { git = "https://github.com/bengineer42/cubit", branch = "bump-cairo-gt-2.8" }
+starknet = "^2.9.2"
+cairo_test = "^2.9.2"

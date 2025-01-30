@@ -87,7 +87,7 @@ pub struct LogisticVRGDA {
     pub target_price: Fixed,
     pub decay_constant: Fixed,
     pub max_sellable: Fixed,
-    pub time_scale: Fixed, // target time to sell 46% of units
+    pub time_scale: Fixed // target time to sell 46% of units
 }
 
 impl LogisticVRGDAVarsImpl of VRGDAVarsTrait<LogisticVRGDA> {

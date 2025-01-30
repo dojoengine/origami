@@ -1,4 +1,4 @@
-use zeroable::Zeroable;
+use core::num::traits::Zero;
 use core::ops::{AddAssign, SubAssign};
 
 
@@ -10,9 +10,9 @@ struct Matrix<T> {
 }
 
 mod errors {
-    const INVALID_INDEX: felt252 = 'Matrix: index out of bounds';
-    const INVALID_DIMENSION: felt252 = 'Matrix: invalid dimension';
-    const INVALID_MATRIX_INVERSION: felt252 = 'Matrix: matrix not invertible';
+    pub const INVALID_INDEX: felt252 = 'Matrix: index out of bounds';
+    pub const INVALID_DIMENSION: felt252 = 'Matrix: invalid dimension';
+    pub const INVALID_MATRIX_INVERSION: felt252 = 'Matrix: matrix not invertible';
 }
 
 trait MatrixTrait<T> {
@@ -38,7 +38,7 @@ impl MatrixImpl<
     +Sub<T>,
     +SubAssign<T, T>,
     +Neg<T>,
-    +Zeroable<T>,
+    +Zero<T>,
     +Copy<T>,
     +Drop<T>,
 > of MatrixTrait<T> {
@@ -102,7 +102,7 @@ impl MatrixImpl<
             return (self.get(0, 0) * self.get(1, 1)) - (self.get(0, 1) * self.get(1, 0));
         }
 
-        let mut det: T = Zeroable::zero();
+        let mut det: T = Zero::zero();
         let mut col: u8 = 0;
         loop {
             if col >= self.cols {
@@ -166,7 +166,7 @@ impl MatrixAdd<
     +Sub<T>,
     +SubAssign<T, T>,
     +Neg<T>,
-    +Zeroable<T>,
+    +Zero<T>,
     +Copy<T>,
     +Drop<T>,
 > of Add<Matrix<T>> {
@@ -198,7 +198,7 @@ impl MatrixSub<
     +Sub<T>,
     +SubAssign<T, T>,
     +Neg<T>,
-    +Zeroable<T>,
+    +Zero<T>,
     +Copy<T>,
     +Drop<T>,
 > of Sub<Matrix<T>> {
@@ -230,7 +230,7 @@ impl MatrixMul<
     +Sub<T>,
     +SubAssign<T, T>,
     +Neg<T>,
-    +Zeroable<T>,
+    +Zero<T>,
     +Copy<T>,
     +Drop<T>,
 > of Mul<Matrix<T>> {
@@ -248,7 +248,7 @@ impl MatrixMul<
             let row = index / rhs.cols;
             let col = index % rhs.cols;
 
-            let mut sum: T = Zeroable::zero();
+            let mut sum: T = Zero::zero();
             let mut k: u8 = 0;
             loop {
                 if k == lhs.cols {
@@ -268,30 +268,7 @@ impl MatrixMul<
 
 #[cfg(test)]
 mod tests {
-    use core::traits::TryInto;
     use super::{Matrix, MatrixTrait};
-    use debug::PrintTrait;
-
-    impl I128Zeroable of Zeroable<i128> {
-        fn zero() -> i128 {
-            0
-        }
-        fn is_zero(self: i128) -> bool {
-            self == 0
-        }
-        fn is_non_zero(self: i128) -> bool {
-            self != 0
-        }
-    }
-
-    // impl I128Div of Div<i128> {
-    //     fn div(lhs: i128, rhs: i128) -> i128 {
-    //         let lhs_u256: u256 = Into::<felt252, u256>::into(lhs.into());
-    //         let rhs_u256: u256 = Into::<felt252, u256>::into(rhs.into());
-    //         let div: felt252 = (lhs_u256 / rhs_u256).try_into().unwrap();
-    //         div.try_into().unwrap()
-    //     }
-    // }
 
     #[test]
     fn test_matrix_get() {

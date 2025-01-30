@@ -25,7 +25,7 @@ pub impl Digger of DiggerTrait {
     /// * The grid with the maze to the exit
     #[inline]
     fn maze(
-        width: u8, height: u8, order: u8, start: u8, mut grid: felt252, mut seed: felt252
+        width: u8, height: u8, order: u8, start: u8, mut grid: felt252, mut seed: felt252,
     ) -> felt252 {
         // [Check] Position is not a corner and is on an edge
         Asserter::assert_not_corner(width, height, start);
@@ -62,7 +62,7 @@ pub impl Digger of DiggerTrait {
     /// * The grid with the maze to the exit
     #[inline]
     fn corridor(
-        width: u8, height: u8, order: u8, start: u8, grid: felt252, mut seed: felt252
+        width: u8, height: u8, order: u8, start: u8, grid: felt252, mut seed: felt252,
     ) -> felt252 {
         // [Check] Position is not a corner and is on an edge
         Asserter::assert_not_corner(width, height, start);
@@ -107,7 +107,7 @@ pub impl Digger of DiggerTrait {
         grid: felt252,
         ref stop: bool,
         ref maze: felt252,
-        ref seed: felt252
+        ref seed: felt252,
     ) {
         // [Check] Stop criteria, the position collides with the grid
         if Bitmap::get(grid, start) == 1 {
@@ -165,7 +165,7 @@ pub impl Digger of DiggerTrait {
         order: u8,
         position: u8,
         direction: Direction,
-        stop: bool
+        stop: bool,
     ) -> bool {
         !stop && Mazer::check(grid, width, height, order, position, direction)
     }
