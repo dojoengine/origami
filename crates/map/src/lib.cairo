@@ -12,6 +12,7 @@ pub mod finders {
     pub mod bfs;
     pub mod greedy;
     pub mod dfs;
+    pub mod dijkstra;
 }
 
 pub mod generators {

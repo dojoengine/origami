@@ -49,22 +49,22 @@ pub impl Astar of AstarTrait {
             let seed = Seeder::shuffle(grid, current.position.into());
             let mut directions = DirectionTrait::compute_shuffled_directions(seed);
             let direction: Direction = DirectionTrait::pop_front(ref directions);
-            if Self::check(grid, width, height, current.position, direction, ref visited) {
+            if Finder::check(grid, width, height, current.position, direction, ref visited) {
                 let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
             let direction: Direction = DirectionTrait::pop_front(ref directions);
-            if Self::check(grid, width, height, current.position, direction, ref visited) {
+            if Finder::check(grid, width, height, current.position, direction, ref visited) {
                 let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
             let direction: Direction = DirectionTrait::pop_front(ref directions);
-            if Self::check(grid, width, height, current.position, direction, ref visited) {
+            if Finder::check(grid, width, height, current.position, direction, ref visited) {
                 let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
             let direction: Direction = DirectionTrait::pop_front(ref directions);
-            if Self::check(grid, width, height, current.position, direction, ref visited) {
+            if Finder::check(grid, width, height, current.position, direction, ref visited) {
                 let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
@@ -72,43 +72,6 @@ pub impl Astar of AstarTrait {
 
         // [Return] The path from the start to the target
         Finder::path_with_heap(ref heap, start, target)
-    }
-
-    /// Check if the position can be visited in the specified direction.
-    /// # Arguments
-    /// * `grid` - The grid to search (1 is walkable and 0 is not)
-    /// * `width` - The width of the grid
-    /// * `height` - The height of the grid
-    /// * `position` - The current position
-    /// * `direction` - The direction to check
-    /// * `visited` - The visited nodes
-    /// # Returns
-    /// * Whether the position can be visited in the specified direction
-    #[inline]
-    fn check(
-        grid: felt252,
-        width: u8,
-        height: u8,
-        position: u8,
-        direction: Direction,
-        ref visited: Felt252Dict<bool>
-    ) -> bool {
-        let (x, y) = (position % width, position / width);
-        match direction {
-            Direction::North => (y < height - 1)
-                && (Bitmap::get(grid, position + width) == 1)
-                && !visited.get((position + width).into()),
-            Direction::East => (x > 0)
-                && (Bitmap::get(grid, position - 1) == 1)
-                && !visited.get((position - 1).into()),
-            Direction::South => (y > 0)
-                && (Bitmap::get(grid, position - width) == 1)
-                && !visited.get((position - width).into()),
-            Direction::West => (x < width - 1)
-                && (Bitmap::get(grid, position + 1) == 1)
-                && !visited.get((position + 1).into()),
-            _ => false,
-        }
     }
 
     /// Assess the neighbor node and update the heap.
@@ -121,16 +84,14 @@ pub impl Astar of AstarTrait {
     /// # Effects
     /// * Update the heap with the neighbor node
     #[inline]
-    fn assess(
-        width: u8, neighbor_position: u8, current: Node, target: Node, ref heap: Heap<Node>,
-    ) {
+    fn assess(width: u8, neighbor_position: u8, current: Node, target: Node, ref heap: Heap<Node>) {
         let distance = Finder::manhattan(current.position, neighbor_position, width);
         let neighbor_gcost = current.gcost + distance;
         let neighbor_hcost = Finder::manhattan(neighbor_position, target.position, width);
         let mut neighbor = match heap.get(neighbor_position.into()) {
             Option::Some(node) => node,
             Option::None => NodeTrait::new(
-                neighbor_position, current.position, neighbor_gcost, neighbor_hcost
+                neighbor_position, current.position, neighbor_gcost, neighbor_hcost,
             ),
         };
         if neighbor_gcost < neighbor.gcost || !heap.contains(neighbor.position) {
@@ -218,7 +179,7 @@ mod test {
         assert_eq!(
             path,
             array![170, 171, 172, 154, 136, 118, 117, 116, 115, 114, 113, 112, 94, 93, 75, 74, 56]
-                .span()
+                .span(),
         );
     }
 
@@ -272,7 +233,7 @@ mod test {
                 55,
                 56,
             ]
-                .span()
+                .span(),
         );
     }
 }
