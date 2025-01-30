@@ -56,7 +56,7 @@ pub impl Mazer of MazerTrait {
         start: u8,
         ref grid: felt252,
         ref maze: felt252,
-        ref seed: felt252
+        ref seed: felt252,
     ) {
         // [Check] Stop criteria, the position collides with the original grid
         if Bitmap::get(grid, start) == 1 {
@@ -109,7 +109,7 @@ pub impl Mazer of MazerTrait {
     /// * Whether the position can be visited in the specified direction
     #[inline]
     fn check(
-        maze: felt252, width: u8, height: u8, order: u8, position: u8, direction: Direction
+        maze: felt252, width: u8, height: u8, order: u8, position: u8, direction: Direction,
     ) -> bool {
         // [Check] Order is valid
         assert(order <= 1, errors::MAZER_INVALID_ORDER);

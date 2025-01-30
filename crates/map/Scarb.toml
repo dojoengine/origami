@@ -1,8 +1,9 @@
 [package]
 name = "origami_map"
 version.workspace = true
+edition.workspace = true
 description = "Maps library for Dojo based games."
 homepage = "https://github.com/dojoengine/origami/tree/main/crates/map"
-edition = "2024_07"
 
 [dependencies]
+cairo_test.workspace = true

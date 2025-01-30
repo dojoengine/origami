@@ -124,7 +124,7 @@ pub struct Heap<T> {
 pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapTrait<T> {
     #[inline]
     fn new() -> Heap<T> {
-        Heap { len: 0, keys: Default::default(), data: Default::default(), }
+        Heap { len: 0, keys: Default::default(), data: Default::default() }
     }
 
     #[inline]
@@ -288,7 +288,7 @@ mod tests {
     #[test]
     fn test_heap_add() {
         let mut heap: Heap<Node> = HeapTrait::new();
-        let node: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1, };
+        let node: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1 };
         heap.add(node);
         assert!(!heap.is_empty());
     }
@@ -296,7 +296,7 @@ mod tests {
     #[test]
     fn test_heap_contains() {
         let mut heap: Heap<Node> = HeapTrait::new();
-        let node: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1, };
+        let node: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1 };
         heap.add(node);
         assert!(heap.contains(node.position));
     }
@@ -304,16 +304,16 @@ mod tests {
     #[test]
     fn test_heap_not_contains() {
         let mut heap: Heap<Node> = HeapTrait::new();
-        let node: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1, };
+        let node: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1 };
         assert!(!heap.contains(node.position));
     }
 
     #[test]
     fn test_heap_pop_front_sorted() {
         let mut heap: Heap<Node> = HeapTrait::new();
-        let first: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1, };
-        let second: Node = Node { position: 2, source: 2, gcost: 2, hcost: 2, };
-        let third: Node = Node { position: 3, source: 3, gcost: 3, hcost: 3, };
+        let first: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1 };
+        let second: Node = Node { position: 2, source: 2, gcost: 2, hcost: 2 };
+        let third: Node = Node { position: 3, source: 3, gcost: 3, hcost: 3 };
         heap.add(first);
         heap.add(second);
         heap.add(third);
@@ -325,9 +325,9 @@ mod tests {
     #[test]
     fn test_heap_pop_front_reversed() {
         let mut heap: Heap<Node> = HeapTrait::new();
-        let first: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1, };
-        let second: Node = Node { position: 2, source: 2, gcost: 2, hcost: 2, };
-        let third: Node = Node { position: 3, source: 3, gcost: 3, hcost: 3, };
+        let first: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1 };
+        let second: Node = Node { position: 2, source: 2, gcost: 2, hcost: 2 };
+        let third: Node = Node { position: 3, source: 3, gcost: 3, hcost: 3 };
         heap.add(third);
         heap.add(second);
         heap.add(first);
@@ -339,8 +339,8 @@ mod tests {
     #[test]
     fn test_heap_swap() {
         let mut heap: Heap<Node> = HeapTrait::new();
-        let first: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1, };
-        let second: Node = Node { position: 2, source: 2, gcost: 2, hcost: 2, };
+        let first: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1 };
+        let second: Node = Node { position: 2, source: 2, gcost: 2, hcost: 2 };
         heap.add(first);
         heap.add(second);
         heap.swap(first.key(), second.key());
@@ -354,8 +354,8 @@ mod tests {
     #[test]
     fn test_heap_get() {
         let mut heap: Heap<Node> = HeapTrait::new();
-        let first: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1, };
-        let second: Node = Node { position: 2, source: 2, gcost: 2, hcost: 2, };
+        let first: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1 };
+        let second: Node = Node { position: 2, source: 2, gcost: 2, hcost: 2 };
         heap.add(first);
         heap.add(second);
         assert_eq!(heap.get(first.position).unwrap().position, 1);
@@ -368,8 +368,8 @@ mod tests {
     #[test]
     fn test_heap_at() {
         let mut heap: Heap<Node> = HeapTrait::new();
-        let first: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1, };
-        let second: Node = Node { position: 2, source: 2, gcost: 2, hcost: 2, };
+        let first: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1 };
+        let second: Node = Node { position: 2, source: 2, gcost: 2, hcost: 2 };
         heap.add(first);
         heap.add(second);
         assert_eq!(heap.at(first.position).position, 1);
@@ -382,8 +382,8 @@ mod tests {
     #[test]
     fn test_heap_add_pop_add() {
         let mut heap: Heap<Node> = HeapTrait::new();
-        let first: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1, };
-        let second: Node = Node { position: 2, source: 2, gcost: 2, hcost: 2, };
+        let first: Node = Node { position: 1, source: 1, gcost: 1, hcost: 1 };
+        let second: Node = Node { position: 2, source: 2, gcost: 2, hcost: 2 };
         heap.add(first);
         heap.add(second);
         heap.pop_front().unwrap();

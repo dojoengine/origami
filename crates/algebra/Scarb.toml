@@ -1,6 +1,7 @@
 [package]
 name = "origami_algebra"
 version.workspace = true
+edition.workspace = true
 description = "Algebra library for Dojo based games."
 homepage = "https://github.com/dojoengine/origami/tree/main/crates/algebra"
 
@@ -9,3 +10,4 @@ homepage = "https://github.com/dojoengine/origami/tree/main/crates/algebra"
 
 [dependencies]
 cubit.workspace = true
+cairo_test.workspace = true
