@@ -1,4 +1,5 @@
 use core::ops::AddAssign;
+use core::num::traits::Zero;
 
 #[derive(Copy, Drop)]
 struct Vector<T> {
@@ -6,8 +7,8 @@ struct Vector<T> {
 }
 
 mod errors {
-    const INVALID_INDEX: felt252 = 'Vector: index out of bounds';
-    const INVALID_SIZE: felt252 = 'Vector: invalid size';
+    pub const INVALID_INDEX: felt252 = 'Vector: index out of bounds';
+    pub const INVALID_SIZE: felt252 = 'Vector: invalid size';
 }
 
 trait VectorTrait<T> {
@@ -20,7 +21,7 @@ trait VectorTrait<T> {
     fn dot(self: Vector<T>, vector: Vector<T>) -> T;
 }
 
-impl VectorImpl<T, +Mul<T>, +AddAssign<T, T>, +Zeroable<T>, +Copy<T>, +Drop<T>,> of VectorTrait<T> {
+impl VectorImpl<T, +Mul<T>, +AddAssign<T, T>, +Zero<T>, +Copy<T>, +Drop<T>> of VectorTrait<T> {
     fn new(data: Span<T>) -> Vector<T> {
         Vector { data }
     }
@@ -37,7 +38,7 @@ impl VectorImpl<T, +Mul<T>, +AddAssign<T, T>, +Zeroable<T>, +Copy<T>, +Drop<T>,>
         // [Check] Dimesions are compatible
         assert(self.size() == vector.size(), errors::INVALID_SIZE);
         // [Compute] Dot product in a loop
-        let mut value = Zeroable::zero();
+        let mut value = Zero::zero();
         loop {
             match self.data.pop_front() {
                 Option::Some(x_value) => {
@@ -51,7 +52,7 @@ impl VectorImpl<T, +Mul<T>, +AddAssign<T, T>, +Zeroable<T>, +Copy<T>, +Drop<T>,>
 }
 
 impl VectorAdd<
-    T, +Mul<T>, +AddAssign<T, T>, +Add<T>, +Zeroable<T>, +Copy<T>, +Drop<T>,
+    T, +Mul<T>, +AddAssign<T, T>, +Add<T>, +Zero<T>, +Copy<T>, +Drop<T>,
 > of Add<Vector<T>> {
     fn add(mut lhs: Vector<T>, mut rhs: Vector<T>) -> Vector<T> {
         // [Check] Dimesions are compatible
@@ -71,7 +72,7 @@ impl VectorAdd<
 }
 
 impl VectorSub<
-    T, +Mul<T>, +AddAssign<T, T>, +Sub<T>, +Zeroable<T>, +Copy<T>, +Drop<T>,
+    T, +Mul<T>, +AddAssign<T, T>, +Sub<T>, +Zero<T>, +Copy<T>, +Drop<T>,
 > of Sub<Vector<T>> {
     fn sub(mut lhs: Vector<T>, mut rhs: Vector<T>) -> Vector<T> {
         // [Check] Dimesions are compatible
@@ -92,25 +93,7 @@ impl VectorSub<
 
 #[cfg(test)]
 mod tests {
-    // Core imports
-
-    use debug::PrintTrait;
-
-    // Local imports
-
     use super::{Vector, VectorTrait};
-
-    impl I128Zeroable of Zeroable<i128> {
-        fn zero() -> i128 {
-            0
-        }
-        fn is_zero(self: i128) -> bool {
-            self == 0
-        }
-        fn is_non_zero(self: i128) -> bool {
-            self != 0
-        }
-    }
 
     #[test]
     fn test_vector_get() {

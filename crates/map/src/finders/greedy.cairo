@@ -84,9 +84,7 @@ pub impl Greedy of GreedyTrait {
     /// # Effects
     /// * Update the heap with the neighbor node
     #[inline]
-    fn assess(
-        width: u8, neighbor_position: u8, current: Node, target: Node, ref heap: Heap<Node>,
-    ) {
+    fn assess(width: u8, neighbor_position: u8, current: Node, target: Node, ref heap: Heap<Node>) {
         let neighbor_hcost = Finder::manhattan(neighbor_position, target.position, width);
         let mut neighbor = match heap.get(neighbor_position.into()) {
             Option::Some(node) => node,
@@ -176,9 +174,9 @@ mod test {
                 93,
                 75,
                 74,
-                56
+                56,
             ]
-                .span()
+                .span(),
         );
     }
 }

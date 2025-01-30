@@ -31,7 +31,7 @@ pub impl Finder of FinderTrait {
         height: u8,
         position: u8,
         direction: Direction,
-        ref visited: Felt252Dict<bool>
+        ref visited: Felt252Dict<bool>,
     ) -> bool {
         let (x, y) = (position % width, position / width);
         match direction {
@@ -190,16 +190,16 @@ mod test {
         let position = 0;
         let mut visited: Felt252Dict<bool> = Default::default();
         assert_eq!(
-            Finder::check(grid, width, height, position, Direction::North, ref visited), true
+            Finder::check(grid, width, height, position, Direction::North, ref visited), true,
         );
         assert_eq!(
-            Finder::check(grid, width, height, position, Direction::East, ref visited), false
+            Finder::check(grid, width, height, position, Direction::East, ref visited), false,
         );
         assert_eq!(
-            Finder::check(grid, width, height, position, Direction::South, ref visited), false
+            Finder::check(grid, width, height, position, Direction::South, ref visited), false,
         );
         assert_eq!(
-            Finder::check(grid, width, height, position, Direction::West, ref visited), true
+            Finder::check(grid, width, height, position, Direction::West, ref visited), true,
         );
     }
 
@@ -214,16 +214,16 @@ mod test {
         let position = 1;
         let mut visited: Felt252Dict<bool> = Default::default();
         assert_eq!(
-            Finder::check(grid, width, height, position, Direction::North, ref visited), false
+            Finder::check(grid, width, height, position, Direction::North, ref visited), false,
         );
         assert_eq!(
-            Finder::check(grid, width, height, position, Direction::East, ref visited), true
+            Finder::check(grid, width, height, position, Direction::East, ref visited), true,
         );
         assert_eq!(
-            Finder::check(grid, width, height, position, Direction::South, ref visited), false
+            Finder::check(grid, width, height, position, Direction::South, ref visited), false,
         );
         assert_eq!(
-            Finder::check(grid, width, height, position, Direction::West, ref visited), true
+            Finder::check(grid, width, height, position, Direction::West, ref visited), true,
         );
     }
 
@@ -238,16 +238,16 @@ mod test {
         let position = 4;
         let mut visited: Felt252Dict<bool> = Default::default();
         assert_eq!(
-            Finder::check(grid, width, height, position, Direction::North, ref visited), true
+            Finder::check(grid, width, height, position, Direction::North, ref visited), true,
         );
         assert_eq!(
-            Finder::check(grid, width, height, position, Direction::East, ref visited), false
+            Finder::check(grid, width, height, position, Direction::East, ref visited), false,
         );
         assert_eq!(
-            Finder::check(grid, width, height, position, Direction::South, ref visited), false
+            Finder::check(grid, width, height, position, Direction::South, ref visited), false,
         );
         assert_eq!(
-            Finder::check(grid, width, height, position, Direction::West, ref visited), true
+            Finder::check(grid, width, height, position, Direction::West, ref visited), true,
         );
     }
 
