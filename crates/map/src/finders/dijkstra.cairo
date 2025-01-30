@@ -1,21 +1,20 @@
-//! A* algorithm implementation for pathfinding.
+//! Dijkstra algorithm for pathfinding.
 
 // Core imports
-
 use core::dict::{Felt252Dict, Felt252DictTrait};
 
-// Internal imports
-
+// Internal Imports
 use origami_map::finders::finder::Finder;
+use origami_map::finders::astar::Astar;
 use origami_map::helpers::heap::{Heap, HeapTrait};
 use origami_map::helpers::bitmap::Bitmap;
-use origami_map::helpers::seeder::Seeder;
 use origami_map::types::node::{Node, NodeTrait};
 use origami_map::types::direction::{Direction, DirectionTrait};
+use origami_map::helpers::seeder::Seeder;
 
 #[generate_trait]
-pub impl Astar of AstarTrait {
-    /// Search for the shortest path from a start to a target position.
+pub impl Dijkstra of DijkstraTrait {
+    /// Search for the shortest path from a start to a target position using Dijkstra's algorithm.
     /// # Arguments
     /// * `grid` - The grid to search (1 is walkable and 0 is not)
     /// * `width` - The width of the grid
@@ -70,29 +69,18 @@ pub impl Astar of AstarTrait {
             }
         };
 
-        // [Return] The path from the start to the target
-        Finder::path_with_heap(ref heap, start, target)
+        // [Return] Reconstruct the path from the start to the target
+        Finder::path_with_heap(ref heap, start, NodeTrait::new(to, 0, 0, 0))
     }
 
-    /// Assess the neighbor node and update the heap.
-    /// # Arguments
-    /// * `width` - The width of the grid
-    /// * `neighbor_position` - The position of the neighbor
-    /// * `current` - The current node
-    /// * `target` - The target node
-    /// * `heap` - The heap of nodes
-    /// # Effects
-    /// * Update the heap with the neighbor node
+    /// Assess a neighbor node (simplified from A*).
     #[inline]
     fn assess(width: u8, neighbor_position: u8, current: Node, target: Node, ref heap: Heap<Node>) {
         let distance = Finder::manhattan(current.position, neighbor_position, width);
         let neighbor_gcost = current.gcost + distance;
-        let neighbor_hcost = Finder::manhattan(neighbor_position, target.position, width);
         let mut neighbor = match heap.get(neighbor_position.into()) {
             Option::Some(node) => node,
-            Option::None => NodeTrait::new(
-                neighbor_position, current.position, neighbor_gcost, neighbor_hcost,
-            ),
+            Option::None => NodeTrait::new(neighbor_position, current.position, neighbor_gcost, 0),
         };
         if neighbor_gcost < neighbor.gcost || !heap.contains(neighbor.position) {
             neighbor.gcost = neighbor_gcost;
@@ -105,15 +93,15 @@ pub impl Astar of AstarTrait {
     }
 }
 
+// => Tests <=//
 #[cfg(test)]
 mod test {
     // Local imports
-
-    use super::Astar;
+    use super::Dijkstra;
 
     #[test]
-    fn test_astar_search_small() {
-        // x* *
+    fn test_dijkstra_search_small() {
+        // x * *
         // 1 0 *
         // 0 1 s
         let grid: felt252 = 0x1EB;
@@ -121,12 +109,12 @@ mod test {
         let height = 3;
         let from = 0;
         let to = 8;
-        let mut path = Astar::search(grid, width, height, from, to);
+        let mut path = Dijkstra::search(grid, width, height, from, to);
         assert_eq!(path, array![8, 7, 6, 3].span());
     }
 
     #[test]
-    fn test_astar_search_impossible() {
+    fn test_dijkstra_search_impossible() {
         // x 1 0
         // 1 0 1
         // 0 1 s
@@ -135,27 +123,27 @@ mod test {
         let height = 3;
         let from = 0;
         let to = 8;
-        let mut path = Astar::search(grid, width, height, from, to);
+        let mut path = Dijkstra::search(grid, width, height, from, to);
         assert_eq!(path, array![].span());
     }
 
     #[test]
-    fn test_astar_search_medium() {
+    fn test_dijkstra_search_medium() {
         // * x 0 0
         // * 0 1 1
-        // * * * *
-        // 1 1 1 s
+        // * 1 1 1
+        // * * * s
         let grid: felt252 = 0xCBFF;
         let width = 4;
         let height = 4;
         let from = 0;
         let to = 14;
-        let mut path = Astar::search(grid, width, height, from, to);
-        assert_eq!(path, array![14, 15, 11, 7, 6, 5, 4].span());
+        let mut path = Dijkstra::search(grid, width, height, from, to);
+        assert_eq!(path, array![14, 15, 11, 7, 3, 2, 1].span());
     }
 
     #[test]
-    fn test_astar_search_large() {
+    fn test_dijkstra_search_large() {
         // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
         // 0 0 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0
         // 0 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0
@@ -163,10 +151,10 @@ mod test {
         // 0 0 0 1 1 1 1 * * x 0 0 0 0 0 0 0 0
         // 0 0 0 0 1 1 1 * 0 0 0 1 0 0 1 0 0 0
         // 0 0 0 1 1 1 1 * 0 0 0 1 1 1 1 1 0 0
-        // 0 0 1 1 1 1 1 * * * * * * * * 1 1 0
-        // 0 0 0 1 1 1 1 0 1 1 1 0 1 1 * * 1 0
-        // 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 * 1 0
-        // 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 * s 0
+        // 0 0 1 1 1 1 1 * * 1 1 1 1 1 1 1 1 0
+        // 0 0 0 1 1 1 1 0 * 1 1 0 1 1 1 1 1 0
+        // 0 0 0 0 1 1 1 1 * * 1 1 1 1 1 1 1 0
+        // 0 0 0 1 1 1 1 1 1 * * * * * * * s 0
         // 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0
         // 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 0
         // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -175,64 +163,10 @@ mod test {
         let height = 14;
         let from = 55;
         let to = 170;
-        let mut path = Astar::search(grid, width, height, from, to);
+        let mut path = Dijkstra::search(grid, width, height, from, to);
         assert_eq!(
             path,
-            array![170, 171, 172, 154, 136, 118, 117, 116, 115, 114, 113, 112, 94, 93, 75, 74, 56]
-                .span(),
-        );
-    }
-
-    #[test]
-    fn test_astar_search_issue() {
-        // 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0
-        // 0 1 1 1 1 1 1 1 0 1 1 0 0 1 0
-        // 0 1 1 1 1 1 1 1 0 0 E * 1 1 0  <-- 180 + 4 = 184
-        // 0 1 1 1 1 1 1 1 1 1 0 * 0 1 0
-        // 0 1 1 1 1 1 1 1 1 1 0 * 0 1 0
-        // 0 1 1 1 0 0 1 0 0 0 1 * * 0 0
-        // 0 1 1 1 1 0 0 1 1 1 1 0 * * 0
-        // 1 1 1 1 0 1 1 1 0 0 1 1 0 * 1
-        // 0 1 1 1 1 0 0 0 0 1 0 0 * * 0
-        // 0 1 1 1 0 0 * * * * * * * 0 0
-        // 0 1 1 1 0 0 * 1 0 1 1 1 0 0 0
-        // 0 1 1 * * * * 0 1 0 1 1 1 1 0
-        // 0 1 1 S 1 1 1 0 1 0 1 1 1 1 0  <-- 30 + 11 = 41
-        // 0 1 1 1 1 1 1 1 1 1 0 1 1 1 0
-        // 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0
-        let grid: felt252 = 0x201fd93f9e7fd4ffa9c8e3cf6f736f099cfe39b87ebcfd79ff70080;
-        let width = 15;
-        let height = 15;
-        let from = 41;
-        let to = 184;
-        let mut path = Astar::search(grid, width, height, from, to);
-        assert_eq!(
-            path,
-            array![
-                184,
-                183,
-                168,
-                153,
-                138,
-                137,
-                122,
-                121,
-                106,
-                91,
-                92,
-                77,
-                78,
-                79,
-                80,
-                81,
-                82,
-                83,
-                68,
-                53,
-                54,
-                55,
-                56,
-            ]
+            array![170, 171, 172, 154, 136, 118, 117, 99, 81, 80, 62, 61, 60, 59, 58, 57, 56]
                 .span(),
         );
     }
