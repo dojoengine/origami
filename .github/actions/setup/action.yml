@@ -1,15 +1,11 @@
-name: 'Setup'
-description: 'Setup tooling'
+name: "Setup"
+description: "Setup tooling"
 runs:
   using: "composite"
   steps:
-    - name: Install dojoup
-      run: curl -L https://install.dojoengine.org | bash
-      shell: bash
-
     - name: Install dojo
       run: |
-        /home/runner/.config/.dojo/bin/dojoup --version ${{ env.DOJO_VERSION }}
-        sudo mv /home/runner/.config/.dojo/bin/katana /usr/local/bin/
-        sudo mv /home/runner/.config/.dojo/bin/sozo /usr/local/bin/
+        curl -L -o dojo-linux-x86_64.tar.gz https://github.com/dojoengine/dojo/releases/download/${{ env.DOJO_VERSION }}/dojo_${{ env.DOJO_VERSION }}_linux_amd64.tar.gz
+        tar -xzf dojo-linux-x86_64.tar.gz
+        sudo mv sozo /usr/local/bin/
       shell: bash
