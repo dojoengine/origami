@@ -13,8 +13,8 @@ version = "1.1.2"
 edition = "2024_07"
 
 [workspace.dependencies]
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.1.2" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.5.1" }
 # dojo = { path = "../dojo/crates/dojo-core" }
 cubit = { git = "https://github.com/bengineer42/cubit", branch = "bump-cairo-gt-2.8" }
-starknet = "^2.9.2"
-cairo_test = "^2.9.2"
+starknet = "^2.10.1"
+cairo_test = "^2.10.1"
