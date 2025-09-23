@@ -7,8 +7,8 @@ use core::dict::{Felt252Dict, Felt252DictTrait};
 use origami_map::finders::finder::Finder;
 use origami_map::helpers::bitmap::Bitmap;
 use origami_map::helpers::seeder::Seeder;
-use origami_map::types::node::{Node, NodeTrait};
 use origami_map::types::direction::DirectionTrait;
+use origami_map::types::node::{Node, NodeTrait};
 
 
 /// BreadthFirstSearch implementation for pathfinding
@@ -63,12 +63,12 @@ pub impl BreadthFirstSearch of BreadthFirstSearchTrait {
                     visited.insert(neighbor_position.into(), true);
                 }
             };
-        };
+        }
 
         // Reconstruct and return the path if found
         if !path_found {
             return array![].span();
-        };
+        }
         Finder::path_with_parents(ref parents, start, target)
     }
 }

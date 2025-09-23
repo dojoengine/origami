@@ -85,13 +85,13 @@ pub impl DeckImpl of DeckTrait {
         loop {
             if bitmap == 0 || card.into() > number {
                 break;
-            };
+            }
             if bitmap & MASK_1 == 1 {
                 deck.withdraw(card);
             }
             bitmap /= TWO_POW_1;
             card += 1;
-        };
+        }
         deck
     }
 
@@ -212,9 +212,9 @@ mod tests {
         loop {
             if deck.remaining == 0 {
                 break;
-            };
+            }
             deck.draw();
-        };
+        }
         let card: u8 = 0x11;
         deck.discard(card);
         assert(deck.draw() == card, 'Wrong card');
@@ -228,10 +228,10 @@ mod tests {
         loop {
             if card.into() > DECK_CARDS_NUMBER {
                 break;
-            };
+            }
             cards.append(card);
             card += 1;
-        };
+        }
         deck.remove(cards.span());
         let card: u8 = 0x11;
         deck.discard(card);

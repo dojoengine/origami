@@ -7,8 +7,7 @@ on:
   pull_request:
 
 env:
-  DOJO_VERSION: v1.6.1
-  SCARB_VERSION: 2.10.1
+  SCARB_VERSION: 2.12.2
 
 jobs:
   check:
@@ -29,9 +28,11 @@ jobs:
     name: Build workspace
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
       - name: Build
-        run: sozo build
+        run: scarb build
         shell: bash
 
   algebra:
@@ -43,9 +44,8 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - uses: ./.github/actions/setup
       - name: Test
-        run: sozo test --package origami_algebra
+        run: scarb test --package origami_algebra
         shell: bash
 
   defi:
@@ -57,9 +57,8 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - uses: ./.github/actions/setup
       - name: Test
-        run: sozo test --package origami_defi
+        run: scarb test --package origami_defi
         shell: bash
 
   map:
@@ -71,9 +70,8 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - uses: ./.github/actions/setup
       - name: Test
-        run: sozo test --package origami_map
+        run: scarb test --package origami_map
         shell: bash
 
   random:
@@ -85,9 +83,8 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - uses: ./.github/actions/setup
       - name: Test
-        run: sozo test --package origami_random
+        run: scarb test --package origami_random
         shell: bash
 
   rating:
@@ -99,9 +96,8 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - uses: ./.github/actions/setup
       - name: Test
-        run: sozo test --package origami_rating
+        run: scarb test --package origami_rating
         shell: bash
 
   security:
@@ -113,7 +109,6 @@ jobs:
       - uses: software-mansion/setup-scarb@v1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - uses: ./.github/actions/setup
       - name: Test
-        run: sozo test --package origami_security
+        run: scarb test --package origami_security
         shell: bash

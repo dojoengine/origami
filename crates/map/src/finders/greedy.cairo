@@ -3,15 +3,15 @@
 // Core imports
 
 use core::dict::{Felt252Dict, Felt252DictTrait};
+use origami_map::finders::finder::Finder;
+use origami_map::helpers::bitmap::Bitmap;
 
 // Internal imports
 
 use origami_map::helpers::heap::{Heap, HeapTrait};
-use origami_map::finders::finder::Finder;
-use origami_map::helpers::bitmap::Bitmap;
 use origami_map::helpers::seeder::Seeder;
-use origami_map::types::node::{Node, NodeTrait};
 use origami_map::types::direction::{Direction, DirectionTrait};
+use origami_map::types::node::{Node, NodeTrait};
 
 #[generate_trait]
 pub impl Greedy of GreedyTrait {
@@ -68,7 +68,7 @@ pub impl Greedy of GreedyTrait {
                 let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
-        };
+        }
 
         // [Return] The path from the start to the target
         Finder::path_with_heap(ref heap, start, target)
@@ -156,25 +156,8 @@ mod test {
         assert_eq!(
             path,
             array![
-                170,
-                171,
-                172,
-                154,
-                136,
-                118,
-                117,
-                116,
-                115,
-                114,
-                132,
-                131,
-                130,
-                112,
-                94,
-                93,
-                75,
-                74,
-                56,
+                170, 171, 172, 154, 136, 118, 117, 116, 115, 114, 132, 131, 130, 112, 94, 93, 75,
+                74, 56,
             ]
                 .span(),
         );

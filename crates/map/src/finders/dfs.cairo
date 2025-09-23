@@ -7,8 +7,8 @@ use core::dict::{Felt252Dict, Felt252DictTrait};
 use origami_map::finders::finder::Finder;
 use origami_map::helpers::bitmap::Bitmap;
 use origami_map::helpers::seeder::Seeder;
-use origami_map::types::node::{Node, NodeTrait};
 use origami_map::types::direction::DirectionTrait;
+use origami_map::types::node::{Node, NodeTrait};
 
 /// DepthFirstSearch implementation for pathfinding
 #[generate_trait]
@@ -98,7 +98,7 @@ pub impl DepthFirstSearch of DepthFirstSearchTrait {
                     break;
                 }
             }
-        };
+        }
 
         // [Check] Return whether we've found the target
         found

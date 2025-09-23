@@ -26,18 +26,18 @@ pub impl MapPrinter of MapPrinterTrait {
                 }
                 x /= 2;
                 x_pos += 1;
-            };
+            }
 
             // Reverse the line to have smaller x coordinates at the end of the string.
             lines.append(line.rev());
             y += 1;
-        };
+        }
 
         let mut lines = lines.span();
         // Reverse order to have smaller y coordinates at the bottom.
         while let Option::Some(l) = lines.pop_back() {
             println!("{}", l);
-        };
+        }
 
         println!("");
     }
@@ -78,7 +78,7 @@ pub impl MapPrinter of MapPrinterTrait {
                         found = true;
                         break;
                     }
-                };
+                }
 
                 if current_index == from {
                     line.append(@"S");
@@ -93,18 +93,18 @@ pub impl MapPrinter of MapPrinterTrait {
                 }
                 x /= 2;
                 x_pos += 1;
-            };
+            }
 
             // Reverse the line to have smaller x coordinates at the end of the string.
             lines.append(line.rev());
             y += 1;
-        };
+        }
 
         let mut lines = lines.span();
         // Reverse order to have smaller y coordinates at the bottom.
         while let Option::Some(l) = lines.pop_back() {
             println!("{}", l);
-        };
+        }
 
         println!("");
     }

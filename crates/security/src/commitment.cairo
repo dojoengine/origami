@@ -1,5 +1,5 @@
-use core::poseidon::poseidon_hash_span;
 use core::num::traits::Zero;
+use core::poseidon::poseidon_hash_span;
 
 #[derive(Copy, Drop, Default, Serde)]
 pub struct Commitment {

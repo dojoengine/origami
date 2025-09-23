@@ -2,8 +2,8 @@
 
 // Core imports
 
-use core::poseidon::PoseidonTrait;
 use core::hash::HashStateTrait;
+use core::poseidon::PoseidonTrait;
 
 /// Dice struct.
 #[derive(Drop)]

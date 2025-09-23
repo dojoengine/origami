@@ -7,11 +7,11 @@ use core::dict::{Felt252Dict, Felt252DictTrait};
 // Internal imports
 
 use origami_map::finders::finder::Finder;
-use origami_map::helpers::heap::{Heap, HeapTrait};
 use origami_map::helpers::bitmap::Bitmap;
+use origami_map::helpers::heap::{Heap, HeapTrait};
 use origami_map::helpers::seeder::Seeder;
-use origami_map::types::node::{Node, NodeTrait};
 use origami_map::types::direction::{Direction, DirectionTrait};
+use origami_map::types::node::{Node, NodeTrait};
 
 #[generate_trait]
 pub impl Astar of AstarTrait {
@@ -68,7 +68,7 @@ pub impl Astar of AstarTrait {
                 let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
-        };
+        }
 
         // [Return] The path from the start to the target
         Finder::path_with_heap(ref heap, start, target)
@@ -209,29 +209,8 @@ mod test {
         assert_eq!(
             path,
             array![
-                184,
-                183,
-                168,
-                153,
-                138,
-                137,
-                122,
-                121,
-                106,
-                91,
-                92,
-                77,
-                78,
-                79,
-                80,
-                81,
-                82,
-                83,
-                68,
-                53,
-                54,
-                55,
-                56,
+                184, 183, 168, 153, 138, 137, 122, 121, 106, 91, 92, 77, 78, 79, 80, 81, 82, 83, 68,
+                53, 54, 55, 56,
             ]
                 .span(),
         );

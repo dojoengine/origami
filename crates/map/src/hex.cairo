@@ -57,12 +57,9 @@ pub impl HexImpl of HexTrait {
             ];
         }
         return array![
-            self.neighbor(Direction::East(())),
-            self.neighbor(Direction::NorthEast(())),
-            self.neighbor(Direction::NorthWest(())),
-            self.neighbor(Direction::West(())),
-            self.neighbor(Direction::SouthWest(())),
-            self.neighbor(Direction::SouthEast(())),
+            self.neighbor(Direction::East(())), self.neighbor(Direction::NorthEast(())),
+            self.neighbor(Direction::NorthWest(())), self.neighbor(Direction::West(())),
+            self.neighbor(Direction::SouthWest(())), self.neighbor(Direction::SouthEast(())),
         ];
     }
 
@@ -119,16 +116,16 @@ pub impl HexImpl of HexTrait {
                             is_visited = true;
                         }
                         index = index + 1;
-                    };
+                    }
                     if !is_visited {
                         next_queue.append(neighbor);
                         visited.append(neighbor);
                     }
                 };
-            };
+            }
             queue = next_queue.clone();
             moves = moves + 1;
-        };
+        }
         return visited;
     }
 }
@@ -138,7 +135,7 @@ pub impl HexImpl of HexTrait {
 
 #[cfg(test)]
 mod tests {
-    use super::{HexTrait, Direction, Hex};
+    use super::{Direction, Hex, HexTrait};
     #[test]
     fn test_row_col() {
         let mut hex_tile = HexTrait::new(5, 5);

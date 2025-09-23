@@ -18,7 +18,7 @@ mod tests {
 
     // Local imports
 
-    use super::{to_days_fp, from_days_fp};
+    use super::{from_days_fp, to_days_fp};
 
     // Constants
 

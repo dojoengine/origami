@@ -2,15 +2,15 @@
 
 // Core imports
 use core::dict::{Felt252Dict, Felt252DictTrait};
+use origami_map::finders::astar::Astar;
 
 // Internal Imports
 use origami_map::finders::finder::Finder;
-use origami_map::finders::astar::Astar;
-use origami_map::helpers::heap::{Heap, HeapTrait};
 use origami_map::helpers::bitmap::Bitmap;
-use origami_map::types::node::{Node, NodeTrait};
-use origami_map::types::direction::{Direction, DirectionTrait};
+use origami_map::helpers::heap::{Heap, HeapTrait};
 use origami_map::helpers::seeder::Seeder;
+use origami_map::types::direction::{Direction, DirectionTrait};
+use origami_map::types::node::{Node, NodeTrait};
 
 #[generate_trait]
 pub impl Dijkstra of DijkstraTrait {
@@ -67,7 +67,7 @@ pub impl Dijkstra of DijkstraTrait {
                 let neighbor_position = direction.next(current.position, width);
                 Self::assess(width, neighbor_position, current, target, ref heap);
             }
-        };
+        }
 
         // [Return] Reconstruct the path from the start to the target
         Finder::path_with_heap(ref heap, start, NodeTrait::new(to, 0, 0, 0))

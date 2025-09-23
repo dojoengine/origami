@@ -2,14 +2,14 @@
 
 // Internal imports
 
-use origami_map::helpers::power::TwoPower;
-use origami_map::helpers::asserter::Asserter;
-use origami_map::generators::mazer::Mazer;
-use origami_map::generators::walker::Walker;
+use origami_map::finders::astar::Astar;
 use origami_map::generators::caver::Caver;
 use origami_map::generators::digger::Digger;
+use origami_map::generators::mazer::Mazer;
 use origami_map::generators::spreader::Spreader;
-use origami_map::finders::astar::Astar;
+use origami_map::generators::walker::Walker;
+use origami_map::helpers::asserter::Asserter;
+use origami_map::helpers::power::TwoPower;
 
 /// Types.
 #[derive(Copy, Drop)]
@@ -167,11 +167,11 @@ impl Private of PrivateTrait {
         loop {
             if index == 0 {
                 break;
-            };
+            }
             default += row;
             default *= offset;
             index -= 1;
-        };
+        }
         default
     }
 }
@@ -180,8 +180,8 @@ impl Private of PrivateTrait {
 mod tests {
     // Local imports
 
-    use super::{Map, MapTrait};
     use origami_map::helpers::seeder::Seeder;
+    use super::{Map, MapTrait};
 
     // Constants
 

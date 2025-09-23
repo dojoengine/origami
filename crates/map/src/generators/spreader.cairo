@@ -2,9 +2,9 @@
 
 // Internal imports
 
+use origami_map::helpers::asserter::Asserter;
 use origami_map::helpers::bitmap::Bitmap;
 use origami_map::helpers::seeder::Seeder;
-use origami_map::helpers::asserter::Asserter;
 
 // Constants
 
@@ -56,12 +56,12 @@ pub impl Spreader of SpreaderTrait {
         // [Checl] Stop if all objects are placed
         if count == 0 {
             return grid;
-        };
+        }
         // [Check] Skip if the position is already occupied
         let seed = Seeder::shuffle(seed, seed);
         if Bitmap::get(grid, index) == 0 {
             return Self::iter(grid, index + 1, total, count, seed);
-        };
+        }
         // [Compute] Uniform random number between 0 and MULTIPLIER
         let random = seed.into() % MULTIPLIER;
         let probability: u256 = count.into() * MULTIPLIER / total.into();
@@ -71,7 +71,7 @@ pub impl Spreader of SpreaderTrait {
             count -= 1;
             // [Effect] Set bit to 0
             grid = Bitmap::unset(grid, index);
-        };
+        }
         Self::iter(grid, index + 1, total - 1, count, seed)
     }
 }

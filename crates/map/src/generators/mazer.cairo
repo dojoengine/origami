@@ -3,9 +3,9 @@
 
 // Internal imports
 
+use origami_map::helpers::asserter::Asserter;
 use origami_map::helpers::bitmap::Bitmap;
 use origami_map::helpers::seeder::Seeder;
-use origami_map::helpers::asserter::Asserter;
 use origami_map::types::direction::{Direction, DirectionTrait};
 
 // Errors

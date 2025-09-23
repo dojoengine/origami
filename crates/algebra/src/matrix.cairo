@@ -65,7 +65,7 @@ impl MatrixImpl<
             let col = index / self.rows;
             values.append(self.get(row, col));
             index += 1;
-        };
+        }
         MatrixTrait::new(values.span(), self.cols, self.rows)
     }
 
@@ -76,17 +76,17 @@ impl MatrixImpl<
         loop {
             if index == max_index {
                 break;
-            };
+            }
 
             let row = index / self.cols;
             let col = index % self.cols;
 
             if row != exclude_row && col != exclude_col {
                 values.append(self.get(row, col));
-            };
+            }
 
             index += 1;
-        };
+        }
 
         MatrixTrait::new(values.span(), self.cols - 1, self.rows - 1)
     }
@@ -115,10 +115,10 @@ impl MatrixImpl<
                 det += coef * minor.det();
             } else {
                 det -= coef * minor.det();
-            };
+            }
 
             col += 1;
-        };
+        }
 
         return det;
     }
@@ -151,7 +151,7 @@ impl MatrixImpl<
             values.append(cofactor / determinant);
 
             index += 1;
-        };
+        }
 
         MatrixTrait::new(values.span(), self.cols, self.rows)
     }
@@ -184,7 +184,7 @@ impl MatrixAdd<
             let col = index % lhs.cols;
             values.append(lhs.get(row, col) + rhs.get(row, col));
             index += 1;
-        };
+        }
         MatrixTrait::new(values.span(), lhs.rows, lhs.cols)
     }
 }
@@ -216,7 +216,7 @@ impl MatrixSub<
             let col = index % lhs.cols;
             values.append(lhs.get(row, col) - rhs.get(row, col));
             index += 1;
-        };
+        }
         MatrixTrait::new(values.span(), lhs.rows, lhs.cols)
     }
 }
@@ -257,10 +257,10 @@ impl MatrixMul<
 
                 sum += lhs.get(row, k) * rhs.get(k, col);
                 k += 1;
-            };
+            }
             values.append(sum);
             index += 1;
-        };
+        }
 
         MatrixTrait::new(values.span(), lhs.rows, rhs.cols)
     }

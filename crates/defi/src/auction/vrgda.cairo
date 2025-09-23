@@ -195,9 +195,8 @@ mod tests {
     mod logistic {
         // Local imports
 
-        use super::{Fixed, FixedTrait};
-        use super::assert_rel_approx_eq;
         use super::super::{LogisticVRGDA, VRGDATrait};
+        use super::{Fixed, FixedTrait, assert_rel_approx_eq};
 
         // Constants
 

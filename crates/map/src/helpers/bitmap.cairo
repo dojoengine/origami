@@ -16,7 +16,7 @@ pub impl Bitmap of BitmapTrait {
         while (x > 0) {
             count += PrivateTrait::_popcount((x % 0x100000000).try_into().unwrap());
             x /= 0x100000000;
-        };
+        }
         count
     }
 

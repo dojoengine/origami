@@ -87,9 +87,8 @@ mod tests {
     mod continuous {
         // Local imports
 
-        use super::{Fixed, FixedTrait};
-        use super::{assert_approx_equal, TOLERANCE};
         use super::super::{ContinuousGDA, ContinuousGDATrait};
+        use super::{Fixed, FixedTrait, TOLERANCE, assert_approx_equal};
 
         // ipynb with calculations at
         // https://colab.research.google.com/drive/14elIFRXdG3_gyiI43tP47lUC_aClDHfB?usp=sharing
@@ -158,9 +157,8 @@ mod tests {
     mod discrete {
         // Local imports
 
-        use super::FixedTrait;
-        use super::{assert_approx_equal, TOLERANCE};
         use super::super::{DiscreteGDA, DiscreteGDATrait};
+        use super::{FixedTrait, TOLERANCE, assert_approx_equal};
 
         #[test]
         fn test_initial_price() {

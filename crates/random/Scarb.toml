@@ -5,5 +5,5 @@ edition.workspace = true
 description = "Random generator library for Dojo based games."
 homepage = "https://github.com/dojoengine/origami/tree/main/crates/random"
 
-[dependencies]
+[dev-dependencies]
 cairo_test.workspace = true

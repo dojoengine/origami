@@ -5,5 +5,5 @@ edition.workspace = true
 description = "Rating related algorithm library for Dojo based games."
 homepage = "https://github.com/dojoengine/origami/tree/main/crates/rating"
 
-[dependencies]
+[dev-dependencies]
 cairo_test.workspace = true

@@ -3,10 +3,10 @@
 
 // Internal imports
 
-use origami_map::helpers::power::TwoPower;
-use origami_map::helpers::bitmap::Bitmap;
-use origami_map::helpers::seeder::Seeder;
 use origami_map::helpers::asserter::Asserter;
+use origami_map::helpers::bitmap::Bitmap;
+use origami_map::helpers::power::TwoPower;
+use origami_map::helpers::seeder::Seeder;
 
 // Constants
 
@@ -94,22 +94,22 @@ pub impl Caver of CaverTrait {
         if y < height - 1 {
             let index = (y + 1) * width + x;
             floor_count += Bitmap::get(grid, index);
-        };
+        }
         // [Compute] East
         if x < width - 1 {
             let index = y * width + x + 1;
             floor_count += Bitmap::get(grid, index);
-        };
+        }
         // [Compute] South
         if y > 0 {
             let index = (y - 1) * width + x;
             floor_count += Bitmap::get(grid, index);
-        };
+        }
         // [Compute] West
         if x > 0 {
             let index = y * width + x - 1;
             floor_count += Bitmap::get(grid, index);
-        };
+        }
         floor_count
     }
 
@@ -130,22 +130,22 @@ pub impl Caver of CaverTrait {
         if y < height - 1 && x > 0 {
             let index = (y + 1) * width + x - 1;
             floor_count += Bitmap::get(grid, index);
-        };
+        }
         // [Compute] North East
         if y < height - 1 && x < width - 1 {
             let index = (y + 1) * width + x + 1;
             floor_count += Bitmap::get(grid, index);
-        };
+        }
         // [Compute] South East
         if y > 0 && x < width - 1 {
             let index = (y - 1) * width + x + 1;
             floor_count += Bitmap::get(grid, index);
-        };
+        }
         // [Compute] South West
         if y > 0 && x > 0 {
             let index = (y - 1) * width + x - 1;
             floor_count += Bitmap::get(grid, index);
-        };
+        }
         floor_count
     }
 }

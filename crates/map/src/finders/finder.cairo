@@ -4,13 +4,13 @@
 
 use core::dict::{Felt252Dict, Felt252DictTrait};
 use core::num::traits::Sqrt;
+use origami_map::helpers::bitmap::Bitmap;
 
 // Internal imports
 
 use origami_map::helpers::heap::{Heap, HeapTrait};
-use origami_map::helpers::bitmap::Bitmap;
-use origami_map::types::node::{Node, NodeTrait};
 use origami_map::types::direction::Direction;
+use origami_map::types::node::{Node, NodeTrait};
 
 #[generate_trait]
 pub impl Finder of FinderTrait {
@@ -116,7 +116,7 @@ pub impl Finder of FinderTrait {
             }
             path.append(current);
             current = parents.get(current.into());
-        };
+        }
         path.span()
     }
 
@@ -141,7 +141,7 @@ pub impl Finder of FinderTrait {
                         break;
                     }
                     current = heap.at(current.source);
-                };
+                }
                 // [Return] The path from the start to the target
                 path.span()
             },
@@ -153,7 +153,7 @@ pub impl Finder of FinderTrait {
 mod test {
     // Local imports
 
-    use super::{Finder, Node, NodeTrait, Felt252Dict, Direction, Heap, HeapTrait};
+    use super::{Direction, Felt252Dict, Finder, Heap, HeapTrait, Node, NodeTrait};
 
     #[test]
     fn test_finder_euclidean() {

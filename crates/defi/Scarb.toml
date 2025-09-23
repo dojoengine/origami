@@ -8,4 +8,6 @@ homepage = "https://github.com/dojoengine/origami/tree/main/crates/defi"
 [dependencies]
 cubit.workspace = true
 starknet.workspace = true
+
+[dev-dependencies]
 cairo_test.workspace = true

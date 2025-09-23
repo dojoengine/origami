@@ -1,5 +1,5 @@
-use core::ops::AddAssign;
 use core::num::traits::Zero;
+use core::ops::AddAssign;
 
 #[derive(Copy, Drop)]
 struct Vector<T> {
@@ -66,7 +66,7 @@ impl VectorAdd<
             }
             values.append(lhs.get(index) + rhs.get(index));
             index += 1;
-        };
+        }
         VectorTrait::new(values.span())
     }
 }
@@ -86,7 +86,7 @@ impl VectorSub<
             }
             values.append(lhs.get(index) - rhs.get(index));
             index += 1;
-        };
+        }
         VectorTrait::new(values.span())
     }
 }

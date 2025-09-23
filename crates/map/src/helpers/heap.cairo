@@ -235,7 +235,7 @@ pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapT
             // [Effect] Swap if necessary
             if item <= child {
                 break;
-            };
+            }
             self.swap(item_key, child_key);
             // [Check] Stop criteria, assess left child side
             lhs_index = index * 2 + 1;
@@ -261,7 +261,7 @@ pub impl HeapImpl<T, +ItemTrait<T>, +PartialOrd<T>, +Copy<T>, +Drop<T>> of HeapT
             let key = self.keys.get(index.into());
             println!("{} : {}", index, key);
             index += 1;
-        };
+        }
         println!("");
     }
 }
@@ -277,7 +277,7 @@ pub impl DestructHeap<T, +Drop<T>> of Destruct<Heap<T>> {
 mod tests {
     // Local imports
 
-    use super::{Node, Heap, HeapTrait, ItemTrait};
+    use super::{Heap, HeapTrait, ItemTrait, Node};
 
     #[test]
     fn test_heap_new() {
