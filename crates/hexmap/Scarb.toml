@@ -9,7 +9,7 @@ repository.workspace = true
 homepage = "https://github.com/dojoengine/origami/tree/main/crates/hexmap"
 documentation = "https://github.com/dojoengine/origami/tree/main/crates/hexmap#readme"
 readme = "README.md"
-keywords = ["dojo", "starknet", "cairo", "game", "hexagon", "pathfinding", "procedural-generation"]
+keywords = ["dojo", "starknet", "cairo", "game", "hexagon", "pathfinding", "generation"]
 
 [dev-dependencies]
 snforge_std.workspace = true
