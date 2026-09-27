@@ -433,11 +433,15 @@ pub impl Spreader of SpreaderTrait {
         Asserter::assert_valid_dimension(width, height);
         let size = width * height;
         let value: u256 = grid.into();
-        assert(value < Bits::pow(size).into(), errors::SPREADER_INVALID_GRID);
-        // [Return] The chosen tiles
+        // [Return] The chosen tiles, the grid checked on the limb that holds the board end
         if size <= 128 {
+            let valid = value.high == 0
+                && (size == 128 || value.low < *POW128.span().at(size.into()));
+            assert(valid, errors::SPREADER_INVALID_GRID);
             SpreaderInternal::choose(value.low, count, size, seed)
         } else {
+            let limit = *POW128.span().at((size - 128).into());
+            assert(value.high < limit, errors::SPREADER_INVALID_GRID);
             SpreaderInternal::choose(value, count, size, seed)
         }
     }
@@ -468,7 +472,9 @@ pub(crate) impl SpreaderInternal of SpreaderInternalTrait {
             (count, false)
         };
         // [Compute] Radix select, unless k picks are cheaper (never above PICKS_MAX)
-        let chosen = if k <= PICKS_MAX && Self::prefer_picks(total, k, size) {
+        // (one tile on a set of more than 8: a pick, 30k-42k, always beats a level and the table)
+        let chosen = if (k == 1 && total > TABLE_MAX)
+            || (k <= PICKS_MAX && Self::prefer_picks(total, k, size)) {
             Self::picks(set, total, k, size, seed)
         } else {
             Self::radix(set, total, k, size, seed)
