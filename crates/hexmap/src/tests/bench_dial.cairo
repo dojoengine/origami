@@ -19,10 +19,12 @@ use origami_hexmap::helpers::layout::{Layout, LayoutTrait};
 use origami_hexmap::helpers::rng::RngTrait;
 use origami_hexmap::tests::fixtures::*;
 use origami_hexmap::tests::variants::Variants;
-use origami_hexmap::types::direction::Direction;
+use origami_hexmap::types::direction::{Direction, DirectionTrait};
 
 // Constants
 
+/// 2^-128 in the field.
+const INV_2_128: felt252 = 0x800000000000010fffffffffffffffff7ffffffffffffef0000000000000001;
 /// 1/2 in the field.
 const INV_2: felt252 = 0x400000000000008800000000000000000000000000000000000000000000001;
 /// Repetitions of the microbenchmarks.
@@ -437,6 +439,1039 @@ fn bench_dial_micro_felt_to_u256() {
     assert!(acc != 0);
 }
 
+// Variant harness: the library search on `u256` (interior endpoints, reachable target), one
+// building block changed per variant. `search_winner` is the harness copy of the library.
+
+/// Cost classes, as in the library.
+#[derive(Copy, Drop)]
+pub struct HarnessClasses {
+    pub two: u256,
+    pub three: u256,
+    pub four: u256,
+    pub any: u256,
+    pub odd: u256,
+    pub upper: u256,
+    pub has_two: bool,
+    pub has_three: bool,
+    pub has_four: bool,
+}
+
+/// Inputs of the forward loops.
+#[derive(Copy, Drop)]
+pub struct Setup {
+    pub layout: Layout,
+    pub unvisited: u256,
+    pub arrivals: u256,
+    pub target: u256,
+    pub classes: HarnessClasses,
+    pub to: u8,
+    pub to_bit: felt252,
+    pub to_odd: bool,
+    pub weighted: bool,
+}
+
+/// Partition by class, the highest class wins.
+pub fn harness_classes(open: u256, costs: Span<felt252>) -> HarnessClasses {
+    let count = costs.len();
+    let zero: u256 = 0;
+    let mut rest = open;
+    let four = if count == 3 {
+        let four = and(rest, (*costs[2]).into());
+        rest = rest - four;
+        four
+    } else {
+        zero
+    };
+    let three = if count >= 2 {
+        let three = and(rest, (*costs[1]).into());
+        rest = rest - three;
+        three
+    } else {
+        zero
+    };
+    let two = if count >= 1 {
+        and(rest, (*costs[0]).into())
+    } else {
+        zero
+    };
+    let (f2, f3, f4) = (Bits::to_felt(two), Bits::to_felt(three), Bits::to_felt(four));
+    HarnessClasses {
+        two,
+        three,
+        four,
+        any: (f2 + f3 + f4).into(),
+        odd: (f2 + f4).into(),
+        upper: (f3 + f4).into(),
+        has_two: f2 != 0,
+        has_three: f3 != 0,
+        has_four: f4 != 0,
+    }
+}
+
+/// Library setup for interior endpoints.
+pub fn setup(
+    grid: felt252, width: u8, height: u8, from: u8, to: u8, costs: Span<felt252>,
+) -> Setup {
+    let open: u256 = grid.into();
+    let layout = LayoutTrait::new(width, height);
+    let interior: u256 = LayoutTrait::interior(width, height).into();
+    let from_bit = Bits::pow(from);
+    let to_bit = Bits::pow(to);
+    let unvisited: u256 = (Bits::to_felt(and(open, interior)) - from_bit).into();
+    let arrivals = expand_triple(@layout, from_bit.into(), unvisited);
+    Setup {
+        layout,
+        unvisited,
+        arrivals,
+        target: to_bit.into(),
+        classes: harness_classes(open, costs),
+        to,
+        to_bit,
+        to_odd: (to / width) % 2 == 1,
+        weighted: costs.len() != 0,
+    }
+}
+
+/// Whether the target limb meets a set.
+#[inline(always)]
+fn hits(value: u256, target: u256) -> bool {
+    let (hit, _, _) = if target.low != 0 {
+        bitwise(value.low, target.low)
+    } else {
+        bitwise(value.high, target.high)
+    };
+    hit != 0
+}
+
+/// Library forward loop: felt bucket ring in locals, AND with the unvisited set in the dilation,
+/// then one AND per class.
+pub fn forward_winner(setup: @Setup) -> (Array<u256>, u32) {
+    let setup = *setup;
+    let classes = setup.classes;
+    let mut layers: Array<u256> = array![0];
+    let (mut first, mut second, mut third, mut fourth): (felt252, felt252, felt252, felt252) = (
+        0, 0, 0, 0,
+    );
+    let mut unvisited = setup.unvisited - setup.arrivals;
+    let mut arrivals = setup.arrivals;
+    let mut time: u32 = 0;
+    loop {
+        if hits(arrivals, setup.target) {
+            break;
+        }
+        let mut ones = Bits::to_felt(arrivals);
+        if classes.has_two {
+            let two = Bits::to_felt(and(arrivals, classes.two));
+            ones -= two;
+            second += two;
+        }
+        if classes.has_three {
+            let three = Bits::to_felt(and(arrivals, classes.three));
+            ones -= three;
+            third += three;
+        }
+        if classes.has_four {
+            let four = Bits::to_felt(and(arrivals, classes.four));
+            ones -= four;
+            fourth += four;
+        }
+        first += ones;
+        let frontier = loop {
+            let frontier = first;
+            first = second;
+            second = third;
+            third = fourth;
+            fourth = 0;
+            time += 1;
+            if frontier != 0 || first + second + third == 0 {
+                break frontier;
+            }
+        };
+        assert!(frontier != 0);
+        while layers.len() != time {
+            layers.append(0);
+        }
+        let set: u256 = frontier.into();
+        layers.append(set);
+        arrivals = expand_felt(@setup.layout, set, frontier, unvisited);
+        unvisited =
+            u256 { low: unvisited.low - arrivals.low, high: unvisited.high - arrivals.high };
+    }
+    (layers, time)
+}
+
+/// Library dilation with the frontier felt given.
+#[inline(always)]
+pub fn expand_felt(layout: @Layout, frontier: u256, felt: felt252, unvisited: u256) -> u256 {
+    let layout = *layout;
+    let double: u256 = (felt + felt).into();
+    let (_, _, pairs_low) = bitwise(frontier.low, double.low);
+    let (_, _, pairs_high) = bitwise(frontier.high, double.high);
+    let (even_low, _, _) = bitwise(pairs_low, layout.even.low);
+    let (even_high, _, _) = bitwise(pairs_high, layout.even.high);
+    let pairs_even: felt252 = even_low.into() + even_high.into() * TWO_POW_128;
+    let pairs_odd: felt252 = pairs_low.into() + pairs_high.into() * TWO_POW_128 - pairs_even;
+    let up: u256 = (pairs_even * layout.up_even + pairs_odd * layout.up_odd).into();
+    let down: u256 = (pairs_even * layout.down_even + pairs_odd * layout.down_odd).into();
+    let east: u256 = (felt * INV_2).into();
+    let (_, _, low) = bitwise(pairs_low, east.low);
+    let (_, _, low) = bitwise(low, up.low);
+    let (_, _, low) = bitwise(low, down.low);
+    let (low, _, _) = bitwise(low, unvisited.low);
+    let (_, _, high) = bitwise(pairs_high, east.high);
+    let (_, _, high) = bitwise(high, up.high);
+    let (_, _, high) = bitwise(high, down.high);
+    let (high, _, _) = bitwise(high, unvisited.high);
+    u256 { low, high }
+}
+
+/// Library unit-cost loop: no buckets.
+pub fn forward_unit(setup: @Setup) -> (Array<u256>, u32) {
+    let setup = *setup;
+    let mut layers: Array<u256> = array![0];
+    let mut unvisited = setup.unvisited - setup.arrivals;
+    let mut arrivals = setup.arrivals;
+    let mut time: u32 = 0;
+    loop {
+        if hits(arrivals, setup.target) {
+            break;
+        }
+        assert!(arrivals != 0);
+        time += 1;
+        layers.append(arrivals);
+        arrivals = expand_felt(@setup.layout, arrivals, Bits::to_felt(arrivals), unvisited);
+        unvisited =
+            u256 { low: unvisited.low - arrivals.low, high: unvisited.high - arrivals.high };
+    }
+    (layers, time)
+}
+
+/// Variant: bucket ring as an `Array<felt252>` rebuilt every time step.
+pub fn forward_array_ring(setup: @Setup) -> (Array<u256>, u32) {
+    let setup = *setup;
+    let classes = setup.classes;
+    let mut layers: Array<u256> = array![0];
+    let mut ring: Array<felt252> = array![0, 0, 0, 0];
+    let mut unvisited = setup.unvisited - setup.arrivals;
+    let mut arrivals = setup.arrivals;
+    let mut time: u32 = 0;
+    loop {
+        if hits(arrivals, setup.target) {
+            break;
+        }
+        let mut ones = Bits::to_felt(arrivals);
+        let mut adds: Array<felt252> = array![];
+        let two = if classes.has_two {
+            Bits::to_felt(and(arrivals, classes.two))
+        } else {
+            0
+        };
+        let three = if classes.has_three {
+            Bits::to_felt(and(arrivals, classes.three))
+        } else {
+            0
+        };
+        let four = if classes.has_four {
+            Bits::to_felt(and(arrivals, classes.four))
+        } else {
+            0
+        };
+        ones -= two + three + four;
+        adds.append(ones);
+        adds.append(two);
+        adds.append(three);
+        adds.append(four);
+        let mut next: Array<felt252> = array![];
+        let mut index = 0;
+        while index != 4 {
+            next.append(*ring[index] + *adds[index]);
+            index += 1;
+        }
+        ring = next;
+        let frontier = loop {
+            let mut span = ring.span();
+            let frontier = *span.pop_front().unwrap();
+            let mut rest: Array<felt252> = array![];
+            let mut sum = 0;
+            while let Option::Some(value) = span.pop_front() {
+                rest.append(*value);
+                sum += *value;
+            }
+            rest.append(0);
+            ring = rest;
+            time += 1;
+            if frontier != 0 || sum == 0 {
+                break frontier;
+            }
+        };
+        assert!(frontier != 0);
+        while layers.len() != time {
+            layers.append(0);
+        }
+        let set: u256 = frontier.into();
+        layers.append(set);
+        arrivals = expand_felt(@setup.layout, set, frontier, unvisited);
+        unvisited =
+            u256 { low: unvisited.low - arrivals.low, high: unvisited.high - arrivals.high };
+    }
+    (layers, time)
+}
+
+/// Variant: bucket ring as a fixed-size array `[felt252; 4]`, destructured and rebuilt.
+pub fn forward_fixed_ring(setup: @Setup) -> (Array<u256>, u32) {
+    let setup = *setup;
+    let classes = setup.classes;
+    let mut layers: Array<u256> = array![0];
+    let mut ring: [felt252; 4] = [0, 0, 0, 0];
+    let mut unvisited = setup.unvisited - setup.arrivals;
+    let mut arrivals = setup.arrivals;
+    let mut time: u32 = 0;
+    loop {
+        if hits(arrivals, setup.target) {
+            break;
+        }
+        let mut ones = Bits::to_felt(arrivals);
+        let two = if classes.has_two {
+            Bits::to_felt(and(arrivals, classes.two))
+        } else {
+            0
+        };
+        let three = if classes.has_three {
+            Bits::to_felt(and(arrivals, classes.three))
+        } else {
+            0
+        };
+        let four = if classes.has_four {
+            Bits::to_felt(and(arrivals, classes.four))
+        } else {
+            0
+        };
+        ones -= two + three + four;
+        let [a, b, c, d] = ring;
+        ring = [a + ones, b + two, c + three, d + four];
+        let frontier = loop {
+            let [a, b, c, d] = ring;
+            ring = [b, c, d, 0];
+            time += 1;
+            if a != 0 || b + c + d == 0 {
+                break a;
+            }
+        };
+        assert!(frontier != 0);
+        while layers.len() != time {
+            layers.append(0);
+        }
+        let set: u256 = frontier.into();
+        layers.append(set);
+        arrivals = expand_felt(@setup.layout, set, frontier, unvisited);
+        unvisited =
+            u256 { low: unvisited.low - arrivals.low, high: unvisited.high - arrivals.high };
+    }
+    (layers, time)
+}
+
+/// Variant: unvisited set partitioned by class once (`U_k`), one AND per class with the
+/// dilation and removal by subtraction from each part.
+pub fn forward_partition(setup: @Setup) -> (Array<u256>, u32) {
+    let setup = *setup;
+    let classes = setup.classes;
+    let mut layers: Array<u256> = array![0];
+    let (mut first, mut second, mut third, mut fourth): (felt252, felt252, felt252, felt252) = (
+        0, 0, 0, 0,
+    );
+    let unvisited = setup.unvisited - setup.arrivals;
+    let mut u2 = and(unvisited, classes.two);
+    let mut u3 = and(unvisited, classes.three);
+    let mut u4 = and(unvisited, classes.four);
+    let mut u1 = unvisited - u2 - u3 - u4;
+    let arrivals = setup.arrivals;
+    // First arrivals, split once
+    let mut n2 = and(arrivals, classes.two);
+    let mut n3 = and(arrivals, classes.three);
+    let mut n4 = and(arrivals, classes.four);
+    let mut n1 = arrivals - n2 - n3 - n4;
+    let mut probe = arrivals;
+    let mut time: u32 = 0;
+    loop {
+        if hits(probe, setup.target) {
+            break;
+        }
+        first += Bits::to_felt(n1);
+        second += Bits::to_felt(n2);
+        third += Bits::to_felt(n3);
+        fourth += Bits::to_felt(n4);
+        let frontier = loop {
+            let frontier = first;
+            first = second;
+            second = third;
+            third = fourth;
+            fourth = 0;
+            time += 1;
+            if frontier != 0 || first + second + third == 0 {
+                break frontier;
+            }
+        };
+        assert!(frontier != 0);
+        while layers.len() != time {
+            layers.append(0);
+        }
+        let set: u256 = frontier.into();
+        layers.append(set);
+        let all: u256 = 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+        let dilation = expand_felt(@setup.layout, set, frontier, all);
+        probe = dilation;
+        n1 = and(dilation, u1);
+        u1 = u1 - n1;
+        if classes.has_two {
+            n2 = and(dilation, u2);
+            u2 = u2 - n2;
+        }
+        if classes.has_three {
+            n3 = and(dilation, u3);
+            u3 = u3 - n3;
+        }
+        if classes.has_four {
+            n4 = and(dilation, u4);
+            u4 = u4 - n4;
+        }
+    }
+    (layers, time)
+}
+
+/// Variant: corelib operators (`Layout::expand`, `u256` `&`, `-`).
+pub fn forward_corelib(setup: @Setup) -> (Array<u256>, u32) {
+    let setup = *setup;
+    let classes = setup.classes;
+    let mut layers: Array<u256> = array![0];
+    let (mut first, mut second, mut third, mut fourth): (felt252, felt252, felt252, felt252) = (
+        0, 0, 0, 0,
+    );
+    let mut unvisited = setup.unvisited - setup.arrivals;
+    let mut arrivals = setup.arrivals;
+    let mut time: u32 = 0;
+    loop {
+        if arrivals & setup.target != 0 {
+            break;
+        }
+        let mut ones = Bits::to_felt(arrivals);
+        if classes.has_two {
+            let two = Bits::to_felt(arrivals & classes.two);
+            ones -= two;
+            second += two;
+        }
+        if classes.has_three {
+            let three = Bits::to_felt(arrivals & classes.three);
+            ones -= three;
+            third += three;
+        }
+        if classes.has_four {
+            let four = Bits::to_felt(arrivals & classes.four);
+            ones -= four;
+            fourth += four;
+        }
+        first += ones;
+        let frontier = loop {
+            let frontier = first;
+            first = second;
+            second = third;
+            third = fourth;
+            fourth = 0;
+            time += 1;
+            if frontier != 0 || first + second + third == 0 {
+                break frontier;
+            }
+        };
+        assert!(frontier != 0);
+        while layers.len() != time {
+            layers.append(0);
+        }
+        let set: u256 = frontier.into();
+        layers.append(set);
+        arrivals = setup.layout.expand(set) & unvisited;
+        unvisited = unvisited - arrivals;
+    }
+    (layers, time)
+}
+
+/// Variant: only the non-empty layers are stored, with their times.
+pub fn forward_sparse(setup: @Setup) -> (Array<u256>, Array<u32>, u32) {
+    let setup = *setup;
+    let classes = setup.classes;
+    let mut layers: Array<u256> = array![];
+    let mut times: Array<u32> = array![];
+    let (mut first, mut second, mut third, mut fourth): (felt252, felt252, felt252, felt252) = (
+        0, 0, 0, 0,
+    );
+    let mut unvisited = setup.unvisited - setup.arrivals;
+    let mut arrivals = setup.arrivals;
+    let mut time: u32 = 0;
+    loop {
+        if hits(arrivals, setup.target) {
+            break;
+        }
+        let mut ones = Bits::to_felt(arrivals);
+        if classes.has_two {
+            let two = Bits::to_felt(and(arrivals, classes.two));
+            ones -= two;
+            second += two;
+        }
+        if classes.has_three {
+            let three = Bits::to_felt(and(arrivals, classes.three));
+            ones -= three;
+            third += three;
+        }
+        if classes.has_four {
+            let four = Bits::to_felt(and(arrivals, classes.four));
+            ones -= four;
+            fourth += four;
+        }
+        first += ones;
+        let frontier = loop {
+            let frontier = first;
+            first = second;
+            second = third;
+            third = fourth;
+            fourth = 0;
+            time += 1;
+            if frontier != 0 || first + second + third == 0 {
+                break frontier;
+            }
+        };
+        assert!(frontier != 0);
+        let set: u256 = frontier.into();
+        layers.append(set);
+        times.append(time);
+        arrivals = expand_felt(@setup.layout, set, frontier, unvisited);
+        unvisited =
+            u256 { low: unvisited.low - arrivals.low, high: unvisited.high - arrivals.high };
+    }
+    (layers, times, time)
+}
+
+/// Cost of a tile from its limb, as in the library.
+#[inline(always)]
+fn harness_cost(classes: @HarnessClasses, bit: u128, high: bool) -> u32 {
+    let classes = *classes;
+    let (any, upper, odd) = if high {
+        (classes.any.high, classes.upper.high, classes.odd.high)
+    } else {
+        (classes.any.low, classes.upper.low, classes.odd.low)
+    };
+    let (hit, _, _) = bitwise(bit, any);
+    if hit == 0 {
+        return 1;
+    }
+    if !classes.has_three && !classes.has_four {
+        return 2;
+    }
+    let (hit, _, _) = bitwise(bit, upper);
+    if hit == 0 {
+        return 2;
+    }
+    if !classes.has_four {
+        return 3;
+    }
+    let (hit, _, _) = bitwise(bit, odd);
+    if hit == 0 {
+        3
+    } else {
+        4
+    }
+}
+
+/// Cost of a tile from its felt bit.
+fn harness_cost_of(classes: @HarnessClasses, bit: felt252) -> u32 {
+    let value: u256 = bit.into();
+    if value.low != 0 {
+        harness_cost(classes, value.low, false)
+    } else {
+        harness_cost(classes, value.high, true)
+    }
+}
+
+/// One backtracking step of the library: the lowest neighbour of `position` in `layer`.
+/// Returns the neighbour, its bit, its limb and its parity.
+#[inline(always)]
+fn step_mask(
+    layout: @Layout, layer: u256, position: u8, bit: felt252, odd: bool,
+) -> (u8, felt252, u128, bool, bool) {
+    let layout = *layout;
+    let width = layout.width;
+    let mask = if odd {
+        bit * (INV_2 + 2 + 3 * (layout.up_odd + layout.down_odd))
+    } else {
+        bit * (INV_2 + 2 + 3 * (layout.up_even + layout.down_even))
+    };
+    let (hits, high) = if position < 127 - width {
+        let (hits, _, _) = bitwise(mask.try_into().unwrap(), layer.low);
+        (hits, false)
+    } else if position >= 129 + width {
+        let (hits, _, _) = bitwise((mask * INV_2_128).try_into().unwrap(), layer.high);
+        (hits, true)
+    } else {
+        let mask: u256 = mask.into();
+        let (hits, _, _) = bitwise(mask.low, layer.low);
+        if hits != 0 {
+            (hits, false)
+        } else {
+            let (hits, _, _) = bitwise(mask.high, layer.high);
+            (hits, true)
+        }
+    };
+    let (rest, _, _) = bitwise(hits, hits - 1);
+    let lowest = hits - rest;
+    let next_bit: felt252 = if high {
+        lowest.into() * TWO_POW_128
+    } else {
+        lowest.into()
+    };
+    let (down, up) = if odd {
+        (layout.down_odd, layout.up_odd)
+    } else {
+        (layout.down_even, layout.up_even)
+    };
+    let south = bit * down;
+    let (next, flip) = if next_bit == south {
+        (position - if odd {
+            width
+        } else {
+            width + 1
+        }, true)
+    } else if next_bit == south + south {
+        (if odd {
+            position + 1 - width
+        } else {
+            position - width
+        }, true)
+    } else if next_bit == bit * INV_2 {
+        (position - 1, false)
+    } else if next_bit == bit + bit {
+        (position + 1, false)
+    } else if next_bit == bit * up {
+        (position + if odd {
+            width
+        } else {
+            width - 1
+        }, true)
+    } else {
+        (position + if odd {
+            width + 1
+        } else {
+            width
+        }, true)
+    };
+    (next, next_bit, lowest, high, odd != flip)
+}
+
+/// Library backtracking (interior target).
+pub fn backtrack_winner(setup: @Setup, layers: Span<u256>, time: u32) -> Span<u8> {
+    let setup = *setup;
+    let mut path: Array<u8> = array![setup.to];
+    if time == 0 {
+        return path.span();
+    }
+    let (mut position, mut bit, mut odd) = (setup.to, setup.to_bit, setup.to_odd);
+    let (mut time, mut cost) = if setup.weighted {
+        let cost = harness_cost_of(@setup.classes, bit);
+        (time + cost, cost)
+    } else {
+        (time + 1, 1)
+    };
+    loop {
+        let previous = time - cost;
+        if previous == 0 {
+            break;
+        }
+        let (next, next_bit, lowest, high, next_odd) = step_mask(
+            @setup.layout, *layers[previous], position, bit, odd,
+        );
+        path.append(next);
+        if setup.weighted {
+            cost = harness_cost(@setup.classes, lowest, high);
+        }
+        position = next;
+        bit = next_bit;
+        odd = next_odd;
+        time = previous;
+    }
+    path.span()
+}
+
+/// Cost of a tile by bit tests of the class planes.
+fn bit_cost(classes: @HarnessClasses, weighted: bool, position: u8) -> u32 {
+    let classes = *classes;
+    if !weighted || !Bits::get(classes.any, position) {
+        1
+    } else if !Bits::get(classes.upper, position) {
+        2
+    } else if !Bits::get(classes.odd, position) {
+        3
+    } else {
+        4
+    }
+}
+
+/// Variant: backtracking by single-bit tests of the 6 neighbours in a fixed direction order,
+/// the cost by bit tests of the class planes.
+pub fn backtrack_bits(setup: @Setup, layers: Span<u256>, time: u32) -> Span<u8> {
+    let setup = *setup;
+    let width = setup.layout.width;
+    let mut path: Array<u8> = array![setup.to];
+    if time == 0 {
+        return path.span();
+    }
+    let (mut position, mut odd) = (setup.to, setup.to_odd);
+    let classes = setup.classes;
+    let mut cost = bit_cost(@classes, setup.weighted, position);
+    let mut time = time + cost;
+    let directions = directions();
+    loop {
+        let previous = time - cost;
+        if previous == 0 {
+            break;
+        }
+        let layer = *layers[previous];
+        let mut next: u8 = 0;
+        for direction in directions {
+            let candidate = (*direction).next(position, width, odd);
+            if Bits::get(layer, candidate) {
+                next = candidate;
+                break;
+            }
+        }
+        // A vertical move flips the row parity
+        if next + 1 != position && next != position + 1 {
+            odd = !odd;
+        }
+        path.append(next);
+        position = next;
+        cost = bit_cost(@classes, setup.weighted, position);
+        time = previous;
+    }
+    path.span()
+}
+
+/// Variant: backtracking through the sparse layers, `pop_back` until the wanted time.
+pub fn backtrack_sparse(
+    setup: @Setup, layers: Span<u256>, times: Span<u32>, time: u32,
+) -> Span<u8> {
+    let setup = *setup;
+    let mut layers = layers;
+    let mut times = times;
+    let mut path: Array<u8> = array![setup.to];
+    if time == 0 {
+        return path.span();
+    }
+    let (mut position, mut bit, mut odd) = (setup.to, setup.to_bit, setup.to_odd);
+    let (mut time, mut cost) = if setup.weighted {
+        let cost = harness_cost_of(@setup.classes, bit);
+        (time + cost, cost)
+    } else {
+        (time + 1, 1)
+    };
+    loop {
+        let previous = time - cost;
+        if previous == 0 {
+            break;
+        }
+        let layer = loop {
+            let layer = *layers.pop_back().unwrap();
+            if *times.pop_back().unwrap() == previous {
+                break layer;
+            }
+        };
+        let (next, next_bit, lowest, high, next_odd) = step_mask(
+            @setup.layout, layer, position, bit, odd,
+        );
+        path.append(next);
+        if setup.weighted {
+            cost = harness_cost(@setup.classes, lowest, high);
+        }
+        position = next;
+        bit = next_bit;
+        odd = next_odd;
+        time = previous;
+    }
+    path.span()
+}
+
+/// Harness copy of the library search on `u256`.
+pub fn search_winner(
+    grid: felt252, width: u8, height: u8, from: u8, to: u8, costs: Span<felt252>,
+) -> Span<u8> {
+    let setup = setup(grid, width, height, from, to, costs);
+    let (layers, time) = forward_winner(@setup);
+    backtrack_winner(@setup, layers.span(), time)
+}
+
+// Baseline: scalar Dijkstra with a binary heap in a dictionary
+
+/// Binary min-heap of `key = distance * 256 + position` in a dictionary (index -> key).
+#[derive(Destruct)]
+pub struct Heap {
+    pub items: Felt252Dict<u64>,
+    pub size: felt252,
+}
+
+#[generate_trait]
+pub impl HeapImpl of HeapTrait {
+    fn new() -> Heap {
+        Heap { items: Default::default(), size: 0 }
+    }
+
+    fn push(ref self: Heap, key: u64) {
+        let mut index = self.size;
+        self.size += 1;
+        // Sift up
+        while index != 0 {
+            let index_u: u32 = index.try_into().unwrap();
+            let parent: felt252 = ((index_u - 1) / 2).into();
+            let above = self.items.get(parent);
+            if above <= key {
+                break;
+            }
+            self.items.insert(index, above);
+            index = parent;
+        }
+        self.items.insert(index, key);
+    }
+
+    fn pop(ref self: Heap) -> u64 {
+        let top = self.items.get(0);
+        self.size -= 1;
+        let last = self.items.get(self.size);
+        let size: u32 = self.size.try_into().unwrap();
+        let mut index: u32 = 0;
+        // Sift down
+        loop {
+            let left = 2 * index + 1;
+            if left >= size {
+                break;
+            }
+            let mut child = left;
+            let mut value = self.items.get(left.into());
+            if left + 1 < size {
+                let right = self.items.get((left + 1).into());
+                if right < value {
+                    child = left + 1;
+                    value = right;
+                }
+            }
+            if last <= value {
+                break;
+            }
+            self.items.insert(index.into(), value);
+            index = child;
+        }
+        self.items.insert(index.into(), last);
+        top
+    }
+}
+
+/// Scalar Dijkstra: heap of (distance, position), bitmap of settled tiles, parents in a
+/// dictionary, early exit at the target. Interior endpoints.
+pub fn dijkstra_heap(
+    grid: felt252, width: u8, height: u8, from: u8, to: u8, costs: Span<felt252>,
+) -> Span<u8> {
+    let interior: u256 = LayoutTrait::interior(width, height).into();
+    let open: u256 = grid.into() & interior;
+    let classes = harness_classes(open, costs);
+    let mut dist: Felt252Dict<u32> = Default::default();
+    let mut parent: Felt252Dict<u8> = Default::default();
+    let mut settled: felt252 = 0;
+    let mut heap = HeapTrait::new();
+    heap.push(from.into());
+    dist.insert(from.into(), 1);
+    let directions = directions();
+    let found = loop {
+        if heap.size == 0 {
+            break false;
+        }
+        let key = heap.pop();
+        let (distance, position) = DivRem::div_rem(key, 256);
+        let position: u8 = position.try_into().unwrap();
+        let bit = Bits::pow(position);
+        if Bits::get(settled.into(), position) {
+            continue;
+        }
+        settled += bit;
+        if position == to {
+            break true;
+        }
+        let odd = (position / width) % 2 == 1;
+        for direction in directions {
+            let next = (*direction).next(position, width, odd);
+            if Bits::get(open, next) {
+                let cost = harness_cost_of(@classes, Bits::pow(next));
+                let candidate: u32 = distance.try_into().unwrap() + cost;
+                let known = dist.get(next.into());
+                if known == 0 || candidate + 1 < known {
+                    dist.insert(next.into(), candidate + 1);
+                    parent.insert(next.into(), position);
+                    heap.push(candidate.into() * 256 + next.into());
+                }
+            }
+        }
+    };
+    let mut path: Array<u8> = array![];
+    if !found {
+        return path.span();
+    }
+    let mut position = to;
+    while position != from {
+        path.append(position);
+        position = parent.get(position.into());
+    }
+    path.span()
+}
+
+// Benchmarks: variants (CAVE 17x14 far pair, 2 classes, unless stated)
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_winner_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    let path = search_winner(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    assert!(path.len() == 24);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_array_ring_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    let (layers, time) = forward_array_ring(@setup);
+    let path = backtrack_winner(@setup, layers.span(), time);
+    assert!(path.len() == 24);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_fixed_ring_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    let (layers, time) = forward_fixed_ring(@setup);
+    let path = backtrack_winner(@setup, layers.span(), time);
+    assert!(path.len() == 24);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_partition_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    let (layers, time) = forward_partition(@setup);
+    let path = backtrack_winner(@setup, layers.span(), time);
+    assert!(path.len() == 24);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_corelib_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    let (layers, time) = forward_corelib(@setup);
+    let path = backtrack_winner(@setup, layers.span(), time);
+    assert!(path.len() == 24);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_sparse_layers_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    let (layers, times, time) = forward_sparse(@setup);
+    let path = backtrack_sparse(@setup, layers.span(), times.span(), time);
+    assert!(path.len() == 24);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_bit_tests_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    let (layers, time) = forward_winner(@setup);
+    let path = backtrack_bits(@setup, layers.span(), time);
+    assert!(path.len() == 24);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_forward_only_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    let (_, time) = forward_winner(@setup);
+    assert!(time != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_setup_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    assert!(setup.to != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_unit_winner_17x14() {
+    let costs = array![].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    let (layers, time) = forward_unit(@setup);
+    let path = backtrack_winner(@setup, layers.span(), time);
+    assert!(path.len() == 24);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_unit_buckets_17x14() {
+    let costs = array![].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    let (layers, time) = forward_winner(@setup);
+    let path = backtrack_winner(@setup, layers.span(), time);
+    assert!(path.len() == 24);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_u256_7x7() {
+    let costs = array![CAVE_7X7_COST_2, CAVE_7X7_COST_3].span();
+    let path = search_winner(CAVE_7X7, 7, 7, CAVE_7X7_FAR_FROM, CAVE_7X7_FAR_TO, costs);
+    assert!(path.len() != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 1000000000)]
+fn bench_dial_variant_dijkstra_heap_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    let path = dijkstra_heap(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    assert!(path.len() == 24);
+}
+
+#[test]
+#[available_gas(l2_gas: 1000000000)]
+fn bench_dial_variant_dijkstra_heap_empty_17x14() {
+    let costs = array![EMPTY_17X14_COST_2, EMPTY_17X14_COST_3].span();
+    let path = dijkstra_heap(EMPTY_17X14, 17, 14, EMPTY_17X14_FAR_FROM, EMPTY_17X14_FAR_TO, costs);
+    assert!(path.len() != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 1000000000)]
+fn bench_dial_variant_dijkstra_heap_maze_17x14() {
+    let costs = array![MAZE_17X14_COST_2, MAZE_17X14_COST_3].span();
+    let path = dijkstra_heap(MAZE_17X14, 17, 14, MAZE_17X14_FAR_FROM, MAZE_17X14_FAR_TO, costs);
+    assert!(path.len() != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 1000000000)]
+fn bench_dial_variant_dijkstra_heap_7x7() {
+    let costs = array![CAVE_7X7_COST_2, CAVE_7X7_COST_3].span();
+    let path = dijkstra_heap(CAVE_7X7, 7, 7, CAVE_7X7_FAR_FROM, CAVE_7X7_FAR_TO, costs);
+    assert!(path.len() != 0);
+}
+
 // Benchmarks: library
 
 #[test]
@@ -832,5 +1867,83 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// Every variant returns a path of the oracle cost, with 0 to 3 classes (the third class
+    /// overlaps the first: the highest class wins).
+    fn check_variants(grid: felt252, from: u8, to: u8, two: felt252, three: felt252) {
+        let classes = array![
+            array![].span(), array![two + three].span(), array![two, three].span(),
+            array![two, three, two].span(),
+        ];
+        for costs in classes.span() {
+            let costs = *costs;
+            let expected = *dijkstra(grid, 17, 14, from, costs)[to.into()];
+            let setup = setup(grid, 17, 14, from, to, costs);
+            let mut paths: Array<Span<u8>> = array![];
+            paths.append(search_winner(grid, 17, 14, from, to, costs));
+            let (layers, time) = forward_array_ring(@setup);
+            paths.append(backtrack_winner(@setup, layers.span(), time));
+            let (layers, time) = forward_fixed_ring(@setup);
+            paths.append(backtrack_winner(@setup, layers.span(), time));
+            let (layers, time) = forward_partition(@setup);
+            paths.append(backtrack_winner(@setup, layers.span(), time));
+            let (layers, time) = forward_corelib(@setup);
+            paths.append(backtrack_winner(@setup, layers.span(), time));
+            let (layers, times, time) = forward_sparse(@setup);
+            paths.append(backtrack_sparse(@setup, layers.span(), times.span(), time));
+            let (layers, time) = forward_winner(@setup);
+            paths.append(backtrack_bits(@setup, layers.span(), time));
+            paths.append(dijkstra_heap(grid, 17, 14, from, to, costs));
+            if costs.len() == 0 {
+                let (layers, time) = forward_unit(@setup);
+                paths.append(backtrack_winner(@setup, layers.span(), time));
+            }
+            for path in paths.span() {
+                check_path(grid, 17, 14, from, to, costs, *path, expected);
+            }
+            // The harness copy of the winner returns the library path
+            assert!(*paths[0] == Dial::search(grid, 17, 14, from, to, costs));
+        }
+    }
+
+    #[test]
+    fn test_dial_variants_empty_17x14() {
+        check_variants(
+            EMPTY_17X14,
+            EMPTY_17X14_FAR_FROM,
+            EMPTY_17X14_FAR_TO,
+            EMPTY_17X14_COST_2,
+            EMPTY_17X14_COST_3,
+        );
+    }
+
+    #[test]
+    fn test_dial_variants_cave_17x14() {
+        check_variants(
+            CAVE_17X14,
+            CAVE_17X14_FAR_FROM,
+            CAVE_17X14_FAR_TO,
+            CAVE_17X14_COST_2,
+            CAVE_17X14_COST_3,
+        );
+        check_variants(
+            CAVE_17X14,
+            CAVE_17X14_NEAR_FROM,
+            CAVE_17X14_NEAR_TO,
+            CAVE_17X14_COST_2,
+            CAVE_17X14_COST_3,
+        );
+    }
+
+    #[test]
+    fn test_dial_variants_maze_17x14() {
+        check_variants(
+            MAZE_17X14,
+            MAZE_17X14_FAR_FROM,
+            MAZE_17X14_FAR_TO,
+            MAZE_17X14_COST_2,
+            MAZE_17X14_COST_3,
+        );
     }
 }
