@@ -3,7 +3,13 @@ name = "origami_random"
 version.workspace = true
 edition.workspace = true
 description = "Random generator library for Dojo based games."
+license.workspace = true
+license-file.workspace = true
+repository.workspace = true
 homepage = "https://github.com/dojoengine/origami/tree/main/crates/random"
+documentation = "https://github.com/dojoengine/origami/tree/main/crates/random#readme"
+readme = "README.md"
+keywords = ["dojo", "starknet", "cairo", "game", "random", "dice", "deck"]
 
 [dev-dependencies]
 cairo_test.workspace = true

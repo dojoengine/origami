@@ -3,7 +3,13 @@ name = "origami_security"
 version.workspace = true
 edition.workspace = true
 description = "Security library for Dojo based games."
+license.workspace = true
+license-file.workspace = true
+repository.workspace = true
 homepage = "https://github.com/dojoengine/origami/tree/main/crates/security"
+documentation = "https://github.com/dojoengine/origami/tree/main/crates/security#readme"
+readme = "README.md"
+keywords = ["dojo", "starknet", "cairo", "game", "security", "commitment", "commit-reveal"]
 
 [dev-dependencies]
 cairo_test.workspace = true
