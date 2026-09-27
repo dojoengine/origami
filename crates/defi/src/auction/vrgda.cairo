@@ -1,7 +1,11 @@
 // External imports
 
-use cubit::f128::math::ops::ln;
-use cubit::f128::types::fixed::{Fixed, FixedTrait};
+use fixed::exp::ExpTrait;
+use fixed::{Fixed, ONE};
+
+// Internal imports
+
+use super::helpers::FixedStorePacking;
 
 // Based on https://www.paradigm.xyz/2022/08/vrgda
 
@@ -19,6 +23,8 @@ pub trait VRGDATargetTimeTrait<T> {
     fn get_target_sale_time(self: @T, sold: Fixed) -> Fixed;
 }
 
+/// `(1 - decay_constant)^x` is computed as `exp(x * ln(1 - decay_constant))`, cheaper than
+/// `powf`.
 pub impl TVRGDATrait<T, +VRGDAVarsTrait<T>, +VRGDATargetTimeTrait<T>> of VRGDATrait<T> {
     /// Calculates the VRGDA price at a specific time since the auction started.
     ///
@@ -33,14 +39,16 @@ pub impl TVRGDATrait<T, +VRGDAVarsTrait<T>, +VRGDATargetTimeTrait<T>> of VRGDATr
     /// * A `Fixed` representing the price.
     fn get_vrgda_price(self: @T, time_since_start: Fixed, sold: Fixed) -> Fixed {
         self.get_target_price()
-            * (FixedTrait::ONE() - self.get_decay_constant())
-                .pow(time_since_start - self.get_target_sale_time(sold + FixedTrait::ONE()))
+            * ((time_since_start - self.get_target_sale_time(sold + ONE))
+                * (ONE - self.get_decay_constant()).ln())
+                .exp()
     }
 
     fn get_reverse_vrgda_price(self: @T, time_since_start: Fixed, sold: Fixed) -> Fixed {
         self.get_target_price()
-            * (FixedTrait::ONE() - self.get_decay_constant())
-                .pow(self.get_target_sale_time(sold + FixedTrait::ONE()) - time_since_start)
+            * ((self.get_target_sale_time(sold + ONE) - time_since_start)
+                * (ONE - self.get_decay_constant()).ln())
+                .exp()
     }
 }
 
@@ -110,10 +118,9 @@ pub impl LogisticVRGDATargetTimeImpl of VRGDATargetTimeTrait<LogisticVRGDA> {
     ///
     /// * A `Fixed` representing the target sale time.
     fn get_target_sale_time(self: @LogisticVRGDA, sold: Fixed) -> Fixed {
-        let logistic_limit = *self.max_sellable + FixedTrait::ONE();
-        let logistic_limit_double = logistic_limit + logistic_limit;
-        -*self.time_scale
-            * ln((logistic_limit_double / (sold + logistic_limit)) - FixedTrait::ONE())
+        // 2 * limit / (sold + limit) - 1 = (limit - sold) / (limit + sold)
+        let logistic_limit = *self.max_sellable + ONE;
+        -*self.time_scale * ((logistic_limit - sold) / (logistic_limit + sold)).ln()
     }
 }
 pub impl LogisticVRGDAImpl = TVRGDATrait<LogisticVRGDA>;
@@ -123,22 +130,22 @@ pub impl LogisticVRGDAImpl = TVRGDATrait<LogisticVRGDA>;
 mod tests {
     // External imports
 
-    use cubit::f128::types::fixed::{Fixed, FixedTrait};
+    use fixed::{Fixed, FixedTrait, ZERO};
 
     // Constants
-    const DAY_FIXED_MAG: u128 = 1593798687968505259622400; // 2**64 * 60 * 60 * 24
+    const DAY_FIXED_RAW: i64 = 371085174374400; // 2**32 * 60 * 60 * 24
     // Helpers
 
     fn to_days_fp(x: Fixed) -> Fixed {
-        x / Fixed { mag: DAY_FIXED_MAG, sign: false }
+        x / FixedTrait::from_raw(DAY_FIXED_RAW)
     }
 
     fn from_days_fp(x: Fixed) -> Fixed {
-        x * Fixed { mag: DAY_FIXED_MAG, sign: false }
+        x * FixedTrait::from_raw(DAY_FIXED_RAW)
     }
 
     fn assert_rel_approx_eq(a: Fixed, b: Fixed, max_percent_delta: Fixed) {
-        if b == FixedTrait::ZERO() {
+        if b == ZERO {
             assert(a == b, 'a should eq ZERO');
         }
         let percent_delta = if a > b {
@@ -153,42 +160,42 @@ mod tests {
     mod linear {
         // Local imports
 
-        use cubit::f128::types::fixed::{FixedTrait, HALF_u128};
+        use fixed::{FixedTrait, HALF, ZERO};
         use super::assert_rel_approx_eq;
         use super::super::{LinearVRGDA, VRGDATrait};
 
         // Constants
 
-        const _69_42: u128 = 1280572973596917000000;
-        const _0_31: u128 = 5718490662849961000;
-        const DELTA_0_0005: u128 = 9223372036854776;
-        const DELTA_0_02: u128 = 368934881474191000;
-        const DELTA: u128 = 184467440737095;
+        const _69_42: i64 = 298156629688;
+        const _0_31: i64 = 1331439862;
+        const DELTA_0_0005: i64 = 2147484;
+        const DELTA_0_02: i64 = 85899346;
+        const DELTA: i64 = 42950;
 
         #[test]
         fn test_pricing_basic() {
             let auction = LinearVRGDA {
-                target_price: FixedTrait::new(_69_42, false),
-                decay_constant: FixedTrait::new(_0_31, false),
-                target_units_per_time: FixedTrait::new_unscaled(2, false),
+                target_price: FixedTrait::from_raw(_69_42),
+                decay_constant: FixedTrait::from_raw(_0_31),
+                target_units_per_time: FixedTrait::from_int(2),
             };
 
-            let time = FixedTrait::new(HALF_u128, false);
-            let cost = auction.get_vrgda_price(time, FixedTrait::ZERO());
-            assert_rel_approx_eq(cost, auction.target_price, FixedTrait::new(DELTA_0_0005, false));
+            let time = HALF;
+            let cost = auction.get_vrgda_price(time, ZERO);
+            assert_rel_approx_eq(cost, auction.target_price, FixedTrait::from_raw(DELTA_0_0005));
         }
 
         #[test]
         fn test_pricing_basic_reverse() {
             let auction = LinearVRGDA {
-                target_price: FixedTrait::new(_69_42, false),
-                decay_constant: FixedTrait::new(_0_31, false),
-                target_units_per_time: FixedTrait::new_unscaled(2, false),
+                target_price: FixedTrait::from_raw(_69_42),
+                decay_constant: FixedTrait::from_raw(_0_31),
+                target_units_per_time: FixedTrait::from_int(2),
             };
 
-            let time = FixedTrait::new(HALF_u128, false);
-            let cost = auction.get_reverse_vrgda_price(time, FixedTrait::ZERO());
-            assert_rel_approx_eq(cost, auction.target_price, FixedTrait::new(DELTA_0_0005, false));
+            let time = HALF;
+            let cost = auction.get_reverse_vrgda_price(time, ZERO);
+            assert_rel_approx_eq(cost, auction.target_price, FixedTrait::from_raw(DELTA_0_0005));
         }
     }
 
@@ -196,64 +203,65 @@ mod tests {
         // Local imports
 
         use super::super::{LogisticVRGDA, VRGDATrait};
-        use super::{Fixed, FixedTrait, assert_rel_approx_eq};
+        use super::{FixedTrait, assert_rel_approx_eq};
 
         // Constants
 
-        const _69_42: u128 = 1280572973596917000000;
-        const _0_31: u128 = 5718490662849961000;
-        const DELTA_0_0005: u128 = 9223372036854776;
-        const DELTA_0_02: u128 = 368934881474191000;
-        const MAX_SELLABLE: u128 = 1000000;
-        const _0_0023: u128 = 42427511369531970;
-        const HUNDRED_DAYS_MAG: u128 = 1593798687968505259622400;
+        const _69_42: i64 = 298156629688;
+        const _0_31: i64 = 1331439862;
+        const DELTA_0_0005: i64 = 2147484;
+        const DELTA_0_02: i64 = 85899346;
+        const MAX_SELLABLE: i32 = 1000000;
+        const _0_0023: i64 = 9878425;
+        const HUNDRED_DAYS_RAW: i64 = 371085174374400;
 
         #[test]
         fn test_target_price() {
-            let one_hundred = FixedTrait::new_unscaled(100, false);
+            let one_hundred = FixedTrait::from_int(100);
             let auction = LogisticVRGDA {
-                target_price: FixedTrait::new(_69_42, false),
-                decay_constant: FixedTrait::new(_0_31, false),
-                max_sellable: FixedTrait::new_unscaled(MAX_SELLABLE, false),
+                target_price: FixedTrait::from_raw(_69_42),
+                decay_constant: FixedTrait::from_raw(_0_31),
+                max_sellable: FixedTrait::from_int(MAX_SELLABLE),
                 time_scale: one_hundred,
             };
 
-            let cost = auction
-                .get_vrgda_price(one_hundred, FixedTrait::new_unscaled(462116, false));
+            let cost = auction.get_vrgda_price(one_hundred, FixedTrait::from_int(462116));
 
-            assert_rel_approx_eq(cost, auction.target_price, FixedTrait::new(DELTA_0_0005, false));
+            assert_rel_approx_eq(cost, auction.target_price, FixedTrait::from_raw(DELTA_0_0005));
         }
 
         #[test]
         fn test_pricing_basic() {
-            let hundred_days = Fixed { mag: HUNDRED_DAYS_MAG, sign: false };
+            let hundred_days = FixedTrait::from_raw(HUNDRED_DAYS_RAW);
             let auction = LogisticVRGDA {
-                target_price: FixedTrait::new(_69_42, false),
-                decay_constant: FixedTrait::new(_0_31, false),
-                max_sellable: FixedTrait::new_unscaled(MAX_SELLABLE, false),
+                target_price: FixedTrait::from_raw(_69_42),
+                decay_constant: FixedTrait::from_raw(_0_31),
+                max_sellable: FixedTrait::from_int(MAX_SELLABLE),
                 time_scale: hundred_days,
             };
-            let time_delta = FixedTrait::new(HUNDRED_DAYS_MAG / 2, false);
-            let num_mint = FixedTrait::new_unscaled(244918, false);
+            let time_delta = FixedTrait::from_raw(HUNDRED_DAYS_RAW / 2);
+            let num_mint = FixedTrait::from_int(244918);
 
             let cost = auction.get_vrgda_price(time_delta, num_mint);
-            println!("price {} target price {}", cost.mag, auction.target_price.mag);
-            assert_rel_approx_eq(cost, auction.target_price, FixedTrait::new(DELTA_0_02, false));
+            println!("price {} target price {}", cost.to_raw(), auction.target_price.to_raw());
+            assert_rel_approx_eq(cost, auction.target_price, FixedTrait::from_raw(DELTA_0_02));
         }
 
         #[test]
         fn test_pricing_basic_reverse() {
             let auction = LogisticVRGDA {
-                target_price: FixedTrait::new(_69_42, false),
-                decay_constant: FixedTrait::new(_0_31, false),
-                max_sellable: FixedTrait::new_unscaled(MAX_SELLABLE, false),
-                time_scale: FixedTrait::new(_0_0023, false),
+                target_price: FixedTrait::from_raw(_69_42),
+                decay_constant: FixedTrait::from_raw(_0_31),
+                max_sellable: FixedTrait::from_int(MAX_SELLABLE),
+                time_scale: FixedTrait::from_raw(_0_0023),
             };
-            let time_delta = FixedTrait::new(10368001, false);
-            let num_mint = FixedTrait::new(876, false);
+            // 5.6e-13, below the Q32.32 resolution
+            let time_delta = FixedTrait::from_raw(0);
+            // 4.7e-17, below the Q32.32 resolution
+            let num_mint = FixedTrait::from_raw(0);
 
             let cost = auction.get_reverse_vrgda_price(time_delta, num_mint);
-            assert_rel_approx_eq(cost, auction.target_price, FixedTrait::new(DELTA_0_02, false));
+            assert_rel_approx_eq(cost, auction.target_price, FixedTrait::from_raw(DELTA_0_02));
         }
     }
 }
