@@ -1028,7 +1028,7 @@ fn bench_bfs_reachable_cave_17x14() {
 }
 
 #[test]
-#[available_gas(l2_gas: 612000)]
+#[available_gas(l2_gas: 563000)]
 fn bench_bfs_keep_component_cave_17x14() {
     let component = Caver::keep_component(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM);
     assert!(component != 0);
@@ -1042,7 +1042,7 @@ fn bench_bfs_reachable_maze_17x14() {
 }
 
 #[test]
-#[available_gas(l2_gas: 1308000)]
+#[available_gas(l2_gas: 1169000)]
 fn bench_bfs_keep_component_maze_17x14() {
     let component = Caver::keep_component(MAZE_17X14, 17, 14, MAZE_17X14_FAR_FROM);
     assert!(component != 0);
@@ -1056,7 +1056,7 @@ fn bench_bfs_reachable_serpentine_17x14() {
 }
 
 #[test]
-#[available_gas(l2_gas: 2185000)]
+#[available_gas(l2_gas: 1933000)]
 fn bench_bfs_keep_component_serpentine_17x14() {
     let component = Caver::keep_component(SERPENTINE_17X14, 17, 14, SERPENTINE_17X14_FAR_FROM);
     assert!(component != 0);
@@ -1070,7 +1070,7 @@ fn bench_bfs_reachable_unreachable_17x14() {
 }
 
 #[test]
-#[available_gas(l2_gas: 298000)]
+#[available_gas(l2_gas: 278000)]
 fn bench_bfs_keep_component_unreachable_17x14() {
     let component = Caver::keep_component(UNREACHABLE_17X14, 17, 14, UNREACHABLE_17X14_FAR_FROM);
     assert!(component != 0);
@@ -1084,7 +1084,7 @@ fn bench_bfs_reachable_cave_7x7() {
 }
 
 #[test]
-#[available_gas(l2_gas: 179000)]
+#[available_gas(l2_gas: 103000)]
 fn bench_bfs_keep_component_cave_7x7() {
     let component = Caver::keep_component(CAVE_7X7, 7, 7, CAVE_7X7_FAR_FROM);
     assert!(component != 0);
@@ -1098,7 +1098,7 @@ fn bench_bfs_reachable_maze_7x7() {
 }
 
 #[test]
-#[available_gas(l2_gas: 326000)]
+#[available_gas(l2_gas: 173000)]
 fn bench_bfs_keep_component_maze_7x7() {
     let component = Caver::keep_component(MAZE_7X7, 7, 7, MAZE_7X7_FAR_FROM);
     assert!(component != 0);
@@ -1112,7 +1112,7 @@ fn bench_bfs_reachable_serpentine_7x7() {
 }
 
 #[test]
-#[available_gas(l2_gas: 347000)]
+#[available_gas(l2_gas: 183000)]
 fn bench_bfs_keep_component_serpentine_7x7() {
     let component = Caver::keep_component(SERPENTINE_7X7, 7, 7, SERPENTINE_7X7_FAR_FROM);
     assert!(component != 0);
@@ -1126,7 +1126,7 @@ fn bench_bfs_reachable_unreachable_7x7() {
 }
 
 #[test]
-#[available_gas(l2_gas: 137000)]
+#[available_gas(l2_gas: 82000)]
 fn bench_bfs_keep_component_unreachable_7x7() {
     let component = Caver::keep_component(UNREACHABLE_7X7, 7, 7, UNREACHABLE_7X7_FAR_FROM);
     assert!(component != 0);

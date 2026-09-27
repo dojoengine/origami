@@ -375,7 +375,7 @@ fn bench_bit_set_or() {
 }
 
 #[test]
-#[available_gas(l2_gas: 1786000)]
+#[available_gas(l2_gas: 1562000)]
 fn bench_popcount_swar_dense() {
     let value: u256 = EMPTY_17X14.into();
     let mut acc: felt252 = 0;
@@ -401,7 +401,7 @@ fn bench_popcount_sparse_dense() {
 }
 
 #[test]
-#[available_gas(l2_gas: 1796000)]
+#[available_gas(l2_gas: 1572000)]
 fn bench_popcount_swar_sparse() {
     // 8 bits, 4 per limb
     let value: u256 = (Bits::pow(20)
@@ -470,7 +470,7 @@ fn bench_poseidon_hades() {
 }
 
 #[test]
-#[available_gas(l2_gas: 628000)]
+#[available_gas(l2_gas: 542000)]
 fn bench_rng_next_below() {
     let mut rng = RngTrait::new('seed');
     let mut acc: felt252 = 0;
@@ -526,7 +526,7 @@ impl BenchDivRem6 of DivRemHelper<u128, UnitInt<6>> {
 }
 
 #[test]
-#[available_gas(l2_gas: 600000)]
+#[available_gas(l2_gas: 542000)]
 fn bench_rng_draw6() {
     let mut rng = RngTrait::new('seed');
     let mut acc: felt252 = 0;
@@ -540,7 +540,7 @@ fn bench_rng_draw6() {
 
 #[test]
 #[feature("bounded-int-utils")]
-#[available_gas(l2_gas: 600000)]
+#[available_gas(l2_gas: 265000)]
 fn bench_u128_divrem_bounded() {
     let mut acc: felt252 = 0;
     let mut n = REPS;
@@ -555,7 +555,7 @@ fn bench_u128_divrem_bounded() {
 
 #[test]
 #[feature("bounded-int-utils")]
-#[available_gas(l2_gas: 600000)]
+#[available_gas(l2_gas: 515000)]
 fn bench_rng_draw6_counter() {
     // 24 draws of 6 per 128-bit pool (6^24 < 2^63), the refill decided by a felt counter
     let mut state = CountedPool { seed: 'seed', pool: 0, left: 0 };
@@ -592,7 +592,7 @@ impl BenchDivRemPosition of DivRemHelper<u8, u8> {
 
 #[test]
 #[feature("bounded-int-utils")]
-#[available_gas(l2_gas: 600000)]
+#[available_gas(l2_gas: 265000)]
 fn bench_u128_divrem_bounded_byte() {
     let divisor: NonZero<u8> = 6;
     let mut acc: felt252 = 0;
@@ -608,7 +608,7 @@ fn bench_u128_divrem_bounded_byte() {
 
 #[test]
 #[feature("bounded-int-utils")]
-#[available_gas(l2_gas: 600000)]
+#[available_gas(l2_gas: 265000)]
 fn bench_u8_divrem_bounded() {
     let divisor: NonZero<u8> = 17;
     let mut acc: felt252 = 0;
@@ -817,7 +817,7 @@ fn bench_expand_limbs() {
 }
 
 #[test]
-#[available_gas(l2_gas: 1912000)]
+#[available_gas(l2_gas: 1771000)]
 fn bench_expand_felt_7x7() {
     let layout = LayoutTrait::new(7, 7);
     let frontier: u256 = CAVE_7X7.into();
@@ -859,7 +859,7 @@ fn bench_expand_small_felt_double_7x7() {
 }
 
 #[test]
-#[available_gas(l2_gas: 2352000)]
+#[available_gas(l2_gas: 2210000)]
 fn bench_step_or() {
     let layout = LayoutTrait::new(17, 14);
     let frontier: u256 = Bits::pow(CAVE_17X14_FAR_FROM).into();

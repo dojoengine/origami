@@ -272,7 +272,7 @@ fn bench_spreader_baseline(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 214000)]
+#[available_gas(l2_gas: 196000)]
 fn bench_spreader_generate_empty_17x14_1(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(EMPTY_17X14, 17, 14, 1, seed);
@@ -281,7 +281,7 @@ fn bench_spreader_generate_empty_17x14_1(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 406000)]
+#[available_gas(l2_gas: 380000)]
 fn bench_spreader_generate_empty_17x14_5(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(EMPTY_17X14, 17, 14, 5, seed);
@@ -290,7 +290,7 @@ fn bench_spreader_generate_empty_17x14_5(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 368000)]
+#[available_gas(l2_gas: 347000)]
 fn bench_spreader_generate_empty_17x14_20(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(EMPTY_17X14, 17, 14, 20, seed);
@@ -299,7 +299,7 @@ fn bench_spreader_generate_empty_17x14_20(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 360000)]
+#[available_gas(l2_gas: 340000)]
 fn bench_spreader_generate_empty_17x14_60(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(EMPTY_17X14, 17, 14, 60, seed);
@@ -308,7 +308,7 @@ fn bench_spreader_generate_empty_17x14_60(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 216000)]
+#[available_gas(l2_gas: 196000)]
 fn bench_spreader_generate_cave_17x14_1(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(CAVE_17X14, 17, 14, 1, seed);
@@ -317,7 +317,7 @@ fn bench_spreader_generate_cave_17x14_1(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 358000)]
+#[available_gas(l2_gas: 337000)]
 fn bench_spreader_generate_cave_17x14_5(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(CAVE_17X14, 17, 14, 5, seed);
@@ -326,7 +326,7 @@ fn bench_spreader_generate_cave_17x14_5(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 325000)]
+#[available_gas(l2_gas: 307000)]
 fn bench_spreader_generate_cave_17x14_20(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(CAVE_17X14, 17, 14, 20, seed);
@@ -335,7 +335,7 @@ fn bench_spreader_generate_cave_17x14_20(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 339000)]
+#[available_gas(l2_gas: 321000)]
 fn bench_spreader_generate_cave_17x14_60(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(CAVE_17X14, 17, 14, 60, seed);
@@ -344,7 +344,7 @@ fn bench_spreader_generate_cave_17x14_60(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 216000)]
+#[available_gas(l2_gas: 196000)]
 fn bench_spreader_generate_maze_17x14_1(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(MAZE_17X14, 17, 14, 1, seed);
@@ -353,7 +353,7 @@ fn bench_spreader_generate_maze_17x14_1(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 325000)]
+#[available_gas(l2_gas: 307000)]
 fn bench_spreader_generate_maze_17x14_5(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(MAZE_17X14, 17, 14, 5, seed);
@@ -362,7 +362,7 @@ fn bench_spreader_generate_maze_17x14_5(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 334000)]
+#[available_gas(l2_gas: 316000)]
 fn bench_spreader_generate_maze_17x14_20(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(MAZE_17X14, 17, 14, 20, seed);
@@ -371,7 +371,7 @@ fn bench_spreader_generate_maze_17x14_20(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 331000)]
+#[available_gas(l2_gas: 312000)]
 fn bench_spreader_generate_maze_17x14_60(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(MAZE_17X14, 17, 14, 60, seed);
@@ -380,7 +380,7 @@ fn bench_spreader_generate_maze_17x14_60(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 186000)]
+#[available_gas(l2_gas: 170000)]
 fn bench_spreader_generate_empty_7x7_1(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(EMPTY_7X7, 7, 7, 1, seed);
@@ -389,7 +389,7 @@ fn bench_spreader_generate_empty_7x7_1(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 246000)]
+#[available_gas(l2_gas: 233000)]
 fn bench_spreader_generate_empty_7x7_5(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(EMPTY_7X7, 7, 7, 5, seed);
@@ -398,7 +398,7 @@ fn bench_spreader_generate_empty_7x7_5(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 247000)]
+#[available_gas(l2_gas: 234000)]
 fn bench_spreader_generate_empty_7x7_20(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(EMPTY_7X7, 7, 7, 20, seed);
@@ -407,7 +407,7 @@ fn bench_spreader_generate_empty_7x7_20(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 186000)]
+#[available_gas(l2_gas: 170000)]
 fn bench_spreader_generate_cave_7x7_1(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(CAVE_7X7, 7, 7, 1, seed);
@@ -416,7 +416,7 @@ fn bench_spreader_generate_cave_7x7_1(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 246000)]
+#[available_gas(l2_gas: 233000)]
 fn bench_spreader_generate_cave_7x7_5(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(CAVE_7X7, 7, 7, 5, seed);
@@ -434,7 +434,7 @@ fn bench_spreader_generate_cave_7x7_20(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 186000)]
+#[available_gas(l2_gas: 170000)]
 fn bench_spreader_generate_maze_7x7_1(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(MAZE_7X7, 7, 7, 1, seed);
@@ -488,7 +488,7 @@ fn bench_spreader_generate_sparse5_17x14_2(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 188000)]
+#[available_gas(l2_gas: 171000)]
 fn bench_spreader_generate_d30_17x14_1(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(D30_17X14, 17, 14, 1, seed);
@@ -506,7 +506,7 @@ fn bench_spreader_generate_d30_17x14_5(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 312000)]
+#[available_gas(l2_gas: 297000)]
 fn bench_spreader_generate_d30_17x14_20(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(D30_17X14, 17, 14, 20, seed);
@@ -515,7 +515,7 @@ fn bench_spreader_generate_d30_17x14_20(k: u16) {
 
 #[test]
 #[fuzzer(seed: 7)]
-#[available_gas(l2_gas: 330000)]
+#[available_gas(l2_gas: 312000)]
 fn bench_spreader_generate_d30_17x14_60(k: u16) {
     let seed = SEED + k.into();
     let objects = Spreader::generate(D30_17X14, 17, 14, 60, seed);
@@ -527,7 +527,7 @@ fn bench_spreader_generate_d30_17x14_60(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 1716000)]
+#[available_gas(l2_gas: 1831000)]
 fn bench_spreader_selection_empty_17x14_1(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::selection(EMPTY_17X14, 1, seed);
@@ -727,7 +727,7 @@ fn bench_spreader_selection_maze_7x7_5(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 111000)]
+#[available_gas(l2_gas: 105000)]
 fn bench_spreader_selection_maze_7x7_16(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::selection(MAZE_7X7, 16, seed);
@@ -939,7 +939,7 @@ fn bench_spreader_floyd_maze_7x7_5(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 117000)]
+#[available_gas(l2_gas: 111000)]
 fn bench_spreader_floyd_maze_7x7_16(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::floyd(MAZE_7X7, 16, seed);
@@ -961,7 +961,7 @@ fn bench_spreader_reject_empty_17x14_1(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 259000)]
+#[available_gas(l2_gas: 222000)]
 fn bench_spreader_reject_empty_17x14_5(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::reject(EMPTY_17X14, 238, 5, seed);
@@ -1001,7 +1001,7 @@ fn bench_spreader_reject_cave_17x14_1(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 301000)]
+#[available_gas(l2_gas: 340000)]
 fn bench_spreader_reject_cave_17x14_5(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::reject(CAVE_17X14, 238, 5, seed);
@@ -1081,7 +1081,7 @@ fn bench_spreader_reject_empty_7x7_1(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 362000)]
+#[available_gas(l2_gas: 293000)]
 fn bench_spreader_reject_empty_7x7_5(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::reject(EMPTY_7X7, 49, 5, seed);
@@ -1091,7 +1091,7 @@ fn bench_spreader_reject_empty_7x7_5(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 362000)]
+#[available_gas(l2_gas: 293000)]
 fn bench_spreader_reject_empty_7x7_20(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::reject(EMPTY_7X7, 49, 20, seed);
@@ -1121,7 +1121,7 @@ fn bench_spreader_reject_cave_7x7_5(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 315000)]
+#[available_gas(l2_gas: 247000)]
 fn bench_spreader_reject_cave_7x7_20(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::reject(CAVE_7X7, 49, 20, seed);
@@ -1141,7 +1141,7 @@ fn bench_spreader_reject_maze_7x7_1(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 414000)]
+#[available_gas(l2_gas: 442000)]
 fn bench_spreader_reject_maze_7x7_5(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::reject(MAZE_7X7, 49, 5, seed);
@@ -1151,7 +1151,7 @@ fn bench_spreader_reject_maze_7x7_5(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 106000)]
+#[available_gas(l2_gas: 100000)]
 fn bench_spreader_reject_maze_7x7_16(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::reject(MAZE_7X7, 49, 16, seed);
@@ -1161,7 +1161,7 @@ fn bench_spreader_reject_maze_7x7_16(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 3768000)]
+#[available_gas(l2_gas: 4734000)]
 fn bench_spreader_reject_sparse2_10x25_1(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::reject(SPARSE2_10X25, 250, 1, seed);
@@ -1171,7 +1171,7 @@ fn bench_spreader_reject_sparse2_10x25_1(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 1613000)]
+#[available_gas(l2_gas: 1111000)]
 fn bench_spreader_reject_sparse5_17x14_1(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::reject(SPARSE5_17X14, 238, 1, seed);
@@ -1181,7 +1181,7 @@ fn bench_spreader_reject_sparse5_17x14_1(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 2244000)]
+#[available_gas(l2_gas: 2549000)]
 fn bench_spreader_reject_sparse5_17x14_2(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::reject(SPARSE5_17X14, 238, 2, seed);
@@ -1201,7 +1201,7 @@ fn bench_spreader_reject_d30_17x14_1(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 451000)]
+#[available_gas(l2_gas: 383000)]
 fn bench_spreader_reject_d30_17x14_5(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::reject(D30_17X14, 238, 5, seed);
@@ -1211,7 +1211,7 @@ fn bench_spreader_reject_d30_17x14_5(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 1430000)]
+#[available_gas(l2_gas: 1350000)]
 fn bench_spreader_reject_d30_17x14_20(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::reject(D30_17X14, 238, 20, seed);
@@ -1233,7 +1233,7 @@ fn bench_spreader_reject_d30_17x14_60(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 171000)]
+#[available_gas(l2_gas: 160000)]
 fn bench_spreader_mask_empty_17x14_1(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(EMPTY_17X14, 238, 1, seed);
@@ -1273,7 +1273,7 @@ fn bench_spreader_mask_empty_17x14_60(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 182000)]
+#[available_gas(l2_gas: 170000)]
 fn bench_spreader_mask_cave_17x14_1(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(CAVE_17X14, 238, 1, seed);
@@ -1283,7 +1283,7 @@ fn bench_spreader_mask_cave_17x14_1(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 382000)]
+#[available_gas(l2_gas: 340000)]
 fn bench_spreader_mask_cave_17x14_5(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(CAVE_17X14, 238, 5, seed);
@@ -1293,7 +1293,7 @@ fn bench_spreader_mask_cave_17x14_5(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 689000)]
+#[available_gas(l2_gas: 825000)]
 fn bench_spreader_mask_cave_17x14_20(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(CAVE_17X14, 238, 20, seed);
@@ -1303,7 +1303,7 @@ fn bench_spreader_mask_cave_17x14_20(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 627000)]
+#[available_gas(l2_gas: 665000)]
 fn bench_spreader_mask_cave_17x14_60(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(CAVE_17X14, 238, 60, seed);
@@ -1313,7 +1313,7 @@ fn bench_spreader_mask_cave_17x14_60(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 203000)]
+#[available_gas(l2_gas: 191000)]
 fn bench_spreader_mask_maze_17x14_1(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(MAZE_17X14, 238, 1, seed);
@@ -1323,7 +1323,7 @@ fn bench_spreader_mask_maze_17x14_1(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 384000)]
+#[available_gas(l2_gas: 405000)]
 fn bench_spreader_mask_maze_17x14_5(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(MAZE_17X14, 238, 5, seed);
@@ -1333,7 +1333,7 @@ fn bench_spreader_mask_maze_17x14_5(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 941000)]
+#[available_gas(l2_gas: 1023000)]
 fn bench_spreader_mask_maze_17x14_20(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(MAZE_17X14, 238, 20, seed);
@@ -1343,7 +1343,7 @@ fn bench_spreader_mask_maze_17x14_20(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 594000)]
+#[available_gas(l2_gas: 775000)]
 fn bench_spreader_mask_maze_17x14_60(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(MAZE_17X14, 238, 60, seed);
@@ -1363,7 +1363,7 @@ fn bench_spreader_mask_empty_7x7_1(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 689000)]
+#[available_gas(l2_gas: 585000)]
 fn bench_spreader_mask_empty_7x7_5(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(EMPTY_7X7, 49, 5, seed);
@@ -1373,7 +1373,7 @@ fn bench_spreader_mask_empty_7x7_5(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 689000)]
+#[available_gas(l2_gas: 585000)]
 fn bench_spreader_mask_empty_7x7_20(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(EMPTY_7X7, 49, 20, seed);
@@ -1393,7 +1393,7 @@ fn bench_spreader_mask_cave_7x7_1(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 689000)]
+#[available_gas(l2_gas: 585000)]
 fn bench_spreader_mask_cave_7x7_5(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(CAVE_7X7, 49, 5, seed);
@@ -1403,7 +1403,7 @@ fn bench_spreader_mask_cave_7x7_5(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 456000)]
+#[available_gas(l2_gas: 415000)]
 fn bench_spreader_mask_cave_7x7_20(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(CAVE_7X7, 49, 20, seed);
@@ -1413,7 +1413,7 @@ fn bench_spreader_mask_cave_7x7_20(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 1284000)]
+#[available_gas(l2_gas: 918000)]
 fn bench_spreader_mask_maze_7x7_1(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(MAZE_7X7, 49, 1, seed);
@@ -1433,7 +1433,7 @@ fn bench_spreader_mask_maze_7x7_5(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 32, seed: 7)]
-#[available_gas(l2_gas: 145000)]
+#[available_gas(l2_gas: 134000)]
 fn bench_spreader_mask_maze_7x7_16(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::mask(MAZE_7X7, 49, 16, seed);
@@ -1445,7 +1445,7 @@ fn bench_spreader_mask_maze_7x7_16(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 256, seed: 7)]
-#[available_gas(l2_gas: 208000)]
+#[available_gas(l2_gas: 193000)]
 fn bench_spreader_u256_empty_7x7_1(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::choose_u256(EMPTY_7X7, 49, 1, seed);
@@ -1475,7 +1475,7 @@ fn bench_spreader_u256_empty_7x7_20(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 256, seed: 7)]
-#[available_gas(l2_gas: 208000)]
+#[available_gas(l2_gas: 193000)]
 fn bench_spreader_u256_cave_7x7_1(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::choose_u256(CAVE_7X7, 49, 1, seed);
@@ -1505,7 +1505,7 @@ fn bench_spreader_u256_cave_7x7_20(k: u16) {
 #[test]
 #[ignore]
 #[fuzzer(runs: 256, seed: 7)]
-#[available_gas(l2_gas: 208000)]
+#[available_gas(l2_gas: 193000)]
 fn bench_spreader_u256_maze_7x7_1(k: u16) {
     let seed = SEED + k.into();
     let objects = SpreaderVariants::choose_u256(MAZE_7X7, 49, 1, seed);
@@ -1547,7 +1547,7 @@ fn bench_spreader_micro_loop() {
 }
 
 #[test]
-#[available_gas(l2_gas: 258000)]
+#[available_gas(l2_gas: 236000)]
 fn bench_spreader_micro_level_u256() {
     // One radix level on EMPTY_17X14: a Poseidon word, one AND, one popcount
     let value: u256 = EMPTY_17X14.into();
@@ -1563,7 +1563,7 @@ fn bench_spreader_micro_level_u256() {
 }
 
 #[test]
-#[available_gas(l2_gas: 200000)]
+#[available_gas(l2_gas: 177000)]
 fn bench_spreader_micro_level_u128() {
     let value: u256 = EMPTY_7X7.into();
     let value = value.low;
@@ -1579,7 +1579,7 @@ fn bench_spreader_micro_level_u128() {
 }
 
 #[test]
-#[available_gas(l2_gas: 207000)]
+#[available_gas(l2_gas: 184000)]
 fn bench_spreader_micro_popcount_limbs() {
     // Two-limb popcount (`BitSetTrait<u256>`, winner)
     let value: u256 = EMPTY_17X14.into();
@@ -1626,7 +1626,7 @@ fn bench_spreader_micro_popcount_bits() {
 }
 
 #[test]
-#[available_gas(l2_gas: 157000)]
+#[available_gas(l2_gas: 135000)]
 fn bench_spreader_micro_popcount_u128() {
     let value: u256 = CAVE_7X7.into();
     let mut acc: u8 = 0;
@@ -1639,17 +1639,17 @@ fn bench_spreader_micro_popcount_u128() {
 }
 
 #[test]
-#[available_gas(l2_gas: 131000)]
+#[available_gas(l2_gas: 124000)]
 fn bench_spreader_micro_trial() {
     // One rejection trial (draw, probe) on EMPTY_17X14
     let value: u256 = EMPTY_17X14.into();
     let mut rng = RngTrait::new(SEED);
-    let range: NonZero<u128> = 238;
+    let range: NonZero<u8> = 238;
     let mut hits: u8 = 0;
     let mut n: u8 = 10;
     while n != 0 {
         n -= 1;
-        let index: u32 = rng.draw(range).try_into().unwrap();
+        let index: u32 = rng.draw_byte(range).into();
         if let Option::Some(_) = value.probe(index) {
             hits += 1;
         }
@@ -1687,7 +1687,7 @@ fn bench_spreader_micro_select_u256() {
 }
 
 #[test]
-#[available_gas(l2_gas: 299000)]
+#[available_gas(l2_gas: 281000)]
 fn bench_spreader_micro_select_u128() {
     let value: u256 = EMPTY_7X7.into();
     let value = value.low;

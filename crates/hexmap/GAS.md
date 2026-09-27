@@ -14,6 +14,17 @@ makes it more expensive than its budget.
    (test, measured, budget, commit).
 4. A pull request that makes a benchmark more than 5 % cheaper must lower its budget.
 
+CI (lot P1): the pull-request job runs `snforge test --package origami_hexmap --fuzzer-runs 64`:
+the library fuzz benchmarks (`bench_spreader_generate_*`) take their number of runs from the
+command line and their budgets, max over 256 seeds, hold on any subset; the losers of
+`bench_spreader.cairo` are `#[ignore]`d. The non-blocking job `hexmap-full` runs everything on
+pushes to `main`: `snforge test --package origami_hexmap --include-ignored` (256 seeds by default).
+Measure a lot with the same command and a filter, `--include-ignored` for the losers.
+
+The lot sections below record the measurements of their lot. Lot P1 refreshed their `Measured`
+and `Budget` columns (and the L0 per-operation column) at its commit; the other derived figures
+(per tile, per step, deltas, iteration tables) are the lots' own: section P1 has the current ones.
+
 Microbenchmarks repeat the operation 100 times in a loop. Per-operation cost =
 `(test - baseline) / 100`, where the baseline is `bench_baseline_loop` (the same loop that only
 accumulates the counter) unless the table says otherwise. Every loop iteration itself costs 1_270.
@@ -55,15 +66,15 @@ Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas).
 | Bit test, two u256 divisions (`origami_map`) | `bench_bit_test_divmod` | 3_659_750 | 3_843_000 | 17_588 | 10k+ | refuted, lower |
 | Bit set known unset, `+ 2^i` (`Bits::set`) | `bench_bit_set_add` | 345_420 | 363_000 | 2_033 | ~300 | refuted, higher |
 | Bit set, limb OR (loser) | `bench_bit_set_or` | 627_780 | 660_000 | 4_857 |  |  |
-| popcount SWAR, 180 bits set (P1: byte counts per limb) | `bench_popcount_swar_dense` | 1_700_920 | 1_786_000 | 15_588 |  |  |
+| popcount, 180 bits set (P1: byte counts per limb, `bounded_int` byte sum) | `bench_popcount_swar_dense` | 1_486_920 | 1_562_000 | 13_448 |  |  |
 | popcount per set bit, 180 bits set | `bench_popcount_sparse_dense` | 53_953_630 | 56_652_000 | 538_115 |  |  |
-| popcount SWAR, 8 bits set (P1: byte counts per limb) | `bench_popcount_swar_sparse` | 1_710_380 | 1_796_000 | 15_683 |  |  |
+| popcount, 8 bits set (P1: byte counts per limb, `bounded_int` byte sum) | `bench_popcount_swar_sparse` | 1_496_380 | 1_572_000 | 13_543 |  |  |
 | popcount per set bit, 8 bits set | `bench_popcount_sparse_sparse` | 3_171_490 | 3_331_000 | 30_294 |  |  |
 | Poseidon `HashState` (2 updates + finalize) | `bench_poseidon_hash_state` | 441_890 | 464_000 | 2_998 | 1.2-1.5k | refuted, higher |
 | Poseidon, one `hades_permutation` (`Rng::mix`) | `bench_poseidon_hades` | 312_590 | 329_000 | 1_705 |  |  |
-| Pool draw, constant bound (`Rng::draw`), refills amortised | `bench_rng_draw` | 560_713 | 589_000 | 4_186 | ~0.9k | refuted, higher |
-| Pool draw `Rng::next_below(6)` | `bench_rng_next_below` | 597_713 | 628_000 | 4_556 | ~0.9k | refuted, higher |
-| `Rng::shuffle6` (one draw + table), refills amortised | `bench_rng_shuffle6` | 738_830 | 776_000 | 5_967 |  |  |
+| Pool draw, constant bound (`Rng::draw`), refills amortised | `bench_rng_draw` | 562_744 | 589_000 | 4_206 | ~0.9k | refuted, higher |
+| Pool draw `Rng::next_below(6)` | `bench_rng_next_below` | 515_744 | 542_000 | 3_736 | ~0.9k | refuted, higher |
+| `Rng::shuffle6` (one draw + table), refills amortised | `bench_rng_shuffle6` | 718_985 | 776_000 | 5_769 |  |  |
 | shuffle6: DivRem 720 + table (winner) | `bench_shuffle6_table` | 498_670 | 524_000 | 3_566 |  |  |
 | shuffle6: Fisher-Yates, 5 draws (loser) | `bench_shuffle6_fisher_yates` | 11_459_660 | 12_033_000 | 113_176 |  |  |
 | `Felt252Dict` insert (incl. squash share) | `bench_dict_insert` | 695_100 | 730_000 | 5_530 | 2-4k | confirmed |
@@ -72,15 +83,15 @@ Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas).
 | `span.at` | `bench_array_span_at` | 388_680 | 409_000 | 972 | 200-400 | refuted, higher |
 | `Layout::new` (17x14) | `bench_layout_new` | 871_490 | 916_000 | 7_294 | 1-2k per mask |  |
 | `Layout::interior` (17x14) | `bench_layout_interior` | 496_490 | 522_000 | 3_544 | 1-2k | refuted, higher |
-| **`expand` (a) felt shifts, border invariant (winner)**, 17x14 | `bench_expand_felt` | 2_077_410 | 2_182_000 | 19_353 |  |  |
+| **`expand` (a) felt shifts, border invariant (winner)**, 17x14 | `bench_expand_felt` | 2_003_410 | 2_182_000 | 18_613 |  |  |
 | `expand` (a') West shift via felt conversion | `bench_expand_felt_double` | 2_162_810 | 2_271_000 | 20_207 |  |  |
 | `expand` (a'') vertical from parity-selected pairs | `bench_expand_felt_vertical` | 2_363_410 | 2_482_000 | 22_213 |  |  |
 | `expand` (b) u256 shifts + row/column masks, no invariant | `bench_expand_masks` | 6_547_600 | 6_875_000 | 64_055 | ~3x (a) | confirmed (3.3x) |
 | `expand` (c) per-limb u128 set operations | `bench_expand_limbs` | 2_162_810 | 2_271_000 | 20_207 |  |  |
-| `expand` (a) on 7x7 | `bench_expand_felt_7x7` | 1_820_930 | 1_912_000 | 16_788 |  |  |
-| **`expand_small` (c') single u128 limb, W*H <= 128 (winner)**, 7x7 | `bench_expand_small_7x7` | 953_680 | 1_002_000 | 8_116 |  |  |
+| `expand` (a) on 7x7 | `bench_expand_felt_7x7` | 1_685_930 | 1_771_000 | 15_438 |  |  |
+| **`expand_small` (c') single u128 limb, W*H <= 128 (winner)**, 7x7 | `bench_expand_small_7x7` | 923_680 | 1_002_000 | 7_816 |  |  |
 | `expand_small` with the West shift via felt | `bench_expand_small_felt_double_7x7` | 1_277_080 | 1_341_000 | 11_350 |  |  |
-| BFS layer step: `expand & U`, `U - F'` (winner) | `bench_step_or` | 2_239_260 | 2_352_000 | 20_972 | 15-20k | confirmed (upper end) |
+| BFS layer step: `expand & U`, `U - F'` (winner) | `bench_step_or` | 2_104_260 | 2_210_000 | 19_622 | 15-20k | confirmed (upper end) |
 | BFS layer step, sequential AND-and-subtract per direction | `bench_step_sequential` | 5_806_270 | 6_097_000 | 56_642 |  |  |
 | `neighbour_mask`: 1 lookup x field multiplier (winner) | `bench_neighbour_mask` | 726_670 | 764_000 | 5_846 |  |  |
 | `neighbour_mask`: 6 lookups (loser) | `bench_neighbour_mask_lookups` | 1_507_200 | 1_583_000 | 13_651 |  |  |
@@ -207,19 +218,21 @@ costs 131_733, 12x less on a board 3x larger.
 
 `Bfs::reachable` (frontier flood: the same 12 bitwise applications per layer as
 `expand(component) & open`, but on limbs with the local `bitwise`, the loop ending on an empty
-frontier instead of a `u256` comparison, single limb on small boards) beats
-`Caver::keep_component` on every input; it also adds the open edge tiles next to the component.
+frontier instead of a `u256` comparison, single limb on small boards) beat the L4
+`Caver::keep_component` on every input (-2.5 % to -8.3 % on 17x14, -35 % to -44 % on 7x7); it also
+adds the open edge tiles next to the component. Since P1, `Caver::keep_component` runs the same
+flood (`BfsInternal::component`, no endpoint checks, no edge tiles): the column below.
 
-| Test | Measured | Budget | `Caver::keep_component` (same input) | Delta |
+| Test | Measured | Budget | `Caver::keep_component` (same input; since P1 the same flood without the checks) | Delta |
 |---|---:|---:|---:|---:|
-| `bench_bfs_reachable_cave_17x14` | 557_039 | 585_000 | 582_223 (budget 612_000) | -4.3 % |
-| `bench_bfs_reachable_maze_17x14` | 1_154_583 | 1_213_000 | 1_245_367 (budget 1_308_000) | -7.3 % |
-| `bench_bfs_reachable_serpentine_17x14` | 1_908_405 | 2_004_000 | 2_080_829 (budget 2_185_000) | -8.3 % |
-| `bench_bfs_reachable_unreachable_17x14` | 276_581 | 291_000 | 283_755 (budget 298_000) | -2.5 % |
-| `bench_bfs_reachable_cave_7x7` | 104_253 | 110_000 | 170_115 (budget 179_000) | -38.7 % |
-| `bench_bfs_reachable_maze_7x7` | 175_079 | 184_000 | 310_087 (budget 326_000) | -43.5 % |
-| `bench_bfs_reachable_serpentine_7x7` | 185_197 | 195_000 | 330_083 (budget 347_000) | -43.9 % |
-| `bench_bfs_reachable_unreachable_7x7` | 84_017 | 89_000 | 130_123 (budget 137_000) | -35.4 % |
+| `bench_bfs_reachable_cave_17x14` | 538_169 | 585_000 | 535_769 (budget 563_000) | +0.4 % |
+| `bench_bfs_reachable_maze_17x14` | 1_115_413 | 1_213_000 | 1_113_013 (budget 1_169_000) | +0.2 % |
+| `bench_bfs_reachable_serpentine_17x14` | 1_843_335 | 2_004_000 | 1_840_935 (budget 1_933_000) | +0.1 % |
+| `bench_bfs_reachable_unreachable_17x14` | 266_811 | 291_000 | 264_411 (budget 278_000) | +0.9 % |
+| `bench_bfs_reachable_cave_7x7` | 99_453 | 110_000 | 97_253 (budget 103_000) | +2.3 % |
+| `bench_bfs_reachable_maze_7x7` | 166_779 | 184_000 | 164_579 (budget 173_000) | +1.3 % |
+| `bench_bfs_reachable_serpentine_7x7` | 176_397 | 195_000 | 174_197 (budget 183_000) | +1.3 % |
+| `bench_bfs_reachable_unreachable_7x7` | 80_217 | 89_000 | 78_017 (budget 82_000) | +2.8 % |
 
 ### tiles_within_range
 
@@ -451,21 +464,21 @@ Far pairs of `tests/fixtures.cairo`.
 | Test | Measured | Budget | Path tiles | Path cost |
 |---|---:|---:|---:|---:|
 | `bench_dial_baseline_17x14` (fixture + costs only) | 13_720 | 15_000 | | |
-| `bench_dial_empty_17x14` | 1_184_765 | 1_245_000 | 20 | 20 |
-| **`bench_dial_cave_17x14`** (target < 1.5M) | **1_427_654** | 1_500_000 | 24 | 25 |
-| `bench_dial_cave_17x14_near` | 289_645 | 305_000 | 4 | 4 |
-| `bench_dial_maze_17x14` | 3_364_897 | 3_534_000 | 53 | 74 |
-| `bench_dial_serpentine_17x14` | 5_094_739 | 5_350_000 | 90 | 125 |
-| `bench_dial_unreachable_17x14` (floods the component) | 681_530 | 716_000 | 0 | |
-| `bench_dial_cave_17x14_classes_0` (unit-cost loop) | 938_551 | 986_000 | 24 | 24 |
-| `bench_dial_cave_17x14_classes_1` | 1_393_694 | 1_464_000 | 24 | 25 |
-| `bench_dial_cave_17x14_classes_3` | 1_464_174 | 1_538_000 | 24 | |
-| `bench_dial_empty_17x14_classes_0` | 763_597 | 802_000 | 19 | 19 |
-| `bench_dial_maze_17x14_classes_0` | 2_005_148 | 2_106_000 | 53 | 53 |
-| `bench_dial_serpentine_17x14_classes_0` | 3_293_977 | 3_459_000 | 90 | 90 |
-| `bench_dial_cave_7x7` (`u128` path) | 298_947 | 314_000 | | |
-| `bench_dial_cave_7x7_classes_0` (`u128` path) | 175_278 | 185_000 | | |
-| `bench_dial_field_cave_17x14_budget_8` | 335_705 | 353_000 | | |
+| `bench_dial_empty_17x14` | 1_167_355 | 1_245_000 | 20 | 20 |
+| **`bench_dial_cave_17x14`** (target < 1.5M) | **1_406_744** | 1_500_000 | 24 | 25 |
+| `bench_dial_cave_17x14_near` | 283_435 | 305_000 | 4 | 4 |
+| `bench_dial_maze_17x14` | 3_318_087 | 3_534_000 | 53 | 74 |
+| `bench_dial_serpentine_17x14` | 5_027_629 | 5_350_000 | 90 | 125 |
+| `bench_dial_unreachable_17x14` (floods the component) | 666_920 | 716_000 | 0 | |
+| `bench_dial_cave_17x14_classes_0` (unit-cost loop) | 918_341 | 986_000 | 24 | 24 |
+| `bench_dial_cave_17x14_classes_1` | 1_372_784 | 1_464_000 | 24 | 25 |
+| `bench_dial_cave_17x14_classes_3` | 1_443_264 | 1_538_000 | 24 | |
+| `bench_dial_empty_17x14_classes_0` | 746_887 | 802_000 | 19 | 19 |
+| `bench_dial_maze_17x14_classes_0` | 1_964_638 | 2_106_000 | 53 | 53 |
+| `bench_dial_serpentine_17x14_classes_0` | 3_227_567 | 3_459_000 | 90 | 90 |
+| `bench_dial_cave_7x7` (`u128` path) | 290_637 | 314_000 | | |
+| `bench_dial_cave_7x7_classes_0` (`u128` path) | 167_668 | 185_000 | | |
+| `bench_dial_field_cave_17x14_budget_8` | 326_895 | 353_000 | | |
 
 ### Per time step and per path tile
 
@@ -600,17 +613,17 @@ automaton (`reference`) on 3x3 to 83x3 boards.
 | Test | Measured | Budget | Note |
 |---|---:|---:|---|
 | `bench_caver_generate_17x14_order_0` | 27_157 | 29_000 | initial fill only (early return) |
-| `bench_caver_generate_17x14_order_1` | 75_727 | 80_000 | + `Layout::new` and 1 generation |
-| **`bench_caver_generate_17x14_order_3`** | **146_747** | 155_000 | target < 250k |
-| `bench_caver_generate_17x14_order_5` | 218_567 | 230_000 | |
-| `bench_caver_generate_19x13_order_3` | 147_247 | 155_000 | |
+| `bench_caver_generate_17x14_order_1` | 72_717 | 80_000 | + `Layout::new` and 1 generation |
+| **`bench_caver_generate_17x14_order_3`** | **143_737** | 155_000 | target < 250k |
+| `bench_caver_generate_17x14_order_5` | 215_557 | 230_000 | |
+| `bench_caver_generate_19x13_order_3` | 144_237 | 155_000 | |
 | `bench_caver_generate_7x7_order_0` | 27_157 | 29_000 | |
-| `bench_caver_generate_7x7_order_1` | 53_967 | 57_000 | single-limb path |
-| `bench_caver_generate_7x7_order_3` | 86_027 | 91_000 | single-limb path |
-| `bench_caver_keep_component_17x14` | 300_925 | 316_000 | cave of `generate(17, 14, 3, 'CAVER')` |
-| `bench_caver_keep_component_maze_17x14` | 1_245_367 | 1_308_000 | `MAZE_17X14` fixture |
-| `bench_caver_keep_component_serpentine_17x14` | 2_080_829 | 2_185_000 | `SERPENTINE_17X14` fixture |
-| `bench_caver_generate_connected_17x14` | 432_232 | 454_000 | `generate` + `keep_component` |
+| `bench_caver_generate_7x7_order_1` | 50_957 | 54_000 | single-limb path |
+| `bench_caver_generate_7x7_order_3` | 83_017 | 91_000 | single-limb path |
+| `bench_caver_keep_component_17x14` | 284_161 | 299_000 | cave of `generate(17, 14, 3, 'CAVER')` |
+| `bench_caver_keep_component_maze_17x14` | 1_113_013 | 1_169_000 | `MAZE_17X14` fixture |
+| `bench_caver_keep_component_serpentine_17x14` | 1_840_935 | 1_933_000 | `SERPENTINE_17X14` fixture |
+| `bench_caver_generate_connected_17x14` | 412_358 | 454_000 | `generate` + `keep_component` |
 
 * **One generation, 17x14: 35_710** (`(order_5 - order_1) / 4`), target < 60k. The first
   generation also pays `Layout::new` (about 12.9k with the shift constants and the conversion).
@@ -679,14 +692,14 @@ divides by the open tiles of the result (the dug tiles for the digger, entrance 
 
 | Test | Measured | Budget | Tiles | Per tile |
 |---|---:|---:|---:|---:|
-| `bench_mazer_17x14_order_0` (target < 3M) | 2_875_890 | 3_020_000 | 89 | 32_314 |
-| `bench_mazer_17x14_order_1` | 1_826_661 | 1_918_000 | 46 | 39_710 |
-| `bench_mazer_17x14_order_0_seeds` (seeds 0..7) | 23_573_184 | 24_752_000 | 729 | 32_336 |
-| `bench_mazer_17x14_order_1_seeds` (seeds 0..7) | 14_796_998 | 15_537_000 | 385 | 38_434 |
-| `bench_mazer_7x7_order_0` | 524_603 | 551_000 | | |
-| `bench_mazer_19x13_order_0` | 3_167_395 | 3_326_000 | | |
-| `bench_digger_corridor_17x14` (3x2 room, entrance (3, 0)) | 314_852 | 331_000 | 9 | 34_984 |
-| `bench_digger_maze_17x14` (same) | 3_229_661 | 3_392_000 | 90 | 35_885 |
+| `bench_mazer_17x14_order_0` (target < 3M) | 2_900_244 | 3_020_000 | 89 | 32_314 |
+| `bench_mazer_17x14_order_1` | 1_499_695 | 1_575_000 | 46 | 39_710 |
+| `bench_mazer_17x14_order_0_seeds` (seeds 0..7) | 23_068_131 | 24_752_000 | 729 | 32_336 |
+| `bench_mazer_17x14_order_1_seeds` (seeds 0..7) | 13_857_147 | 14_551_000 | 385 | 38_434 |
+| `bench_mazer_7x7_order_0` | 516_043 | 551_000 | | |
+| `bench_mazer_19x13_order_0` | 2_890_702 | 3_036_000 | | |
+| `bench_digger_corridor_17x14` (3x2 room, entrance (3, 0)) | 310_722 | 331_000 | 9 | 34_984 |
+| `bench_digger_maze_17x14` (same) | 3_094_676 | 3_392_000 | 90 | 35_885 |
 
 Reference `origami_map` (cairo-test "gas usage est.", 18x14, 4 directions): maze order 0
 27_966_300 (122 tiles, 229k per tile), order 1 29_823_584 (105 tiles, 284k per tile); digger
@@ -703,17 +716,17 @@ per tile over 8 seeds.
 
 | Variant | Test | Measured | Budget | Per tile | vs base |
 |---|---|---:|---:|---:|---:|
-| **Library: per-direction code (`Heading`), static turns (winner)** | `bench_mazer_17x14_order_0` | 2_875_890 | 3_020_000 | 32_314 | -4.4 % |
-| Base: runtime direction dispatch | `bench_mazer_variant_base_17x14` | 3_006_900 | 3_158_000 | 33_785 | |
-| Base, order 1 (library: 1_826_661, -5.3 %) | `bench_mazer_variant_base_17x14_order_1` | 1_928_381 | 2_025_000 | 41_921 | |
-| Explicit stack (`Felt252Dict<Nullable<Frame>>`) | `bench_mazer_variant_stack_17x14` | 4_543_190 | 4_771_000 | 51_047 | +51.1 % |
-| Per-neighbour bit tests (`Bits::get`, early exit) | `bench_mazer_variant_bits_17x14` | 9_633_733 | 10_116_000 | 108_244 | +220.4 % |
-| Maze kept as `felt252`, set by addition | `bench_mazer_variant_felt_17x14` | 3_064_030 | 3_218_000 | 34_427 | +1.9 % |
-| Index tracked, `(x, y)` by `DivRem` once per tile | `bench_mazer_variant_divrem_17x14` | 3_379_210 | 3_549_000 | 37_969 | +12.4 % |
-| Base, 8 seeds (729 tiles) | `bench_mazer_variant_base_17x14_seeds` | 24_663_054 | 25_897_000 | 33_831 | |
-| One draw of 3, rotation of (L, F, R) (719 tiles) | `bench_mazer_variant_rotation_17x14_seeds` | 23_167_600 | 24_326_000 | 32_222 | -4.8 % |
-| Lazy draws: 3, then 2 if the first fails (726 tiles) | `bench_mazer_variant_lazy_17x14_seeds` | 26_386_034 | 27_706_000 | 36_344 | +7.4 % |
-| `Rng::shuffle6` per tile, non forward skipped (727 tiles) | `bench_mazer_variant_shuffle_17x14_seeds` | 73_624_530 | 77_306_000 | 101_272 | +199.4 % |
+| **Library: per-direction code (`Heading`), static turns (winner)** | `bench_mazer_17x14_order_0` | 2_900_244 | 3_020_000 | 32_314 | -4.4 % |
+| Base: runtime direction dispatch | `bench_mazer_variant_base_17x14` | 3_075_284 | 3_158_000 | 33_785 | |
+| Base, order 1 (library: 1_826_661, -5.3 %) | `bench_mazer_variant_base_17x14_order_1` | 1_590_225 | 1_670_000 | 41_921 | |
+| Explicit stack (`Felt252Dict<Nullable<Frame>>`) | `bench_mazer_variant_stack_17x14` | 4_650_884 | 4_771_000 | 51_047 | +51.1 % |
+| Per-neighbour bit tests (`Bits::get`, early exit) | `bench_mazer_variant_bits_17x14` | 9_758_598 | 10_116_000 | 108_244 | +220.4 % |
+| Maze kept as `felt252`, set by addition | `bench_mazer_variant_felt_17x14` | 3_129_874 | 3_218_000 | 34_427 | +1.9 % |
+| Index tracked, `(x, y)` by `DivRem` once per tile | `bench_mazer_variant_divrem_17x14` | 3_451_774 | 3_549_000 | 37_969 | +12.4 % |
+| Base, 8 seeds (729 tiles) | `bench_mazer_variant_base_17x14_seeds` | 24_490_061 | 25_897_000 | 33_831 | |
+| One draw of 3, rotation of (L, F, R) (719 tiles) | `bench_mazer_variant_rotation_17x14_seeds` | 23_063_045 | 24_326_000 | 32_222 | -4.8 % |
+| Lazy draws: 3, then 2 if the first fails (726 tiles) | `bench_mazer_variant_lazy_17x14_seeds` | 26_181_248 | 27_706_000 | 36_344 | +7.4 % |
+| `Rng::shuffle6` per tile, non forward skipped (727 tiles) | `bench_mazer_variant_shuffle_17x14_seeds` | 72_986_841 | 77_306_000 | 101_272 | +199.4 % |
 
 Formulations measured while iterating on the library (not kept as tests; same maze, order 0 /
 order 1 on 17x14):
@@ -765,15 +778,15 @@ the start tile (two `Rng::next_below`) and the constants.
 
 | Test | Measured | Budget | Per step |
 |---|---:|---:|---:|
-| `bench_walker_17x14_0` | 36_481 | 39_000 | |
-| `bench_walker_17x14_50` | 301_845 | 317_000 | 5_307 |
-| `bench_walker_17x14_200` | 1_001_849 | 1_052_000 | 4_827 |
-| `bench_walker_17x14_500` | 2_467_497 | 2_591_000 | 4_862 |
-| `bench_walker_17x14_504` | 2_462_993 | 2_587_000 | 4_815 |
-| `bench_walker_7x7_50` | 302_475 | 318_000 | |
-| `bench_walker_7x7_200` | 995_139 | 1_045_000 | |
-| `bench_walker_19x13_200` | 1_008_929 | 1_060_000 | |
-| `bench_walker_3x3_50` (every move blocked) | 305_375 | 321_000 | |
+| `bench_walker_17x14_0` | 34_901 | 39_000 | |
+| `bench_walker_17x14_50` | 294_005 | 317_000 | 5_307 |
+| `bench_walker_17x14_200` | 970_779 | 1_052_000 | 4_827 |
+| `bench_walker_17x14_500` | 2_411_657 | 2_591_000 | 4_862 |
+| `bench_walker_17x14_504` | 2_406_413 | 2_587_000 | 4_815 |
+| `bench_walker_7x7_50` | 294_305 | 318_000 | |
+| `bench_walker_7x7_200` | 962_659 | 1_045_000 | |
+| `bench_walker_19x13_200` | 972_589 | 1_060_000 | |
+| `bench_walker_3x3_50` (every move blocked) | 297_365 | 321_000 | |
 
 Target (< 6k per step on 17x14): met, 4.8k-5.3k. Reference: `origami_map`'s
 `test_walker_generate` (18x14, 500 steps, 4 directions, recursive) reports 29_937_342
@@ -806,24 +819,24 @@ than the library. Variants on the same draws assert the library grid.
 
 | Axis | Variant | Test | Measured | Budget | Per step | vs winner |
 |---|---|---|---:|---:|---:|---:|
-| | **Winner (harness copy)** | `bench_walker_variant_winner` | 2_657_173 | 2_791_000 | 5_272 | |
-| Random | `Rng::next_below(6)` per move | `bench_walker_variant_random_next_below` | 3_916_609 | 4_113_000 | 7_771 | +47.4 % |
-| Random | 3-bit digits, rejection of 6 and 7 | `bench_walker_variant_random_octal` | 6_367_516 | 6_686_000 | 12_634 | +139.6 % |
-| Random | one draw in `0..36` per two moves (36-arm table) | `bench_walker_variant_random_pairs` | 2_855_509 | 2_999_000 | 5_666 | +7.5 % |
-| Move | `(x, y)` incremental, parity bool, per-parity deltas | `bench_walker_variant_move_coords` | 2_706_793 | 2_843_000 | 5_371 | +1.9 % |
-| Move | index arithmetic (`DirectionTrait::next`), test `2^i & INTERIOR` | `bench_walker_variant_move_index_mask` | 5_951_005 | 6_249_000 | 11_808 | +124.0 % |
-| Move | one-hot, per-parity offset table, interior test = one AND | `bench_walker_variant_move_one_hot_and` | 4_554_917 | 4_783_000 | 9_038 | +71.4 % |
-| Grid | OR each step into a `u256`, one conversion at the end | `bench_walker_variant_grid_or_each` | 3_613_075 | 3_794_000 | 7_169 | +36.0 % |
-| Grid | OR each step on a felt grid (`u256` round trip) | `bench_walker_variant_grid_or_felt` | 4_466_515 | 4_690_000 | 8_862 | +68.1 % |
-| Grid | bit test, add only when unset | `bench_walker_variant_grid_test_add` | 4_516_955 | 4_743_000 | 8_962 | +70.0 % |
-| Grid | batch of three, low-limb OR when the batch fits | `bench_walker_variant_grid_limb` | 2_757_218 | 2_896_000 | 5_471 | +3.8 % |
-| Loop | 3 moves per iteration | `bench_walker_variant_loop_3` | 3_446_273 | 3_619_000 | 6_838 | +29.7 % |
-| Loop | 6 moves per iteration | `bench_walker_variant_loop_6` | 2_972_813 | 3_122_000 | 5_898 | +11.9 % |
-| Loop | 12 moves per iteration | `bench_walker_variant_loop_12` | 2_736_083 | 2_873_000 | 5_429 | +3.0 % |
-| Loop | 36 moves per iteration (one pool) | `bench_walker_variant_loop_36` | 2_578_173 | 2_708_000 | 5_115 | -3.0 % |
-| Loop | 12 moves per iteration, table inlined | `bench_walker_variant_loop_12_inline` | 2_678_963 | 2_813_000 | 5_315 | +0.8 % |
-| Loop | 36 moves per iteration, table inlined | `bench_walker_variant_loop_36_inline` | 2_521_053 | 2_648_000 | 5_002 | -5.1 % |
-| All | naive: one move per iteration, `next_below`, `(x, y)`, OR each step | `bench_walker_variant_naive` | 6_892_587 | 7_238_000 | 13_676 | +159.4 % |
+| | **Winner (harness copy)** | `bench_walker_variant_winner` | 2_655_493 | 2_791_000 | 5_272 | |
+| Random | `Rng::next_below(6)` per move | `bench_walker_variant_random_next_below` | 3_500_126 | 3_676_000 | 7_771 | +47.4 % |
+| Random | 3-bit digits, rejection of 6 and 7 | `bench_walker_variant_random_octal` | 6_365_836 | 6_686_000 | 12_634 | +139.6 % |
+| Random | one draw in `0..36` per two moves (36-arm table) | `bench_walker_variant_random_pairs` | 2_853_829 | 2_999_000 | 5_666 | +7.5 % |
+| Move | `(x, y)` incremental, parity bool, per-parity deltas | `bench_walker_variant_move_coords` | 2_705_113 | 2_843_000 | 5_371 | +1.9 % |
+| Move | index arithmetic (`DirectionTrait::next`), test `2^i & INTERIOR` | `bench_walker_variant_move_index_mask` | 5_949_325 | 6_249_000 | 11_808 | +124.0 % |
+| Move | one-hot, per-parity offset table, interior test = one AND | `bench_walker_variant_move_one_hot_and` | 4_553_237 | 4_783_000 | 9_038 | +71.4 % |
+| Grid | OR each step into a `u256`, one conversion at the end | `bench_walker_variant_grid_or_each` | 3_611_395 | 3_794_000 | 7_169 | +36.0 % |
+| Grid | OR each step on a felt grid (`u256` round trip) | `bench_walker_variant_grid_or_felt` | 4_464_835 | 4_690_000 | 8_862 | +68.1 % |
+| Grid | bit test, add only when unset | `bench_walker_variant_grid_test_add` | 4_515_275 | 4_743_000 | 8_962 | +70.0 % |
+| Grid | batch of three, low-limb OR when the batch fits | `bench_walker_variant_grid_limb` | 2_755_538 | 2_896_000 | 5_471 | +3.8 % |
+| Loop | 3 moves per iteration | `bench_walker_variant_loop_3` | 3_444_593 | 3_619_000 | 6_838 | +29.7 % |
+| Loop | 6 moves per iteration | `bench_walker_variant_loop_6` | 2_971_133 | 3_122_000 | 5_898 | +11.9 % |
+| Loop | 12 moves per iteration | `bench_walker_variant_loop_12` | 2_734_403 | 2_873_000 | 5_429 | +3.0 % |
+| Loop | 36 moves per iteration (one pool) | `bench_walker_variant_loop_36` | 2_576_493 | 2_708_000 | 5_115 | -3.0 % |
+| Loop | 12 moves per iteration, table inlined | `bench_walker_variant_loop_12_inline` | 2_677_283 | 2_813_000 | 5_315 | +0.8 % |
+| Loop | 36 moves per iteration, table inlined | `bench_walker_variant_loop_36_inline` | 2_519_373 | 2_648_000 | 5_002 | -5.1 % |
+| All | naive: one move per iteration, `next_below`, `(x, y)`, OR each step | `bench_walker_variant_naive` | 6_422_084 | 6_744_000 | 13_676 | +159.4 % |
 
 ### Loop shape and code size
 
@@ -882,8 +895,9 @@ max, min and mean of `l2_gas` over the runs. Per call = run - 67_351, the mean o
 `bench_spreader_baseline` (the same harness around a trivial body; its runs range from 49_990 to
 68_560, so a per-call max is exact to about -17k/+1k). `#[available_gas]` applies to every run,
 so each budget is `ceil(1.05 * max run, 1000)`: CI fails when any of the seeds gets more expensive.
-The library and its `u256`-only variant run 256 seeds in CI; the losers run 32 seeds in CI, and their
-256-seed figures below come from the same tests with `runs: 256` (measured once). `first version`
+The library runs 256 seeds (64 in the pull-request CI job since P1, see the top of this file); the
+losers run 32 seeds (`#[ignore]`d since P1), and their 256-seed figures below come from the same
+tests with `runs: 256` (measured once). `first version`
 is PR #130 before the audit, measured with the same harness at its commit.
 
 Fixtures: EMPTY/CAVE/MAZE 17x14 and 7x7 (shared fixtures), and, for audit A2 finding 1:
@@ -1023,76 +1037,76 @@ single run for the microbenchmarks; budget = `ceil(1.05 * measured, 1000)`.
 | Test | runs | Measured (max run) | Budget |
 |---|---:|---:|---:|
 | `bench_spreader_baseline` | 256 | 68_560 | 72_000 |
-| `bench_spreader_floyd_cave_17x14_1` | 32 | 1_287_136 | 1_352_000 |
-| `bench_spreader_floyd_cave_17x14_20` | 32 | 1_584_586 | 1_664_000 |
-| `bench_spreader_floyd_cave_17x14_5` | 32 | 1_363_860 | 1_433_000 |
-| `bench_spreader_floyd_cave_17x14_60` | 32 | 2_172_349 | 2_281_000 |
-| `bench_spreader_floyd_cave_7x7_1` | 32 | 331_390 | 348_000 |
-| `bench_spreader_floyd_cave_7x7_20` | 32 | 360_696 | 379_000 |
-| `bench_spreader_floyd_cave_7x7_5` | 32 | 389_602 | 410_000 |
-| `bench_spreader_floyd_empty_17x14_1` | 32 | 1_754_092 | 1_842_000 |
-| `bench_spreader_floyd_empty_17x14_20` | 32 | 2_037_130 | 2_139_000 |
-| `bench_spreader_floyd_empty_17x14_5` | 32 | 1_785_536 | 1_875_000 |
-| `bench_spreader_floyd_empty_17x14_60` | 32 | 2_630_643 | 2_763_000 |
-| `bench_spreader_floyd_empty_7x7_1` | 32 | 349_402 | 367_000 |
-| `bench_spreader_floyd_empty_7x7_20` | 32 | 407_914 | 429_000 |
-| `bench_spreader_floyd_empty_7x7_5` | 32 | 407_814 | 429_000 |
-| `bench_spreader_floyd_maze_17x14_1` | 32 | 953_264 | 1_001_000 |
-| `bench_spreader_floyd_maze_17x14_20` | 32 | 1_231_752 | 1_294_000 |
-| `bench_spreader_floyd_maze_17x14_5` | 32 | 1_011_676 | 1_063_000 |
-| `bench_spreader_floyd_maze_17x14_60` | 32 | 1_409_319 | 1_480_000 |
-| `bench_spreader_floyd_maze_7x7_1` | 32 | 268_348 | 282_000 |
-| `bench_spreader_floyd_maze_7x7_16` | 32 | 110_728 | 117_000 |
-| `bench_spreader_floyd_maze_7x7_5` | 32 | 326_510 | 343_000 |
-| `bench_spreader_generate_cave_17x14_1` | 256 | 204_839 | 216_000 |
-| `bench_spreader_generate_cave_17x14_20` | 256 | 308_848 | 325_000 |
-| `bench_spreader_generate_cave_17x14_5` | 256 | 340_087 | 358_000 |
-| `bench_spreader_generate_cave_17x14_60` | 256 | 322_711 | 339_000 |
-| `bench_spreader_generate_cave_7x7_1` | 256 | 176_831 | 186_000 |
-| `bench_spreader_generate_cave_7x7_20` | 256 | 219_394 | 231_000 |
-| `bench_spreader_generate_cave_7x7_5` | 256 | 234_194 | 246_000 |
-| `bench_spreader_generate_d30_17x14_1` | 256 | 178_633 | 188_000 |
-| `bench_spreader_generate_d30_17x14_20` | 256 | 297_136 | 312_000 |
-| `bench_spreader_generate_d30_17x14_5` | 256 | 306_469 | 322_000 |
-| `bench_spreader_generate_d30_17x14_60` | 256 | 314_275 | 330_000 |
-| `bench_spreader_generate_empty_17x14_1` | 256 | 203_769 | 214_000 |
-| `bench_spreader_generate_empty_17x14_20` | 256 | 349_586 | 368_000 |
-| `bench_spreader_generate_empty_17x14_5` | 256 | 386_026 | 406_000 |
-| `bench_spreader_generate_empty_17x14_60` | 256 | 342_340 | 360_000 |
-| `bench_spreader_generate_empty_7x7_1` | 256 | 176_841 | 186_000 |
-| `bench_spreader_generate_empty_7x7_20` | 256 | 234_544 | 247_000 |
-| `bench_spreader_generate_empty_7x7_5` | 256 | 234_204 | 246_000 |
-| `bench_spreader_generate_maze_17x14_1` | 256 | 204_839 | 216_000 |
-| `bench_spreader_generate_maze_17x14_20` | 256 | 317_978 | 334_000 |
-| `bench_spreader_generate_maze_17x14_5` | 256 | 309_009 | 325_000 |
-| `bench_spreader_generate_maze_17x14_60` | 256 | 314_372 | 331_000 |
-| `bench_spreader_generate_maze_7x7_1` | 256 | 176_201 | 186_000 |
-| `bench_spreader_generate_maze_7x7_16` | 256 | 106_509 | 112_000 |
-| `bench_spreader_generate_maze_7x7_5` | 256 | 213_251 | 224_000 |
-| `bench_spreader_generate_sparse2_10x25_1` | 256 | 135_256 | 143_000 |
-| `bench_spreader_generate_sparse5_17x14_1` | 256 | 149_625 | 158_000 |
-| `bench_spreader_generate_sparse5_17x14_2` | 256 | 149_865 | 158_000 |
-| `bench_spreader_mask_cave_17x14_1` | 32 | 172_664 | 182_000 |
-| `bench_spreader_mask_cave_17x14_20` | 32 | 655_847 | 689_000 |
-| `bench_spreader_mask_cave_17x14_5` | 32 | 363_809 | 382_000 |
-| `bench_spreader_mask_cave_17x14_60` | 32 | 596_992 | 627_000 |
-| `bench_spreader_mask_cave_7x7_1` | 32 | 241_625 | 254_000 |
-| `bench_spreader_mask_cave_7x7_20` | 32 | 433_615 | 456_000 |
-| `bench_spreader_mask_cave_7x7_5` | 32 | 655_338 | 689_000 |
-| `bench_spreader_mask_empty_17x14_1` | 32 | 162_741 | 171_000 |
-| `bench_spreader_mask_empty_17x14_20` | 32 | 395_920 | 416_000 |
-| `bench_spreader_mask_empty_17x14_5` | 32 | 262_878 | 277_000 |
-| `bench_spreader_mask_empty_17x14_60` | 32 | 594_005 | 624_000 |
-| `bench_spreader_mask_empty_7x7_1` | 32 | 241_625 | 254_000 |
-| `bench_spreader_mask_empty_7x7_20` | 32 | 655_338 | 689_000 |
-| `bench_spreader_mask_empty_7x7_5` | 32 | 655_338 | 689_000 |
-| `bench_spreader_mask_maze_17x14_1` | 32 | 192_760 | 203_000 |
-| `bench_spreader_mask_maze_17x14_20` | 32 | 895_807 | 941_000 |
-| `bench_spreader_mask_maze_17x14_5` | 32 | 364_809 | 384_000 |
-| `bench_spreader_mask_maze_17x14_60` | 32 | 565_486 | 594_000 |
-| `bench_spreader_mask_maze_7x7_1` | 32 | 1_222_100 | 1_284_000 |
-| `bench_spreader_mask_maze_7x7_16` | 32 | 137_924 | 145_000 |
-| `bench_spreader_mask_maze_7x7_5` | 32 | 507_113 | 533_000 |
+| `bench_spreader_floyd_cave_17x14_1` | 32 | 1_281_546 | 1_352_000 |
+| `bench_spreader_floyd_cave_17x14_20` | 32 | 1_580_827 | 1_664_000 |
+| `bench_spreader_floyd_cave_17x14_5` | 32 | 1_358_270 | 1_433_000 |
+| `bench_spreader_floyd_cave_17x14_60` | 32 | 2_171_021 | 2_281_000 |
+| `bench_spreader_floyd_cave_7x7_1` | 32 | 325_800 | 348_000 |
+| `bench_spreader_floyd_cave_7x7_20` | 32 | 355_106 | 379_000 |
+| `bench_spreader_floyd_cave_7x7_5` | 32 | 384_012 | 410_000 |
+| `bench_spreader_floyd_empty_17x14_1` | 32 | 1_748_502 | 1_842_000 |
+| `bench_spreader_floyd_empty_17x14_20` | 32 | 2_034_321 | 2_139_000 |
+| `bench_spreader_floyd_empty_17x14_5` | 32 | 1_779_946 | 1_875_000 |
+| `bench_spreader_floyd_empty_17x14_60` | 32 | 2_630_465 | 2_763_000 |
+| `bench_spreader_floyd_empty_7x7_1` | 32 | 343_812 | 367_000 |
+| `bench_spreader_floyd_empty_7x7_20` | 32 | 402_324 | 429_000 |
+| `bench_spreader_floyd_empty_7x7_5` | 32 | 402_224 | 429_000 |
+| `bench_spreader_floyd_maze_17x14_1` | 32 | 947_674 | 1_001_000 |
+| `bench_spreader_floyd_maze_17x14_20` | 32 | 1_226_762 | 1_294_000 |
+| `bench_spreader_floyd_maze_17x14_5` | 32 | 1_006_086 | 1_063_000 |
+| `bench_spreader_floyd_maze_17x14_60` | 32 | 1_405_360 | 1_480_000 |
+| `bench_spreader_floyd_maze_7x7_1` | 32 | 262_758 | 282_000 |
+| `bench_spreader_floyd_maze_7x7_16` | 32 | 105_138 | 111_000 |
+| `bench_spreader_floyd_maze_7x7_5` | 32 | 320_920 | 343_000 |
+| `bench_spreader_generate_cave_17x14_1` | 256 | 186_639 | 196_000 |
+| `bench_spreader_generate_cave_17x14_20` | 256 | 291_588 | 307_000 |
+| `bench_spreader_generate_cave_17x14_5` | 256 | 320_687 | 337_000 |
+| `bench_spreader_generate_cave_17x14_60` | 256 | 305_451 | 321_000 |
+| `bench_spreader_generate_cave_7x7_1` | 256 | 161_121 | 170_000 |
+| `bench_spreader_generate_cave_7x7_20` | 256 | 208_954 | 231_000 |
+| `bench_spreader_generate_cave_7x7_5` | 256 | 221_614 | 233_000 |
+| `bench_spreader_generate_d30_17x14_1` | 256 | 162_113 | 171_000 |
+| `bench_spreader_generate_d30_17x14_20` | 256 | 282_016 | 297_000 |
+| `bench_spreader_generate_d30_17x14_5` | 256 | 291_349 | 322_000 |
+| `bench_spreader_generate_d30_17x14_60` | 256 | 297_015 | 312_000 |
+| `bench_spreader_generate_empty_17x14_1` | 256 | 186_639 | 196_000 |
+| `bench_spreader_generate_empty_17x14_20` | 256 | 330_186 | 347_000 |
+| `bench_spreader_generate_empty_17x14_5` | 256 | 361_304 | 380_000 |
+| `bench_spreader_generate_empty_17x14_60` | 256 | 322_940 | 340_000 |
+| `bench_spreader_generate_empty_7x7_1` | 256 | 161_121 | 170_000 |
+| `bench_spreader_generate_empty_7x7_20` | 256 | 221_964 | 234_000 |
+| `bench_spreader_generate_empty_7x7_5` | 256 | 221_624 | 233_000 |
+| `bench_spreader_generate_maze_17x14_1` | 256 | 186_639 | 196_000 |
+| `bench_spreader_generate_maze_17x14_20` | 256 | 300_718 | 316_000 |
+| `bench_spreader_generate_maze_17x14_5` | 256 | 291_749 | 307_000 |
+| `bench_spreader_generate_maze_17x14_60` | 256 | 297_112 | 312_000 |
+| `bench_spreader_generate_maze_7x7_1` | 256 | 161_121 | 170_000 |
+| `bench_spreader_generate_maze_7x7_16` | 256 | 103_059 | 112_000 |
+| `bench_spreader_generate_maze_7x7_5` | 256 | 202_811 | 224_000 |
+| `bench_spreader_generate_sparse2_10x25_1` | 256 | 131_176 | 143_000 |
+| `bench_spreader_generate_sparse5_17x14_1` | 256 | 145_545 | 158_000 |
+| `bench_spreader_generate_sparse5_17x14_2` | 256 | 145_445 | 158_000 |
+| `bench_spreader_mask_cave_17x14_1` | 32 | 161_484 | 170_000 |
+| `bench_spreader_mask_cave_17x14_20` | 32 | 785_220 | 825_000 |
+| `bench_spreader_mask_cave_17x14_5` | 32 | 323_110 | 340_000 |
+| `bench_spreader_mask_cave_17x14_60` | 32 | 632_676 | 665_000 |
+| `bench_spreader_mask_cave_7x7_1` | 32 | 230_445 | 254_000 |
+| `bench_spreader_mask_cave_7x7_20` | 32 | 394_867 | 415_000 |
+| `bench_spreader_mask_cave_7x7_5` | 32 | 557_052 | 585_000 |
+| `bench_spreader_mask_empty_17x14_1` | 32 | 151_561 | 160_000 |
+| `bench_spreader_mask_empty_17x14_20` | 32 | 407_537 | 416_000 |
+| `bench_spreader_mask_empty_17x14_5` | 32 | 262_322 | 277_000 |
+| `bench_spreader_mask_empty_17x14_60` | 32 | 584_776 | 624_000 |
+| `bench_spreader_mask_empty_7x7_1` | 32 | 230_445 | 254_000 |
+| `bench_spreader_mask_empty_7x7_20` | 32 | 557_052 | 585_000 |
+| `bench_spreader_mask_empty_7x7_5` | 32 | 557_052 | 585_000 |
+| `bench_spreader_mask_maze_17x14_1` | 32 | 181_580 | 191_000 |
+| `bench_spreader_mask_maze_17x14_20` | 32 | 974_065 | 1_023_000 |
+| `bench_spreader_mask_maze_17x14_5` | 32 | 385_599 | 405_000 |
+| `bench_spreader_mask_maze_17x14_60` | 32 | 737_190 | 775_000 |
+| `bench_spreader_mask_maze_7x7_1` | 32 | 873_538 | 918_000 |
+| `bench_spreader_mask_maze_7x7_16` | 32 | 126_744 | 134_000 |
+| `bench_spreader_mask_maze_7x7_5` | 32 | 484_547 | 533_000 |
 | `bench_spreader_micro_counts_u256` |  | 259_130 | 273_000 |
 | `bench_spreader_micro_deposit_u256` |  | 325_580 | 342_000 |
 | `bench_spreader_micro_level_u128` |  | 189_540 | 200_000 |
@@ -1103,66 +1117,66 @@ single run for the microbenchmarks; budget = `ceil(1.05 * measured, 1000)`.
 | `bench_spreader_micro_popcount_u128` |  | 149_200 | 157_000 |
 | `bench_spreader_micro_select_u128` |  | 284_409 | 299_000 |
 | `bench_spreader_micro_select_u256` |  | 355_868 | 374_000 |
-| `bench_spreader_micro_trial` |  | 124_381 | 131_000 |
+| `bench_spreader_micro_trial` |  | 118_012 | 124_000 |
 | `bench_spreader_micro_walk_u256` |  | 367_430 | 386_000 |
-| `bench_spreader_reject_cave_17x14_1` | 32 | 145_011 | 153_000 |
-| `bench_spreader_reject_cave_17x14_20` | 32 | 688_422 | 723_000 |
-| `bench_spreader_reject_cave_17x14_5` | 32 | 286_541 | 301_000 |
-| `bench_spreader_reject_cave_17x14_60` | 32 | 1_983_195 | 2_083_000 |
-| `bench_spreader_reject_cave_7x7_1` | 32 | 144_261 | 152_000 |
-| `bench_spreader_reject_cave_7x7_20` | 32 | 299_827 | 315_000 |
-| `bench_spreader_reject_cave_7x7_5` | 32 | 344_079 | 362_000 |
-| `bench_spreader_reject_d30_17x14_1` | 32 | 185_203 | 195_000 |
-| `bench_spreader_reject_d30_17x14_20` | 32 | 1_361_345 | 1_430_000 |
-| `bench_spreader_reject_d30_17x14_5` | 32 | 429_414 | 451_000 |
-| `bench_spreader_reject_d30_17x14_60` | 32 | 749_106 | 787_000 |
-| `bench_spreader_reject_empty_17x14_1` | 32 | 134_838 | 142_000 |
-| `bench_spreader_reject_empty_17x14_20` | 32 | 523_752 | 550_000 |
-| `bench_spreader_reject_empty_17x14_5` | 32 | 246_099 | 259_000 |
-| `bench_spreader_reject_empty_17x14_60` | 32 | 1_348_964 | 1_417_000 |
-| `bench_spreader_reject_empty_7x7_1` | 32 | 144_261 | 152_000 |
-| `bench_spreader_reject_empty_7x7_20` | 32 | 344_059 | 362_000 |
-| `bench_spreader_reject_empty_7x7_5` | 32 | 344_079 | 362_000 |
-| `bench_spreader_reject_maze_17x14_1` | 32 | 175_280 | 185_000 |
-| `bench_spreader_reject_maze_17x14_20` | 32 | 995_014 | 1_045_000 |
-| `bench_spreader_reject_maze_17x14_5` | 32 | 356_752 | 375_000 |
-| `bench_spreader_reject_maze_17x14_60` | 32 | 1_579_803 | 1_659_000 |
-| `bench_spreader_reject_maze_7x7_1` | 32 | 174_030 | 183_000 |
-| `bench_spreader_reject_maze_7x7_16` | 32 | 100_078 | 106_000 |
-| `bench_spreader_reject_maze_7x7_5` | 32 | 393_694 | 414_000 |
-| `bench_spreader_reject_sparse2_10x25_1` | 32 | 3_588_489 | 3_768_000 |
-| `bench_spreader_reject_sparse5_17x14_1` | 32 | 1_536_000 | 1_613_000 |
-| `bench_spreader_reject_sparse5_17x14_2` | 32 | 2_136_781 | 2_244_000 |
-| `bench_spreader_selection_cave_17x14_1` | 32 | 1_292_139 | 1_357_000 |
-| `bench_spreader_selection_cave_17x14_20` | 32 | 1_300_499 | 1_366_000 |
-| `bench_spreader_selection_cave_17x14_5` | 32 | 1_293_899 | 1_359_000 |
-| `bench_spreader_selection_cave_17x14_60` | 32 | 1_318_099 | 1_385_000 |
-| `bench_spreader_selection_cave_7x7_1` | 32 | 311_618 | 328_000 |
-| `bench_spreader_selection_cave_7x7_20` | 32 | 312_478 | 329_000 |
-| `bench_spreader_selection_cave_7x7_5` | 32 | 313_378 | 330_000 |
-| `bench_spreader_selection_empty_17x14_1` | 32 | 1_633_907 | 1_716_000 |
-| `bench_spreader_selection_empty_17x14_20` | 32 | 1_746_830 | 1_835_000 |
-| `bench_spreader_selection_empty_17x14_5` | 32 | 1_740_230 | 1_828_000 |
-| `bench_spreader_selection_empty_17x14_60` | 32 | 1_764_430 | 1_853_000 |
-| `bench_spreader_selection_empty_7x7_1` | 32 | 329_504 | 346_000 |
-| `bench_spreader_selection_empty_7x7_20` | 32 | 331_244 | 348_000 |
-| `bench_spreader_selection_empty_7x7_5` | 32 | 331_264 | 348_000 |
-| `bench_spreader_selection_maze_17x14_1` | 32 | 928_326 | 975_000 |
-| `bench_spreader_selection_maze_17x14_20` | 32 | 945_629 | 993_000 |
-| `bench_spreader_selection_maze_17x14_5` | 32 | 939_029 | 986_000 |
-| `bench_spreader_selection_maze_17x14_60` | 32 | 952_920 | 1_001_000 |
-| `bench_spreader_selection_maze_7x7_1` | 32 | 249_017 | 262_000 |
-| `bench_spreader_selection_maze_7x7_16` | 32 | 104_988 | 111_000 |
-| `bench_spreader_selection_maze_7x7_5` | 32 | 250_777 | 264_000 |
-| `bench_spreader_u256_cave_7x7_1` | 256 | 197_819 | 208_000 |
-| `bench_spreader_u256_cave_7x7_20` | 256 | 250_419 | 263_000 |
-| `bench_spreader_u256_cave_7x7_5` | 256 | 268_581 | 283_000 |
-| `bench_spreader_u256_empty_7x7_1` | 256 | 197_829 | 208_000 |
-| `bench_spreader_u256_empty_7x7_20` | 256 | 269_131 | 283_000 |
-| `bench_spreader_u256_empty_7x7_5` | 256 | 268_591 | 283_000 |
-| `bench_spreader_u256_maze_7x7_1` | 256 | 197_189 | 208_000 |
-| `bench_spreader_u256_maze_7x7_16` | 256 | 107_318 | 113_000 |
-| `bench_spreader_u256_maze_7x7_5` | 256 | 241_726 | 254_000 |
+| `bench_spreader_reject_cave_17x14_1` | 32 | 139_421 | 153_000 |
+| `bench_spreader_reject_cave_17x14_20` | 32 | 688_484 | 723_000 |
+| `bench_spreader_reject_cave_17x14_5` | 32 | 323_594 | 340_000 |
+| `bench_spreader_reject_cave_17x14_60` | 32 | 2_055_050 | 2_083_000 |
+| `bench_spreader_reject_cave_7x7_1` | 32 | 138_671 | 152_000 |
+| `bench_spreader_reject_cave_7x7_20` | 32 | 234_699 | 247_000 |
+| `bench_spreader_reject_cave_7x7_5` | 32 | 328_566 | 362_000 |
+| `bench_spreader_reject_d30_17x14_1` | 32 | 179_613 | 195_000 |
+| `bench_spreader_reject_d30_17x14_20` | 32 | 1_284_925 | 1_350_000 |
+| `bench_spreader_reject_d30_17x14_5` | 32 | 364_036 | 383_000 |
+| `bench_spreader_reject_d30_17x14_60` | 32 | 728_322 | 787_000 |
+| `bench_spreader_reject_empty_17x14_1` | 32 | 129_248 | 142_000 |
+| `bench_spreader_reject_empty_17x14_20` | 32 | 512_891 | 550_000 |
+| `bench_spreader_reject_empty_17x14_5` | 32 | 210_740 | 222_000 |
+| `bench_spreader_reject_empty_17x14_60` | 32 | 1_407_494 | 1_417_000 |
+| `bench_spreader_reject_empty_7x7_1` | 32 | 138_671 | 152_000 |
+| `bench_spreader_reject_empty_7x7_20` | 32 | 278_931 | 293_000 |
+| `bench_spreader_reject_empty_7x7_5` | 32 | 278_951 | 293_000 |
+| `bench_spreader_reject_maze_17x14_1` | 32 | 169_690 | 185_000 |
+| `bench_spreader_reject_maze_17x14_20` | 32 | 954_585 | 1_045_000 |
+| `bench_spreader_reject_maze_17x14_5` | 32 | 342_440 | 375_000 |
+| `bench_spreader_reject_maze_17x14_60` | 32 | 1_541_086 | 1_659_000 |
+| `bench_spreader_reject_maze_7x7_1` | 32 | 168_440 | 183_000 |
+| `bench_spreader_reject_maze_7x7_16` | 32 | 94_488 | 100_000 |
+| `bench_spreader_reject_maze_7x7_5` | 32 | 420_074 | 442_000 |
+| `bench_spreader_reject_sparse2_10x25_1` | 32 | 4_507_725 | 4_734_000 |
+| `bench_spreader_reject_sparse5_17x14_1` | 32 | 1_057_529 | 1_111_000 |
+| `bench_spreader_reject_sparse5_17x14_2` | 32 | 2_426_823 | 2_549_000 |
+| `bench_spreader_selection_cave_17x14_1` | 32 | 1_258_901 | 1_357_000 |
+| `bench_spreader_selection_cave_17x14_20` | 32 | 1_303_033 | 1_366_000 |
+| `bench_spreader_selection_cave_17x14_5` | 32 | 1_290_243 | 1_359_000 |
+| `bench_spreader_selection_cave_17x14_60` | 32 | 1_320_633 | 1_385_000 |
+| `bench_spreader_selection_cave_7x7_1` | 32 | 308_059 | 328_000 |
+| `bench_spreader_selection_cave_7x7_20` | 32 | 308_919 | 329_000 |
+| `bench_spreader_selection_cave_7x7_5` | 32 | 309_819 | 330_000 |
+| `bench_spreader_selection_empty_17x14_1` | 32 | 1_743_035 | 1_831_000 |
+| `bench_spreader_selection_empty_17x14_20` | 32 | 1_751_395 | 1_835_000 |
+| `bench_spreader_selection_empty_17x14_5` | 32 | 1_744_795 | 1_828_000 |
+| `bench_spreader_selection_empty_17x14_60` | 32 | 1_768_995 | 1_853_000 |
+| `bench_spreader_selection_empty_7x7_1` | 32 | 317_002 | 346_000 |
+| `bench_spreader_selection_empty_7x7_20` | 32 | 327_685 | 348_000 |
+| `bench_spreader_selection_empty_7x7_5` | 32 | 327_705 | 348_000 |
+| `bench_spreader_selection_maze_17x14_1` | 32 | 937_772 | 975_000 |
+| `bench_spreader_selection_maze_17x14_20` | 32 | 946_132 | 993_000 |
+| `bench_spreader_selection_maze_17x14_5` | 32 | 939_532 | 986_000 |
+| `bench_spreader_selection_maze_17x14_60` | 32 | 951_392 | 1_001_000 |
+| `bench_spreader_selection_maze_7x7_1` | 32 | 243_427 | 262_000 |
+| `bench_spreader_selection_maze_7x7_16` | 32 | 99_398 | 105_000 |
+| `bench_spreader_selection_maze_7x7_5` | 32 | 245_187 | 264_000 |
+| `bench_spreader_u256_cave_7x7_1` | 256 | 183_409 | 193_000 |
+| `bench_spreader_u256_cave_7x7_20` | 256 | 242_119 | 263_000 |
+| `bench_spreader_u256_cave_7x7_5` | 256 | 258_141 | 283_000 |
+| `bench_spreader_u256_empty_7x7_1` | 256 | 183_409 | 193_000 |
+| `bench_spreader_u256_empty_7x7_20` | 256 | 258_691 | 283_000 |
+| `bench_spreader_u256_empty_7x7_5` | 256 | 258_151 | 283_000 |
+| `bench_spreader_u256_maze_7x7_1` | 256 | 183_409 | 193_000 |
+| `bench_spreader_u256_maze_7x7_16` | 256 | 106_008 | 113_000 |
+| `bench_spreader_u256_maze_7x7_5` | 256 | 233_426 | 254_000 |
 
 </details>
 
@@ -1454,9 +1468,9 @@ Per op = (test - baseline) / 100, the baseline being the test that builds the sa
 | **`u252` Serde round trip (no range check)** | `bench_u252_serde` | 231_790 | 244_000 | 601 |
 | **`u252` `StorePacking` round trip** | `bench_u252_store_packing` | 171_690 | 181_000 | 0 |
 | _`Layout::expand` and BFS layer step, 17x14 (per op = (test - loop) / 100)_ | | | | |
-| `expand` on `u256` (library) | `bench_u252_expand_u256` | 2_077_410 | 2_182_000 | 19_354 |
+| `expand` on `u256` (library) | `bench_u252_expand_u256` | 2_003_410 | 2_182_000 | 18_614 |
 | `expand` on `u252` (bench copy) | `bench_u252_expand` | 2_246_500 | 2_359_000 | 21_045 |
-| BFS step on `u256`: `expand & U`, `U - F'` (library) | `bench_u252_step_u256` | 2_239_260 | 2_352_000 | 20_973 |
+| BFS step on `u256`: `expand & U`, `U - F'` (library) | `bench_u252_step_u256` | 2_104_260 | 2_210_000 | 19_623 |
 | BFS step on `u252`: `u252 &`, `wrapping_sub` | `bench_u252_step` | 2_404_340 | 2_525_000 | 22_624 |
 | BFS step on `u252`, fused: one split of `U`, one join | `bench_u252_step_fused` | 2_292_340 | 2_407_000 | 21_504 |
 
@@ -1482,3 +1496,306 @@ Per op = (test - baseline) / 100, the baseline being the test that builds the sa
   reach of any 252-bit form. `helpers/bits.cairo` and `helpers/layout.cairo` stay on `u256`
   with felt shifts; `u252` is worth using for counters, storage and APIs that convert to and from
   `felt252`, not for the set algebra.
+
+## P1 Commons
+
+Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas). "Before" is `main` at `7adb9c4` (all lots
+L0-L7 and S1 merged), "after" is the head of the P1 pull request; both from
+`snforge test --package origami_hexmap --include-ignored --detailed-resources` (256 seeds).
+
+### Shared primitives
+
+| Helper | Origin | Used by |
+|---|---|---|
+| `Bits::bitwise` (AND, XOR, OR from one application, wrapper of the private libfunc), `Bits::and` / `or` / `xor` on `u256` limbs | L4, L1, L3 local `extern fn` | `Layout`, `Bfs`, `Dial`, `Caver`, benches |
+| `Bits::popcount` (byte counts of both limbs summed, one byte sum), `Bits::popcount_small`, `Bits::byte_counts` | L7 | `Spreader`, tests |
+| `Bits::top_byte`, `Bits::low_byte` (`bounded_int` divisions by 2^120 and 256) | P1 | `Bits::popcount`, `Spreader` |
+| `Set<T>` (`WideSet` on `u256`, `SmallSet` on `u128`) | L3 | `Dial` |
+| `Layout::with_interior` (layout and interior from 3 shared lookups) | L1 `constants` | `Bfs`, `Dial`, `Caver` |
+| `Dilation` (4 constants) and `Dilation::dilate` / `expand_small`: the L1 dilation, up/down from `X = 2P - Pe` with one product each; `Layout::expand` / `expand_small` now run it | L1 `BfsInternal::expand` | `Bfs`, `Dial`, `Layout::expand` |
+| `Layout::edge_neighbours`, `Layout::neighbour_in` (edge endpoints) | L1 `around_edge` / `enter`, L3 `seeds` / edge scan | `Bfs`, `Dial` |
+| `BfsInternal::component` (flood of `Bfs::reachable` without the checks) | L1 | `Caver::keep_component` |
+| `Rng::draw_byte`, `Rng::draw6`, `Rng::split216` (`bounded_int` divisions), refill below 2^64 | L6, P1 | `Spreader`, `Mazer`, `Digger`, `Walker` |
+
+Kept local: the byte-count select of `Spreader` (one module uses it), the `Frontier<T>` dilation
+and backtracking masks of `Dial` (they need the `Dilation`), the walker's pool loop (locals, both
+limbs of every permutation, `Rng::split216`).
+
+### Microbenchmarks (per op = (test - loop) / 100, loop 142_090)
+
+| Operation | Test | Measured | Budget | Per op | Before |
+|---|---|---:|---:|---:|---:|
+| u128 DivRem by 6 | `bench_u128_divrem` | 298_410 | 314_000 | 1_563 | |
+| **`bounded_int::div_rem` u128 by `UnitInt<6>`** | `bench_u128_divrem_bounded` | 251_880 | 265_000 | 1_098 | |
+| **`bounded_int::div_rem` u128 by a runtime `NonZero<u8>`** | `bench_u128_divrem_bounded_byte` | 251_880 | 265_000 | 1_098 | |
+| u8 DivRem by 17 | `bench_u8_divrem` | 251_880 | 265_000 | 1_098 | |
+| `bounded_int::div_rem` u8 by `NonZero<u8>` (loser: equal) | `bench_u8_divrem_bounded` | 251_880 | 265_000 | 1_098 | |
+| `Rng::draw(6)`, generic `u128` bound | `bench_rng_draw` | 562_744 | 589_000 | 4_206 | 4_186 |
+| **`Rng::draw6`** | `bench_rng_draw6` | 515_744 | 542_000 | 3_737 | |
+| **`Rng::next_below(6)`** (`draw_byte`) | `bench_rng_next_below` | 515_744 | 542_000 | 3_737 | 4_556 |
+| `Rng::draw6` with a counter refill (loser: needs a third field) | `bench_rng_draw6_counter` | 490_295 | 515_000 | 3_482 | |
+| `Rng::shuffle6` | `bench_rng_shuffle6` | 718_985 | 776_000 | 5_769 | 5_967 |
+| `Bits::popcount`, 180 / 8 bits set | `bench_popcount_swar_dense` / `_sparse` | 1_486_920 / 1_496_380 | 1_562_000 / 1_572_000 | 13_448 / 13_543 | 19_038 / 19_133 |
+| `Layout::expand`, 17x14 / 7x7 | `bench_expand_felt` / `_7x7` | 2_003_410 / 1_685_930 | 2_182_000 / 1_771_000 | 18_613 / 15_438 | 19_353 / 16_788 |
+| `Layout::expand_small`, 7x7 | `bench_expand_small_7x7` | 923_680 | 1_002_000 | 7_816 | 8_116 |
+| BFS layer step `expand & U`, `U - F'` | `bench_step_or` | 2_104_260 | 2_210_000 | 19_622 | 20_972 |
+
+`bench_rng_draw` is 20 gas per draw dearer: the pool refilled below 2^64 serves about 24 draws
+of 6 instead of 37 (one more permutation per 100 draws). The spreader micro table of L7 moves the
+same way: level `u256` 21_438 -> 19_298, level `u128` 15_852 -> 13_712, popcount `u256` 16_521 ->
+14_381, `u128` 11_818 -> 9_678, counts 22_811 -> 21_941, select `u256` 32_484 -> 30_721, `u128`
+25_339 -> 23_659, trial 9_336 -> 8_699 (`draw_byte`); walk and deposit unchanged.
+
+### Rng: bias, pools and draws
+
+* **Refill threshold 2^64** (was 2^32): the draws of one pool are within `2^64 * B / 2^128` of
+  independent draws, `2^-56` for `B <= 251` (was `2^-24`), `2^-54.5` for `shuffle6`. Cost on the
+  generators, same code with the threshold only changed (mazer, 8 seeds): order 0 31_868 ->
+  31_881 per carved tile (+0.04 %), order 1 37_967 -> 37_590: below the 2 % limit, adopted.
+* **All the outputs of a permutation**: a spare pool in `Rng` (the high limb) is one more field
+  carried through the recursions of `Mazer` and `Digger`: +1.9 % (order 0) and +3.0 % (order 1)
+  per carved tile against the 2-field `Rng` (32_499 vs 31_881, 38_731 vs 37_590): not kept. The
+  walker, whose pool lives in locals, draws 6 triples from each limb of every permutation.
+* **Counter refill** (a felt counter instead of `pool < 2^64`): -6.8 % per draw in isolation
+  (3_482 vs 3_737) but a third field: not kept, same reason.
+* **`bounded_int::div_rem`** (owner decision): -30 % per division by a constant or by a runtime
+  `NonZero<u8>` bound, the quotient and the remainder need no conversion. Kept in `draw_byte`,
+  `draw6`, `shuffle6`, `split216`, `top_byte`, `low_byte`. u8 by u8 (coordinates, parity,
+  distance) costs the same: not used there.
+
+### Generators after the stream change (per unit)
+
+| Benchmark | Before | After | Delta |
+|---|---:|---:|---:|
+| Mazer 17x14 order 0, 8 seeds, per tile | 32_336 (729 tiles) | 31_862 (724 tiles) | -1.5 % |
+| Mazer 17x14 order 1, 8 seeds, per tile | 38_434 (385 tiles) | 37_553 (369 tiles) | -2.3 % |
+| Mazer 17x14 order 0, `'SEED'`, per tile | 32_314 (89 tiles) | 32_225 (90 tiles) | -0.3 % |
+| Mazer 17x14 order 1, `'SEED'`, per tile | 39_710 (46 tiles) | 37_492 (40 tiles) | -5.6 % |
+| Digger corridor, per tile | 34_984 (9 tiles) | 34_525 (9 tiles) | -1.3 % |
+| Digger maze, per tile | 35_885 (90 tiles) | 35_167 (88 tiles) | -2.0 % |
+| Walker 17x14, 500 steps, per step | 4_862 | 4_754 | -2.2 % |
+
+`bench_mazer_17x14_order_0` (one seed) costs 0.8 % more than before: its maze has 90 tiles
+instead of 89; per tile it is 0.3 % cheaper.
+
+### Variants measured and not kept
+
+| Variant | Measured | Verdict |
+|---|---|---|
+| `Bfs` carrying the 7-field `Layout` in its loops instead of the 4-field `Dilation` | +0.4 % (17x14 far searches) to +2.6 % (7x7 ranges) | `Dilation` kept |
+| `Caver::keep_component` through `Bfs::reachable` (checks, endpoint, edge tiles) | cave 300_925 -> 305_194 (+1.4 %), maze -5.2 %, serpentine -6.3 % | `BfsInternal::component` kept: -5.6 %, -10.6 %, -11.5 % |
+| `Dial` target test skipped while `time < hex distance - 1` (L3 deferred item) | +0.5 % to +3.8 % (CAVE far 1_406_744 -> 1_440_828, SERPENTINE unit 3_227_567 -> 3_348_820): the `u32` comparison per step costs more than the single-limb test it saves | not kept |
+| Spare pool in `Rng`, counter refill | see above | not kept |
+| `bounded_int` u8 by u8 | equal | not used |
+
+The L4 `keep_component` (dilation of the whole component, corelib operators) stays in
+`bench_caver.cairo` as `keep_component_dilation`: `bench_caver_variant_keep_component_dilation_17x14`
+300_162 (budget 316_000). The L0 `Layout::expand` / `expand_small` stay in `tests/variants.cairo`
+(`Variants::expand_felt`, `expand_small_corelib`) for the loser benchmarks that used them.
+
+### Not reached
+
+* **L1 search targets on 17x14** (EMPTY far 500k, CAVE 650k, MAZE 1.4M, SERPENTINE 2.4M): the
+  search benchmarks are unchanged by P1 (the promoted dilation is the L1 one, carried by the same
+  4 constants). A layer is 12 bitwise applications and 4 wide felt -> `u256` conversions; the
+  limb-aligned East shift needs a wall at bits 127 and 128 (not the case on 17x14: tile 128 is
+  interior), and the doubling by `u128` additions was measured slower by L1.
+* **Caver conversions per generation** (6 per generation): each neighbour plane crosses the limb
+  boundary; the limb-wise East plane was measured +4 % by L4. No new formulation found.
+* **Spreader `deposit`** (5.9k per step): unchanged; a mask walk over the set bits of the mask
+  saves at most one `u8` division per step (1.1k) and adds a lowest-bit extraction per chosen
+  rank. Not implemented.
+
+### CI time
+
+| Job | Before | After |
+|---|---:|---:|
+| `Test origami_hexmap` (pull requests) | 8m23s | 4m0s |
+| Local, fresh build, same command | 7m55s | 2m46s |
+
+The 100 spreader losers (`#[ignore]`) and the library fuzz benchmarks on 256 seeds run in the
+non-blocking `hexmap-full` job on pushes to `main` (about 9m20s locally).
+
+### Before / after, every library benchmark
+
+#### L1 Bfs
+
+| Test | Before | After | Delta |
+|---|---:|---:|---:|
+| `bench_bfs_distance_cave_far_17x14` | 501_942 | 501_942 | +0.0 % |
+| `bench_bfs_distance_cave_far_7x7` | 88_923 | 88_923 | +0.0 % |
+| `bench_bfs_distance_empty_far_17x14` | 407_159 | 407_159 | +0.0 % |
+| `bench_bfs_distance_empty_far_7x7` | 88_923 | 88_923 | +0.0 % |
+| `bench_bfs_distance_maze_far_17x14` | 1_058_347 | 1_058_347 | +0.0 % |
+| `bench_bfs_distance_maze_far_7x7` | 154_812 | 154_812 | +0.0 % |
+| `bench_bfs_distance_serpentine_far_17x14` | 1_774_065 | 1_774_065 | +0.0 % |
+| `bench_bfs_distance_serpentine_far_7x7` | 167_851 | 167_851 | +0.0 % |
+| `bench_bfs_distance_unreachable_far_17x14` | 259_880 | 259_880 | +0.0 % |
+| `bench_bfs_distance_unreachable_far_17x14_library` | 259_580 | 259_580 | +0.0 % |
+| `bench_bfs_distance_unreachable_far_7x7` | 87_603 | 87_603 | +0.0 % |
+| `bench_bfs_distance_unreachable_near_17x14_library` | 261_778 | 261_778 | +0.0 % |
+| `bench_bfs_keep_component_cave_17x14` | 582_223 | 535_769 | -8.0 % |
+| `bench_bfs_keep_component_cave_7x7` | 170_115 | 97_253 | -42.8 % |
+| `bench_bfs_keep_component_maze_17x14` | 1_245_367 | 1_113_013 | -10.6 % |
+| `bench_bfs_keep_component_maze_7x7` | 310_087 | 164_579 | -46.9 % |
+| `bench_bfs_keep_component_serpentine_17x14` | 2_080_829 | 1_840_935 | -11.5 % |
+| `bench_bfs_keep_component_serpentine_7x7` | 330_083 | 174_197 | -47.2 % |
+| `bench_bfs_keep_component_unreachable_17x14` | 283_755 | 264_411 | -6.8 % |
+| `bench_bfs_keep_component_unreachable_7x7` | 130_123 | 78_017 | -40.0 % |
+| `bench_bfs_range_3_cave_17x14` | 84_507 | 84_507 | +0.0 % |
+| `bench_bfs_range_3_cave_7x7` | 62_061 | 62_061 | +0.0 % |
+| `bench_bfs_range_3_empty_17x14` | 91_617 | 91_617 | +0.0 % |
+| `bench_bfs_range_3_empty_7x7` | 62_061 | 62_061 | +0.0 % |
+| `bench_bfs_range_3_maze_17x14` | 90_627 | 90_627 | +0.0 % |
+| `bench_bfs_range_3_maze_7x7` | 62_061 | 62_061 | +0.0 % |
+| `bench_bfs_range_6_cave_17x14` | 145_825 | 145_825 | +0.0 % |
+| `bench_bfs_range_6_cave_7x7` | 92_415 | 92_415 | +0.0 % |
+| `bench_bfs_range_6_empty_17x14` | 159_255 | 159_255 | +0.0 % |
+| `bench_bfs_range_6_empty_7x7` | 92_415 | 92_415 | +0.0 % |
+| `bench_bfs_range_6_maze_17x14` | 149_575 | 149_575 | +0.0 % |
+| `bench_bfs_range_6_maze_7x7` | 92_415 | 92_415 | +0.0 % |
+| `bench_bfs_reachable_cave_17x14` | 557_039 | 538_169 | -3.4 % |
+| `bench_bfs_reachable_cave_7x7` | 104_253 | 99_453 | -4.6 % |
+| `bench_bfs_reachable_maze_17x14` | 1_154_583 | 1_115_413 | -3.4 % |
+| `bench_bfs_reachable_maze_7x7` | 175_079 | 166_779 | -4.7 % |
+| `bench_bfs_reachable_serpentine_17x14` | 1_908_405 | 1_843_335 | -3.4 % |
+| `bench_bfs_reachable_serpentine_7x7` | 185_197 | 176_397 | -4.8 % |
+| `bench_bfs_reachable_unreachable_17x14` | 276_581 | 266_811 | -3.5 % |
+| `bench_bfs_reachable_unreachable_7x7` | 84_017 | 80_217 | -4.5 % |
+| `bench_bfs_search_cave_far_17x14` | 706_135 | 706_135 | +0.0 % |
+| `bench_bfs_search_cave_far_7x7` | 131_733 | 131_733 | +0.0 % |
+| `bench_bfs_search_cave_near_17x14` | 112_141 | 112_141 | +0.0 % |
+| `bench_bfs_search_cave_near_7x7` | 81_521 | 81_521 | +0.0 % |
+| `bench_bfs_search_empty_far_17x14` | 570_033 | 570_033 | +0.0 % |
+| `bench_bfs_search_empty_far_7x7` | 131_733 | 131_733 | +0.0 % |
+| `bench_bfs_search_empty_near_17x14` | 107_285 | 107_285 | +0.0 % |
+| `bench_bfs_search_empty_near_7x7` | 82_241 | 82_241 | +0.0 % |
+| `bench_bfs_search_maze_far_17x14` | 1_519_526 | 1_519_526 | +0.0 % |
+| `bench_bfs_search_maze_far_7x7` | 239_984 | 239_984 | +0.0 % |
+| `bench_bfs_search_maze_near_17x14` | 102_815 | 102_815 | +0.0 % |
+| `bench_bfs_search_maze_near_7x7` | 78_204 | 78_204 | +0.0 % |
+| `bench_bfs_search_serpentine_far_17x14` | 2_532_090 | 2_532_090 | +0.0 % |
+| `bench_bfs_search_serpentine_far_7x7` | 257_269 | 257_269 | +0.0 % |
+| `bench_bfs_search_serpentine_near_17x14` | 102_295 | 102_295 | +0.0 % |
+| `bench_bfs_search_serpentine_near_7x7` | 80_361 | 80_361 | +0.0 % |
+| `bench_bfs_search_unreachable_far_17x14` | 263_320 | 263_320 | +0.0 % |
+| `bench_bfs_search_unreachable_far_7x7` | 89_843 | 89_843 | +0.0 % |
+| `bench_bfs_search_unreachable_near_17x14` | 266_118 | 266_118 | +0.0 % |
+| `bench_bfs_search_unreachable_near_7x7` | 67_873 | 67_873 | +0.0 % |
+
+#### L3 Dial
+
+| Test | Before | After | Delta |
+|---|---:|---:|---:|
+| `bench_dial_cave_17x14` | 1_427_654 | 1_406_744 | -1.5 % |
+| `bench_dial_cave_17x14_classes_0` | 938_551 | 918_341 | -2.2 % |
+| `bench_dial_cave_17x14_classes_1` | 1_393_694 | 1_372_784 | -1.5 % |
+| `bench_dial_cave_17x14_classes_3` | 1_464_174 | 1_443_264 | -1.4 % |
+| `bench_dial_cave_17x14_near` | 289_645 | 283_435 | -2.1 % |
+| `bench_dial_cave_7x7` | 298_947 | 290_637 | -2.8 % |
+| `bench_dial_cave_7x7_classes_0` | 175_278 | 167_668 | -4.3 % |
+| `bench_dial_empty_17x14` | 1_184_765 | 1_167_355 | -1.5 % |
+| `bench_dial_empty_17x14_classes_0` | 763_597 | 746_887 | -2.2 % |
+| `bench_dial_field_cave_17x14_budget_8` | 335_705 | 326_895 | -2.6 % |
+| `bench_dial_field_empty_17x14_budget_2` | 126_717 | 122_107 | -3.6 % |
+| `bench_dial_field_empty_17x14_budget_8` | 347_555 | 338_745 | -2.5 % |
+| `bench_dial_field_empty_17x14_classes_0_budget_2` | 89_901 | 85_291 | -5.1 % |
+| `bench_dial_field_empty_17x14_classes_0_budget_8` | 248_637 | 239_827 | -3.5 % |
+| `bench_dial_field_empty_17x14_classes_1_budget_2` | 118_199 | 113_589 | -3.9 % |
+| `bench_dial_field_empty_17x14_classes_1_budget_8` | 331_801 | 322_991 | -2.7 % |
+| `bench_dial_field_empty_17x14_classes_3_budget_2` | 134_645 | 134_645 | +0.0 % |
+| `bench_dial_field_empty_17x14_classes_3_budget_8` | 362_719 | 358_519 | -1.2 % |
+| `bench_dial_field_empty_7x7_classes_0_budget_1` | 48_787 | 45_077 | -7.6 % |
+| `bench_dial_field_empty_7x7_classes_0_budget_4` | 89_431 | 83_421 | -6.7 % |
+| `bench_dial_field_empty_7x7_classes_2_budget_1` | 69_315 | 65_405 | -5.6 % |
+| `bench_dial_field_empty_7x7_classes_2_budget_4` | 130_947 | 124_937 | -4.6 % |
+| `bench_dial_maze_17x14` | 3_364_897 | 3_318_087 | -1.4 % |
+| `bench_dial_maze_17x14_classes_0` | 2_005_148 | 1_964_638 | -2.0 % |
+| `bench_dial_serpentine_17x14` | 5_094_739 | 5_027_629 | -1.3 % |
+| `bench_dial_serpentine_17x14_classes_0` | 3_293_977 | 3_227_567 | -2.0 % |
+| `bench_dial_unreachable_17x14` | 681_530 | 666_920 | -2.1 % |
+
+#### L4 Caver
+
+| Test | Before | After | Delta |
+|---|---:|---:|---:|
+| `bench_caver_fill_dense_17x14` | 31_973 | 31_973 | +0.0 % |
+| `bench_caver_fill_half_17x14` | 28_097 | 28_097 | +0.0 % |
+| `bench_caver_fill_sparse_17x14` | 31_973 | 31_973 | +0.0 % |
+| `bench_caver_generate_17x14_order_0` | 27_157 | 27_157 | +0.0 % |
+| `bench_caver_generate_17x14_order_1` | 75_727 | 72_717 | -4.0 % |
+| `bench_caver_generate_17x14_order_3` | 146_747 | 143_737 | -2.1 % |
+| `bench_caver_generate_17x14_order_5` | 218_567 | 215_557 | -1.4 % |
+| `bench_caver_generate_19x13_order_3` | 147_247 | 144_237 | -2.0 % |
+| `bench_caver_generate_7x7_order_0` | 27_157 | 27_157 | +0.0 % |
+| `bench_caver_generate_7x7_order_1` | 53_967 | 50_957 | -5.6 % |
+| `bench_caver_generate_7x7_order_3` | 86_027 | 83_017 | -3.5 % |
+| `bench_caver_generate_connected_17x14` | 432_232 | 412_358 | -4.6 % |
+| `bench_caver_keep_component_17x14` | 300_925 | 284_161 | -5.6 % |
+| `bench_caver_keep_component_maze_17x14` | 1_245_367 | 1_113_013 | -10.6 % |
+| `bench_caver_keep_component_runs_17x14` | 376_836 | 376_836 | +0.0 % |
+| `bench_caver_keep_component_runs_first_17x14` | 380_626 | 380_626 | +0.0 % |
+| `bench_caver_keep_component_runs_maze_17x14` | 1_445_492 | 1_445_492 | +0.0 % |
+| `bench_caver_keep_component_runs_serpentine_17x14` | 1_504_878 | 1_504_878 | +0.0 % |
+| `bench_caver_keep_component_serpentine_17x14` | 2_080_829 | 1_840_935 | -11.5 % |
+
+#### L5 Mazer and Digger
+
+| Test | Before | After | Delta |
+|---|---:|---:|---:|
+| `bench_digger_corridor_17x14` | 314_852 | 310_722 | -1.3 % |
+| `bench_digger_maze_17x14` | 3_229_661 | 3_094_676 | -4.2 % |
+| `bench_mazer_17x14_order_0` | 2_875_890 | 2_900_244 | +0.8 % |
+| `bench_mazer_17x14_order_0_seeds` | 23_573_184 | 23_068_131 | -2.1 % |
+| `bench_mazer_17x14_order_1` | 1_826_661 | 1_499_695 | -17.9 % |
+| `bench_mazer_17x14_order_1_seeds` | 14_796_998 | 13_857_147 | -6.4 % |
+| `bench_mazer_19x13_order_0` | 3_167_395 | 2_890_702 | -8.7 % |
+| `bench_mazer_7x7_order_0` | 524_603 | 516_043 | -1.6 % |
+
+#### L6 Walker
+
+| Test | Before | After | Delta |
+|---|---:|---:|---:|
+| `bench_walker_17x14_0` | 36_481 | 34_901 | -4.3 % |
+| `bench_walker_17x14_200` | 1_001_849 | 970_779 | -3.1 % |
+| `bench_walker_17x14_50` | 301_845 | 294_005 | -2.6 % |
+| `bench_walker_17x14_500` | 2_467_497 | 2_411_657 | -2.3 % |
+| `bench_walker_17x14_504` | 2_462_993 | 2_406_413 | -2.3 % |
+| `bench_walker_19x13_200` | 1_008_929 | 972_589 | -3.6 % |
+| `bench_walker_3x3_50` | 305_375 | 297_365 | -2.6 % |
+| `bench_walker_7x7_200` | 995_139 | 962_659 | -3.3 % |
+| `bench_walker_7x7_50` | 302_475 | 294_305 | -2.7 % |
+
+#### L7 Spreader (max / mean over 256 seeds)
+
+| Test | Before | After | Delta |
+|---|---:|---:|---:|
+| `bench_spreader_generate_cave_17x14_1` | 204_839 / 153_540 | 186_639 / 138_480 | -8.9 % / -9.8 % |
+| `bench_spreader_generate_cave_17x14_20` | 308_848 / 258_451 | 291_588 / 244_582 | -5.6 % / -5.4 % |
+| `bench_spreader_generate_cave_17x14_5` | 340_087 / 273_493 | 320_687 / 259_514 | -5.7 % / -5.1 % |
+| `bench_spreader_generate_cave_17x14_60` | 322_711 / 266_711 | 305_451 / 252_801 | -5.3 % / -5.2 % |
+| `bench_spreader_generate_cave_7x7_1` | 176_831 / 142_231 | 161_121 / 128_772 | -8.9 % / -9.5 % |
+| `bench_spreader_generate_cave_7x7_20` | 219_394 / 182_146 | 208_954 / 173_856 | -4.8 % / -4.6 % |
+| `bench_spreader_generate_cave_7x7_5` | 234_194 / 180_396 | 221_614 / 172_091 | -5.4 % / -4.6 % |
+| `bench_spreader_generate_d30_17x14_1` | 178_633 / 177_424 | 162_113 / 160_904 | -9.2 % / -9.3 % |
+| `bench_spreader_generate_d30_17x14_20` | 297_136 / 240_294 | 282_016 / 228_242 | -5.1 % / -5.0 % |
+| `bench_spreader_generate_d30_17x14_5` | 306_469 / 249_910 | 291_349 / 237_851 | -4.9 % / -4.8 % |
+| `bench_spreader_generate_d30_17x14_60` | 314_275 / 242_623 | 297_015 / 230_403 | -5.5 % / -5.0 % |
+| `bench_spreader_generate_empty_17x14_1` | 203_769 / 141_298 | 186_639 / 128_053 | -8.4 % / -9.4 % |
+| `bench_spreader_generate_empty_17x14_20` | 349_586 / 275_706 | 330_186 / 260_745 | -5.5 % / -5.4 % |
+| `bench_spreader_generate_empty_17x14_5` | 386_026 / 259_599 | 361_304 / 249_697 | -6.4 % / -3.8 % |
+| `bench_spreader_generate_empty_17x14_60` | 342_340 / 274_510 | 322_940 / 259_733 | -5.7 % / -5.4 % |
+| `bench_spreader_generate_empty_7x7_1` | 176_841 / 140_967 | 161_121 / 127_590 | -8.9 % / -9.5 % |
+| `bench_spreader_generate_empty_7x7_20` | 234_544 / 184_367 | 221_964 / 175_765 | -5.4 % / -4.7 % |
+| `bench_spreader_generate_empty_7x7_5` | 234_204 / 184_027 | 221_624 / 175_425 | -5.4 % / -4.7 % |
+| `bench_spreader_generate_maze_17x14_1` | 204_839 / 162_112 | 186_639 / 146_514 | -8.9 % / -9.6 % |
+| `bench_spreader_generate_maze_17x14_20` | 317_978 / 248_152 | 300_718 / 235_427 | -5.4 % / -5.1 % |
+| `bench_spreader_generate_maze_17x14_5` | 309_009 / 258_496 | 291_749 / 245_474 | -5.6 % / -5.0 % |
+| `bench_spreader_generate_maze_17x14_60` | 314_372 / 251_565 | 297_112 / 238_626 | -5.5 % / -5.1 % |
+| `bench_spreader_generate_maze_7x7_1` | 176_201 / 150_137 | 161_121 / 136_727 | -8.6 % / -8.9 % |
+| `bench_spreader_generate_maze_7x7_16` | 106_509 / 105_300 | 103_059 / 101_850 | -3.2 % / -3.3 % |
+| `bench_spreader_generate_maze_7x7_5` | 213_251 / 168_943 | 202_811 / 161_877 | -4.9 % / -4.2 % |
+| `bench_spreader_generate_sparse2_10x25_1` | 135_256 / 131_275 | 131_176 / 127_195 | -3.0 % / -3.1 % |
+| `bench_spreader_generate_sparse5_17x14_1` | 149_625 / 139_223 | 145_545 / 135_143 | -2.7 % / -2.9 % |
+| `bench_spreader_generate_sparse5_17x14_2` | 149_865 / 143_721 | 145_445 / 139_301 | -2.9 % / -3.1 % |
+

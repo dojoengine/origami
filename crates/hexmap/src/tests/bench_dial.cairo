@@ -1714,7 +1714,7 @@ fn bench_dial_field_cave_17x14_budget_8() {
 }
 
 #[test]
-#[available_gas(l2_gas: 95000)]
+#[available_gas(l2_gas: 90000)]
 fn bench_dial_field_empty_17x14_classes_0_budget_2() {
     let costs = array![].span();
     Dial::field_of_movement(EMPTY_17X14, 17, 14, 110, 2, costs);
@@ -1756,21 +1756,21 @@ fn bench_dial_field_empty_17x14_classes_3_budget_8() {
 }
 
 #[test]
-#[available_gas(l2_gas: 52000)]
+#[available_gas(l2_gas: 48000)]
 fn bench_dial_field_empty_7x7_classes_0_budget_1() {
     let costs = array![].span();
     Dial::field_of_movement(EMPTY_7X7, 7, 7, 8, 1, costs);
 }
 
 #[test]
-#[available_gas(l2_gas: 94000)]
+#[available_gas(l2_gas: 88000)]
 fn bench_dial_field_empty_7x7_classes_0_budget_4() {
     let costs = array![].span();
     Dial::field_of_movement(EMPTY_7X7, 7, 7, 8, 4, costs);
 }
 
 #[test]
-#[available_gas(l2_gas: 73000)]
+#[available_gas(l2_gas: 69000)]
 fn bench_dial_field_empty_7x7_classes_2_budget_1() {
     let costs = array![CAVE_7X7_COST_2, CAVE_7X7_COST_3].span();
     Dial::field_of_movement(EMPTY_7X7, 7, 7, 8, 1, costs);

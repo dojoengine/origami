@@ -1776,7 +1776,7 @@ fn bench_walker_variant_loop_36_inline() {
 }
 
 #[test]
-#[available_gas(l2_gas: 4113000)]
+#[available_gas(l2_gas: 3676000)]
 fn bench_walker_variant_random_next_below() {
     let (x, y, seed) = start(17, 14, SEED);
     let mut walk = doubled(17, 14, x, y);
@@ -1803,7 +1803,7 @@ fn bench_walker_variant_random_pairs() {
 }
 
 #[test]
-#[available_gas(l2_gas: 7238000)]
+#[available_gas(l2_gas: 6744000)]
 fn bench_walker_variant_naive() {
     let grid = naive(17, 14, STEPS, SEED);
     assert_closed(grid, 17, 14);

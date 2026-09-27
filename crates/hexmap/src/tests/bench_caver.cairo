@@ -563,7 +563,7 @@ fn bench_caver_generate_7x7_order_0() {
 }
 
 #[test]
-#[available_gas(l2_gas: 57000)]
+#[available_gas(l2_gas: 54000)]
 fn bench_caver_generate_7x7_order_1() {
     assert!(Caver::generate(7, 7, 1, SEED) != 0);
 }
@@ -575,7 +575,7 @@ fn bench_caver_generate_7x7_order_3() {
 }
 
 #[test]
-#[available_gas(l2_gas: 316000)]
+#[available_gas(l2_gas: 299000)]
 fn bench_caver_keep_component_17x14() {
     // 7 * 17 + 8: centre of the board, floor in CAVE_17X14
     assert!(Caver::keep_component(CAVE_17X14, 17, 14, 127) != 0);
@@ -599,7 +599,7 @@ pub fn keep_component_dilation(grid: felt252, width: u8, height: u8, from: u8) -
 }
 
 #[test]
-#[available_gas(l2_gas: 335000)]
+#[available_gas(l2_gas: 316000)]
 fn bench_caver_variant_keep_component_dilation_17x14() {
     assert!(keep_component_dilation(CAVE_17X14, 17, 14, 127) != 0);
 }
@@ -624,7 +624,7 @@ fn bench_caver_keep_component_runs_first_17x14() {
 }
 
 #[test]
-#[available_gas(l2_gas: 1308000)]
+#[available_gas(l2_gas: 1169000)]
 fn bench_caver_keep_component_maze_17x14() {
     assert!(Caver::keep_component(MAZE_17X14, 17, 14, MAZE_17X14_FAR_FROM) != 0);
 }
@@ -636,7 +636,7 @@ fn bench_caver_keep_component_runs_maze_17x14() {
 }
 
 #[test]
-#[available_gas(l2_gas: 2185000)]
+#[available_gas(l2_gas: 1933000)]
 fn bench_caver_keep_component_serpentine_17x14() {
     assert!(Caver::keep_component(SERPENTINE_17X14, 17, 14, SERPENTINE_17X14_FAR_FROM) != 0);
 }
