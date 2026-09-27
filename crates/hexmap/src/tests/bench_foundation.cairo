@@ -578,6 +578,49 @@ fn bench_rng_draw6_counter() {
     assert!(acc != 0);
 }
 
+/// `DivRem` of a pool by a runtime bound of at most 255.
+impl BenchDivRemByte of DivRemHelper<u128, u8> {
+    type DivT = BoundedInt<0, 0xffffffffffffffffffffffffffffffff>;
+    type RemT = BoundedInt<0, 254>;
+}
+
+/// `DivRem` of a position by a runtime width.
+impl BenchDivRemPosition of DivRemHelper<u8, u8> {
+    type DivT = BoundedInt<0, 255>;
+    type RemT = BoundedInt<0, 254>;
+}
+
+#[test]
+#[feature("bounded-int-utils")]
+#[available_gas(l2_gas: 600000)]
+fn bench_u128_divrem_bounded_byte() {
+    let divisor: NonZero<u8> = 6;
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let value = u256 { low: n.into(), high: n.into() };
+        let (q, r) = div_rem::<_, _, BenchDivRemByte>(value.low, divisor);
+        acc += upcast::<_, felt252>(q) + upcast::<_, felt252>(r);
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[feature("bounded-int-utils")]
+#[available_gas(l2_gas: 600000)]
+fn bench_u8_divrem_bounded() {
+    let divisor: NonZero<u8> = 17;
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let (q, r) = div_rem::<_, _, BenchDivRemPosition>(n, divisor);
+        acc += upcast::<_, felt252>(q) + upcast::<_, felt252>(r);
+    }
+    assert!(acc != 0);
+}
+
 #[test]
 #[available_gas(l2_gas: 524000)]
 fn bench_shuffle6_table() {

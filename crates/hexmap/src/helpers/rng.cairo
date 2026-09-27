@@ -3,7 +3,8 @@
 //! One Poseidon permutation yields a 128-bit pool (the low limb of its second output; the first
 //! output is the next seed). Bounded integers are drawn from it by mixed radix
 //! (`(pool, r) = DivRem(pool, n)`), and the pool is refilled when it drops below 2^64. The
-//! divisions by the constant bounds 6, 216 and 720 use `bounded_int::div_rem` (see `GAS.md`).
+//! divisions by a bound of at most 255 and by the constants 216 and 720 use
+//! `bounded_int::div_rem` (see `GAS.md`).
 //!
 //! Bias: while the pool holds at least 2^64, the bounds already drawn from it multiply to less
 //! than `2^128 / 2^64`, so the bounds of all the draws of one pool multiply to less than
@@ -31,6 +32,12 @@ use origami_hexmap::helpers::bits::TWO_POW_64;
 
 /// Number of permutations of the 6 directions.
 const PERMUTATION_COUNT: NonZero<u128> = 720;
+
+/// `DivRem` of a pool by a bound of at most 255.
+impl DivRemByte of DivRemHelper<u128, u8> {
+    type DivT = BoundedInt<0, 0xffffffffffffffffffffffffffffffff>;
+    type RemT = BoundedInt<0, 254>;
+}
 
 /// `DivRem` of a pool by 6, with the ranges of the quotient and the remainder.
 impl DivRem6 of DivRemHelper<u128, UnitInt<6>> {
@@ -115,6 +122,23 @@ pub impl RngImpl of RngTrait {
         upcast(value)
     }
 
+    /// Draw an integer in `[0, bound)`, `bound` at most 255: `bounded_int` division (see `GAS.md`).
+    /// # Arguments
+    /// * `self` - The generator
+    /// * `bound` - The exclusive upper bound
+    /// # Returns
+    /// * The drawn integer
+    #[feature("bounded-int-utils")]
+    #[inline]
+    fn draw_byte(ref self: Rng, bound: NonZero<u8>) -> u8 {
+        if self.pool < TWO_POW_64 {
+            self.refill();
+        }
+        let (pool, value) = div_rem::<_, _, DivRemByte>(self.pool, bound);
+        self.pool = upcast(pool);
+        upcast(value)
+    }
+
     /// Draw an integer in `[0, bound)`.
     /// # Arguments
     /// * `self` - The generator
@@ -123,10 +147,7 @@ pub impl RngImpl of RngTrait {
     /// * The drawn integer
     #[inline]
     fn next_below(ref self: Rng, bound: u8) -> u8 {
-        let bound: u128 = bound.into();
-        let value = self.draw(bound.try_into().unwrap());
-        // [Return] value < bound <= 255
-        value.try_into().unwrap()
+        self.draw_byte(bound.try_into().unwrap())
     }
 
     /// Draw a uniform permutation of the 6 directions, packed 4 bits per direction (first in the

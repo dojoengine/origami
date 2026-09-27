@@ -8,6 +8,8 @@
 // Core imports
 
 use core::integer::Bitwise;
+#[feature("bounded-int-utils")]
+use core::internal::bounded_int::{BoundedInt, DivRemHelper, UnitInt, div_rem, upcast};
 
 // Constants
 
@@ -33,6 +35,18 @@ const INV_2: felt252 = 0x4000000000000088000000000000000000000000000000000000000
 const INV_4: felt252 = 0x60000000000000cc00000000000000000000000000000000000000000000001;
 /// 1/16 in the field.
 const INV_16: felt252 = 0x78000000000000ff00000000000000000000000000000000000000000000001;
+
+/// `DivRem` of a limb by 2^120: its top byte.
+impl DivRemTopByte of DivRemHelper<u128, UnitInt<0x1000000000000000000000000000000>> {
+    type DivT = BoundedInt<0, 0xff>;
+    type RemT = BoundedInt<0, 0xffffffffffffffffffffffffffffff>;
+}
+
+/// `DivRem` of a limb by 256: its low byte.
+impl DivRemLowByte of DivRemHelper<u128, UnitInt<0x100>> {
+    type DivT = BoundedInt<0, 0xffffffffffffffffffffffffffffff>;
+    type RemT = BoundedInt<0, 0xff>;
+}
 
 /// AND, XOR and OR of two limbs in a single application of the bitwise builtin. The corelib
 /// declares the same libfunc but keeps it private, and its `&`, `^`, `|` each pay a full
@@ -189,9 +203,8 @@ pub impl Bits of BitsTrait {
         // [Compute] Every byte of the sum is at most 16, every prefix sum at most 251
         let bytes = Self::byte_counts(value.low) + Self::byte_counts(value.high);
         let total: u256 = (bytes * BYTES_ONE).into();
-        let (count, _) = DivRem::div_rem(total.low, TWO_POW_120);
         // [Return] Byte 15 of the product holds the total
-        count.try_into().unwrap()
+        Self::top_byte(total.low)
     }
 
     /// Count the set bits of a single limb.
@@ -201,8 +214,31 @@ pub impl Bits of BitsTrait {
     /// * The number of set bits
     fn popcount_small(value: u128) -> u8 {
         let total: u256 = (Self::byte_counts(value) * BYTES_ONE).into();
-        let (count, _) = DivRem::div_rem(total.low, TWO_POW_120);
-        count.try_into().unwrap()
+        Self::top_byte(total.low)
+    }
+
+    /// Top byte of a limb, `value / 2^120` (`bounded_int` division, see `GAS.md`).
+    /// # Arguments
+    /// * `value` - The limb
+    /// # Returns
+    /// * Byte 15
+    #[feature("bounded-int-utils")]
+    #[inline(always)]
+    fn top_byte(value: u128) -> u8 {
+        let (byte, _) = div_rem::<_, _, DivRemTopByte>(value, 0x1000000000000000000000000000000);
+        upcast(byte)
+    }
+
+    /// Low byte of a limb and the rest (`bounded_int` division).
+    /// # Arguments
+    /// * `value` - The limb
+    /// # Returns
+    /// * `value / 256` and `value % 256`
+    #[feature("bounded-int-utils")]
+    #[inline(always)]
+    fn low_byte(value: u128) -> (u128, u8) {
+        let (rest, byte) = div_rem::<_, _, DivRemLowByte>(value, 0x100);
+        (upcast(rest), upcast(byte))
     }
 
     /// Byte counts of a limb, SWAR with the shifts as exact field divisions.

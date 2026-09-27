@@ -27,7 +27,7 @@ use core::traits::{BitAnd, BitOr};
 // Internal imports
 
 use origami_hexmap::helpers::asserter::Asserter;
-use origami_hexmap::helpers::bits::{BYTES_ONE, Bits, POW128, TWO_POW_120, TWO_POW_128};
+use origami_hexmap::helpers::bits::{BYTES_ONE, Bits, POW128, TWO_POW_128};
 use origami_hexmap::helpers::rng::{Rng, RngTrait};
 
 // Constants
@@ -228,13 +228,8 @@ pub(crate) impl U256BitSet of BitSetTrait<u256> {
     fn counts(self: u256) -> Counts {
         let (low_prefix, low_bytes) = prefix_counts(self.low);
         let (high_prefix, high_bytes) = prefix_counts(self.high);
-        let (low_count, _) = DivRem::div_rem(low_prefix, TWO_POW_120);
         Counts {
-            low_prefix,
-            low_bytes,
-            high_prefix,
-            high_bytes,
-            low_count: low_count.try_into().unwrap(),
+            low_prefix, low_bytes, high_prefix, high_bytes, low_count: Bits::top_byte(low_prefix),
         }
     }
 
@@ -387,11 +382,10 @@ fn select_in(value: u128, prefix: u128, bytes: u128, rank: u8) -> (u128, u128) {
     let base_nz: NonZero<u128> = base.try_into().unwrap();
     // [Compute] The byte and the number of set bits below it
     let (above, _) = DivRem::div_rem(value, base_nz);
-    let (_, byte) = DivRem::div_rem(above, 256);
+    let (_, byte) = Bits::low_byte(above);
     let (above, _) = DivRem::div_rem(prefix - bytes, base_nz);
-    let (_, below) = DivRem::div_rem(above, 256);
-    let byte: u8 = byte.try_into().unwrap();
-    let rank: u8 = rank - below.try_into().unwrap();
+    let (_, below) = Bits::low_byte(above);
+    let rank: u8 = rank - below;
     // [Compute] The nibble, then a table
     let (high, low) = DivRem::div_rem(byte, 16);
     let low_count = *NIBBLE_COUNT.span().at(low.into());
@@ -579,8 +573,8 @@ pub(crate) impl SpreaderInternal of SpreaderInternalTrait {
             let row: u32 = (n * 10 + k).into();
             let start = *SUBSET_OFFSETS.span().at(row);
             let end = *SUBSET_OFFSETS.span().at(row + 1);
-            let range: u128 = (end - start).into();
-            let index: u32 = rng.draw(range.try_into().unwrap()).try_into().unwrap();
+            let range: u8 = (end - start).try_into().unwrap();
+            let index: u32 = rng.next_below(range).into();
             let mask = *SUBSETS.span().at(start.into() + index);
             return base + set.deposit(mask);
         }
@@ -606,8 +600,7 @@ pub(crate) impl SpreaderInternal of SpreaderInternalTrait {
         set: T, total: u8, k: u8, size: u8, seed: felt252,
     ) -> felt252 {
         // [Compute] At most k <= 125 iterations, each bounded (see `pick`)
-        let range: u128 = size.into();
-        let range: NonZero<u128> = range.try_into().unwrap();
+        let range: NonZero<u8> = size.try_into().unwrap();
         let mut rng = RngTrait::new(seed);
         let mut counts: Option<Counts> = Option::None;
         let mut set = set;
@@ -636,7 +629,7 @@ pub(crate) impl SpreaderInternal of SpreaderInternalTrait {
     /// * The picked tile, as a set
     #[inline]
     fn pick<T, +BitSetTrait<T>, +Copy<T>, +Drop<T>>(
-        set: T, total: u8, size: u8, range: NonZero<u128>, ref counts: Option<Counts>, ref rng: Rng,
+        set: T, total: u8, size: u8, range: NonZero<u8>, ref counts: Option<Counts>, ref rng: Rng,
     ) -> T {
         // [Compute] Small set, byte counts not built: a walk of at most WALK_MAX - 1 steps
         if total <= WALK_MAX && counts.is_none() {
@@ -648,7 +641,7 @@ pub(crate) impl SpreaderInternal of SpreaderInternalTrait {
         if 10 * total_u16 >= 3 * size_u16 {
             let mut trials = TRIALS;
             while trials != 0 {
-                let index: u32 = rng.draw(range).try_into().unwrap();
+                let index: u32 = rng.draw_byte(range).into();
                 if let Option::Some(bit) = set.probe(index) {
                     if let Option::Some(mut built) = counts {
                         BitSetTrait::<T>::forget(ref built, index);
