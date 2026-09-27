@@ -5,29 +5,71 @@ on:
     tags:
       - "v*"
 
+env:
+  SCARB_VERSION: 2.19.4
+  CRATES: origami_defi origami_hexmap origami_map origami_random origami_rating origami_security
+
 jobs:
-  create-release:
+  release:
     runs-on: ubuntu-latest
-
+    name: Package and create the GitHub release
+    permissions:
+      contents: write
     steps:
-      - name: Extract version from tag
-        id: tag-version
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+      - name: Check the tag against the crate versions
         run: |
-          echo "::set-output name=version::${GITHUB_REF#refs/tags/v}"
-
-      - name: Create GitHub Release
-        run: |
-          curl -s \
-            -X POST \
-            -H "Authorization: token $GIT_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/releases \
-            -d '{
-              "tag_name": "v${{ steps.tag-version.outputs.version }}",
-              "name": "Release v${{ steps.tag-version.outputs.version }}",
-              "body": "Release of version ${{ steps.tag-version.outputs.version }}",
-              "draft": false,
-              "prerelease": false
-            }'
+          tag="${GITHUB_REF_NAME#v}"
+          metadata=$(scarb metadata --format-version 1 --no-deps)
+          for crate in $CRATES; do
+            version=$(jq -r --arg name "$crate" '.packages[] | select(.name == $name) | .version' <<< "$metadata")
+            if [ "$version" != "$tag" ]; then
+              echo "::error::tag $GITHUB_REF_NAME does not match $crate version '$version'"
+              exit 1
+            fi
+          done
+        shell: bash
+      - name: Package
+        run: scarb package $(printf -- '-p %s ' $CRATES)
+        shell: bash
+      - name: Create the GitHub release
         env:
-          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes --title "$GITHUB_REF_NAME" target/package/*.tar.zst
+        shell: bash
+
+  publish:
+    needs: release
+    runs-on: ubuntu-latest
+    name: Publish to scarbs.xyz
+    env:
+      # A secret cannot be tested in `if`: expose it as an env variable and test that instead.
+      # Without the secret every step is skipped and the job is a no-op.
+      SCARB_REGISTRY_AUTH_TOKEN: ${{ secrets.SCARB_REGISTRY_AUTH_TOKEN }}
+    steps:
+      - name: Registry token missing
+        if: ${{ env.SCARB_REGISTRY_AUTH_TOKEN == '' }}
+        run: echo "::notice::SCARB_REGISTRY_AUTH_TOKEN is not set, nothing published"
+      - uses: actions/checkout@v4
+        if: ${{ env.SCARB_REGISTRY_AUTH_TOKEN != '' }}
+      - uses: software-mansion/setup-scarb@v1
+        if: ${{ env.SCARB_REGISTRY_AUTH_TOKEN != '' }}
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+      - name: Publish the versions not yet on the registry
+        if: ${{ env.SCARB_REGISTRY_AUTH_TOKEN != '' }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          for crate in $CRATES; do
+            # Index path of the registry: `{first two}/{next two}/{name}.json`
+            index="https://scarbs.xyz/api/v1/index/${crate:0:2}/${crate:2:2}/${crate}.json"
+            if curl -sf "$index" | jq -e --arg v "$version" 'any(.[]; .v == $v)' > /dev/null; then
+              echo "$crate $version is already on scarbs.xyz, skipped"
+            else
+              scarb publish -p "$crate"
+            fi
+          done
+        shell: bash
