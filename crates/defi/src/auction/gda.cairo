@@ -1,11 +1,12 @@
 // External imports
 
 use fixed::exp::ExpTrait;
+use fixed::wide::{WideAdd, WideNarrow, WideSub, wide_mul};
 use fixed::{Fixed, ONE};
 
 // Internal imports
 
-use super::helpers::FixedStorePacking;
+use super::helpers::{FixedStorePacking, mul_div};
 
 /// A Gradual Dutch Auction represented using discrete time steps.
 /// The purchase price for a given quantity is calculated based on
@@ -31,16 +32,36 @@ pub impl DiscreteGDAImpl of DiscreteGDATrait {
     /// # Returns
     ///
     /// * A `Fixed` representing the purchase price.
+    ///
+    /// # Domain
+    ///
+    /// Values are Q32.32 (`|x| < 2^31`, resolution `2^-32`). The exponents are summed exactly
+    /// (`fixed::wide`) and `initial_price * (...) / (scale_factor - 1)` keeps its product on 128
+    /// bits, so only these values have to fit:
+    ///
+    /// * `(sold + quantity) * ln(scale_factor) - decay_constant * time_since_start < 31 ln 2`
+    ///   (21.49), i.e. `scale_factor^(sold + quantity) / exp(decay_constant * time_since_start)`
+    ///   `< 2^31`; below `-33 ln 2` a term is 0.
+    /// * the price itself (`< 2^31`).
+    ///
+    /// The relative error of the price grows like `(sold + quantity) * 2^-32` (the rounding of
+    /// `ln(scale_factor)`, scaled by the exponent).
+    ///
+    /// # Panics
+    ///
+    /// * `'Fixed: ln domain'` if `scale_factor <= 0`, `'Division by 0'` if `scale_factor == 1`.
+    /// * `'Fixed: exp overflow'` / `'Fixed: overflow'` outside the domain above.
     fn purchase_price(self: @DiscreteGDA, time_since_start: Fixed, quantity: Fixed) -> Fixed {
         // initial_price * scale_factor^sold * (scale_factor^quantity - 1)
         //   / (exp(decay_constant * time_since_start) * (scale_factor - 1)),
         // with the powers and the decay folded into two exponentials sharing one logarithm, so
         // that no intermediate term leaves the Q32.32 range.
         let ln_scale = (*self.scale_factor).ln();
-        let decay = *self.decay_constant * time_since_start;
-        let low = (*self.sold * ln_scale - decay).exp();
-        let high = ((*self.sold + quantity) * ln_scale - decay).exp();
-        *self.initial_price * (high - low) / (*self.scale_factor - ONE)
+        let base = wide_mul(*self.sold, ln_scale)
+            .sub(wide_mul(*self.decay_constant, time_since_start));
+        let low = base.narrow().exp();
+        let high = wide_mul(quantity, ln_scale).add(base).narrow().exp();
+        mul_div(*self.initial_price, high - low, *self.scale_factor - ONE)
     }
 }
 
@@ -66,15 +87,36 @@ pub impl ContinuousGDAImpl of ContinuousGDATrait {
     /// # Returns
     ///
     /// * A `Fixed` representing the purchase price.
+    ///
+    /// # Domain
+    ///
+    /// Values are Q32.32 (`|x| < 2^31`, resolution `2^-32`).
+    /// `initial_price * (...) / decay_constant` keeps its product on 128 bits, so only these
+    /// values have to fit:
+    ///
+    /// * `decay_constant * time_since_last < 2^31` (beyond `33 ln 2` its exponential is 0).
+    /// * `quantity / emission_rate < 2^31` and `decay_constant * quantity / emission_rate < 2^31`.
+    /// * `decay_constant * (quantity / emission_rate - time_since_last) < 31 ln 2` (21.49).
+    /// * the price itself (`< 2^31`).
+    ///
+    /// For a tiny `decay_constant * quantity / emission_rate` the price is a difference of two
+    /// exponentials divided by `decay_constant`: its absolute error is about
+    /// `initial_price * 2^-31 / decay_constant`.
+    ///
+    /// # Panics
+    ///
+    /// * `'Division by 0'` / `'Fixed: division by zero'` if `decay_constant` or `emission_rate`
+    ///   is 0.
+    /// * `'Fixed: exp overflow'` / `'Fixed: overflow'` outside the domain above.
     fn purchase_price(self: @ContinuousGDA, time_since_last: Fixed, quantity: Fixed) -> Fixed {
         // initial_price / decay_constant * (exp(decay_constant * quantity / emission_rate) - 1)
         //   / exp(decay_constant * time_since_last),
-        // with the decay folded into the exponentials so that no intermediate term leaves the
-        // Q32.32 range.
+        // with the decay folded into the exponentials and the division by decay_constant done
+        // last on a 128-bit product, so that no intermediate term leaves the Q32.32 range.
         let decay = *self.decay_constant * time_since_last;
-        let growth = (*self.decay_constant * quantity) / *self.emission_rate;
+        let growth = *self.decay_constant * (quantity / *self.emission_rate);
         let num = (growth - decay).exp() - (-decay).exp();
-        (*self.initial_price / *self.decay_constant) * num
+        mul_div(*self.initial_price, num, *self.decay_constant)
     }
 }
 
@@ -100,7 +142,7 @@ mod tests {
         // Local imports
 
         use super::super::{ContinuousGDA, ContinuousGDATrait};
-        use super::{Fixed, FixedTrait, ONE, TOLERANCE, assert_approx_equal};
+        use super::{Fixed, FixedTrait, ONE, TOLERANCE, ZERO, assert_approx_equal};
 
         // ipynb with calculations at
         // https://colab.research.google.com/drive/14elIFRXdG3_gyiI43tP47lUC_aClDHfB?usp=sharing
@@ -158,6 +200,33 @@ mod tests {
             let time_since_last = FixedTrait::from_int(40);
             let quantity = FixedTrait::from_int(35);
             let price: Fixed = auction.purchase_price(time_since_last, quantity);
+            assert_approx_equal(price, expected, TOLERANCE)
+        }
+
+        #[test]
+        fn test_price_small_decay() {
+            // `initial_price / decay_constant` (1.0e10) does not fit, the price does.
+            let auction = ContinuousGDA {
+                initial_price: FixedTrait::from_int(1000),
+                emission_rate: ONE,
+                decay_constant: FixedTrait::from_raw(429) // 9.988e-8
+            };
+            let expected = FixedTrait::from_raw(4294967510500); // 1000.000049942
+            let price: Fixed = auction.purchase_price(ZERO, ONE);
+            assert_approx_equal(price, expected, TOLERANCE)
+        }
+
+        #[test]
+        fn test_price_large_quantity() {
+            // `decay_constant * quantity` (1.0e10) does not fit, the price does.
+            let auction = ContinuousGDA {
+                initial_price: FixedTrait::from_int(1000000),
+                emission_rate: FixedTrait::from_int(1000000000),
+                decay_constant: FixedTrait::from_int(10),
+            };
+            let expected = FixedTrait::from_raw(19498236098); // 1e5 * (exp(-10) - exp(-20))
+            let price: Fixed = auction
+                .purchase_price(FixedTrait::from_int(2), FixedTrait::from_int(1000000000));
             assert_approx_equal(price, expected, TOLERANCE)
         }
     }
@@ -232,6 +301,21 @@ mod tests {
             let expected = FixedTrait::from_raw(0); // 1.6e-17, below the Q32.32 resolution
             let price = auction.purchase_price(FixedTrait::from_int(85), FixedTrait::from_int(1));
             assert_approx_equal(price, expected, TOLERANCE)
+        }
+
+        #[test]
+        fn test_price_large_initial_price() {
+            // `initial_price * (scale_factor - 1)` (2.4e9) does not fit, the price does.
+            let auction = DiscreteGDA {
+                sold: ZERO,
+                initial_price: FixedTrait::from_int(1200000000),
+                scale_factor: FixedTrait::from_int(3),
+                decay_constant: ZERO,
+            };
+            let expected = FixedTrait::from_int(1200000000);
+            let price = auction.purchase_price(ZERO, ONE);
+            // 1.2e9 carries the 2^-32 relative error of `exp` / `ln`: 1 unit is 8.3e-10 relative.
+            assert_approx_equal(price, expected, ONE.to_raw())
         }
     }
 }

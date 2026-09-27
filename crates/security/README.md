@@ -27,7 +27,7 @@ Features of the Commitment implementation include:
 Add the Origami Security crate from the [scarbs.xyz](https://scarbs.xyz) registry:
 
 ```sh
-scarb add origami_security@<version>
+scarb add origami_security@1.8.0
 ```
 
 Or from git, in the [dependencies] section of your Scarb.toml:

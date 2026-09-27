@@ -37,6 +37,22 @@ pub impl TVRGDATrait<T, +VRGDAVarsTrait<T>, +VRGDATargetTimeTrait<T>> of VRGDATr
     /// # Returns
     ///
     /// * A `Fixed` representing the price.
+    ///
+    /// # Domain
+    ///
+    /// Values are Q32.32 (`|x| < 2^31`, resolution `2^-32`); with
+    /// `x = time_since_start - get_target_sale_time(sold + 1)`:
+    ///
+    /// * `0 <= decay_constant < 1`, `sold + 1 < 2^31`, `|x| < 2^31`.
+    /// * `|x * ln(1 - decay_constant)| < 2^31`, and `x * ln(1 - decay_constant) < 31 ln 2`
+    ///   (21.49); below `-33 ln 2` the price is 0.
+    /// * the price itself (`< 2^31`).
+    ///
+    /// # Panics
+    ///
+    /// * `'Fixed: ln domain'` if `decay_constant >= 1`.
+    /// * `'Fixed: exp overflow'` / `'Fixed: overflow'` / `'i64_* Overflow'` outside the domain
+    ///   above.
     fn get_vrgda_price(self: @T, time_since_start: Fixed, sold: Fixed) -> Fixed {
         self.get_target_price()
             * ((time_since_start - self.get_target_sale_time(sold + ONE))
@@ -44,6 +60,13 @@ pub impl TVRGDATrait<T, +VRGDAVarsTrait<T>, +VRGDATargetTimeTrait<T>> of VRGDATr
                 .exp()
     }
 
+    /// Calculates the reverse VRGDA price: the price decays with the lead over the schedule
+    /// instead of the lag.
+    ///
+    /// # Domain
+    ///
+    /// The domain of `get_vrgda_price`, with `x = get_target_sale_time(sold + 1) -
+    /// time_since_start`.
     fn get_reverse_vrgda_price(self: @T, time_since_start: Fixed, sold: Fixed) -> Fixed {
         self.get_target_price()
             * ((self.get_target_sale_time(sold + ONE) - time_since_start)
@@ -83,6 +106,10 @@ impl LinearVRGDATargetTimeImpl of VRGDATargetTimeTrait<LinearVRGDA> {
     /// # Returns
     ///
     /// * A `Fixed` representing the target sale time.
+    ///
+    /// # Domain
+    ///
+    /// * `target_units_per_time != 0` and `sold / target_units_per_time < 2^31`.
     fn get_target_sale_time(self: @LinearVRGDA, sold: Fixed) -> Fixed {
         sold / *self.target_units_per_time
     }
@@ -117,10 +144,26 @@ pub impl LogisticVRGDATargetTimeImpl of VRGDATargetTimeTrait<LogisticVRGDA> {
     /// # Returns
     ///
     /// * A `Fixed` representing the target sale time.
+    ///
+    /// # Domain
+    ///
+    /// Values are Q32.32 (`|x| < 2^31`, resolution `2^-32`); `limit + sold` is never formed:
+    ///
+    /// * `max_sellable + 1 < 2^31`, `0 <= sold < max_sellable + 1`.
+    /// * `2 * sold / (max_sellable + 1 - sold) < 2^31`: only the last unit of a
+    ///   `max_sellable >= 2^30` auction is out.
+    /// * the target sale time itself (`time_scale * ln(...)`, `ln(...) <= 21.5`).
+    ///
+    /// # Panics
+    ///
+    /// * `'Fixed: ln domain'` if `sold > max_sellable + 1` or `sold <= -(max_sellable + 1)`,
+    ///   `'Fixed: division by zero'` if `sold == max_sellable + 1`, `'Fixed: overflow'` outside
+    ///   the domain above.
     fn get_target_sale_time(self: @LogisticVRGDA, sold: Fixed) -> Fixed {
-        // 2 * limit / (sold + limit) - 1 = (limit - sold) / (limit + sold)
-        let logistic_limit = *self.max_sellable + ONE;
-        -*self.time_scale * ((logistic_limit - sold) / (logistic_limit + sold)).ln()
+        // -ln(2 * limit / (sold + limit) - 1) = ln((limit + sold) / (limit - sold))
+        //   = ln_1p(2 * sold / (limit - sold)), which never forms `limit + sold`.
+        let ratio = sold / (*self.max_sellable + ONE - sold);
+        *self.time_scale * (ratio + ratio).ln_1p()
     }
 }
 pub impl LogisticVRGDAImpl = TVRGDATrait<LogisticVRGDA>;
@@ -202,7 +245,8 @@ mod tests {
     mod logistic {
         // Local imports
 
-        use super::super::{LogisticVRGDA, VRGDATrait};
+        use fixed::ONE;
+        use super::super::{LogisticVRGDA, VRGDATargetTimeTrait, VRGDATrait};
         use super::{FixedTrait, assert_rel_approx_eq};
 
         // Constants
@@ -214,6 +258,7 @@ mod tests {
         const MAX_SELLABLE: i32 = 1000000;
         const _0_0023: i64 = 9878425;
         const HUNDRED_DAYS_RAW: i64 = 371085174374400;
+        const DELTA: i64 = 42950;
 
         #[test]
         fn test_target_price() {
@@ -262,6 +307,20 @@ mod tests {
 
             let cost = auction.get_reverse_vrgda_price(time_delta, num_mint);
             assert_rel_approx_eq(cost, auction.target_price, FixedTrait::from_raw(DELTA_0_02));
+        }
+
+        #[test]
+        fn test_target_sale_time_large_max_sellable() {
+            // `max_sellable + 1 + sold` (2.2e9) does not fit, the target sale time does.
+            let auction = LogisticVRGDA {
+                target_price: FixedTrait::from_raw(_69_42),
+                decay_constant: FixedTrait::from_raw(_0_31),
+                max_sellable: FixedTrait::from_int(1200000000),
+                time_scale: ONE,
+            };
+            let expected = FixedTrait::from_raw(10298881756); // -ln(200000001 / 2200000001)
+            let time = auction.get_target_sale_time(FixedTrait::from_int(1000000000));
+            assert_rel_approx_eq(time, expected, FixedTrait::from_raw(DELTA));
         }
     }
 }

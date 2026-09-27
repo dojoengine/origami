@@ -30,7 +30,7 @@ The crate is designed to work seamlessly with the Dojo engine and other Origami 
 Add the Origami Random crate from the [scarbs.xyz](https://scarbs.xyz) registry:
 
 ```sh
-scarb add origami_random@<version>
+scarb add origami_random@1.8.0
 ```
 
 Or from git, in the [dependencies] section of your Scarb.toml:

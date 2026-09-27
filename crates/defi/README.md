@@ -41,7 +41,7 @@ scarb add origami_defi@1.8.0
 scarb add fixed@0.4.0
 ```
 
-Values are signed Q32.32 fixed-point numbers (`fixed::Fixed`): the range is `[-2^31, 2^31)` and the resolution is `2^-32`. An intermediate value outside this range panics with `'Fixed: overflow'`.
+Values are signed Q32.32 fixed-point numbers (`fixed::Fixed`): the range is `[-2^31, 2^31)` and the resolution is `2^-32`. Only the inputs and the result have to fit: the intermediate products are kept wide. The remaining domain limits are documented on each function (`# Domain`).
 
 ## How to Use
 
