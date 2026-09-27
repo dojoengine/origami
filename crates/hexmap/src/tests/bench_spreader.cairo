@@ -12,7 +12,7 @@ use core::poseidon::hades_permutation;
 // Internal imports
 
 use origami_hexmap::generators::spreader::{BitSetTrait, Spreader};
-use origami_hexmap::helpers::bits::{Bits, POW128};
+use origami_hexmap::helpers::bits::{BYTES_ONE, Bits, POW128, TWO_POW_120};
 use origami_hexmap::helpers::rng::{Rng, RngTrait};
 use origami_hexmap::tests::fixtures::*;
 
@@ -1487,16 +1487,35 @@ fn bench_spreader_micro_popcount_limbs() {
     assert!(acc == 180);
 }
 
+/// The first `Bits::popcount` (lot L0, loser): SWAR on the whole `u256`, 3 `u256` ANDs.
+fn popcount_swar(value: u256) -> u8 {
+    let odd_bits: u256 = 0x0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa;
+    let pairs_mask: u256 = 0x0333333333333333333333333333333333333333333333333333333333333333;
+    let nibbles_mask: u256 = 0x0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f;
+    let inv_2: felt252 = 0x400000000000008800000000000000000000000000000000000000000000001;
+    let inv_4: felt252 = 0x60000000000000cc00000000000000000000000000000000000000000000001;
+    let inv_16: felt252 = 0x78000000000000ff00000000000000000000000000000000000000000000001;
+    let pairs = Bits::to_felt(value) - Bits::to_felt(value & odd_bits) * inv_2;
+    let low = Bits::to_felt(pairs.into() & pairs_mask);
+    let nibbles = low + (pairs - low) * inv_4;
+    let low = Bits::to_felt(nibbles.into() & nibbles_mask);
+    let bytes: u256 = (low + (nibbles - low) * inv_16).into();
+    let total: felt252 = (bytes.low.into() + bytes.high.into()) * BYTES_ONE;
+    let total: u256 = total.into();
+    let (count, _) = DivRem::div_rem(total.low, TWO_POW_120);
+    count.try_into().unwrap()
+}
+
 #[test]
 #[available_gas(l2_gas: 243000)]
 fn bench_spreader_micro_popcount_bits() {
-    // `Bits::popcount` (loser here)
+    // The first `Bits::popcount`, SWAR on the whole `u256` (loser)
     let value: u256 = EMPTY_17X14.into();
     let mut acc: u8 = 0;
     let mut n: u8 = 10;
     while n != 0 {
         n -= 1;
-        acc = acc | Bits::popcount(value);
+        acc = acc | popcount_swar(value);
     }
     assert!(acc == 180);
 }

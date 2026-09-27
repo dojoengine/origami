@@ -6,7 +6,6 @@
 
 // Core imports
 
-use core::integer::Bitwise;
 use core::num::traits::OverflowingAdd;
 use core::poseidon::hades_permutation;
 
@@ -31,9 +30,6 @@ const FILL_17X14: felt252 = 0xced810e216a71359cdfca69663bef8793026be673435110eb0
 const FILL_7X7: felt252 = 0x110e30a9500;
 /// `Caver::generate(17, 14, 3, SEED)`.
 const CAVE_17X14: felt252 = 0x47c833e61fe70ff9cffcc7fe73fff07ffc7ffc7f3e3f100e0000000;
-
-/// AND, XOR and OR of two limbs in one builtin application, see `generators::caver`.
-extern fn bitwise(lhs: u128, rhs: u128) -> (u128, u128, u128) implicits(Bitwise) nopanic;
 
 // Reference
 
@@ -133,8 +129,8 @@ pub fn evolve<impl S: Step>(width: u8, height: u8, order: u8, grid: felt252) -> 
 
 #[inline(always)]
 fn bw(lhs: u256, rhs: u256) -> (u256, u256, u256) {
-    let (la, lx, lo) = bitwise(lhs.low, rhs.low);
-    let (ha, hx, ho) = bitwise(lhs.high, rhs.high);
+    let (la, lx, lo) = Bits::bitwise(lhs.low, rhs.low);
+    let (ha, hx, ho) = Bits::bitwise(lhs.high, rhs.high);
     (u256 { low: la, high: ha }, u256 { low: lx, high: hx }, u256 { low: lo, high: ho })
 }
 

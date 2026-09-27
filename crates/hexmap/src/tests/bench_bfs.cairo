@@ -10,7 +10,6 @@
 // Core imports
 
 use core::dict::{Felt252Dict, Felt252DictTrait};
-use core::integer::Bitwise;
 
 // Internal imports
 
@@ -25,9 +24,6 @@ use origami_hexmap::tests::fixtures::*;
 // Constants
 
 const INV_2: felt252 = 0x400000000000008800000000000000000000000000000000000000000000001;
-
-/// AND, XOR and OR of two limbs in one builtin application, see `finders::bfs`.
-extern fn bitwise(lhs: u128, rhs: u128) -> (u128, u128, u128) implicits(Bitwise) nopanic;
 
 // Shared prologue
 
@@ -53,19 +49,19 @@ fn backtrack(back: Back, target: @Endpoint, layers: Span<u256>) -> Span<u8> {
 
 /// First layer: the closed neighbourhood of an interior start.
 fn first_layer(start: @Endpoint, free: u256) -> u256 {
-    BfsInternal::and((*start.around + *start.power).into(), free)
+    Bits::and((*start.around + *start.power).into(), free)
 }
 
 /// Target neighbourhood.
 fn goal(target: @Endpoint, free: u256) -> u256 {
-    BfsInternal::and((*target.around).into(), free)
+    Bits::and((*target.around).into(), free)
 }
 
 /// Whether a layer touches the goal, both limbs.
 #[inline(always)]
 fn touches(low: u128, high: u128, goal: u256) -> bool {
-    let (hit_low, _, _) = bitwise(low, goal.low);
-    let (hit_high, _, _) = bitwise(high, goal.high);
+    let (hit_low, _, _) = Bits::bitwise(low, goal.low);
+    let (hit_high, _, _) = Bits::bitwise(high, goal.high);
     hit_low != 0 || hit_high != 0
 }
 
@@ -307,9 +303,9 @@ fn back_straight(back: Box<Back>, walk: Walk, layer: u256) -> Walk {
     let power = walk.power * walk.factor;
     let bits: u256 = power.into();
     let (hit, _, _) = if bits.high == 0 {
-        bitwise(bits.low, layer.low)
+        Bits::bitwise(bits.low, layer.low)
     } else {
-        bitwise(bits.high, layer.high)
+        Bits::bitwise(bits.high, layer.high)
     };
     if hit == 0 {
         return turn(back, walk, layer);
@@ -433,8 +429,8 @@ fn back_window(
     } else {
         back.around_even
     }).into();
-    let (low, _, _) = bitwise(mask.low, layer.low);
-    let (high, _, _) = bitwise(mask.high, layer.high);
+    let (low, _, _) = Bits::bitwise(mask.low, layer.low);
+    let (high, _, _) = Bits::bitwise(mask.high, layer.high);
     let hit: u128 = ((low.into() + high.into() * TWO_POW_128) * shift).try_into().unwrap();
     if odd {
         if hit >= window.top_odd {
@@ -560,7 +556,7 @@ fn distance_harness_two(grid: felt252, width: u8, height: u8, from: u8, to: u8) 
 fn distance_every_two(grid: felt252, width: u8, height: u8, from: u8, to: u8) -> u8 {
     let (step, _, start, target, free) = setup(grid, width, height, from, to);
     let goal = goal(@target, free);
-    let closed = BfsInternal::and((target.around + target.power).into(), free);
+    let closed = Bits::and((target.around + target.power).into(), free);
     let first = first_layer(@start, free);
     let mut low = first.low;
     let mut high = first.high;
@@ -617,8 +613,8 @@ fn distance_free_test(grid: felt252, width: u8, height: u8, from: u8, to: u8) ->
         count += 1;
     }
     loop {
-        let (left_low, _, _) = bitwise(free_low, goal.low);
-        let (left_high, _, _) = bitwise(free_high, goal.high);
+        let (left_low, _, _) = Bits::bitwise(free_low, goal.low);
+        let (left_high, _, _) = Bits::bitwise(free_high, goal.high);
         if left_low != goal.low || left_high != goal.high {
             break;
         }
@@ -668,23 +664,23 @@ fn distance_bidirectional(grid: felt252, width: u8, height: u8, from: u8, to: u8
     let mut count: u8 = 0;
     loop {
         let (low, high) = BfsInternal::expand(@step, a.low, a.high, Bits::to_felt(a));
-        let next = BfsInternal::and(u256 { low, high }, free_a);
+        let next = Bits::and(u256 { low, high }, free_a);
         if next == 0 {
             break Option::None;
         }
         count += 1;
-        if !(BfsInternal::and(next, b) == 0) {
+        if !(Bits::and(next, b) == 0) {
             break Option::Some(count);
         }
         free_a = free_a - next;
         a = next;
         let (low, high) = BfsInternal::expand(@step, b.low, b.high, Bits::to_felt(b));
-        let next = BfsInternal::and(u256 { low, high }, free_b);
+        let next = Bits::and(u256 { low, high }, free_b);
         if next == 0 {
             break Option::None;
         }
         count += 1;
-        if !(BfsInternal::and(next, a) == 0) {
+        if !(Bits::and(next, a) == 0) {
             break Option::Some(count);
         }
         free_b = free_b - next;

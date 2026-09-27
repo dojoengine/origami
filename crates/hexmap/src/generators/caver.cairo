@@ -4,10 +4,6 @@
 //! carry-save adder counts them bit-sliced, and the rule is two set operations. Rule `B4/S2`: a
 //! wall with at least 4 floor neighbours becomes floor, a floor with at least 2 stays floor.
 
-// Core imports
-
-use core::integer::Bitwise;
-
 // Internal imports
 
 use origami_hexmap::helpers::asserter::Asserter;
@@ -25,11 +21,6 @@ const SMALL_SIZE: u8 = 128;
 pub mod errors {
     pub const CAVER_POSITION_NOT_FLOOR: felt252 = 'Caver: position not floor';
 }
-
-/// AND, XOR and OR of two limbs in a single application of the bitwise builtin. The corelib
-/// declares the same libfunc but keeps it private, and its `&`, `^`, `|` each pay a full
-/// application.
-extern fn bitwise(lhs: u128, rhs: u128) -> (u128, u128, u128) implicits(Bitwise) nopanic;
 
 /// Shift constants of the neighbour planes.
 #[derive(Copy, Drop)]
@@ -188,8 +179,8 @@ impl CaverInternal of CaverInternalTrait {
     fn step(shifts: @Shifts, even: u256, grid: u256, felt: felt252) -> u256 {
         let shifts = *shifts;
         // [Compute] Split by row parity
-        let (low, _, _) = bitwise(grid.low, even.low);
-        let (high, _, _) = bitwise(grid.high, even.high);
+        let (low, _, _) = Bits::bitwise(grid.low, even.low);
+        let (high, _, _) = Bits::bitwise(grid.high, even.high);
         let grid_even = Bits::to_felt(u256 { low, high });
         let grid_odd = felt - grid_even;
         // [Compute] Neighbour planes: bit i of a plane is the grid at one neighbour of i
@@ -227,7 +218,7 @@ impl CaverInternal of CaverInternalTrait {
     #[inline]
     fn step_small(shifts: @Shifts, even: u128, grid: u128, felt: felt252) -> u128 {
         let shifts = *shifts;
-        let (grid_even, _, _) = bitwise(grid, even);
+        let (grid_even, _, _) = Bits::bitwise(grid, even);
         let grid_even: felt252 = grid_even.into();
         let grid_odd = felt - grid_even;
         Self::rule(
@@ -250,18 +241,18 @@ impl CaverInternal of CaverInternalTrait {
     #[inline(always)]
     fn rule(grid: u128, a: u128, b: u128, c: u128, d: u128, e: u128, f: u128) -> u128 {
         // [Compute] Full adders on (a, b, c) and (d, e, f)
-        let (ab, x, _) = bitwise(a, b);
-        let (xc, s1, _) = bitwise(x, c);
-        let (de, y, _) = bitwise(d, e);
-        let (yf, s2, _) = bitwise(y, f);
+        let (ab, x, _) = Bits::bitwise(a, b);
+        let (xc, s1, _) = Bits::bitwise(x, c);
+        let (de, y, _) = Bits::bitwise(d, e);
+        let (yf, s2, _) = Bits::bitwise(y, f);
         // [Compute] Half adder on the sums: weight-2 carry
-        let (c3, _, _) = bitwise(s1, s2);
+        let (c3, _, _) = Bits::bitwise(s1, s2);
         // [Compute] Full adder on the weight-2 carries
-        let (c12, x12, _) = bitwise(ab + xc, de + yf);
-        let (x3, b1, _) = bitwise(x12, c3);
+        let (c12, x12, _) = Bits::bitwise(ab + xc, de + yf);
+        let (x3, b1, _) = Bits::bitwise(x12, c3);
         // [Return] Born with 4+, survive with 2+
-        let (survive, _, _) = bitwise(grid, b1);
-        let (_, _, next) = bitwise(c12 + x3, survive);
+        let (survive, _, _) = Bits::bitwise(grid, b1);
+        let (_, _, next) = Bits::bitwise(c12 + x3, survive);
         next
     }
 }

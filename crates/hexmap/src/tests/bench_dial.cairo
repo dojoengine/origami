@@ -7,7 +7,6 @@
 // Core imports
 
 use core::dict::Felt252Dict;
-use core::integer::Bitwise;
 
 // Internal imports
 
@@ -29,9 +28,6 @@ const INV_2_128: felt252 = 0x800000000000010fffffffffffffffff7ffffffffffffef0000
 const INV_2: felt252 = 0x400000000000008800000000000000000000000000000000000000000000001;
 /// Repetitions of the microbenchmarks.
 const REPS: u8 = 100;
-
-/// AND, XOR and OR of two limbs in one builtin application, see `generators::caver`.
-extern fn bitwise(lhs: u128, rhs: u128) -> (u128, u128, u128) implicits(Bitwise) nopanic;
 
 /// Distance of an unreachable tile.
 pub const UNREACHABLE: u32 = 0xffffffff;
@@ -309,31 +305,31 @@ pub fn expand_triple(layout: @Layout, frontier: u256, unvisited: u256) -> u256 {
     let layout = *layout;
     let felt = Bits::to_felt(frontier);
     let double: u256 = (felt + felt).into();
-    let (_, _, pairs_low) = bitwise(frontier.low, double.low);
-    let (_, _, pairs_high) = bitwise(frontier.high, double.high);
-    let (even_low, _, _) = bitwise(pairs_low, layout.even.low);
-    let (even_high, _, _) = bitwise(pairs_high, layout.even.high);
+    let (_, _, pairs_low) = Bits::bitwise(frontier.low, double.low);
+    let (_, _, pairs_high) = Bits::bitwise(frontier.high, double.high);
+    let (even_low, _, _) = Bits::bitwise(pairs_low, layout.even.low);
+    let (even_high, _, _) = Bits::bitwise(pairs_high, layout.even.high);
     let pairs_even: felt252 = even_low.into() + even_high.into() * TWO_POW_128;
     let pairs_odd: felt252 = pairs_low.into() + pairs_high.into() * TWO_POW_128 - pairs_even;
     let up: u256 = (pairs_even * layout.up_even + pairs_odd * layout.up_odd).into();
     let down: u256 = (pairs_even * layout.down_even + pairs_odd * layout.down_odd).into();
     let east: u256 = (felt * INV_2).into();
-    let (_, _, low) = bitwise(pairs_low, east.low);
-    let (_, _, low) = bitwise(low, up.low);
-    let (_, _, low) = bitwise(low, down.low);
-    let (low, _, _) = bitwise(low, unvisited.low);
-    let (_, _, high) = bitwise(pairs_high, east.high);
-    let (_, _, high) = bitwise(high, up.high);
-    let (_, _, high) = bitwise(high, down.high);
-    let (high, _, _) = bitwise(high, unvisited.high);
+    let (_, _, low) = Bits::bitwise(pairs_low, east.low);
+    let (_, _, low) = Bits::bitwise(low, up.low);
+    let (_, _, low) = Bits::bitwise(low, down.low);
+    let (low, _, _) = Bits::bitwise(low, unvisited.low);
+    let (_, _, high) = Bits::bitwise(pairs_high, east.high);
+    let (_, _, high) = Bits::bitwise(high, up.high);
+    let (_, _, high) = Bits::bitwise(high, down.high);
+    let (high, _, _) = Bits::bitwise(high, unvisited.high);
     u256 { low, high }
 }
 
 /// Set intersection, one builtin application per limb.
 #[inline(always)]
 pub fn and(lhs: u256, rhs: u256) -> u256 {
-    let (low, _, _) = bitwise(lhs.low, rhs.low);
-    let (high, _, _) = bitwise(lhs.high, rhs.high);
+    let (low, _, _) = Bits::bitwise(lhs.low, rhs.low);
+    let (high, _, _) = Bits::bitwise(lhs.high, rhs.high);
     u256 { low, high }
 }
 
@@ -405,7 +401,7 @@ fn bench_dial_micro_and_limb() {
     let mut n = REPS;
     while n != 0 {
         n -= 1;
-        let (low, _, _) = bitwise(lhs.low, rhs.low);
+        let (low, _, _) = Bits::bitwise(lhs.low, rhs.low);
         acc += low.into();
     }
     assert!(acc != 0);
@@ -536,9 +532,9 @@ pub fn setup(
 #[inline(always)]
 fn hits(value: u256, target: u256) -> bool {
     let (hit, _, _) = if target.low != 0 {
-        bitwise(value.low, target.low)
+        Bits::bitwise(value.low, target.low)
     } else {
-        bitwise(value.high, target.high)
+        Bits::bitwise(value.high, target.high)
     };
     hit != 0
 }
@@ -605,23 +601,23 @@ pub fn forward_winner(setup: @Setup) -> (Array<u256>, u32) {
 pub fn expand_felt(layout: @Layout, frontier: u256, felt: felt252, unvisited: u256) -> u256 {
     let layout = *layout;
     let double: u256 = (felt + felt).into();
-    let (_, _, pairs_low) = bitwise(frontier.low, double.low);
-    let (_, _, pairs_high) = bitwise(frontier.high, double.high);
-    let (even_low, _, _) = bitwise(pairs_low, layout.even.low);
-    let (even_high, _, _) = bitwise(pairs_high, layout.even.high);
+    let (_, _, pairs_low) = Bits::bitwise(frontier.low, double.low);
+    let (_, _, pairs_high) = Bits::bitwise(frontier.high, double.high);
+    let (even_low, _, _) = Bits::bitwise(pairs_low, layout.even.low);
+    let (even_high, _, _) = Bits::bitwise(pairs_high, layout.even.high);
     let pairs_even: felt252 = even_low.into() + even_high.into() * TWO_POW_128;
     let pairs_odd: felt252 = pairs_low.into() + pairs_high.into() * TWO_POW_128 - pairs_even;
     let up: u256 = (pairs_even * layout.up_even + pairs_odd * layout.up_odd).into();
     let down: u256 = (pairs_even * layout.down_even + pairs_odd * layout.down_odd).into();
     let east: u256 = (felt * INV_2).into();
-    let (_, _, low) = bitwise(pairs_low, east.low);
-    let (_, _, low) = bitwise(low, up.low);
-    let (_, _, low) = bitwise(low, down.low);
-    let (low, _, _) = bitwise(low, unvisited.low);
-    let (_, _, high) = bitwise(pairs_high, east.high);
-    let (_, _, high) = bitwise(high, up.high);
-    let (_, _, high) = bitwise(high, down.high);
-    let (high, _, _) = bitwise(high, unvisited.high);
+    let (_, _, low) = Bits::bitwise(pairs_low, east.low);
+    let (_, _, low) = Bits::bitwise(low, up.low);
+    let (_, _, low) = Bits::bitwise(low, down.low);
+    let (low, _, _) = Bits::bitwise(low, unvisited.low);
+    let (_, _, high) = Bits::bitwise(pairs_high, east.high);
+    let (_, _, high) = Bits::bitwise(high, up.high);
+    let (_, _, high) = Bits::bitwise(high, down.high);
+    let (high, _, _) = Bits::bitwise(high, unvisited.high);
     u256 { low, high }
 }
 
@@ -957,21 +953,21 @@ fn harness_cost(classes: @HarnessClasses, bit: u128, high: bool) -> u32 {
     } else {
         (classes.any.low, classes.upper.low, classes.odd.low)
     };
-    let (hit, _, _) = bitwise(bit, any);
+    let (hit, _, _) = Bits::bitwise(bit, any);
     if hit == 0 {
         return 1;
     }
     if !classes.has_three && !classes.has_four {
         return 2;
     }
-    let (hit, _, _) = bitwise(bit, upper);
+    let (hit, _, _) = Bits::bitwise(bit, upper);
     if hit == 0 {
         return 2;
     }
     if !classes.has_four {
         return 3;
     }
-    let (hit, _, _) = bitwise(bit, odd);
+    let (hit, _, _) = Bits::bitwise(bit, odd);
     if hit == 0 {
         3
     } else {
@@ -1003,22 +999,22 @@ fn step_mask(
         bit * (INV_2 + 2 + 3 * (layout.up_even + layout.down_even))
     };
     let (hits, high) = if position < 127 - width {
-        let (hits, _, _) = bitwise(mask.try_into().unwrap(), layer.low);
+        let (hits, _, _) = Bits::bitwise(mask.try_into().unwrap(), layer.low);
         (hits, false)
     } else if position >= 129 + width {
-        let (hits, _, _) = bitwise((mask * INV_2_128).try_into().unwrap(), layer.high);
+        let (hits, _, _) = Bits::bitwise((mask * INV_2_128).try_into().unwrap(), layer.high);
         (hits, true)
     } else {
         let mask: u256 = mask.into();
-        let (hits, _, _) = bitwise(mask.low, layer.low);
+        let (hits, _, _) = Bits::bitwise(mask.low, layer.low);
         if hits != 0 {
             (hits, false)
         } else {
-            let (hits, _, _) = bitwise(mask.high, layer.high);
+            let (hits, _, _) = Bits::bitwise(mask.high, layer.high);
             (hits, true)
         }
     };
-    let (rest, _, _) = bitwise(hits, hits - 1);
+    let (rest, _, _) = Bits::bitwise(hits, hits - 1);
     let lowest = hits - rest;
     let next_bit: felt252 = if high {
         lowest.into() * TWO_POW_128
@@ -1561,7 +1557,7 @@ fn bench_dial_micro_lowest() {
     let mut n = REPS;
     while n != 0 {
         n -= 1;
-        let (rest, _, _) = bitwise(hits, hits - 1);
+        let (rest, _, _) = Bits::bitwise(hits, hits - 1);
         acc += (hits - rest).into();
     }
     assert!(acc != 0);

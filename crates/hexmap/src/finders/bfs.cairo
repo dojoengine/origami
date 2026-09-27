@@ -18,7 +18,6 @@
 // Core imports
 
 use core::felt252_div;
-use core::integer::Bitwise;
 
 // Internal imports
 
@@ -38,10 +37,6 @@ const SMALL_SIZE: u8 = 128;
 pub mod errors {
     pub const BFS_POSITION_NOT_WALKABLE: felt252 = 'Bfs: position not walkable';
 }
-
-/// AND, XOR and OR of two limbs in a single application of the bitwise builtin, see
-/// `generators::caver`.
-extern fn bitwise(lhs: u128, rhs: u128) -> (u128, u128, u128) implicits(Bitwise) nopanic;
 
 /// Constants of the layer step.
 #[derive(Copy, Drop)]
@@ -159,7 +154,7 @@ pub struct HighGoal {
 impl LowGoalImpl of Goal<LowGoal> {
     #[inline(always)]
     fn hit(self: LowGoal, low: u128, high: u128) -> bool {
-        let (hit, _, _) = bitwise(low, self.mask);
+        let (hit, _, _) = Bits::bitwise(low, self.mask);
         hit != 0
     }
 }
@@ -167,7 +162,7 @@ impl LowGoalImpl of Goal<LowGoal> {
 impl HighGoalImpl of Goal<HighGoal> {
     #[inline(always)]
     fn hit(self: HighGoal, low: u128, high: u128) -> bool {
-        let (hit, _, _) = bitwise(high, self.mask);
+        let (hit, _, _) = Bits::bitwise(high, self.mask);
         hit != 0
     }
 }
@@ -175,8 +170,8 @@ impl HighGoalImpl of Goal<HighGoal> {
 impl WideGoalImpl of Goal<u256> {
     #[inline(always)]
     fn hit(self: u256, low: u128, high: u128) -> bool {
-        let (hit_low, _, _) = bitwise(low, self.low);
-        let (hit_high, _, _) = bitwise(high, self.high);
+        let (hit_low, _, _) = Bits::bitwise(low, self.low);
+        let (hit_high, _, _) = Bits::bitwise(high, self.high);
         hit_low != 0 || hit_high != 0
     }
 }
@@ -300,7 +295,7 @@ pub impl Bfs of BfsTrait {
         } else {
             centre.around
         };
-        let first = BfsInternal::and(closed.into(), free);
+        let first = Bits::and(closed.into(), free);
         // [Compute] Remaining layers, `inner` is the ball of radius `range - 1`
         let small = width * height <= SMALL_SIZE;
         let (ball, inner) = if small {
@@ -322,14 +317,14 @@ pub impl Bfs of BfsTrait {
             centre.around.into()
         } else if small {
             let next: u256 = BfsInternal::expand_small(@step, inner.try_into().unwrap()).into();
-            BfsInternal::or(next, centre.around.into())
+            Bits::or(next, centre.around.into())
         } else {
             let inner_u256: u256 = inner.into();
             let (low, high) = BfsInternal::expand(@step, inner_u256.low, inner_u256.high, inner);
-            BfsInternal::or(u256 { low, high }, centre.around.into())
+            Bits::or(u256 { low, high }, centre.around.into())
         };
-        let reach = BfsInternal::and(near, edges.into());
-        Bits::to_felt(BfsInternal::or(reach, ball.into()))
+        let reach = Bits::and(near, edges.into());
+        Bits::to_felt(Bits::or(reach, ball.into()))
     }
 }
 
@@ -502,7 +497,7 @@ pub impl BfsInternal of BfsInternalTrait {
         let rows = board * inv_row * inv_row - 1;
         let interior = felt252_div((up - 2) * row * rows, (row - 1).try_into().unwrap());
         let step = Step { even_low: even.low, even_high: even.high, up, down };
-        (step, Self::back_constants(width, up, down), Self::and(open, interior.into()))
+        (step, Self::back_constants(width, up, down), Bits::and(open, interior.into()))
     }
 
     /// Describe an endpoint.
@@ -611,7 +606,7 @@ pub impl BfsInternal of BfsInternalTrait {
         step: @Step, start: @Endpoint, target: @Endpoint, free: u256, ref store: S,
     ) -> bool {
         // [Compute] Target neighbourhood, empty means unreachable
-        let goal = Self::and((*target.around).into(), free);
+        let goal = Bits::and((*target.around).into(), free);
         if goal.low == 0 && goal.high == 0 {
             return false;
         }
@@ -621,7 +616,7 @@ pub impl BfsInternal of BfsInternalTrait {
         } else {
             *start.around
         };
-        let first = Self::and(closed.into(), free);
+        let first = Bits::and(closed.into(), free);
         let mut low = first.low;
         let mut high = first.high;
         let mut free_low = free.low - low;
@@ -768,8 +763,8 @@ pub impl BfsInternal of BfsInternalTrait {
             return false;
         }
         let (next_low, next_high) = Self::expand(step, low, high, felt);
-        let (next_low, _, _) = bitwise(next_low, free_low);
-        let (next_high, _, _) = bitwise(next_high, free_high);
+        let (next_low, _, _) = Bits::bitwise(next_low, free_low);
+        let (next_high, _, _) = Bits::bitwise(next_high, free_high);
         free_low -= next_low;
         free_high -= next_high;
         low = next_low;
@@ -802,8 +797,8 @@ pub impl BfsInternal of BfsInternalTrait {
             steps -= 1;
             inner = total - free_low.into() - free_high.into() * TWO_POW_128;
             let (next_low, next_high) = Self::expand(step, low, high, felt);
-            let (next_low, _, _) = bitwise(next_low, free_low);
-            let (next_high, _, _) = bitwise(next_high, free_high);
+            let (next_low, _, _) = Bits::bitwise(next_low, free_low);
+            let (next_high, _, _) = Bits::bitwise(next_high, free_high);
             free_low -= next_low;
             free_high -= next_high;
             low = next_low;
@@ -833,10 +828,10 @@ pub impl BfsInternal of BfsInternalTrait {
         // [Compute] Frontier and its West neighbours, then split by row parity
         let double: u256 = (felt + felt).into();
         let (double_low, double_high) = (double.low, double.high);
-        let (_, _, pairs_low) = bitwise(low, double_low);
-        let (_, _, pairs_high) = bitwise(high, double_high);
-        let (even_low, _, _) = bitwise(pairs_low, step.even_low);
-        let (even_high, _, _) = bitwise(pairs_high, step.even_high);
+        let (_, _, pairs_low) = Bits::bitwise(low, double_low);
+        let (_, _, pairs_high) = Bits::bitwise(high, double_high);
+        let (even_low, _, _) = Bits::bitwise(pairs_low, step.even_low);
+        let (even_high, _, _) = Bits::bitwise(pairs_high, step.even_high);
         let pairs: felt252 = pairs_low.into() + pairs_high.into() * TWO_POW_128;
         let even: felt252 = even_low.into() + even_high.into() * TWO_POW_128;
         let rows = pairs + pairs - even;
@@ -845,12 +840,12 @@ pub impl BfsInternal of BfsInternalTrait {
         let down: u256 = (rows * step.down).into();
         let east: u256 = (felt * INV_2).into();
         // [Return] Union
-        let (_, _, side_low) = bitwise(pairs_low, east.low);
-        let (_, _, side_high) = bitwise(pairs_high, east.high);
-        let (_, _, vertical_low) = bitwise(up.low, down.low);
-        let (_, _, vertical_high) = bitwise(up.high, down.high);
-        let (_, _, low) = bitwise(side_low, vertical_low);
-        let (_, _, high) = bitwise(side_high, vertical_high);
+        let (_, _, side_low) = Bits::bitwise(pairs_low, east.low);
+        let (_, _, side_high) = Bits::bitwise(pairs_high, east.high);
+        let (_, _, vertical_low) = Bits::bitwise(up.low, down.low);
+        let (_, _, vertical_high) = Bits::bitwise(up.high, down.high);
+        let (_, _, low) = Bits::bitwise(side_low, vertical_low);
+        let (_, _, high) = Bits::bitwise(side_high, vertical_high);
         (low, high)
     }
 
@@ -929,21 +924,21 @@ pub impl BfsInternal of BfsInternalTrait {
             back.around_even
         }).into();
         let lowest: felt252 = if mask.high == 0 {
-            let (hit, _, _) = bitwise(mask.low, layer.low);
-            let (rest, _, _) = bitwise(hit, hit - 1);
+            let (hit, _, _) = Bits::bitwise(mask.low, layer.low);
+            let (rest, _, _) = Bits::bitwise(hit, hit - 1);
             hit.into() - rest.into()
         } else if mask.low == 0 {
-            let (hit, _, _) = bitwise(mask.high, layer.high);
-            let (rest, _, _) = bitwise(hit, hit - 1);
+            let (hit, _, _) = Bits::bitwise(mask.high, layer.high);
+            let (rest, _, _) = Bits::bitwise(hit, hit - 1);
             (hit.into() - rest.into()) * TWO_POW_128
         } else {
-            let (hit, _, _) = bitwise(mask.low, layer.low);
+            let (hit, _, _) = Bits::bitwise(mask.low, layer.low);
             if hit != 0 {
-                let (rest, _, _) = bitwise(hit, hit - 1);
+                let (rest, _, _) = Bits::bitwise(hit, hit - 1);
                 hit.into() - rest.into()
             } else {
-                let (hit, _, _) = bitwise(mask.high, layer.high);
-                let (rest, _, _) = bitwise(hit, hit - 1);
+                let (hit, _, _) = Bits::bitwise(mask.high, layer.high);
+                let (rest, _, _) = Bits::bitwise(hit, hit - 1);
                 (hit.into() - rest.into()) * TWO_POW_128
             }
         };
@@ -1000,7 +995,7 @@ pub impl BfsInternal of BfsInternalTrait {
         step: @Step, start: @Endpoint, target: @Endpoint, free: u128, ref store: S,
     ) -> bool {
         // [Compute] Target neighbourhood, empty means unreachable
-        let (goal, _, _) = bitwise((*target.around).try_into().unwrap(), free);
+        let (goal, _, _) = Bits::bitwise((*target.around).try_into().unwrap(), free);
         if goal == 0 {
             return false;
         }
@@ -1010,7 +1005,7 @@ pub impl BfsInternal of BfsInternalTrait {
         } else {
             *start.around
         };
-        let (mut layer, _, _) = bitwise(closed.try_into().unwrap(), free);
+        let (mut layer, _, _) = Bits::bitwise(closed.try_into().unwrap(), free);
         let mut free = free - layer;
         // [Compute] Layers closer than the hex distance minus one cannot touch the goal
         let gap = Self::gap(start, target);
@@ -1041,7 +1036,7 @@ pub impl BfsInternal of BfsInternalTrait {
         // [Compute] Layers with the target test
         loop {
             store.push(layer);
-            let (hit, _, _) = bitwise(layer, goal);
+            let (hit, _, _) = Bits::bitwise(layer, goal);
             if hit != 0 {
                 break true;
             }
@@ -1049,7 +1044,7 @@ pub impl BfsInternal of BfsInternalTrait {
                 break false;
             }
             store.push(layer);
-            let (hit, _, _) = bitwise(layer, goal);
+            let (hit, _, _) = Bits::bitwise(layer, goal);
             if hit != 0 {
                 break true;
             }
@@ -1071,7 +1066,7 @@ pub impl BfsInternal of BfsInternalTrait {
         if layer == 0 {
             return false;
         }
-        let (next, _, _) = bitwise(Self::expand_small(step, layer), free);
+        let (next, _, _) = Bits::bitwise(Self::expand_small(step, layer), free);
         free -= next;
         layer = next;
         true
@@ -1086,16 +1081,16 @@ pub impl BfsInternal of BfsInternalTrait {
     #[inline(always)]
     fn expand_small(step: @Step, frontier: u128) -> u128 {
         let step = *step;
-        let (_, _, pairs) = bitwise(frontier, frontier + frontier);
-        let (even, _, _) = bitwise(pairs, step.even_low);
+        let (_, _, pairs) = Bits::bitwise(frontier, frontier + frontier);
+        let (even, _, _) = Bits::bitwise(pairs, step.even_low);
         let pairs_felt: felt252 = pairs.into();
         let rows = pairs_felt + pairs_felt - even.into();
         let up: u128 = (rows * step.up).try_into().unwrap();
         let down: u128 = (rows * step.down).try_into().unwrap();
         let east: u128 = (frontier.into() * INV_2).try_into().unwrap();
-        let (_, _, side) = bitwise(pairs, east);
-        let (_, _, vertical) = bitwise(up, down);
-        let (_, _, next) = bitwise(side, vertical);
+        let (_, _, side) = Bits::bitwise(pairs, east);
+        let (_, _, vertical) = Bits::bitwise(up, down);
+        let (_, _, next) = Bits::bitwise(side, vertical);
         next
     }
 
@@ -1113,7 +1108,7 @@ pub impl BfsInternal of BfsInternalTrait {
             }
             steps -= 1;
             inner = total - unvisited.into();
-            let (next, _, _) = bitwise(Self::expand_small(step, layer), unvisited);
+            let (next, _, _) = Bits::bitwise(Self::expand_small(step, layer), unvisited);
             unvisited -= next;
             layer = next;
         }
@@ -1191,8 +1186,8 @@ pub impl BfsInternal of BfsInternalTrait {
         })
             .try_into()
             .unwrap();
-        let (hit, _, _) = bitwise(mask, layer);
-        let (rest, _, _) = bitwise(hit, hit - 1);
+        let (hit, _, _) = Bits::bitwise(mask, layer);
+        let (rest, _, _) = Bits::bitwise(hit, hit - 1);
         Self::identify(boxed, position, power, odd, hit.into() - rest.into())
     }
 
@@ -1216,21 +1211,10 @@ pub impl BfsInternal of BfsInternalTrait {
         }
         panic!("unreachable")
     }
-
-    /// `u256` AND with the bitwise builtin.
+    /// `u256` AND with the bitwise builtin, see `Bits::and` (used by the `HexMap` facade).
     #[inline(always)]
     fn and(lhs: u256, rhs: u256) -> u256 {
-        let (low, _, _) = bitwise(lhs.low, rhs.low);
-        let (high, _, _) = bitwise(lhs.high, rhs.high);
-        u256 { low, high }
-    }
-
-    /// `u256` OR with the bitwise builtin.
-    #[inline(always)]
-    fn or(lhs: u256, rhs: u256) -> u256 {
-        let (_, _, low) = bitwise(lhs.low, rhs.low);
-        let (_, _, high) = bitwise(lhs.high, rhs.high);
-        u256 { low, high }
+        Bits::and(lhs, rhs)
     }
 }
 

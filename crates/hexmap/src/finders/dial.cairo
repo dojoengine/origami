@@ -18,10 +18,6 @@
 //! is seeded with its open neighbours, an edge target is scheduled like any tile and never
 //! expanded, and paths never cross another edge tile.
 
-// Core imports
-
-use core::integer::Bitwise;
-
 // Internal imports
 
 use origami_hexmap::helpers::asserter::Asserter;
@@ -45,10 +41,6 @@ pub mod errors {
     pub const DIAL_TOO_MANY_COSTS: felt252 = 'Dial: too many costs';
     pub const DIAL_POSITION_NOT_WALKABLE: felt252 = 'Dial: position not walkable';
 }
-
-/// AND, XOR and OR of two limbs in a single application of the bitwise builtin, see
-/// `generators::caver`.
-extern fn bitwise(lhs: u128, rhs: u128) -> (u128, u128, u128) implicits(Bitwise) nopanic;
 
 /// Walkable tiles of each cost class, disjoint (the highest class wins), and the planes of
 /// `cost - 1` read by the backtracking.
@@ -144,8 +136,8 @@ impl WideSet of Set<u256> {
 
     #[inline(always)]
     fn and(self: u256, other: u256) -> u256 {
-        let (low, _, _) = bitwise(self.low, other.low);
-        let (high, _, _) = bitwise(self.high, other.high);
+        let (low, _, _) = Bits::bitwise(self.low, other.low);
+        let (high, _, _) = Bits::bitwise(self.high, other.high);
         u256 { low, high }
     }
 
@@ -162,9 +154,9 @@ impl WideSet of Set<u256> {
     #[inline(always)]
     fn hits(self: u256, target: u256) -> bool {
         let (hit, _, _) = if target.low != 0 {
-            bitwise(self.low, target.low)
+            Bits::bitwise(self.low, target.low)
         } else {
-            bitwise(self.high, target.high)
+            Bits::bitwise(self.high, target.high)
         };
         hit != 0
     }
@@ -184,10 +176,10 @@ impl WideSet of Set<u256> {
         let layout = *layout;
         let double: u256 = (felt + felt).into();
         // [Compute] Frontier and its West neighbours, split by row parity
-        let (_, _, pairs_low) = bitwise(frontier.low, double.low);
-        let (_, _, pairs_high) = bitwise(frontier.high, double.high);
-        let (even_low, _, _) = bitwise(pairs_low, layout.even.low);
-        let (even_high, _, _) = bitwise(pairs_high, layout.even.high);
+        let (_, _, pairs_low) = Bits::bitwise(frontier.low, double.low);
+        let (_, _, pairs_high) = Bits::bitwise(frontier.high, double.high);
+        let (even_low, _, _) = Bits::bitwise(pairs_low, layout.even.low);
+        let (even_high, _, _) = Bits::bitwise(pairs_high, layout.even.high);
         let pairs_even: felt252 = even_low.into() + even_high.into() * TWO_POW_128;
         let pairs_odd: felt252 = pairs_low.into() + pairs_high.into() * TWO_POW_128 - pairs_even;
         // [Compute] NE/NW, SE/SW and East neighbours
@@ -195,14 +187,14 @@ impl WideSet of Set<u256> {
         let down: u256 = (pairs_even * layout.down_even + pairs_odd * layout.down_odd).into();
         let east: u256 = (felt * INV_2).into();
         // [Return] Union, intersected
-        let (_, _, low) = bitwise(pairs_low, east.low);
-        let (_, _, low) = bitwise(low, up.low);
-        let (_, _, low) = bitwise(low, down.low);
-        let (low, _, _) = bitwise(low, unvisited.low);
-        let (_, _, high) = bitwise(pairs_high, east.high);
-        let (_, _, high) = bitwise(high, up.high);
-        let (_, _, high) = bitwise(high, down.high);
-        let (high, _, _) = bitwise(high, unvisited.high);
+        let (_, _, low) = Bits::bitwise(pairs_low, east.low);
+        let (_, _, low) = Bits::bitwise(low, up.low);
+        let (_, _, low) = Bits::bitwise(low, down.low);
+        let (low, _, _) = Bits::bitwise(low, unvisited.low);
+        let (_, _, high) = Bits::bitwise(pairs_high, east.high);
+        let (_, _, high) = Bits::bitwise(high, up.high);
+        let (_, _, high) = Bits::bitwise(high, down.high);
+        let (high, _, _) = Bits::bitwise(high, unvisited.high);
         u256 { low, high }
     }
 
@@ -211,19 +203,19 @@ impl WideSet of Set<u256> {
         layer: u256, mask: felt252, position: u8, low_limit: u8, high_limit: u8,
     ) -> (u128, bool) {
         if position < low_limit {
-            let (hits, _, _) = bitwise(mask.try_into().unwrap(), layer.low);
+            let (hits, _, _) = Bits::bitwise(mask.try_into().unwrap(), layer.low);
             (hits, false)
         } else if position >= high_limit {
-            let (hits, _, _) = bitwise((mask * INV_2_128).try_into().unwrap(), layer.high);
+            let (hits, _, _) = Bits::bitwise((mask * INV_2_128).try_into().unwrap(), layer.high);
             (hits, true)
         } else {
             // [Compute] The mask straddles the limbs
             let mask: u256 = mask.into();
-            let (hits, _, _) = bitwise(mask.low, layer.low);
+            let (hits, _, _) = Bits::bitwise(mask.low, layer.low);
             if hits != 0 {
                 (hits, false)
             } else {
-                let (hits, _, _) = bitwise(mask.high, layer.high);
+                let (hits, _, _) = Bits::bitwise(mask.high, layer.high);
                 (hits, true)
             }
         }
@@ -248,7 +240,7 @@ impl SmallSet of Set<u128> {
 
     #[inline(always)]
     fn and(self: u128, other: u128) -> u128 {
-        let (value, _, _) = bitwise(self, other);
+        let (value, _, _) = Bits::bitwise(self, other);
         value
     }
 
@@ -264,7 +256,7 @@ impl SmallSet of Set<u128> {
 
     #[inline(always)]
     fn hits(self: u128, target: u128) -> bool {
-        let (hit, _, _) = bitwise(self, target);
+        let (hit, _, _) = Bits::bitwise(self, target);
         hit != 0
     }
 
@@ -278,8 +270,8 @@ impl SmallSet of Set<u128> {
     fn expand(layout: @Layout, frontier: u128, felt: felt252, unvisited: u128) -> u128 {
         let layout = *layout;
         let double: u128 = (felt + felt).try_into().unwrap();
-        let (_, _, pairs) = bitwise(frontier, double);
-        let (pairs_even, _, _) = bitwise(pairs, layout.even.low);
+        let (_, _, pairs) = Bits::bitwise(frontier, double);
+        let (pairs_even, _, _) = Bits::bitwise(pairs, layout.even.low);
         let pairs_even: felt252 = pairs_even.into();
         let pairs_odd = pairs.into() - pairs_even;
         let up: u128 = (pairs_even * layout.up_even + pairs_odd * layout.up_odd)
@@ -289,10 +281,10 @@ impl SmallSet of Set<u128> {
             .try_into()
             .unwrap();
         let east: u128 = (felt * INV_2).try_into().unwrap();
-        let (_, _, value) = bitwise(pairs, east);
-        let (_, _, value) = bitwise(value, up);
-        let (_, _, value) = bitwise(value, down);
-        let (value, _, _) = bitwise(value, unvisited);
+        let (_, _, value) = Bits::bitwise(pairs, east);
+        let (_, _, value) = Bits::bitwise(value, up);
+        let (_, _, value) = Bits::bitwise(value, down);
+        let (value, _, _) = Bits::bitwise(value, unvisited);
         value
     }
 
@@ -300,7 +292,7 @@ impl SmallSet of Set<u128> {
     fn neighbours(
         layer: u128, mask: felt252, position: u8, low_limit: u8, high_limit: u8,
     ) -> (u128, bool) {
-        let (hits, _, _) = bitwise(mask.try_into().unwrap(), layer);
+        let (hits, _, _) = Bits::bitwise(mask.try_into().unwrap(), layer);
         (hits, false)
     }
 }
@@ -346,7 +338,7 @@ pub impl Dial of DialTrait {
             to_edge: Asserter::is_edge(width, height, to_x, to_y),
             to_odd: to_y % 2 == 1,
         };
-        let mut unvisited = Bits::to_felt(WideSet::and(open, interior));
+        let mut unvisited = Bits::to_felt(Bits::and(open, interior));
         if !ends.from_edge {
             unvisited -= ends.from_bit;
         }
@@ -391,7 +383,7 @@ pub impl Dial of DialTrait {
         let interior: u256 = LayoutTrait::interior(width, height).into();
         let (from_y, from_x) = DivRem::div_rem(from, width.try_into().unwrap());
         let from_edge = Asserter::is_edge(width, height, from_x, from_y);
-        let inside = WideSet::and(open, interior);
+        let inside = Bits::and(open, interior);
         let edges = inside != open;
         let unvisited = if edges {
             grid - from_bit
@@ -427,20 +419,20 @@ impl DialInternal of DialInternalTrait {
         let zero: u256 = 0;
         let mut rest = open;
         let four = if count == 3 {
-            let four = WideSet::and(rest, (*costs[2]).into());
+            let four = Bits::and(rest, (*costs[2]).into());
             rest = WideSet::sub(rest, four);
             four
         } else {
             zero
         };
         let three = if count >= 2 {
-            let three = WideSet::and(rest, (*costs[1]).into());
+            let three = Bits::and(rest, (*costs[1]).into());
             rest = WideSet::sub(rest, three);
             three
         } else {
             zero
         };
-        let two = WideSet::and(rest, (*costs[0]).into());
+        let two = Bits::and(rest, (*costs[0]).into());
         let (two_felt, three_felt, four_felt) = (
             Bits::to_felt(two), Bits::to_felt(three), Bits::to_felt(four),
         );
@@ -802,21 +794,21 @@ impl DialInternal of DialInternalTrait {
     /// for the tiles of cost 1.
     #[inline(always)]
     fn cost(bit: u128, any: u128, upper: u128, odd: u128, has_upper: bool, has_four: bool) -> u32 {
-        let (hit, _, _) = bitwise(bit, any);
+        let (hit, _, _) = Bits::bitwise(bit, any);
         if hit == 0 {
             return 1;
         }
         if !has_upper {
             return 2;
         }
-        let (hit, _, _) = bitwise(bit, upper);
+        let (hit, _, _) = Bits::bitwise(bit, upper);
         if hit == 0 {
             return 2;
         }
         if !has_four {
             return 3;
         }
-        let (hit, _, _) = bitwise(bit, odd);
+        let (hit, _, _) = Bits::bitwise(bit, odd);
         if hit == 0 {
             3
         } else {
@@ -928,7 +920,7 @@ impl DialInternal of DialInternalTrait {
             let (hits, high) = Set::neighbours(
                 *layers[previous], mask, position, walk.low_limit, walk.high_limit,
             );
-            let (rest, _, _) = bitwise(hits, hits - 1);
+            let (rest, _, _) = Bits::bitwise(hits, hits - 1);
             let lowest = hits - rest;
             let next_bit: felt252 = if high {
                 lowest.into() * TWO_POW_128

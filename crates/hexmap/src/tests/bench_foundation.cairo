@@ -373,7 +373,7 @@ fn bench_bit_set_or() {
 }
 
 #[test]
-#[available_gas(l2_gas: 2149000)]
+#[available_gas(l2_gas: 1786000)]
 fn bench_popcount_swar_dense() {
     let value: u256 = EMPTY_17X14.into();
     let mut acc: felt252 = 0;
@@ -399,7 +399,7 @@ fn bench_popcount_sparse_dense() {
 }
 
 #[test]
-#[available_gas(l2_gas: 2159000)]
+#[available_gas(l2_gas: 1796000)]
 fn bench_popcount_swar_sparse() {
     // 8 bits, 4 per limb
     let value: u256 = (Bits::pow(20)

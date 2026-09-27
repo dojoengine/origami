@@ -27,7 +27,7 @@ use core::traits::{BitAnd, BitOr};
 // Internal imports
 
 use origami_hexmap::helpers::asserter::Asserter;
-use origami_hexmap::helpers::bits::{Bits, POW128, TWO_POW_128};
+use origami_hexmap::helpers::bits::{BYTES_ONE, Bits, POW128, TWO_POW_120, TWO_POW_128};
 use origami_hexmap::helpers::rng::{Rng, RngTrait};
 
 // Constants
@@ -51,24 +51,8 @@ const TABLE_MAX: u8 = 8;
 const WALK_MAX: u8 = 8;
 /// Largest number of rejection trials of a pick, before the select.
 const TRIALS: u8 = 2;
-/// Odd bits mask 0xAAAA... on 128 bits.
-const MASK_ODD_BITS: u128 = 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa;
-/// Low pairs mask 0x3333... on 128 bits.
-const MASK_PAIRS: u128 = 0x33333333333333333333333333333333;
-/// Low nibbles mask 0x0F0F... on 128 bits.
-const MASK_NIBBLES: u128 = 0x0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f;
 /// High bit of every byte, 0x8080... on 128 bits.
 const MASK_BYTE_HIGH: u128 = 0x80808080808080808080808080808080;
-/// Byte-sum multiplier 0x0101...01 (16 bytes).
-const BYTES_ONE: felt252 = 0x01010101010101010101010101010101;
-/// 2^120, the byte-sum lands in the top byte of the low limb.
-const TWO_POW_120: NonZero<u128> = 0x1000000000000000000000000000000;
-/// 1/2 in the field.
-const INV_2: felt252 = 0x400000000000008800000000000000000000000000000000000000000000001;
-/// 1/4 in the field.
-const INV_4: felt252 = 0x60000000000000cc00000000000000000000000000000000000000000000001;
-/// 1/16 in the field.
-const INV_16: felt252 = 0x78000000000000ff00000000000000000000000000000000000000000000001;
 /// 1/128 in the field.
 const INV_128: felt252 = 0x7f0000000000010de0000000000000000000000000000000000000000000001;
 /// 1/255 in the field.
@@ -174,13 +158,9 @@ pub impl U256BitSet of BitSetTrait<u256> {
         word.into()
     }
 
-    /// Byte counts of both limbs summed, then one byte-sum (cheaper than `Bits::popcount`).
+    #[inline]
     fn popcount(self: u256) -> u8 {
-        let bytes = byte_counts(self.low) + byte_counts(self.high);
-        // [Compute] Every byte of the sum is at most 16, every prefix sum at most 251
-        let total: u256 = (bytes * BYTES_ONE).into();
-        let (count, _) = DivRem::div_rem(total.low, TWO_POW_120);
-        count.try_into().unwrap()
+        Bits::popcount(self)
     }
 
     #[inline]
@@ -293,10 +273,9 @@ pub impl U128BitSet of BitSetTrait<u128> {
         word.low
     }
 
+    #[inline]
     fn popcount(self: u128) -> u8 {
-        let total: u256 = (byte_counts(self) * BYTES_ONE).into();
-        let (count, _) = DivRem::div_rem(total.low, TWO_POW_120);
-        count.try_into().unwrap()
+        Bits::popcount_small(self)
     }
 
     #[inline]
@@ -355,20 +334,6 @@ pub impl U128BitSet of BitSetTrait<u128> {
     }
 }
 
-/// Byte counts of a limb (SWAR, shifts as exact field divisions).
-/// # Arguments
-/// * `value` - The limb
-/// # Returns
-/// * Byte `j` holds the number of set bits of byte `j` (at most 8), below 2^128
-fn byte_counts(value: u128) -> felt252 {
-    let felt: felt252 = value.into();
-    let pairs = felt - (value & MASK_ODD_BITS).into() * INV_2;
-    let low: felt252 = (pairs.try_into().unwrap() & MASK_PAIRS).into();
-    let nibbles = low + (pairs - low) * INV_4;
-    let low: felt252 = (nibbles.try_into().unwrap() & MASK_NIBBLES).into();
-    low + (nibbles - low) * INV_16
-}
-
 /// Byte counts of a limb and their inclusive prefix sums.
 /// # Arguments
 /// * `value` - The limb
@@ -376,7 +341,7 @@ fn byte_counts(value: u128) -> felt252 {
 /// * The prefix sums, byte `j` holds the number of set bits in bytes `0..=j` (at most 128)
 /// * The byte counts, byte `j` holds the number of set bits of byte `j` (at most 8)
 fn prefix_counts(value: u128) -> (u128, u128) {
-    let bytes = byte_counts(value);
+    let bytes = Bits::byte_counts(value);
     // [Compute] No carry between bytes: every prefix sum is at most 128
     let prefix: u256 = (bytes * BYTES_ONE).into();
     (prefix.low, bytes.try_into().unwrap())
