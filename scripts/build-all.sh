@@ -1,11 +1,5 @@
-# Scarb dependent crates.
-scarb --manifest-path crates/algebra/Scarb.toml build
-scarb --manifest-path crates/defi/Scarb.toml build
-scarb --manifest-path crates/map/Scarb.toml build
-scarb --manifest-path crates/random/Scarb.toml build
-scarb --manifest-path crates/rating/Scarb.toml build
-scarb --manifest-path crates/security/Scarb.toml build
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Sozo dependent crates.
-sozo build --package "origami_token"
-sozo build --package "origami_governance"
+# Build every crate of the workspace.
+scarb build --workspace

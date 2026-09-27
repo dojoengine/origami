@@ -4,10 +4,6 @@
 
 use core::dict::{Felt252Dict, Felt252DictTrait};
 
-// Internal imports
-
-use origami_map::types::node::Node;
-
 // Constants
 
 const KEY_OFFSET: felt252 = 252;
@@ -275,9 +271,13 @@ pub impl DestructHeap<T, +Drop<T>> of Destruct<Heap<T>> {
 
 #[cfg(test)]
 mod tests {
+    // Internal imports
+
+    use origami_map::types::node::Node;
+
     // Local imports
 
-    use super::{Heap, HeapTrait, ItemTrait, Node};
+    use super::{Heap, HeapTrait, ItemTrait};
 
     #[test]
     fn test_heap_new() {
