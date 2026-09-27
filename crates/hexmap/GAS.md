@@ -126,7 +126,308 @@ Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas).
 
 ## L1 Bit-BFS
 
-_To be filled by lot L1._
+Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas), budgets set by the procedure above.
+Library: `finders/bfs.cairo`; benchmarks and losing variants: `tests/bench_bfs.cairo`. Every
+variant asserts the fixture path length; the library is checked against a scalar queue BFS on
+the fixtures, on caves and mazes of 7x7, 17x14 and 19x13, on 3x3, 8x16, 9x15, 25x10, 83x3 and
+3x83 boards, and with open edge tiles (entrances, corners, adjacent edge tiles).
+
+### Cost model (measured with `--tracked-resource cairo-steps`)
+
+Sierra gas is close to `100 * steps + 70 * range checks + ~580 * bitwise applications`. Per
+operation: a local `bitwise` application is 2 CASM steps plus the builtin (the corelib `&`, `|`
+cost more around it); a wide `felt252 -> u256` conversion 14 steps and 3 range checks (~1.6k), a
+narrow one (< 2^128) ~6 steps and 1 range check; a checked `u8` operation ~6 steps and 1 range
+check; a loop iteration pays `withdraw_gas` and one store per carried value. Steps dominate: in
+a 17x14 layer, the 4 wide conversions (doubling, NE/NW, SE/SW, East) are about half of the steps,
+the 13 bitwise applications ~40 % of the gas.
+
+* **Forward layer, 17x14: ~19.3k** (110 steps, 12.9 bitwise, 9.6 range checks): dilation with 10
+  applications of the local `bitwise`, `& unvisited` (2), target test (1, single limb), 2 limb
+  subtractions, the layer stored.
+* **Backtracking step, 17x14: ~8.4k** (70 steps, 2.1 bitwise, 2.6 range checks; `search -
+  distance` per path tile below).
+* **Boards of at most 128 bits** (single limb): ~9.9k per layer, ~6.4k per backtracking step.
+* **Fixed cost**: checks, constants, endpoints and hex distance ~55k (near searches, 3 tiles:
+  102k-112k on 17x14, 78k-82k on 7x7).
+
+### search
+
+Targets on 17x14 (algorithm minus the 15_040 fixture baseline): EMPTY far 555_000 (target
+500_000, +11 %), CAVE far 691_000 (650_000, +6 %), MAZE far 1_504_000 (1_400_000, +7 %),
+SERPENTINE far 2_517_000 (2_400_000, +5 %): **not met**, see "Iterations" for what was tried.
+UNREACHABLE (248_000 and 251_000) costs less than flooding the component (`reachable` 277_000,
+`Caver::keep_component` 284_000): **met**.
+
+| Test | Measured | Budget | Path length | Minus baseline |
+|---|---:|---:|---:|---:|
+| `bench_bfs_search_empty_near_17x14` | 107_285 | 113_000 | 3 | 92_245 |
+| `bench_bfs_search_empty_far_17x14` | 570_033 | 599_000 | 19 | 554_993 |
+| `bench_bfs_search_cave_near_17x14` | 112_141 | 118_000 | 3 | 97_101 |
+| `bench_bfs_search_cave_far_17x14` | 706_135 | 742_000 | 24 | 691_095 |
+| `bench_bfs_search_maze_near_17x14` | 102_815 | 108_000 | 3 | 87_775 |
+| `bench_bfs_search_maze_far_17x14` | 1_519_526 | 1_596_000 | 53 | 1_504_486 |
+| `bench_bfs_search_serpentine_near_17x14` | 102_295 | 108_000 | 3 | 87_255 |
+| `bench_bfs_search_serpentine_far_17x14` | 2_532_090 | 2_659_000 | 90 | 2_517_050 |
+| `bench_bfs_search_unreachable_near_17x14` | 266_118 | 280_000 | 0 | 251_078 |
+| `bench_bfs_search_unreachable_far_17x14` | 263_320 | 277_000 | 0 | 248_280 |
+| `bench_bfs_search_empty_near_7x7` | 82_241 | 87_000 | 3 | 67_201 |
+| `bench_bfs_search_empty_far_7x7` | 131_733 | 139_000 | 6 | 116_693 |
+| `bench_bfs_search_cave_near_7x7` | 81_521 | 86_000 | 3 | 66_481 |
+| `bench_bfs_search_cave_far_7x7` | 131_733 | 139_000 | 6 | 116_693 |
+| `bench_bfs_search_maze_near_7x7` | 78_204 | 83_000 | 3 | 63_164 |
+| `bench_bfs_search_maze_far_7x7` | 239_984 | 252_000 | 13 | 224_944 |
+| `bench_bfs_search_serpentine_near_7x7` | 80_361 | 85_000 | 3 | 65_321 |
+| `bench_bfs_search_serpentine_far_7x7` | 257_269 | 271_000 | 14 | 242_229 |
+| `bench_bfs_search_unreachable_near_7x7` | 67_873 | 72_000 | 0 | 52_833 |
+| `bench_bfs_search_unreachable_far_7x7` | 89_843 | 95_000 | 0 | 74_803 |
+
+`origami_map` for the record (`scarb test -p origami_map -f bfs`, cairo-test estimate): 4x4
+medium 1_608_464 (path of 6), 5x4 maze 1_373_230; the hex 7x7 EMPTY far (path of 6, 49 tiles)
+costs 131_733, 12x less on a board 3x larger.
+
+### distance
+
+`Bfs::distance` runs the same forward pass without storing the layers or backtracking.
+
+| Test | Measured | Budget | search - distance (backtracking) |
+|---|---:|---:|---:|
+| `bench_bfs_distance_empty_far_17x14` | 407_159 | 428_000 | 162_874 |
+| `bench_bfs_distance_cave_far_17x14` | 501_942 | 528_000 | 204_193 |
+| `bench_bfs_distance_maze_far_17x14` | 1_058_347 | 1_112_000 | 461_179 |
+| `bench_bfs_distance_serpentine_far_17x14` | 1_774_065 | 1_863_000 | 758_025 |
+| `bench_bfs_distance_unreachable_far_17x14` | 259_880 | 273_000 | 3_440 |
+| `bench_bfs_distance_empty_far_7x7` | 88_923 | 94_000 | 42_810 |
+| `bench_bfs_distance_cave_far_7x7` | 88_923 | 94_000 | 42_810 |
+| `bench_bfs_distance_maze_far_7x7` | 154_812 | 163_000 | 85_172 |
+| `bench_bfs_distance_serpentine_far_7x7` | 167_851 | 177_000 | 89_418 |
+| `bench_bfs_distance_unreachable_far_7x7` | 87_603 | 92_000 | 2_240 |
+
+### reachable
+
+`Bfs::reachable` (frontier flood: the same 12 bitwise applications per layer as
+`expand(component) & open`, but on limbs with the local `bitwise`, the loop ending on an empty
+frontier instead of a `u256` comparison, single limb on small boards) beats
+`Caver::keep_component` on every input; it also adds the open edge tiles next to the component.
+
+| Test | Measured | Budget | `Caver::keep_component` (same input) | Delta |
+|---|---:|---:|---:|---:|
+| `bench_bfs_reachable_cave_17x14` | 557_039 | 585_000 | 582_223 (budget 612_000) | -4.3 % |
+| `bench_bfs_reachable_maze_17x14` | 1_154_583 | 1_213_000 | 1_245_367 (budget 1_308_000) | -7.3 % |
+| `bench_bfs_reachable_serpentine_17x14` | 1_908_405 | 2_004_000 | 2_080_829 (budget 2_185_000) | -8.3 % |
+| `bench_bfs_reachable_unreachable_17x14` | 276_581 | 291_000 | 283_755 (budget 298_000) | -2.5 % |
+| `bench_bfs_reachable_cave_7x7` | 104_253 | 110_000 | 170_115 (budget 179_000) | -38.7 % |
+| `bench_bfs_reachable_maze_7x7` | 175_079 | 184_000 | 310_087 (budget 326_000) | -43.5 % |
+| `bench_bfs_reachable_serpentine_7x7` | 185_197 | 195_000 | 330_083 (budget 347_000) | -43.9 % |
+| `bench_bfs_reachable_unreachable_7x7` | 84_017 | 89_000 | 130_123 (budget 137_000) | -35.4 % |
+
+### tiles_within_range
+
+| Test | Measured | Budget |
+|---|---:|---:|
+| `bench_bfs_range_3_empty_17x14` | 91_617 | 97_000 |
+| `bench_bfs_range_6_empty_17x14` | 159_255 | 168_000 |
+| `bench_bfs_range_3_cave_17x14` | 84_507 | 89_000 |
+| `bench_bfs_range_6_cave_17x14` | 145_825 | 154_000 |
+| `bench_bfs_range_3_maze_17x14` | 90_627 | 96_000 |
+| `bench_bfs_range_6_maze_17x14` | 149_575 | 158_000 |
+| `bench_bfs_range_3_empty_7x7` | 62_061 | 66_000 |
+| `bench_bfs_range_6_empty_7x7` | 92_415 | 98_000 |
+| `bench_bfs_range_3_cave_7x7` | 62_061 | 66_000 |
+| `bench_bfs_range_6_cave_7x7` | 92_415 | 98_000 |
+| `bench_bfs_range_3_maze_7x7` | 62_061 | 66_000 |
+| `bench_bfs_range_6_maze_7x7` | 92_415 | 98_000 |
+
+### Variants: layer storage (library: `bench_bfs_search_*_far_17x14`)
+
+`felt_layers`: layers stored as `felt252`, converted back before the backtracking (one wide
+conversion per layer). `checkpoints`: only the pairs `L(4m), L(4m+1)` stored, `L(4m+2)` and
+`L(4m+3)` rebuilt from them on the way back (`expand(L) & free - L - L_prev`). `recompute`: nothing
+stored, each backtracking step replays the forward pass from the start (quadratic).
+
+| Test | Measured | Budget | vs library search |
+|---|---:|---:|---:|
+| `bench_bfs_variant_felt_layers_empty_17x14` | 667_943 | 702_000 | +17.2 % |
+| `bench_bfs_variant_felt_layers_cave_17x14` | 818_655 | 860_000 | +15.9 % |
+| `bench_bfs_variant_felt_layers_maze_17x14` | 1_715_816 | 1_802_000 | +12.9 % |
+| `bench_bfs_variant_felt_layers_serpentine_17x14` | 2_837_270 | 2_980_000 | +12.1 % |
+| `bench_bfs_variant_checkpoints_empty_17x14` | 966_077 | 1_015_000 | +69.5 % |
+| `bench_bfs_variant_checkpoints_cave_17x14` | 1_221_303 | 1_283_000 | +73.0 % |
+| `bench_bfs_variant_checkpoints_maze_17x14` | 2_645_944 | 2_779_000 | +74.1 % |
+| `bench_bfs_variant_checkpoints_serpentine_17x14` | 4_436_402 | 4_659_000 | +75.2 % |
+| `bench_bfs_variant_recompute_empty_17x14` | 4_243_857 | 4_457_000 | +644.5 % |
+| `bench_bfs_variant_recompute_cave_17x14` | 6_424_509 | 6_746_000 | +809.8 % |
+
+### Variants: backtracking step (same plain loop, one layer per iteration)
+
+`harness`: library step (neighbour mask of the current tile `2^c * M_parity` converted once,
+intersected on the limbs that hold it, lowest bit by one `x & (x - 1)`, identified among the 6
+offsets by field equalities in increasing order). `bits`: 6 single-bit tests (`Bits::get`) in
+the direction order. `straight`: the last move is tried first with one bit test, the library
+step otherwise. `window`: the hit is shifted into a `2W + 3`-bit window (tracked factor
+`2^-(c-W-1)`) and a binary search over thresholds finds the highest neighbour (needs `W <= 62`).
+
+| Test | Measured | Budget | vs harness |
+|---|---:|---:|---:|
+| `bench_bfs_variant_back_harness_empty_17x14` | 653_073 | 686_000 |  |
+| `bench_bfs_variant_back_harness_cave_17x14` | 807_525 | 848_000 |  |
+| `bench_bfs_variant_back_harness_maze_17x14` | 1_693_586 | 1_779_000 |  |
+| `bench_bfs_variant_back_harness_serpentine_17x14` | 2_811_550 | 2_953_000 |  |
+| `bench_bfs_variant_back_bits_empty_17x14` | 845_255 | 888_000 | +29.4 % |
+| `bench_bfs_variant_back_bits_cave_17x14` | 987_886 | 1_038_000 | +22.3 % |
+| `bench_bfs_variant_back_bits_maze_17x14` | 2_209_641 | 2_321_000 | +30.5 % |
+| `bench_bfs_variant_back_bits_serpentine_17x14` | 3_393_838 | 3_564_000 | +20.7 % |
+| `bench_bfs_variant_back_straight_empty_17x14` | 654_801 | 688_000 | +0.3 % |
+| `bench_bfs_variant_back_straight_cave_17x14` | 870_294 | 914_000 | +7.8 % |
+| `bench_bfs_variant_back_straight_maze_17x14` | 2_096_317 | 2_202_000 | +23.8 % |
+| `bench_bfs_variant_back_straight_serpentine_17x14` | 2_919_346 | 3_066_000 | +3.8 % |
+| `bench_bfs_variant_back_window_empty_17x14` | 658_407 | 692_000 | +0.8 % |
+| `bench_bfs_variant_back_window_cave_17x14` | 810_320 | 851_000 | +0.3 % |
+| `bench_bfs_variant_back_window_maze_17x14` | 1_683_669 | 1_768_000 | -0.6 % |
+| `bench_bfs_variant_back_window_serpentine_17x14` | 2_768_869 | 2_908_000 | -1.5 % |
+
+`window` is within 1.5 % of the library step but its step is 999 Sierra statements against 552
+(`#[inline(never)]` probes) and it needs `W <= 62`: not kept.
+
+### Variants: target test, set operations (forward pass only, plain loop, one layer per iteration)
+
+`harness`: library choices (layers closer than the hex distance minus one skip the test, single
+limb test). `no_gap`: the target is tested on every layer. `free_test`: the target neighbourhood
+is tested on the unvisited set instead of the layer. `corelib`: `Layout::expand`, `&` and `-` on
+`u256` instead of the local `bitwise` on limbs. `every_two` (against `harness_two`, the same
+choices two layers per iteration): the second layer of each pair is tested against the closed
+neighbourhood of the target (a layer that touches the neighbourhood is followed by one that holds
+the target), then the first one once.
+
+| Test | Measured | Budget | vs harness |
+|---|---:|---:|---:|
+| `bench_bfs_variant_distance_harness_empty_17x14` | 469_392 | 493_000 |  |
+| `bench_bfs_variant_distance_harness_cave_17x14` | 615_538 | 647_000 |  |
+| `bench_bfs_variant_distance_harness_maze_17x14` | 1_255_284 | 1_319_000 |  |
+| `bench_bfs_variant_distance_harness_serpentine_17x14` | 2_117_758 | 2_224_000 |  |
+| `bench_bfs_variant_distance_no_gap_empty_17x14` | 503_204 | 529_000 | +7.2 % |
+| `bench_bfs_variant_distance_no_gap_cave_17x14` | 606_394 | 637_000 | -1.5 % |
+| `bench_bfs_variant_distance_no_gap_maze_17x14` | 1_278_432 | 1_343_000 | +1.8 % |
+| `bench_bfs_variant_distance_no_gap_serpentine_17x14` | 2_127_366 | 2_234_000 | +0.5 % |
+| `bench_bfs_variant_distance_free_test_empty_17x14` | 469_602 | 494_000 | +0.0 % |
+| `bench_bfs_variant_distance_free_test_cave_17x14` | 622_048 | 654_000 | +1.1 % |
+| `bench_bfs_variant_distance_free_test_maze_17x14` | 1_266_894 | 1_331_000 | +0.9 % |
+| `bench_bfs_variant_distance_free_test_serpentine_17x14` | 2_141_968 | 2_250_000 | +1.1 % |
+| `bench_bfs_variant_distance_corelib_empty_17x14` | 519_092 | 546_000 | +10.6 % |
+| `bench_bfs_variant_distance_corelib_cave_17x14` | 686_868 | 722_000 | +11.6 % |
+| `bench_bfs_variant_distance_corelib_maze_17x14` | 1_410_054 | 1_481_000 | +12.3 % |
+| `bench_bfs_variant_distance_corelib_serpentine_17x14` | 2_383_138 | 2_503_000 | +12.5 % |
+| `bench_bfs_variant_distance_harness_two_empty_17x14` | 469_402 | 493_000 |  |
+| `bench_bfs_variant_distance_harness_two_cave_17x14` | 584_948 | 615_000 |  |
+| `bench_bfs_variant_distance_harness_two_maze_17x14` | 1_202_284 | 1_263_000 |  |
+| `bench_bfs_variant_distance_harness_two_serpentine_17x14` | 2_006_168 | 2_107_000 |  |
+| `bench_bfs_variant_distance_every_two_empty_17x14` | 467_808 | 492_000 | -0.3 % |
+| `bench_bfs_variant_distance_every_two_cave_17x14` | 588_856 | 619_000 | +0.7 % |
+| `bench_bfs_variant_distance_every_two_maze_17x14` | 1_172_002 | 1_231_000 | -2.5 % |
+| `bench_bfs_variant_distance_every_two_serpentine_17x14` | 1_940_900 | 2_038_000 | -3.3 % |
+
+`every_two` in the library (unrolled loop, the first layer tested alone for adjacent endpoints,
+every layer tested for an edge target), measured then reverted: search EMPTY far -0.6 %, CAVE far
++2.2 %, MAZE far -0.6 %, SERPENTINE far -1.2 %, near searches -3 %, 7x7 MAZE far +3.0 %. Below 2 %
+on the long paths and worse on CAVE, for a fourth loop instance: not kept.
+
+### Variant: bidirectional (two frontiers expanded in turn, forward pass only)
+
+A new layer can only meet the other frontier (not an older layer), so the test is one AND per
+layer. Same number of layers as the library, a two-limb meeting test instead of a single-limb one
+after the hex distance, no first/last layer saved; on UNREACHABLE it floods both components.
+
+| Test | Measured | Budget | library `distance` | Delta |
+|---|---:|---:|---:|---:|
+| `bench_bfs_variant_bidirectional_empty_near_17x14` | 145_358 | 153_000 |  |  |
+| `bench_bfs_variant_bidirectional_empty_far_17x14` | 525_110 | 552_000 | 407_159 | +29.0 % |
+| `bench_bfs_variant_bidirectional_cave_near_17x14` | 150_158 | 158_000 |  |  |
+| `bench_bfs_variant_bidirectional_cave_far_17x14` | 615_510 | 647_000 | 501_942 | +22.6 % |
+| `bench_bfs_variant_bidirectional_maze_near_17x14` | 138_788 | 146_000 |  |  |
+| `bench_bfs_variant_bidirectional_maze_far_17x14` | 1_295_008 | 1_360_000 | 1_058_347 | +22.4 % |
+| `bench_bfs_variant_bidirectional_serpentine_near_17x14` | 139_158 | 147_000 |  |  |
+| `bench_bfs_variant_bidirectional_serpentine_far_17x14` | 2_146_182 | 2_254_000 | 1_774_065 | +21.0 % |
+| `bench_bfs_variant_bidirectional_unreachable_near_17x14` | 540_224 | 568_000 | 261_778 | +106.4 % |
+| `bench_bfs_variant_bidirectional_unreachable_far_17x14` | 617_532 | 649_000 | 259_580 | +137.9 % |
+
+### Variant: two-limb path on boards of at most 128 bits (library: single limb)
+
+| Test | Measured | Budget | library (single limb) | Library delta |
+|---|---:|---:|---:|---:|
+| `bench_bfs_variant_wide_empty_far_7x7` | 193_861 | 204_000 | 131_733 | -32.0 % |
+| `bench_bfs_variant_wide_cave_far_7x7` | 193_861 | 204_000 | 131_733 | -32.0 % |
+| `bench_bfs_variant_wide_maze_far_7x7` | 373_308 | 392_000 | 239_984 | -35.7 % |
+| `bench_bfs_variant_wide_serpentine_far_7x7` | 402_771 | 423_000 | 257_269 | -36.1 % |
+| `bench_bfs_variant_wide_unreachable_far_7x7` | 143_651 | 151_000 | 89_843 | -37.5 % |
+
+### Variant: scalar queue BFS (bitmap visited set, parents in a `Felt252Dict`, baseline to beat)
+
+| Test | Measured | Budget | library search | Ratio |
+|---|---:|---:|---:|---:|
+| `bench_bfs_variant_scalar_empty_near_17x14` | 3_773_885 | 3_963_000 | 107_285 | 35.2x |
+| `bench_bfs_variant_scalar_empty_far_17x14` | 17_282_104 | 18_147_000 | 570_033 | 30.3x |
+| `bench_bfs_variant_scalar_cave_near_17x14` | 1_949_686 | 2_048_000 | 112_141 | 17.4x |
+| `bench_bfs_variant_scalar_cave_far_17x14` | 12_389_976 | 13_010_000 | 706_135 | 17.5x |
+| `bench_bfs_variant_scalar_maze_near_17x14` | 391_163 | 411_000 | 102_815 | 3.8x |
+| `bench_bfs_variant_scalar_maze_far_17x14` | 7_826_466 | 8_218_000 | 1_519_526 | 5.2x |
+| `bench_bfs_variant_scalar_serpentine_near_17x14` | 474_320 | 499_000 | 102_295 | 4.6x |
+| `bench_bfs_variant_scalar_serpentine_far_17x14` | 8_209_741 | 8_621_000 | 2_532_090 | 3.2x |
+| `bench_bfs_variant_scalar_unreachable_near_17x14` | 7_993_463 | 8_394_000 | 266_118 | 30.0x |
+| `bench_bfs_variant_scalar_unreachable_far_17x14` | 7_994_033 | 8_394_000 | 263_320 | 30.4x |
+| `bench_bfs_variant_scalar_empty_near_7x7` | 1_845_052 | 1_938_000 | 82_241 | 22.4x |
+| `bench_bfs_variant_scalar_empty_far_7x7` | 2_258_243 | 2_372_000 | 131_733 | 17.1x |
+| `bench_bfs_variant_scalar_cave_near_7x7` | 1_909_050 | 2_005_000 | 81_521 | 23.4x |
+| `bench_bfs_variant_scalar_cave_far_7x7` | 2_068_418 | 2_172_000 | 131_733 | 15.7x |
+| `bench_bfs_variant_scalar_maze_near_7x7` | 555_507 | 584_000 | 78_204 | 7.1x |
+| `bench_bfs_variant_scalar_maze_far_7x7` | 1_321_244 | 1_388_000 | 239_984 | 5.5x |
+| `bench_bfs_variant_scalar_serpentine_near_7x7` | 555_667 | 584_000 | 80_361 | 6.9x |
+| `bench_bfs_variant_scalar_serpentine_far_7x7` | 1_420_993 | 1_493_000 | 257_269 | 5.5x |
+| `bench_bfs_variant_scalar_unreachable_near_7x7` | 907_481 | 953_000 | 67_873 | 13.4x |
+| `bench_bfs_variant_scalar_unreachable_far_7x7` | 907_481 | 953_000 | 89_843 | 10.1x |
+
+### Iterations on the library (search, far pairs, 17x14)
+
+| Version | EMPTY | CAVE | MAZE | SERPENTINE |
+|---|---:|---:|---:|---:|
+| v1: local `bitwise`, first layer = start neighbourhood, stop on the target neighbourhood, lowest-bit backtracking on `u256` | 706_994 | 871_747 | 1_918_927 | 3_223_148 |
+| v2: + hex distance skip, single-limb target test, window backtracking with limb selection | 686_749 | 872_528 | 1_874_418 | 3_118_044 |
+| v3: up/down as `(2P - Pe) * 2^(W-1)` and `* 2^-(W+1)` (2 constants), lowest-bit backtracking | 649_663 | 828_665 | 1_779_596 | 2_970_120 |
+| v4: layer loops x2, backtracking x4 with `multi_pop_back`, boxed constants, limb from the conversion | 586_719 | 733_755 | 1_570_872 | 2_632_527 |
+| v5: 3 shared table lookups for the masks, precomputed `W +- 1`, high-limb-only case | 579_893 | 727_935 | 1_553_296 | 2_599_170 |
+| v6: straight-first backtracking (state of 8 values, turn not inlined) | 579_401 | 771_074 | 1_829_767 | 2_666_636 |
+| v7: layer loops x4 (remainder in a second loop: +8k on every near search) | 581_833 | 723_925 | 1_523_556 | 2_535_100 |
+| v8: layer loops x4, one loop with a felt counter | 576_193 | 715_725 | 1_517_416 | 2_532_660 |
+| v8 with loops x8 (+19 % Sierra, 27_587 statements for `search` against 23_107) | 571_053 | 707_715 | 1_498_926 | 2_503_390 |
+| v9: backtracking tail without a loop (<= 3 layers) | 569_453 | 705_555 | 1_518_046 | 2_529_810 |
+| v10: single-limb path, offset identification shared by value (regression) | 582_833 | 722_135 | 1_561_126 | 2_602_490 |
+| **v11 = library: shared identification through the `Box`** | **570_033** | **706_135** | **1_519_526** | **2_532_090** |
+| v12: target tested every two layers (reverted, see above) | 566_866 | 721_556 | 1_510_494 | 2_501_945 |
+
+Doubling of the frontier (v7 shape, x4): `felt -> u256` conversion 2_536_700 (kept),
+`u128_overflowing_add` match 2_546_070 (deprecated), `OverflowingAdd` trait 2_590_170
+(SERPENTINE). Layer constants boxed or by snapshot: equal (2_536_700 / 2_535_100), snapshot kept.
+Loops x2: 20_867 statements for `search` (+2.4 % gas on SERPENTINE in the v7 shape). The iteration
+stopped after three consecutive ideas below 2 % (loops x8, window backtracking, `every_two`).
+
+### Decisions
+
+* **Layers**: one hex dilation per layer on two `u128` limbs with the local `bitwise` (AND, XOR
+  and OR in one application), up/down from `X = 2P - Pe` (`P` the frontier and its West
+  neighbours, `Pe` its even rows) with 2 constants, the frontier doubled by a `felt252` product
+  and converted. Stored as `Array<u256>`.
+* **Endpoints outside the loop**: the first layer is the closed neighbourhood of the start, the
+  loop stops on the first layer that touches the open interior neighbours of the target (2
+  dilations fewer per search). Open edge tiles are endpoints only: the loop runs on interior tiles.
+* **Target test**: skipped on the layers closer than the hex distance minus one, then one
+  single-limb AND per layer (`LowGoal` / `HighGoal`, two limbs only when the neighbourhood spans
+  both).
+* **Backtracking**: neighbour mask `2^c * M_parity` (one product), intersected on the limb(s)
+  given by the conversion, lowest bit, identified among the 6 offsets in increasing order; 4 layers
+  per iteration (`multi_pop_back`), the constants in a `Box`, the last 3 layers without a loop.
+* **Single `u128` limb** on boards of at most 128 bits: -32 % to -37 % on 7x7.
+* **Loops unrolled 4 times**: x8 saves 1.2 % for +19 % code.
+* `Bfs::distance` added (forward pass only, 70 % of `search` on SERPENTINE, 71 % on EMPTY).
+* `Bfs::reachable` = `tiles_within_range(.., 255)`; it could replace `Caver::keep_component`.
 
 ## L2 A* baseline
 
