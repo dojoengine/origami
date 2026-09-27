@@ -13,8 +13,8 @@ First release published on the [scarbs.xyz](https://scarbs.xyz) registry: `origa
 - Registry metadata on every crate (description, license, repository, homepage, documentation,
   readme, keywords); versions and license inherited from the workspace and resolved in the
   packages.
-- Test-only files (integration tests, `origami_hexmap` benchmarks and `GAS.md`, the printers)
-  are kept out of the packages with `.scarbignore`.
+- Test-only files (integration tests; `origami_hexmap` benchmarks, printer and `GAS.md`) are kept
+  out of the packages with `.scarbignore`.
 - Release workflow: on a `v*` tag, checks the tag against the crate versions, packages the six
   crates and creates the GitHub release; publishes to scarbs.xyz the versions not yet there once
   the `SCARB_REGISTRY_AUTH_TOKEN` secret is set.

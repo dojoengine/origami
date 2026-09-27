@@ -1857,5 +1857,7 @@ Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas), `snforge test -p origam
 | `bench_map_variant_keep_component_caver_7x7` | 95_333 | 177_000 | 101_000 |
 | `bench_map_variant_keep_component_caver_maze` | 1_111_093 | 1_306_000 | 1_167_000 |
 
-* **Package.** `.scarbignore` keeps `src/tests/`, `src/helpers/printer.cairo` (test-only modules,
-  declared under `#[cfg(target: "test")]`) and this file out of the published package.
+* **Package.** `.scarbignore` keeps `tests/`, `src/tests/`, `src/helpers/printer.cairo` and this
+  file out of the published package (943.98 KiB -> 400.42 KiB). The test-only modules are declared
+  under `#[cfg(test)]`, set for this package's own tests only: `#[cfg(target: "test")]` is also set
+  when a dependent runs its tests, which then looked for the missing files.
