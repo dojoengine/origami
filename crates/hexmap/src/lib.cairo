@@ -2,6 +2,7 @@ pub mod map;
 
 pub mod types {
     pub mod direction;
+    pub mod u252;
 }
 
 pub mod finders {
@@ -40,6 +41,7 @@ pub mod tests {
     pub mod bench_map;
     pub mod bench_mazer;
     pub mod bench_spreader;
+    pub mod bench_u252;
     pub mod bench_walker;
     pub mod fixtures;
     pub mod properties;

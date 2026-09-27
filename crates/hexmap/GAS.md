@@ -232,3 +232,165 @@ _To be filled by lot L7._
 ## L8 Facade
 
 _To be filled by lot L8._
+
+## S1 u252
+
+Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas). Library: `types/u252.cairo`, benchmarks
+and losing variants: `tests/bench_u252.cairo`.
+
+### Representation
+
+`u252` is `struct { value: felt252 }` with the value set `[0, P - 1]`
+(`P = 2^251 + 17 * 2^192 + 1`): every felt is a valid `u252`, so `Into<felt252, u252>`,
+`Into<u252, felt252>`, `Serde` and `StorePacking<u252, felt252>` are identities with no check and
+no invariant to re-establish. The checked operations panic exactly when the true integer result
+leaves `[0, P - 1]` (property tests against `u256` on the edges 0, 1, 2^128 - 1, 2^128, 2^251,
+P - 1, P - 2 and 36 pseudo-random wide and narrow values, all pairs).
+
+Candidates refused or not viable (scarb 2.19.4):
+
+| Candidate | Result |
+|---|---|
+| `BoundedInt<0, 2^252 - 1>` or any `MAX >= P` | Refused: `E2008 The value does not fit within the range of type core::felt252` (2^252 - 1 > P). A felt cannot hold 2^252 - 1 either. |
+| `BoundedInt<0, 2^251 - 1>` + `AddHelper` (result `<0, 2^252 - 2>`) | Refused: `E2008` (result max > P). |
+| `SubHelper` on it (result `<-(2^251 - 1), 2^251 - 1>`) | Compiler panic: `Could not specialize type BoundedInt<-..., ...>` (range size >= P). |
+| `bounded_int_div_rem<BoundedInt<0, 2^251 - 1>, BoundedInt<1, 255>>` | Refused: `Could not specialize libfunc bounded_int_div_rem ... unsupported` (quotient must be < 2^128). |
+| `bounded_int_constrain` at 2^128 | Refused: both halves must span at most 2^128 values. |
+| `downcast<felt252, BoundedInt<0, 2^251 - 1>>` | Refused: `downcast` only targets ranges of at most 2^128 values. |
+| `BoundedInt<0, P - 1>` | Type accepted; `upcast` to `felt252` is free (identity), but `upcast<felt252, _>` is refused (the felt252 range is `(-P, P)`) and `downcast` too: it cannot be built from a felt, so it cannot carry the infallible `Into`. |
+| `bounded_int_is_zero` | Usable only in corelib: its result type `IsZeroResult` is not visible outside. |
+| Bitwise on a 252-bit word | No libfunc: `bitwise` exists only for `u8..u128`. |
+
+Why the checks need two splits: the only sound range proof on a full-range felt is the
+`felt252 -> u256` split (`u128s_from_felt252`: 1 range check below 2^128, 3 above, measured 820 and
+1_611 per op). For `[0, P - 1]`, `a + b` and `a + b - P` are the same field element, so the sum
+alone cannot reveal the overflow; with the split of one operand it can (`a + b` wraps iff the
+field sum is below `a`). The same holds for `[0, 2^251 - 1]` (`2 * MAX > P`), which in addition
+pays a split on every `TryInto<felt252>` (2_281).
+
+### Results
+
+Per op = (test - baseline) / 100, the baseline being the test that builds the same operands.
+
+| Operation | Test | Measured | Budget | Per op |
+|---|---|---:|---:|---:|
+| _Baselines_ | | | | |
+| Loop only | `bench_u252_baseline_loop` | 141_990 | 150_000 |  |
+| Two wide felts `fa(n)`, `fb(n)` | `bench_u252_baseline_felt` | 211_290 | 222_000 |  |
+| One wide felt `fc(n)` | `bench_u252_baseline_shift` | 171_690 | 181_000 |  |
+| One narrow felt | `bench_u252_baseline_narrow` | 161_790 | 170_000 |  |
+| Two `u256` (both limbs vary) | `bench_u252_baseline_u256` | 338_010 | 355_000 |  |
+| One `u256` | `bench_u252_baseline_shift_u256` | 235_050 | 247_000 |  |
+| Two `u128` | `bench_u252_baseline_u128` | 244_950 | 258_000 |  |
+| One `u128` | `bench_u252_baseline_u128_one` | 188_520 | 198_000 |  |
+| _Checked add_ | | | | |
+| `u256 +` | `bench_u252_add_u256` | 523_140 | 550_000 | 1_851 |
+| `u128 +` | `bench_u252_add_u128` | 271_680 | 286_000 | 267 |
+| `felt252 +` (unchecked) | `bench_u252_add_felt` | 211_290 | 222_000 | 0 |
+| **`u252 +`: `split(a + b) >= split(a)` (winner)** | `bench_u252_add` | 633_490 | 666_000 | 4_222 |
+| `u252 +`, narrow operands | `bench_u252_add_narrow` | 460_490 | 484_000 | 2_987 |
+| `u252 +` via `split(a) + split(b) < P` (loser) | `bench_u252_add_via_sum` | 848_490 | 891_000 | 6_372 |
+| `[0, 2^251 - 1]` add (two splits, high limb < 2^123) | `bench_u251_add` | 818_490 | 860_000 | 6_072 |
+| _Checked sub_ | | | | |
+| `u256 -` | `bench_u252_sub_u256` | 531_060 | 558_000 | 1_930 |
+| `u128 -` | `bench_u252_sub_u128` | 271_680 | 286_000 | 267 |
+| **`u252 -`: `split(a - b) <= split(a)` (winner)** | `bench_u252_sub` | 633_490 | 666_000 | 4_222 |
+| `u252 -` via `split(a) >= split(b)` (loser) | `bench_u252_sub_via_operands` | 653_490 | 687_000 | 4_422 |
+| `[0, 2^251 - 1]` sub | `bench_u251_sub` | 653_490 | 687_000 | 4_422 |
+| _Wrapping add and sub_ | | | | |
+| `u256` `wrapping_add` | `bench_u252_wrapping_add_u256` | 503_340 | 529_000 | 1_653 |
+| `u128` `wrapping_add` | `bench_u252_wrapping_add_u128` | 322_170 | 339_000 | 772 |
+| **`u252` `wrapping_add` (mod P, field add)** | `bench_u252_wrapping_add` | 211_290 | 222_000 | 0 |
+| **`u252` `wrapping_sub` (mod P, field sub)** | `bench_u252_wrapping_sub` | 211_290 | 222_000 | 0 |
+| _Left shift by 17 (checked)_ | | | | |
+| `u256 * 2^17` | `bench_u252_shl_u256` | 1_631_300 | 1_713_000 | 13_962 |
+| `felt252 * 2^17` (`Bits::shl`, unchecked) | `bench_u252_shl_felt` | 318_690 | 335_000 | 1_470 |
+| **`u252::shl`: low bits of the canonical product (winner)** | `bench_u252_shl` | 689_010 | 724_000 | 5_173 |
+| `u252::shl` by 145 (high-limb branch), narrow operand | `bench_u252_shl_high` | 719_010 | 755_000 | 5_572 |
+| `u252::shl`, low limb times `2^-k` cast to `u128` (loser) | `bench_u252_shl_inv_cast` | 729_490 | 766_000 | 5_578 |
+| `u252::shl`, mask split to `u256` + two-limb AND (loser) | `bench_u252_shl_mask_u256` | 872_510 | 917_000 | 7_008 |
+| `u252::shl` via `u256` overflowing product (loser) | `bench_u252_shl_via_u256` | 2_067_490 | 2_171_000 | 18_958 |
+| _Right shift by 17 (the exact tests include one felt mul, 98)_ | | | | |
+| `u256 / 2^17` (floor) | `bench_u252_shr_u256` | 870_050 | 914_000 | 6_350 |
+| `felt252 * 2^-17` (`Bits::shr_exact`, unchecked) | `bench_u252_shr_exact_felt` | 328_590 | 346_000 | 1_569 |
+| **`u252::shr_exact`: low limb times `2^-k` cast to `u128` (winner)** | `bench_u252_shr_exact` | 602_490 | 633_000 | 4_308 |
+| `u252::shr_exact`, mask cast + limb AND (loser) | `bench_u252_shr_exact_and` | 836_010 | 878_000 | 6_643 |
+| **`u252::shr` (floor): dropped bits by limb AND, exact field division** | `bench_u252_shr` | 826_010 | 868_000 | 6_543 |
+| _DivRem by 7_ | | | | |
+| `u256` DivRem | `bench_u252_divrem_u256` | 879_950 | 924_000 | 6_449 |
+| `u128` DivRem | `bench_u252_divrem_u128` | 344_940 | 363_000 | 1_564 |
+| **`u252::div_rem`: split + `u256` DivRem (winner)** | `bench_u252_divrem` | 1_038_490 | 1_091_000 | 8_668 |
+| `u252::div_rem`: 4 `u128` DivRem + `felt252_div` (loser) | `bench_u252_divrem_felt` | 1_287_490 | 1_352_000 | 11_158 |
+| _Checked mul (wide x small)_ | | | | |
+| `u256 *` | `bench_u252_mul_u256` | 1_738_220 | 1_826_000 | 14_002 |
+| `felt252 *` (unchecked) | `bench_u252_mul_felt` | 238_020 | 250_000 | 267 |
+| **`u252 *`: two `u128` wide products (winner)** | `bench_u252_mul` | 1_302_490 | 1_368_000 | 10_912 |
+| `u252 *`, narrow x narrow | `bench_u252_mul_narrow` | 1_156_490 | 1_215_000 | 9_947 |
+| `u252 *` via `u256` overflowing product (loser) | `bench_u252_mul_u256_product` | 1_986_020 | 2_086_000 | 17_747 |
+| _Comparisons_ | | | | |
+| `u256 ==` | `bench_u252_eq_u256` | 420_180 | 442_000 | 822 |
+| `felt252 ==` | `bench_u252_eq_felt` | 240_990 | 254_000 | 297 |
+| **`u252 ==`** | `bench_u252_eq` | 240_990 | 254_000 | 297 |
+| `u256 <` | `bench_u252_lt_u256` | 427_110 | 449_000 | 891 |
+| `u128 <` | `bench_u252_lt_u128` | 321_180 | 338_000 | 762 |
+| **`u252 <`: two splits + `u256 <` (winner)** | `bench_u252_lt` | 644_490 | 677_000 | 4_332 |
+| `u252 <`, narrow operands | `bench_u252_lt_narrow` | 520_400 | 547_000 | 3_586 |
+| `u252 <`, limbs compared by hand (loser) | `bench_u252_lt_manual` | 661_490 | 695_000 | 4_502 |
+| `[0, 2^251 - 1]` `<` | `bench_u251_lt` | 644_490 | 677_000 | 4_332 |
+| **`u252 <=`** | `bench_u252_le` | 664_490 | 698_000 | 4_532 |
+| `felt252 == 0` | `bench_u252_is_zero_felt` | 201_390 | 212_000 | 297 |
+| **`u252::is_zero`** | `bench_u252_is_zero` | 201_390 | 212_000 | 297 |
+| _Bitwise_ | | | | |
+| `u128 &` | `bench_u252_and_u128` | 394_850 | 415_000 | 1_499 |
+| `u256 &` | `bench_u252_and_u256` | 576_610 | 606_000 | 2_386 |
+| `u256 \|` | `bench_u252_or_u256` | 576_610 | 606_000 | 2_386 |
+| `u256 ^` | `bench_u252_xor_u256` | 576_610 | 606_000 | 2_386 |
+| **`u252 &`** (two splits, join) | `bench_u252_and` | 821_690 | 863_000 | 6_104 |
+| **`u252 \|`** (two splits, `< P` check, join) | `bench_u252_or` | 911_510 | 958_000 | 7_002 |
+| **`u252 ^`** (two splits, `< P` check, join) | `bench_u252_xor` | 911_510 | 958_000 | 7_002 |
+| Bit test, `u256` (`Bits::get`) | `bench_u252_bit_test_u256` | 776_540 | 816_000 | 5_415 |
+| **Bit test, `u252::bit`** (split + `Bits::get`) | `bench_u252_bit_test` | 884_080 | 929_000 | 7_124 |
+| Bit set known unset, felt `+ 2^i` (`Bits::set`) | `bench_u252_bit_set_felt` | 421_650 | 443_000 | 2_500 |
+| **Bit set, `u252::set_bit`** (split, limb test, `< P` check) | `bench_u252_bit_set` | 929_060 | 976_000 | 7_574 |
+| _Conversions, Serde, storage_ | | | | |
+| **`felt252 -> u252` and back (`Into`, both ways)** | `bench_u252_from_felt` | 171_690 | 181_000 | 0 |
+| `u252 -> u256` (`Into`), wide | `bench_u252_to_u256` | 332_790 | 350_000 | 1_611 |
+| `u252 -> u256` (`Into`), narrow | `bench_u252_to_u256_narrow` | 243_740 | 256_000 | 820 |
+| `u256 -> u252` (`TryInto`, `< P`) | `bench_u252_from_u256` | 340_980 | 359_000 | 1_059 |
+| `u128 -> u252` (`Into`) | `bench_u252_from_u128` | 188_520 | 198_000 | 0 |
+| `u252 -> u128` (`TryInto`) | `bench_u252_to_u128` | 188_890 | 199_000 | 271 |
+| `u8 -> u252` (`Into`, the test adds 1) | `bench_u252_from_u8` | 151_890 | 160_000 | 99 |
+| `u252 -> u8` (`TryInto`, the test adds 1) | `bench_u252_to_u8` | 205_350 | 216_000 | 634 |
+| `felt252 -> [0, 2^251 - 1]` (`TryInto`: split + high < 2^123) | `bench_u251_from_felt` | 399_790 | 420_000 | 2_281 |
+| `u256` Serde round trip | `bench_u252_serde_u256` | 439_050 | 462_000 | 2_040 |
+| **`u252` Serde round trip (no range check)** | `bench_u252_serde` | 231_790 | 244_000 | 601 |
+| **`u252` `StorePacking` round trip** | `bench_u252_store_packing` | 171_690 | 181_000 | 0 |
+| _`Layout::expand` and BFS layer step, 17x14 (per op = (test - loop) / 100)_ | | | | |
+| `expand` on `u256` (library) | `bench_u252_expand_u256` | 2_077_410 | 2_182_000 | 19_354 |
+| `expand` on `u252` (bench copy) | `bench_u252_expand` | 2_246_500 | 2_359_000 | 21_045 |
+| BFS step on `u256`: `expand & U`, `U - F'` (library) | `bench_u252_step_u256` | 2_239_260 | 2_352_000 | 20_973 |
+| BFS step on `u252`: `u252 &`, `wrapping_sub` | `bench_u252_step` | 2_404_340 | 2_525_000 | 22_624 |
+| BFS step on `u252`, fused: one split of `U`, one join | `bench_u252_step_fused` | 2_292_340 | 2_407_000 | 21_504 |
+
+### Verdict
+
+* **Where `u252` removes the `u256` overhead**: everything that stays a field operation.
+  `Into` both ways, `StorePacking` and `wrapping_add`/`wrapping_sub` (modulo P) cost 0 (`u256`:
+  1.6k for a wrapping add); `==` and `is_zero` 0.3k (`u256 ==`: 0.8k); `Serde` 0.6k (`u256`:
+  2.0k); unchecked shifts stay felt products (1.5k with the table lookup, `u256 * 2^17`: 14.0k).
+  Checked left shift 5.2k and checked mul 10.9k beat `u256` (14.0k both); checked exact right shift
+  4.3k beats the `u256` division (6.4k).
+* **Where it cannot**: every operation that needs the integer order or the bits pays one
+  `felt252 -> u256` split per operand (0.8k narrow, 1.6k wide). Checked add/sub 4.2k vs 1.9k,
+  `<` 4.3k vs 0.9k, `&` 6.1k and `|`/`^` 7.0k vs 2.4k, bit test 7.1k vs 5.4k, DivRem 8.7k vs 6.4k,
+  floor right shift 6.5k vs 6.4k. No libfunc offers a cheaper range proof or a wider bitwise.
+* **Cost of the infallible `Into`**: nothing for the conversions themselves; compared with a
+  `[0, 2^251 - 1]` type the checked add is even cheaper (4.2k vs 6.1k: the overflow test is one
+  comparison with an operand, instead of a sum of two splits), sub and `<` are equal, and the
+  2^251 type pays 2.3k on every `TryInto<felt252>` and `Serde` read.
+* **Bitmaps**: `expand` on `u252` costs 21.0k vs 19.4k (+9 %) and the BFS layer 22.6k vs 21.0k
+  (+8 %), 21.5k (+2.5 %) when fused. The set operations stay `u256` inside `expand`; a `u252`
+  frontier only adds a split and a join. `expand_small` (8.1k on 7x7, one `u128` limb) is out of
+  reach of any 252-bit form. `helpers/bits.cairo` and `helpers/layout.cairo` stay on `u256`
+  with felt shifts; `u252` is worth using for counters, storage and APIs that convert to and from
+  `felt252`, not for the set algebra.
