@@ -1,0 +1,6 @@
+# Kept out of the published package (`scarb package`), still in the repository.
+# Integration tests (README examples).
+/tests/
+# Test-only module: declared under `#[cfg(target: "test")]` in `src/lib.cairo`, so the
+# verification build and dependents compile without it.
+/src/helpers/printer.cairo

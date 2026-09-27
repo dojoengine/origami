@@ -1,0 +1,3 @@
+# Kept out of the published package (`scarb package`), still in the repository.
+# Integration tests (README examples).
+/tests/
