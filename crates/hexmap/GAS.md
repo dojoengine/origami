@@ -134,7 +134,159 @@ _To be filled by lot L2._
 
 ## L3 Dial
 
-_To be filled by lot L3._
+Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas). Library: `finders/dial.cairo`, benchmarks,
+harness and losing variants: `tests/bench_dial.cairo`. Every result is checked against a scalar
+Dijkstra (`dijkstra`, test-only): equal total cost, valid path (adjacent tiles, walkable, no edge tile
+but the target), on the 10 fixtures, random caves (17x14, 19x13), 3x3, open edge tiles and 0 to 3
+pseudo-random cost classes. With no class, the path length equals the scalar BFS of
+`tests/variants.cairo`.
+
+Cost maps of the benchmarks (`*_COST_2`, `*_COST_3`, generated offline): 2 classes over 30 % of the
+floor (18 % cost 2, 10 % cost 3); `*_CLASS_2`, `*_COST_3`, `*_CLASS_4` split them into 3 classes.
+Far pairs of `tests/fixtures.cairo`.
+
+### Library
+
+| Test | Measured | Budget | Path tiles | Path cost |
+|---|---:|---:|---:|---:|
+| `bench_dial_baseline_17x14` (fixture + costs only) | 13_720 | 15_000 | | |
+| `bench_dial_empty_17x14` | 1_184_765 | 1_245_000 | 20 | 20 |
+| **`bench_dial_cave_17x14`** (target < 1.5M) | **1_427_654** | 1_500_000 | 24 | 25 |
+| `bench_dial_cave_17x14_near` | 289_645 | 305_000 | 4 | 4 |
+| `bench_dial_maze_17x14` | 3_364_897 | 3_534_000 | 53 | 74 |
+| `bench_dial_serpentine_17x14` | 5_094_739 | 5_350_000 | 90 | 125 |
+| `bench_dial_unreachable_17x14` (floods the component) | 681_530 | 716_000 | 0 | |
+| `bench_dial_cave_17x14_classes_0` (unit-cost loop) | 938_551 | 986_000 | 24 | 24 |
+| `bench_dial_cave_17x14_classes_1` | 1_393_694 | 1_464_000 | 24 | 25 |
+| `bench_dial_cave_17x14_classes_3` | 1_464_174 | 1_538_000 | 24 | |
+| `bench_dial_empty_17x14_classes_0` | 763_597 | 802_000 | 19 | 19 |
+| `bench_dial_maze_17x14_classes_0` | 2_005_148 | 2_106_000 | 53 | 53 |
+| `bench_dial_serpentine_17x14_classes_0` | 3_293_977 | 3_459_000 | 90 | 90 |
+| `bench_dial_cave_7x7` (`u128` path) | 298_947 | 314_000 | | |
+| `bench_dial_cave_7x7_classes_0` (`u128` path) | 175_278 | 185_000 | | |
+| `bench_dial_field_cave_17x14_budget_8` | 335_705 | 353_000 | | |
+
+### Per time step and per path tile
+
+A time step settles one bucket: dilation intersected with the unvisited set (12 applications of the
+bitwise builtin on `u256`, 6 on `u128`), one AND per class, target test, bucket ring. Measured on
+`field_of_movement` (same loop, no layer storage, no target test) from tile 110 of `EMPTY_17X14`,
+`(budget 8 - budget 2) / 6`; 7x7 from tile 8, `(budget 4 - budget 1) / 3`.
+
+| Classes | 17x14 budget 2 | 17x14 budget 8 | **Per time step, 17x14** (target < 40k) | Per time step, 7x7 (`u128`) |
+|---:|---:|---:|---:|---:|
+| 0 (unit-cost loop, no buckets) | 89_901 | 248_637 | 26_456 | 13_548 |
+| 1 | 118_199 | 331_801 | 35_600 | |
+| 2 | 126_717 | 347_555 | **36_806** | 20_544 |
+| 3 | 134_645 | 362_719 | 38_012 | |
+
+Budgets: `bench_dial_field_empty_17x14[_classes_k]_budget_{2,8}` and
+`bench_dial_field_empty_7x7_classes_{0,2}_budget_{1,4}` (48_787 / 89_431 and 69_315 / 130_947).
+
+Per path tile (backtracking: neighbour mask of the tile times the layer at `d - cost`, lowest bit,
+direction by field comparisons, cost by one test of the "any class" plane, two more for the tiles of
+cost 3 and 4):
+
+* Harness, measured (`bench_dial_variant_backtrack_twice - _once`, 24 tiles): 20_049 per tile with 2
+  classes, 18_089 with unit costs. The harness copy is slower than the library (below).
+* Library, derived: `(search - setup - steps x per step) / tiles` with the harness setup (80_994)
+  gives about 10k per tile with unit costs (`classes_0`, 23 steps) and about 19k with 2 classes
+  (24 steps).
+* Microbenchmarks (per op, loop baseline 145_020): one backtracking step 9_587 (South-East hit,
+  first comparison) to 10_604 (North-West, last comparison); cost of a class-3 tile 5_199 (3
+  applications); lowest-bit extraction 2_138.
+
+Reference `origami_map` (`scarb test -p origami_map -f dijkstra`, cairo-test estimate, unit costs,
+4 directions): `test_dijkstra_search_large` (18x14, 17-tile path) 22_826_630, medium (4x4) 2_292_184.
+It has no weighted search.
+
+### Variants (CAVE 17x14 far pair, 2 classes, harness)
+
+The variants run in a harness copy of the library on `u256` (`search_winner`, interior endpoints),
+which costs 7 % more than the library; each changes one building block. All of them return a path of
+the oracle cost (`test_dial_variants_*`), and the harness winner returns the library path.
+
+| Axis | Variant | Test | Measured | Budget | vs winner |
+|---|---|---|---:|---:|---:|
+| | **Winner (harness copy)**: felt bucket ring in locals, `N = E & U` then `N & C_k`, all layers stored, mask backtracking | `bench_dial_variant_winner_17x14` | 1_531_397 | 1_608_000 | |
+| Bucket ring | fixed-size array `[felt252; 4]`, destructured and rebuilt | `bench_dial_variant_fixed_ring_17x14` | 1_510_831 | 1_587_000 | -1.3 % |
+| Bucket ring | `Array<felt252>` rebuilt every step | `bench_dial_variant_array_ring_17x14` | 2_066_911 | 2_171_000 | +35.0 % |
+| Class masking | unvisited set partitioned by class once (`U_k`), `E & U_k`, removal by subtraction | `bench_dial_variant_partition_17x14` | 1_762_061 | 1_851_000 | +15.1 % |
+| Set operations | corelib (`Layout::expand`, `u256` `&`, `-`) | `bench_dial_variant_corelib_17x14` | 1_581_216 | 1_661_000 | +3.3 % |
+| Layers | only the non-empty layers with their times, backtracking by `pop_back` | `bench_dial_variant_sparse_layers_17x14` | 1_522_711 | 1_599_000 | -0.6 % |
+| Backtracking | 6 single-bit tests in fixed direction order, cost by plane bit tests | `bench_dial_variant_bit_tests_17x14` | 2_151_563 | 2_260_000 | +40.5 % |
+| Unit costs | winner forward loop with no class (buckets) vs the unit loop (1_077_885) | `bench_dial_variant_unit_buckets_17x14` | 1_350_895 | 1_419_000 | +25.3 % |
+| Width | `u256` harness on CAVE 7x7 vs the library `u128` path (298_947) | `bench_dial_variant_u256_7x7` | 469_062 | 493_000 | +56.9 % |
+| Baseline | scalar Dijkstra, binary heap in a `Felt252Dict`, parents in a dictionary | `bench_dial_variant_dijkstra_heap_17x14` | 25_902_461 | 27_198_000 | library x18.1 cheaper |
+| Baseline | same, EMPTY 17x14 (library 1_184_765) | `bench_dial_variant_dijkstra_heap_empty_17x14` | 37_706_695 | 39_593_000 | x31.8 |
+| Baseline | same, MAZE 17x14 (library 3_364_897) | `bench_dial_variant_dijkstra_heap_maze_17x14` | 13_463_407 | 14_137_000 | x4.0 |
+| Baseline | same, CAVE 7x7 (library 298_947) | `bench_dial_variant_dijkstra_heap_7x7` | 3_914_230 | 4_110_000 | x13.1 |
+
+Harness pieces: `bench_dial_variant_setup_17x14` 80_994 (budget 86_000),
+`bench_dial_variant_forward_only_17x14` 1_031_141 (1_083_000), backtracking once / twice 1_515_011 /
+1_996_181 (1_591_000 / 2_096_000), unit 1_077_985 / 1_512_138 (1_132_000 / 1_588_000), bit tests
+twice 3_269_485 (3_433_000), `bench_dial_variant_unit_winner_17x14` 1_077_885 (1_132_000).
+
+Microbenchmarks (100 repetitions, per op = (test - `bench_dial_micro_loop` 145_020) / 100):
+
+| Operation | Test | Measured | Budget | Per op |
+|---|---|---:|---:|---:|
+| One bitwise application (`u128` AND) | `bench_dial_micro_and_limb` | 317_130 | 333_000 | 1_721 |
+| `u256` AND, one application per limb | `bench_dial_micro_and_triple` | 426_030 | 448_000 | 2_810 |
+| `u128` checked sub | `bench_dial_micro_limb_sub` | 194_130 | 204_000 | 491 |
+| felt -> `u256` (wide) | `bench_dial_micro_felt_to_u256` | 322_890 | 340_000 | 1_779 |
+| Dilation + AND, local triple (library) | `bench_dial_micro_expand_triple` | 2_232_020 | 2_344_000 | 20_870 |
+| Dilation + AND, `Layout::expand` + `u256 &` | `bench_dial_micro_expand_corelib` | 2_258_020 | 2_371_000 | 21_130 |
+| Backtracking step, South-East hit | `bench_dial_micro_step_mask` | 1_103_760 | 1_159_000 | 9_587 |
+| Backtracking step, North-West hit | `bench_dial_micro_step_mask_north_west` | 1_205_440 | 1_266_000 | 10_604 |
+| Cost of a class-3 tile | `bench_dial_micro_cost` | 664_882 | 699_000 | 5_199 |
+| Lowest bit of a limb | `bench_dial_micro_lowest` | 358_790 | 377_000 | 2_138 |
+| Felt product + equality | `bench_dial_micro_felt_eq` | 194_780 | 205_000 | 498 |
+| `span.at` on `Array<u256>` | `bench_dial_micro_span_at` | 132_090 | 139_000 | below the loop baseline |
+
+### Library iterations (library tests, before -> after)
+
+| Step | CAVE far, 2 classes | CAVE far, unit | CAVE 7x7, 2 classes |
+|---|---:|---:|---:|
+| First cut: `u256` buckets, `Layout::expand` + AND, cost by 2 plane tests, mask converted to `u256` | 1_581_334 | 1_223_325 | 461_371 |
+| Local dilation with the bitwise triple | 1_563_884 | 1_376_315 | 450_361 |
+| Felt buckets, unit-cost loop, single-limb mask (`try_into`), "any class" plane first | 1_440_654 | 930_321 | 413_779 |
+| Generic `Set<T>`, `u128` path (helpers `#[inline]` only) | 1_477_644 | 984_241 | 311_537 |
+| Helpers inlined by hand (generic functions cannot be `inline(always)`) | 1_459_534 | 962_841 | 306_907 |
+| Class planes built from `u256` (3 conversions instead of 6), limb bounds by value | 1_436_714 | 944_861 | 299_297 |
+| Bucket ring as a fixed-size array | 1_432_634 | 944_861 | 298_217 |
+| Backtracking constants in a `Box` | **1_427_654** | **938_551** | **298_947** |
+
+The iteration stopped after two consecutive ideas below 2 % (fixed ring -0.3 %, `Box` -0.35 %).
+The generic form costs +0.7 % on unit costs 17x14 against the last non-generic version (938_551 vs
+930_321) and saves 28 % on 7x7.
+
+Sierra code size (non-specialized `finders::dial` functions of the test build): 16_170 statements;
+the `u128` instances are 6_316 of them (`u256`: 6_827). The fixed ring is also smaller than the ring
+in locals (16_170 vs 16_304 statements).
+
+### Decisions
+
+* **Tile costs make the first arrival final**: a tile is scheduled once, in the bucket `t + cost`, and
+  leaves the unvisited set when scheduled, not when settled. No stale bucket entries, no AND at pop
+  time, and the search stops when the target is *scheduled*.
+* **Classes**: `N = dilation & U`, then one AND per non-empty class, class 1 by subtraction.
+  Partitioning `U` by class once is 15 % more (same number of ANDs, 3 more subtractions per step).
+  Overlapping class bitmaps: **the highest class wins** (partition at setup, 1 AND per class).
+* **Buckets**: 4 felts in a fixed-size array; the scheduled sets are disjoint, so union = addition and
+  "all empty" = one sum. A `u256` ring pays 2 limb additions per class per step (0.5k each); the
+  felt ring pays one wide conversion (1.8k) per step.
+* **Unit costs** take a separate loop without buckets (-25 %).
+* **`u128` path** for boards of at most 128 bits (-36 % on 7x7), shared code through `Set<T>`.
+* **Layers**: every time step stored (empty ones as 0), read by index. Sparse storage is 0.6 %
+  cheaper in the harness, below the threshold, and adds a times array.
+* **Backtracking**: neighbour mask `2^v * M_parity` narrowed to the limb that holds it (`try_into`,
+  0.3k, instead of a 1.8k conversion), one AND, lowest bit, direction by field comparisons. 6 single
+  bit tests are 40 % more.
+* **Edge endpoints**: an edge start is seeded with its open interior neighbours (scalar), an edge
+  target is added to the unvisited set and never expanded, its predecessor found by a scalar scan.
+  `field_of_movement` keeps open edge tiles in the unvisited set and ANDs the frontier with the
+  interior only when the grid has open edge tiles.
 
 ## L4 Caver
 
