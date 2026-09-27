@@ -14,10 +14,10 @@ use super::helpers::{FixedStorePacking, mul_div};
 /// the auction has started.
 #[derive(Copy, Drop, Serde, starknet::Store)]
 pub struct DiscreteGDA {
-    sold: Fixed,
-    initial_price: Fixed,
-    scale_factor: Fixed,
-    decay_constant: Fixed,
+    pub sold: Fixed,
+    pub initial_price: Fixed,
+    pub scale_factor: Fixed,
+    pub decay_constant: Fixed,
 }
 
 #[generate_trait]
@@ -70,9 +70,9 @@ pub impl DiscreteGDAImpl of DiscreteGDATrait {
 /// emission rate, decay constant, and the time since the last purchase in days.
 #[derive(Copy, Drop, Serde, starknet::Store)]
 pub struct ContinuousGDA {
-    initial_price: Fixed,
-    emission_rate: Fixed,
-    decay_constant: Fixed,
+    pub initial_price: Fixed,
+    pub emission_rate: Fixed,
+    pub decay_constant: Fixed,
 }
 
 #[generate_trait]

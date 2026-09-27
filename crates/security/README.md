@@ -46,6 +46,7 @@ Here are some examples of how to use the Security crate:
 ### Commit/Reveal
 
 ```rust
+use core::poseidon::poseidon_hash_span;
 use origami_security::commitment::{Commitment, CommitmentTrait};
 
 // Create a new commitment
