@@ -571,7 +571,299 @@ Per-component costs measured on the way (17x14): a loop iteration with a felt co
 
 ## L7 Spreader
 
-_To be filled by lot L7._
+Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas).
+
+### Method: mean and max over 256 seeds
+
+The cost of a draw depends on the seed, so every benchmark of `bench_spreader.cairo` is a fuzz
+test (`#[fuzzer(runs: N, seed: 7)]`, argument `k: u16`, seed `'SEED' + k`): snforge reports the
+max, min and mean of `l2_gas` over the runs. Per call = run - 67_351, the mean of
+`bench_spreader_baseline` (the same harness around a trivial body; its runs range from 49_990 to
+68_560, so a per-call max is exact to about -17k/+1k). `#[available_gas]` applies to every run,
+so each budget is `ceil(1.05 * max run, 1000)`: CI fails when any of the seeds gets more expensive.
+The library and its `u256`-only variant run 256 seeds in CI; the losers run 32 seeds in CI, and their
+256-seed figures below come from the same tests with `runs: 256` (measured once). `first version`
+is PR #130 before the audit, measured with the same harness at its commit.
+
+Fixtures: EMPTY/CAVE/MAZE 17x14 and 7x7 (shared fixtures), and, for audit A2 finding 1:
+SPARSE2_10X25 (2 walkable tiles in opposite corners of a 250-bit board), SPARSE5_17X14 (5 walkable
+tiles of 238) and D30_17X14 (71 random interior tiles, 30 % of the board). The 7x7 fixtures have at
+most 25 walkable tiles: count 60 does not apply, and MAZE_7X7 uses count 16 (all its tiles).
+
+### Algorithm (after audit A2)
+
+`Spreader::generate` chooses `k = min(count, walkable - count)` tiles (complement trick) by
+**radix select on random keys**: every tile gets a random key, one bit per Poseidon word, and the
+`k` tiles with the smallest keys are chosen, ties broken uniformly. Each level splits the current
+class with one word (`Z = S & word`, one popcount): if `k <= |Z|` the choice continues in `Z`,
+otherwise `Z` is taken whole and the choice continues in `S - Z`. A class of at most 8 tiles is
+finished at once: a uniform `k`-subset of its ranks from a 511-entry table (every mask of up to 8
+bits, grouped by size and popcount), deposited on the class by a walk of at most 8 steps. About
+`log2(n / 8)` levels (4 to 5 on 17x14), whatever the seed. Small counts are picked one by one when
+that is cheaper (`prefer_picks`, a cost rule from the measurements below): at most 2 rejection trials
+when the set covers at least 30 % of the board, then a select of a random rank from byte counts
+(SWAR prefix sums, updated at every removal), or a walk on sets of at most 8 tiles.
+
+Every loop is bounded: at most 12 levels (more than 8 tiles left after 12 levels has probability
+below `4096 * C(251, 9) * 2^-108 < 2^-42`), at most 8 deposit steps, at most 125 picks of at most 2 trials and one select (no
+loop) or a walk of at most 7 steps, at most 7 walk steps per limb elsewhere.
+
+### Uniformity and bias
+
+Every decision depends only on counts and on random bits, so the output law is invariant under any
+permutation of the walkable tiles: uniform among the `count`-subsets, up to the random sources.
+Exact bounds (doc of `generate`, tests `test_spreader_bias_*`):
+
+| Source | Bound | Proof |
+|---|---|---|
+| Key words: Poseidon outputs, uniform below `P = 2^251 + 17 * 2^192 + 1`, used as 251 fair bits | `(17 * 2^192 + 1) / P < 2^-54.9` per word, at most 12 words: `< 2^-51.3` | `test_spreader_bias_field_bits` checks `P - 1 = 2^251 + 17 * 2^192` and the ratio against `2^-54`/`2^-55` |
+| `Rng` draws: mixed radix digits of a 128-bit pool refilled below 2^32 | `2^-24` per pool (bounds of one pool multiply to less than `2^96 * 251 < 2^104`), one pool per call in practice; worst case one pool per draw, at most 375 draws: `< 2^-15.4` | `test_spreader_bias_pool` checks the refill threshold, every bound `<= 251` (table groups `<= 70`) and `2^96 * 251 < 2^104` |
+
+The `2^-125` of the audit note holds for the first draw of a pool only; later draws of the same
+pool see a smaller pool, hence the `2^-24` per pool. Statistical tests (per-tile bounds and a
+sum-of-squares bound, 180 to 1000 seeds) cover the u128 and u256 radix, the complement, the dense
+and sparse picks, the subset table and the sparse grids of the audit; a mutation that always
+takes the first mask of the table fails three of them.
+
+### Per call, mean / max over 256 seeds
+
+| Fixture | count | **winner (radix)** | first version (PR #130 v1) | one-round mask | plain rejection | selection sampling (design) | rank (Floyd) | winner without u128 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| CAVE_17X14 | 1 | 86k / 137k | 64k / 139k | 91k / 155k | 55k / 128k | 646k / 1225k | 634k / 1238k |  |
+| CAVE_17X14 | 5 | 206k / 273k | 138k / 270k | 175k / 296k | 139k / 270k | 1044k / 1227k | 1115k / 1297k |  |
+| CAVE_17X14 | 20 | **191k / 241k** | 177k / 465k | 197k / 1100k | 474k / 681k | 1183k / 1233k | 1467k / 1518k |  |
+| CAVE_17X14 | 60 | 199k / 255k | 201k / 536k | 243k / 683k | 1662k / 2159k | 1239k / 1251k | 2090k / 2106k |  |
+| EMPTY_17X14 | 1 | 74k / 136k | 58k / 82k | 86k / 116k | 48k / 71k | 796k / 1638k | 912k / 1687k |  |
+| EMPTY_17X14 | 5 | 192k / 319k | 127k / 207k | 149k / 227k | 111k / 190k | 1399k / 1673k | 1474k / 1746k |  |
+| EMPTY_17X14 | 20 | 208k / 282k | 196k / 429k | 219k / 387k | 361k / 489k | 1610k / 1679k | 1897k / 1970k |  |
+| EMPTY_17X14 | 60 | 207k / 275k | 194k / 683k | 217k / 632k | 1155k / 1433k | 1677k / 1697k | 2543k / 2563k |  |
+| MAZE_17X14 | 1 | 95k / 137k | 71k / 183k | 98k / 175k | 61k / 170k | 446k / 870k | 491k / 886k |  |
+| MAZE_17X14 | 5 | 191k / 242k | 163k / 300k | 212k / 348k | 176k / 363k | 737k / 872k | 815k / 944k |  |
+| MAZE_17X14 | 20 | 181k / 251k | 187k / 575k | 232k / 888k | 668k / 1051k | 849k / 878k | 1134k / 1165k |  |
+| MAZE_17X14 | 60 | 184k / 247k | 212k / 617k | 259k / 780k | 1126k / 1537k | 867k / 886k | 1323k / 1342k |  |
+| CAVE_7X7 | 1 | 75k / 109k | 61k / 131k | 96k / 184k | 56k / 136k | 141k / 244k | 167k / 264k | 84k / 130k |
+| CAVE_7X7 | 5 | 113k / 167k | 114k / 251k | 148k / 588k | 160k / 336k | 218k / 246k | 293k / 322k | 134k / 201k |
+| CAVE_7X7 | 20 | 115k / 152k | 101k / 211k | 153k / 921k | 107k / 232k | 195k / 245k | 250k / 293k | 136k / 183k |
+| EMPTY_7X7 | 1 | 74k / 109k | 60k / 114k | 94k / 184k | 55k / 117k | 158k / 262k | 178k / 282k | 82k / 130k |
+| EMPTY_7X7 | 5 | 117k / 167k | 112k / 213k | 149k / 588k | 151k / 336k | 233k / 264k | 310k / 340k | 139k / 201k |
+| EMPTY_7X7 | 20 | 117k / 167k | 112k / 214k | 149k / 588k | 151k / 336k | 233k / 264k | 310k / 341k | 139k / 202k |
+| MAZE_7X7 | 1 | 83k / 109k | 68k / 168k | 153k / 1155k | 65k / 180k | 118k / 182k | 132k / 201k | 95k / 130k |
+| MAZE_7X7 | 5 | 102k / 146k | 115k / 309k | 154k / 751k | 220k / 451k | 166k / 183k | 242k / 259k | 119k / 174k |
+| MAZE_7X7 | 16 | 38k / 39k | 40k / 42k | 69k / 71k | 32k / 33k | 36k / 38k | 42k / 43k | 39k / 40k |
+| D30_17X14 | 1 | 110k / 111k | 80k / 258k |  | 70k / 244k |  |  |  |
+| D30_17X14 | 5 | 183k / 239k | 152k / 390k |  | 217k / 568k |  |  |  |
+| D30_17X14 | 20 | 173k / 230k | 198k / 533k |  | 894k / 1448k |  |  |  |
+| D30_17X14 | 60 | 175k / 247k | 174k / 472k |  | 469k / 824k |  |  |  |
+| SPARSE5_17X14 | 1 | 72k / 82k | 542k / 2874k |  | 522k / 2803k |  |  |  |
+| SPARSE5_17X14 | 2 | 76k / 83k | 1134k / 3969k |  | 1103k / 3875k |  |  |  |
+| SPARSE2_10X25 | 1 | 64k / 68k | 1331k / 9265k |  | 1294k / 9053k |  |  |  |
+
+Targets met: 20 objects on CAVE_17X14 cost at most **241k** over 256 seeds (target 300k, first
+version 465k), and no row exceeds 1.84x its mean (target 3x; first version up to 6.96x, and
+unbounded: finding 1 reproduced at 9.3M on SPARSE2_10X25). The price is the mean of small counts
+on dense boards: count 1 costs 10-30k more than the first version (dimension/grid checks, the
+dispatch rule, byte counts after two missed trials), count 5 on EMPTY/CAVE 17x14 about 60k more;
+counts 20 and 60 cost about the same (-13 % to +14 %). The one-round mask and plain rejection of the first
+bench file keep their unbounded tails (up to 1.2M and 9.1M).
+
+### Microbenchmarks (10 repetitions, per op = (test - `bench_spreader_micro_loop`) / 10)
+
+| Operation | Test | Per op |
+|---|---|---:|
+| Radix level on `u256` (Poseidon word, AND, popcount) | `bench_spreader_micro_level_u256` | 21_438 |
+| Radix level on `u128` | `bench_spreader_micro_level_u128` | 15_852 |
+| popcount `u256`, two `u128` SWAR then one byte-sum (winner) | `bench_spreader_micro_popcount_limbs` | 16_521 |
+| popcount `u256`, `Bits::popcount` (loser) | `bench_spreader_micro_popcount_bits` | 19_971 |
+| popcount `u128` | `bench_spreader_micro_popcount_u128` | 11_818 |
+| Byte counts of a `u256` set (both limbs) | `bench_spreader_micro_counts_u256` | 22_811 |
+| Select from byte counts, `u256` | `bench_spreader_micro_select_u256` | 32_484 |
+| Select from byte counts, `u128` | `bench_spreader_micro_select_u128` | 25_339 |
+| Walk to rank 7, `u256` | `bench_spreader_micro_walk_u256` | 33_641 |
+| Deposit a mask on a 5-tile class, `u256` | `bench_spreader_micro_deposit_u256` | 29_456 |
+| One rejection trial (draw, probe) | `bench_spreader_micro_trial` | 9_336 |
+
+### Radix or picks
+
+Measured on counts 1 to 5 (256 seeds, per-call mean, trials from a hit rate of 1/2): all picks
+versus all radix (count 1 always picks), CAVE_17X14
+77/115/154/192/232k vs 77/195/197/196/198k, EMPTY_17X14 66/94/122/152/182k vs 66/208/210/209/207k,
+MAZE_17X14 101/144/188/231/274k vs 101/182/183/183/183k, CAVE_7X7 78/114/150/186/222k vs
+78/105/107/109/106k. A pick costs about 30k (set covering 2/3 of the board), 38k (1/2), 42k
+(less); a radix level 25k (`u256`) or 16k (`u128`); the table 30k. `prefer_picks` compares
+`k * pick` with `levels * level + table`, `levels = ceil(log2(n / 8))`, for `k <= 5`.
+
+### Explored after the audit and dropped (measured, 256 seeds)
+
+| Design | CAVE_17X14 20: mean / max | Why dropped |
+|---|---:|---|
+| First version + bounded fix-up: rejection capped at 4 trials, then select (recursive rounds of Bernoulli masks, 5 rounds) | 195k / 354k | max above target; tail from chained mask rounds |
+| Same, select in field arithmetic and felt accumulation | 182k / 342k | idem |
+| Same, byte counts kept across picks, rounds capped at 3 or 4, thresholds swept (5 configurations) | 202k-214k / 355k-433k | idem: a round costs ~48k and a 256-seed tail chains 3-4 of them |
+| Radix select, all small counts by radix | 190k / 241k | small counts 2-5 up to 2x more expensive than picks on dense boards |
+| Rejection trials from a hit rate of 1/2 (instead of 30 %) | 191k / 241k | count 1 on MAZE_17X14 110k (95k with 30 %) |
+
+### Library decisions
+
+* Radix select on random keys, subset table for the last class of at most 8 tiles, picks for the
+  small counts when cheaper, complement trick, `u128` path on boards of at most 128 bits (-3 % to
+  -16 % on 7x7 against the same algorithm on `u256`).
+* Byte counts (SWAR prefix sums) built once per pick phase and updated in the field at every
+  removal; select without a loop.
+* `BitSetTrait<u256>::popcount` sums the byte counts of both limbs before one byte-sum: 16.5k vs
+  20.0k for `Bits::popcount`.
+
+### Budgets
+
+Measured at the commit of this pull request: per-run max for the fuzz tests (harness included),
+single run for the microbenchmarks; budget = `ceil(1.05 * measured, 1000)`.
+
+<details><summary>141 benchmarks</summary>
+
+| Test | runs | Measured (max run) | Budget |
+|---|---:|---:|---:|
+| `bench_spreader_baseline` | 256 | 68_560 | 72_000 |
+| `bench_spreader_floyd_cave_17x14_1` | 32 | 1_287_136 | 1_352_000 |
+| `bench_spreader_floyd_cave_17x14_20` | 32 | 1_584_586 | 1_664_000 |
+| `bench_spreader_floyd_cave_17x14_5` | 32 | 1_363_860 | 1_433_000 |
+| `bench_spreader_floyd_cave_17x14_60` | 32 | 2_172_349 | 2_281_000 |
+| `bench_spreader_floyd_cave_7x7_1` | 32 | 331_390 | 348_000 |
+| `bench_spreader_floyd_cave_7x7_20` | 32 | 360_696 | 379_000 |
+| `bench_spreader_floyd_cave_7x7_5` | 32 | 389_602 | 410_000 |
+| `bench_spreader_floyd_empty_17x14_1` | 32 | 1_754_092 | 1_842_000 |
+| `bench_spreader_floyd_empty_17x14_20` | 32 | 2_037_130 | 2_139_000 |
+| `bench_spreader_floyd_empty_17x14_5` | 32 | 1_785_536 | 1_875_000 |
+| `bench_spreader_floyd_empty_17x14_60` | 32 | 2_630_643 | 2_763_000 |
+| `bench_spreader_floyd_empty_7x7_1` | 32 | 349_402 | 367_000 |
+| `bench_spreader_floyd_empty_7x7_20` | 32 | 407_914 | 429_000 |
+| `bench_spreader_floyd_empty_7x7_5` | 32 | 407_814 | 429_000 |
+| `bench_spreader_floyd_maze_17x14_1` | 32 | 953_264 | 1_001_000 |
+| `bench_spreader_floyd_maze_17x14_20` | 32 | 1_231_752 | 1_294_000 |
+| `bench_spreader_floyd_maze_17x14_5` | 32 | 1_011_676 | 1_063_000 |
+| `bench_spreader_floyd_maze_17x14_60` | 32 | 1_409_319 | 1_480_000 |
+| `bench_spreader_floyd_maze_7x7_1` | 32 | 268_348 | 282_000 |
+| `bench_spreader_floyd_maze_7x7_16` | 32 | 110_728 | 117_000 |
+| `bench_spreader_floyd_maze_7x7_5` | 32 | 326_510 | 343_000 |
+| `bench_spreader_generate_cave_17x14_1` | 256 | 204_839 | 216_000 |
+| `bench_spreader_generate_cave_17x14_20` | 256 | 308_848 | 325_000 |
+| `bench_spreader_generate_cave_17x14_5` | 256 | 340_087 | 358_000 |
+| `bench_spreader_generate_cave_17x14_60` | 256 | 322_711 | 339_000 |
+| `bench_spreader_generate_cave_7x7_1` | 256 | 176_831 | 186_000 |
+| `bench_spreader_generate_cave_7x7_20` | 256 | 219_394 | 231_000 |
+| `bench_spreader_generate_cave_7x7_5` | 256 | 234_194 | 246_000 |
+| `bench_spreader_generate_d30_17x14_1` | 256 | 178_633 | 188_000 |
+| `bench_spreader_generate_d30_17x14_20` | 256 | 297_136 | 312_000 |
+| `bench_spreader_generate_d30_17x14_5` | 256 | 306_469 | 322_000 |
+| `bench_spreader_generate_d30_17x14_60` | 256 | 314_275 | 330_000 |
+| `bench_spreader_generate_empty_17x14_1` | 256 | 203_769 | 214_000 |
+| `bench_spreader_generate_empty_17x14_20` | 256 | 349_586 | 368_000 |
+| `bench_spreader_generate_empty_17x14_5` | 256 | 386_026 | 406_000 |
+| `bench_spreader_generate_empty_17x14_60` | 256 | 342_340 | 360_000 |
+| `bench_spreader_generate_empty_7x7_1` | 256 | 176_841 | 186_000 |
+| `bench_spreader_generate_empty_7x7_20` | 256 | 234_544 | 247_000 |
+| `bench_spreader_generate_empty_7x7_5` | 256 | 234_204 | 246_000 |
+| `bench_spreader_generate_maze_17x14_1` | 256 | 204_839 | 216_000 |
+| `bench_spreader_generate_maze_17x14_20` | 256 | 317_978 | 334_000 |
+| `bench_spreader_generate_maze_17x14_5` | 256 | 309_009 | 325_000 |
+| `bench_spreader_generate_maze_17x14_60` | 256 | 314_372 | 331_000 |
+| `bench_spreader_generate_maze_7x7_1` | 256 | 176_201 | 186_000 |
+| `bench_spreader_generate_maze_7x7_16` | 256 | 106_509 | 112_000 |
+| `bench_spreader_generate_maze_7x7_5` | 256 | 213_251 | 224_000 |
+| `bench_spreader_generate_sparse2_10x25_1` | 256 | 135_256 | 143_000 |
+| `bench_spreader_generate_sparse5_17x14_1` | 256 | 149_625 | 158_000 |
+| `bench_spreader_generate_sparse5_17x14_2` | 256 | 149_865 | 158_000 |
+| `bench_spreader_mask_cave_17x14_1` | 32 | 172_664 | 182_000 |
+| `bench_spreader_mask_cave_17x14_20` | 32 | 655_847 | 689_000 |
+| `bench_spreader_mask_cave_17x14_5` | 32 | 363_809 | 382_000 |
+| `bench_spreader_mask_cave_17x14_60` | 32 | 596_992 | 627_000 |
+| `bench_spreader_mask_cave_7x7_1` | 32 | 241_625 | 254_000 |
+| `bench_spreader_mask_cave_7x7_20` | 32 | 433_615 | 456_000 |
+| `bench_spreader_mask_cave_7x7_5` | 32 | 655_338 | 689_000 |
+| `bench_spreader_mask_empty_17x14_1` | 32 | 162_741 | 171_000 |
+| `bench_spreader_mask_empty_17x14_20` | 32 | 395_920 | 416_000 |
+| `bench_spreader_mask_empty_17x14_5` | 32 | 262_878 | 277_000 |
+| `bench_spreader_mask_empty_17x14_60` | 32 | 594_005 | 624_000 |
+| `bench_spreader_mask_empty_7x7_1` | 32 | 241_625 | 254_000 |
+| `bench_spreader_mask_empty_7x7_20` | 32 | 655_338 | 689_000 |
+| `bench_spreader_mask_empty_7x7_5` | 32 | 655_338 | 689_000 |
+| `bench_spreader_mask_maze_17x14_1` | 32 | 192_760 | 203_000 |
+| `bench_spreader_mask_maze_17x14_20` | 32 | 895_807 | 941_000 |
+| `bench_spreader_mask_maze_17x14_5` | 32 | 364_809 | 384_000 |
+| `bench_spreader_mask_maze_17x14_60` | 32 | 565_486 | 594_000 |
+| `bench_spreader_mask_maze_7x7_1` | 32 | 1_222_100 | 1_284_000 |
+| `bench_spreader_mask_maze_7x7_16` | 32 | 137_924 | 145_000 |
+| `bench_spreader_mask_maze_7x7_5` | 32 | 507_113 | 533_000 |
+| `bench_spreader_micro_counts_u256` |  | 259_130 | 273_000 |
+| `bench_spreader_micro_deposit_u256` |  | 325_580 | 342_000 |
+| `bench_spreader_micro_level_u128` |  | 189_540 | 200_000 |
+| `bench_spreader_micro_level_u256` |  | 245_400 | 258_000 |
+| `bench_spreader_micro_loop` |  | 31_020 | 33_000 |
+| `bench_spreader_micro_popcount_bits` |  | 230_730 | 243_000 |
+| `bench_spreader_micro_popcount_limbs` |  | 196_230 | 207_000 |
+| `bench_spreader_micro_popcount_u128` |  | 149_200 | 157_000 |
+| `bench_spreader_micro_select_u128` |  | 284_409 | 299_000 |
+| `bench_spreader_micro_select_u256` |  | 355_868 | 374_000 |
+| `bench_spreader_micro_trial` |  | 124_381 | 131_000 |
+| `bench_spreader_micro_walk_u256` |  | 367_430 | 386_000 |
+| `bench_spreader_reject_cave_17x14_1` | 32 | 145_011 | 153_000 |
+| `bench_spreader_reject_cave_17x14_20` | 32 | 688_422 | 723_000 |
+| `bench_spreader_reject_cave_17x14_5` | 32 | 286_541 | 301_000 |
+| `bench_spreader_reject_cave_17x14_60` | 32 | 1_983_195 | 2_083_000 |
+| `bench_spreader_reject_cave_7x7_1` | 32 | 144_261 | 152_000 |
+| `bench_spreader_reject_cave_7x7_20` | 32 | 299_827 | 315_000 |
+| `bench_spreader_reject_cave_7x7_5` | 32 | 344_079 | 362_000 |
+| `bench_spreader_reject_d30_17x14_1` | 32 | 185_203 | 195_000 |
+| `bench_spreader_reject_d30_17x14_20` | 32 | 1_361_345 | 1_430_000 |
+| `bench_spreader_reject_d30_17x14_5` | 32 | 429_414 | 451_000 |
+| `bench_spreader_reject_d30_17x14_60` | 32 | 749_106 | 787_000 |
+| `bench_spreader_reject_empty_17x14_1` | 32 | 134_838 | 142_000 |
+| `bench_spreader_reject_empty_17x14_20` | 32 | 523_752 | 550_000 |
+| `bench_spreader_reject_empty_17x14_5` | 32 | 246_099 | 259_000 |
+| `bench_spreader_reject_empty_17x14_60` | 32 | 1_348_964 | 1_417_000 |
+| `bench_spreader_reject_empty_7x7_1` | 32 | 144_261 | 152_000 |
+| `bench_spreader_reject_empty_7x7_20` | 32 | 344_059 | 362_000 |
+| `bench_spreader_reject_empty_7x7_5` | 32 | 344_079 | 362_000 |
+| `bench_spreader_reject_maze_17x14_1` | 32 | 175_280 | 185_000 |
+| `bench_spreader_reject_maze_17x14_20` | 32 | 995_014 | 1_045_000 |
+| `bench_spreader_reject_maze_17x14_5` | 32 | 356_752 | 375_000 |
+| `bench_spreader_reject_maze_17x14_60` | 32 | 1_579_803 | 1_659_000 |
+| `bench_spreader_reject_maze_7x7_1` | 32 | 174_030 | 183_000 |
+| `bench_spreader_reject_maze_7x7_16` | 32 | 100_078 | 106_000 |
+| `bench_spreader_reject_maze_7x7_5` | 32 | 393_694 | 414_000 |
+| `bench_spreader_reject_sparse2_10x25_1` | 32 | 3_588_489 | 3_768_000 |
+| `bench_spreader_reject_sparse5_17x14_1` | 32 | 1_536_000 | 1_613_000 |
+| `bench_spreader_reject_sparse5_17x14_2` | 32 | 2_136_781 | 2_244_000 |
+| `bench_spreader_selection_cave_17x14_1` | 32 | 1_292_139 | 1_357_000 |
+| `bench_spreader_selection_cave_17x14_20` | 32 | 1_300_499 | 1_366_000 |
+| `bench_spreader_selection_cave_17x14_5` | 32 | 1_293_899 | 1_359_000 |
+| `bench_spreader_selection_cave_17x14_60` | 32 | 1_318_099 | 1_385_000 |
+| `bench_spreader_selection_cave_7x7_1` | 32 | 311_618 | 328_000 |
+| `bench_spreader_selection_cave_7x7_20` | 32 | 312_478 | 329_000 |
+| `bench_spreader_selection_cave_7x7_5` | 32 | 313_378 | 330_000 |
+| `bench_spreader_selection_empty_17x14_1` | 32 | 1_633_907 | 1_716_000 |
+| `bench_spreader_selection_empty_17x14_20` | 32 | 1_746_830 | 1_835_000 |
+| `bench_spreader_selection_empty_17x14_5` | 32 | 1_740_230 | 1_828_000 |
+| `bench_spreader_selection_empty_17x14_60` | 32 | 1_764_430 | 1_853_000 |
+| `bench_spreader_selection_empty_7x7_1` | 32 | 329_504 | 346_000 |
+| `bench_spreader_selection_empty_7x7_20` | 32 | 331_244 | 348_000 |
+| `bench_spreader_selection_empty_7x7_5` | 32 | 331_264 | 348_000 |
+| `bench_spreader_selection_maze_17x14_1` | 32 | 928_326 | 975_000 |
+| `bench_spreader_selection_maze_17x14_20` | 32 | 945_629 | 993_000 |
+| `bench_spreader_selection_maze_17x14_5` | 32 | 939_029 | 986_000 |
+| `bench_spreader_selection_maze_17x14_60` | 32 | 952_920 | 1_001_000 |
+| `bench_spreader_selection_maze_7x7_1` | 32 | 249_017 | 262_000 |
+| `bench_spreader_selection_maze_7x7_16` | 32 | 104_988 | 111_000 |
+| `bench_spreader_selection_maze_7x7_5` | 32 | 250_777 | 264_000 |
+| `bench_spreader_u256_cave_7x7_1` | 256 | 197_819 | 208_000 |
+| `bench_spreader_u256_cave_7x7_20` | 256 | 250_419 | 263_000 |
+| `bench_spreader_u256_cave_7x7_5` | 256 | 268_581 | 283_000 |
+| `bench_spreader_u256_empty_7x7_1` | 256 | 197_829 | 208_000 |
+| `bench_spreader_u256_empty_7x7_20` | 256 | 269_131 | 283_000 |
+| `bench_spreader_u256_empty_7x7_5` | 256 | 268_591 | 283_000 |
+| `bench_spreader_u256_maze_7x7_1` | 256 | 197_189 | 208_000 |
+| `bench_spreader_u256_maze_7x7_16` | 256 | 107_318 | 113_000 |
+| `bench_spreader_u256_maze_7x7_5` | 256 | 241_726 | 254_000 |
+
+</details>
 
 ## L8 Facade
 
