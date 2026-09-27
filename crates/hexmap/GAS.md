@@ -1168,7 +1168,158 @@ single run for the microbenchmarks; budget = `ceil(1.05 * measured, 1000)`.
 
 ## L8 Facade
 
-_To be filled by lot L8._
+Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas). Library: `map.cairo`, benchmarks and
+losing variants: `tests/bench_map.cairo`. Budgets: `ceil(1.05 * measured, 1000)`.
+
+### Facade overhead (17x14 fixtures, facade vs direct library call on the same inputs)
+
+Every method is `#[inline]` and forwards to one call: the overhead is zero. `hex_distance`,
+`neighbor` and `is_walkable` are measured over 100 iterations with varying positions (constant
+inputs are folded by the compiler); per call = `(test - bench_map_loop_baseline) / 100`, baseline
+142_090.
+
+| Function | Facade | Direct | Delta |
+|---|---:|---:|---:|
+| `new_empty` | 18_480 | 18_480 | +0 |
+| `new_maze` | 2_873_670 | 2_873_670 | +0 |
+| `new_cave` | 144_927 | 144_927 | +0 |
+| `new_random_walk` | 999_629 | 999_629 | +0 |
+| `new_hexagon` | 125_770 | 125_770 | +0 |
+| `open_with_corridor` | 63_018 | 63_018 | +0 |
+| `open_with_maze` | 61_858 | 61_858 | +0 |
+| `keep_component` | 555_119 | 555_119 | +0 |
+| `compute_distribution` | 206_868 | 206_868 | +0 |
+| `search_path` | 706_135 | 706_135 | +0 |
+| `search_path_weighted` | 1_427_654 | 1_427_654 | +0 |
+| `field_of_movement` | 261_829 | 261_829 | +0 |
+| `distance_to` | 501_642 | 501_642 | +0 |
+| `reachable` | 555_119 | 555_119 | +0 |
+| `range` | 103_793 | 103_793 | +0 |
+| `hex_distance` | 1_088_280 | 1_088_280 | +0 |
+| `neighbor` | 781_230 | 781_230 | +0 |
+| `is_walkable` | 797_080 | 849_980 | -52_900 |
+
+Per call: `hex_distance` 9_461, `neighbor` 6_391, `is_walkable` 6_549 (the direct loop
+re-converts the constant fixture: 7_078).
+
+### `keep_component`: `Bfs::reachable` (library) vs `Caver::keep_component`
+
+| Input | `Bfs::reachable` | `Caver::keep_component` | Delta |
+|---|---:|---:|---:|
+| CAVE 17x14 | 555_119 | 580_303 | -4.3 % |
+| MAZE 17x14 | 1_152_663 | 1_243_447 | -7.3 % |
+| CAVE 7x7 | 102_333 | 168_195 | -39.2 % |
+
+`Bfs::reachable` also keeps the open edge tiles next to the component (entrances); on grids
+without open edge tiles both return the same bitmap (`test_map_keep_component`).
+
+### `ring`: one flood (library) vs two `range` calls
+
+The library floods `radius - 2` layers, which returns the balls of radius `radius - 1` and
+`radius - 2`; one dilation of the first gives the interior ring, and the open edge tiles next to
+the first ball but not to the second are the edge tiles of the ring (one more dilation, only when
+the grid has open edge tiles). An open edge centre falls back to two `range` calls.
+
+| Input | One flood | Two `range` | Delta |
+|---|---:|---:|---:|
+| CAVE 17x14, radius 4 | 99_903 | 176_300 | -43.3 % |
+| CAVE 7x7, radius 2 | 46_403 | 79_688 | -41.8 % |
+| CAVE 17x14 + corridor from 8 (open edge), radius 4, corridor included | 167_673 | 269_474 | -37.8 % |
+
+A first version (one flood of `radius - 1` layers, two `range` calls whenever the grid had an open
+edge tile) measured 102_703 on CAVE 17x14: the current form is 2.7 % cheaper there and removes the
+fallback on opened maps.
+
+### End-to-end scenario
+
+`new_cave(3)` + `keep_component` + `open_with_corridor(order 0)` + `compute_distribution(10)` +
+`search_path` from the entrance. 17x14: seed `'SEED'`, keep 113, entrance 8, target 202 (path of
+15). 7x7: seed `'ORIGAMI'`, keep 24, entrance 27, target 8 (path of 6). One test per prefix; step =
+difference of two consecutive prefixes.
+
+| Step | 17x14 prefix | 17x14 step | 7x7 prefix | 7x7 step |
+|---|---:|---:|---:|---:|
+| `new_cave` | 144_927 | 144_927 | 83_807 | 83_807 |
+| `keep_component` | 334_234 | 189_307 | 141_856 | 58_049 |
+| `open_with_corridor` | 497_448 | 163_214 | 189_617 | 47_761 |
+| `compute_distribution(10)` | 686_493 | 189_045 | 308_662 | 119_045 |
+| `search_path` (total) | 1_162_931 | 476_438 | 485_618 | 176_956 |
+
+`origami_map` 18x14, same scenario without `keep_component` (cave order 3 on
+`Seeder::shuffle('S33D', 'S33D')`, corridor from 1, 10 objects, path from 1 to 196 of 25 steps),
+`scarb test -p origami_map` (cairo-test estimate), test not committed:
+
+| Step | Prefix | Step |
+|---|---:|---:|
+| `new_cave` | 126_037_752 | 126_037_752 |
+| `open_with_corridor` | 126_097_488 | 59_736 |
+| `compute_distribution(10)` | 135_055_980 | 8_958_492 |
+| `search_path` (total) | 145_829_152 | 10_773_172 |
+
+The hex scenario costs 1.16M on 17x14, 125x less.
+
+### Budgets
+
+| Test | Measured | Budget |
+|---|---:|---:|
+| `bench_map_compute_distribution` | 206_868 | 218_000 |
+| `bench_map_direct_compute_distribution` | 206_868 | 218_000 |
+| `bench_map_direct_distance_to` | 501_642 | 527_000 |
+| `bench_map_direct_field_of_movement` | 261_829 | 275_000 |
+| `bench_map_direct_hex_distance` | 1_088_280 | 1_143_000 |
+| `bench_map_direct_is_walkable` | 849_980 | 893_000 |
+| `bench_map_direct_keep_component` | 555_119 | 583_000 |
+| `bench_map_direct_neighbor` | 781_230 | 821_000 |
+| `bench_map_direct_new_cave` | 144_927 | 153_000 |
+| `bench_map_direct_new_empty` | 18_480 | 20_000 |
+| `bench_map_direct_new_hexagon` | 125_770 | 133_000 |
+| `bench_map_direct_new_maze` | 2_873_670 | 3_018_000 |
+| `bench_map_direct_new_random_walk` | 999_629 | 1_050_000 |
+| `bench_map_direct_open_with_corridor` | 63_018 | 67_000 |
+| `bench_map_direct_open_with_maze` | 61_858 | 65_000 |
+| `bench_map_direct_range` | 103_793 | 109_000 |
+| `bench_map_direct_reachable` | 555_119 | 583_000 |
+| `bench_map_direct_search_path` | 706_135 | 742_000 |
+| `bench_map_direct_search_path_weighted` | 1_427_654 | 1_500_000 |
+| `bench_map_distance_to` | 501_642 | 527_000 |
+| `bench_map_field_of_movement` | 261_829 | 275_000 |
+| `bench_map_hex_distance` | 1_088_280 | 1_143_000 |
+| `bench_map_is_walkable` | 797_080 | 837_000 |
+| `bench_map_keep_component` | 555_119 | 583_000 |
+| `bench_map_keep_component_7x7` | 102_333 | 108_000 |
+| `bench_map_keep_component_maze` | 1_152_663 | 1_211_000 |
+| `bench_map_loop_baseline` | 142_090 | 150_000 |
+| `bench_map_neighbor` | 781_230 | 821_000 |
+| `bench_map_new_cave` | 144_927 | 153_000 |
+| `bench_map_new_empty` | 18_480 | 20_000 |
+| `bench_map_new_hexagon` | 125_770 | 133_000 |
+| `bench_map_new_maze` | 2_873_670 | 3_018_000 |
+| `bench_map_new_random_walk` | 999_629 | 1_050_000 |
+| `bench_map_open_with_corridor` | 63_018 | 67_000 |
+| `bench_map_open_with_maze` | 61_858 | 65_000 |
+| `bench_map_range` | 103_793 | 109_000 |
+| `bench_map_reachable` | 555_119 | 583_000 |
+| `bench_map_ring` | 99_903 | 105_000 |
+| `bench_map_ring_7x7` | 46_403 | 49_000 |
+| `bench_map_ring_open_edge` | 167_673 | 177_000 |
+| `bench_map_scenario_17x14_1_cave` | 144_927 | 153_000 |
+| `bench_map_scenario_17x14_2_keep` | 334_234 | 351_000 |
+| `bench_map_scenario_17x14_3_corridor` | 497_448 | 523_000 |
+| `bench_map_scenario_17x14_4_distribution` | 686_493 | 721_000 |
+| `bench_map_scenario_17x14_5_total` | 1_162_931 | 1_222_000 |
+| `bench_map_scenario_7x7_1_cave` | 83_807 | 88_000 |
+| `bench_map_scenario_7x7_2_keep` | 141_856 | 149_000 |
+| `bench_map_scenario_7x7_3_corridor` | 189_617 | 200_000 |
+| `bench_map_scenario_7x7_4_distribution` | 308_662 | 325_000 |
+| `bench_map_scenario_7x7_5_total` | 485_618 | 510_000 |
+| `bench_map_search_path` | 706_135 | 742_000 |
+| `bench_map_search_path_weighted` | 1_427_654 | 1_500_000 |
+| `bench_map_variant_keep_component_caver` | 580_303 | 610_000 |
+| `bench_map_variant_keep_component_caver_7x7` | 168_195 | 177_000 |
+| `bench_map_variant_keep_component_caver_maze` | 1_243_447 | 1_306_000 |
+| `bench_map_variant_ring_two_ranges` | 176_300 | 186_000 |
+| `bench_map_variant_ring_two_ranges_7x7` | 79_688 | 84_000 |
+| `bench_map_variant_ring_two_ranges_open_edge` | 269_474 | 283_000 |
 
 ## S1 u252
 

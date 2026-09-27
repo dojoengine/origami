@@ -45,7 +45,7 @@ jobs:
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - name: Package
-        run: scarb package -p origami_defi -p origami_map -p origami_random -p origami_rating -p origami_security
+        run: scarb package -p origami_defi -p origami_hexmap -p origami_map -p origami_random -p origami_rating -p origami_security
         shell: bash
 
   defi:

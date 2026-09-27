@@ -1,4 +1,7 @@
 pub mod map;
+pub use map::{HexMap, HexMapTrait};
+pub use types::direction::Direction;
+pub use types::u252::{U252Trait, u252};
 
 pub mod types {
     pub mod direction;
@@ -6,10 +9,8 @@ pub mod types {
 }
 
 pub mod finders {
-    pub mod astar;
     pub mod bfs;
     pub mod dial;
-    pub mod heap;
 }
 
 pub mod generators {
@@ -33,7 +34,6 @@ pub mod helpers {
 
 #[cfg(target: "test")]
 pub mod tests {
-    pub mod bench_astar;
     pub mod bench_bfs;
     pub mod bench_caver;
     pub mod bench_dial;
