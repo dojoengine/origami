@@ -252,14 +252,39 @@ pub impl Dial of DialTrait {
             Bits::to_felt(inside) - from_bit
         };
         // [Return] Settled tiles up to the budget
+        let dilation = layout.dilation();
         if width * height <= SMALL_SIZE {
             DialInternal::field::<
                 u128,
-            >(@layout, height, open, costs, interior, edges, from, from_edge, budget, unvisited)
+            >(
+                @dilation,
+                width,
+                height,
+                open,
+                costs,
+                interior,
+                edges,
+                from,
+                from_edge,
+                budget,
+                unvisited,
+            )
         } else {
             DialInternal::field::<
                 u256,
-            >(@layout, height, open, costs, interior, edges, from, from_edge, budget, unvisited)
+            >(
+                @dilation,
+                width,
+                height,
+                open,
+                costs,
+                interior,
+                edges,
+                from,
+                from_edge,
+                budget,
+                unvisited,
+            )
         }
     }
 }
@@ -383,7 +408,8 @@ impl DialInternal of DialInternalTrait {
 
     /// Field of movement on one set representation.
     fn field<T, +Set<T>, +Frontier<T>, +Copy<T>, +Drop<T>>(
-        layout: @Layout,
+        dilation: @Dilation,
+        width: u8,
         height: u8,
         open: u256,
         costs: Span<felt252>,
@@ -394,24 +420,21 @@ impl DialInternal of DialInternalTrait {
         budget: u8,
         unvisited: felt252,
     ) -> felt252 {
-        let dilation = layout.dilation();
         let start = Bits::pow(from);
         let arrivals = if from_edge {
-            let (seeds, _) = Self::seeds(*layout.width, height, from, from, unvisited);
+            let (seeds, _) = Self::seeds(width, height, from, from, unvisited);
             seeds
         } else {
             let unvisited: T = Set::from_felt(unvisited);
-            Set::to_felt(Frontier::expand(@dilation, Set::from_felt(start), start, unvisited))
+            Set::to_felt(Frontier::expand(dilation, Set::from_felt(start), start, unvisited))
         };
         let interior: T = Set::from_wide(interior);
         let unvisited: T = Set::from_felt(unvisited - arrivals);
         if costs.len() == 0 {
-            return Self::field_unit(@dilation, interior, edges, start, budget, unvisited, arrivals);
+            return Self::field_unit(dilation, interior, edges, start, budget, unvisited, arrivals);
         }
         let classes: Classes<T> = Self::classes(open, costs);
-        Self::field_weighted(
-            @dilation, classes, interior, edges, start, budget, unvisited, arrivals,
-        )
+        Self::field_weighted(dilation, classes, interior, edges, start, budget, unvisited, arrivals)
     }
 
     /// Settle buckets until the target is scheduled.
