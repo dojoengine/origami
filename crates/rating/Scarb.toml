@@ -3,7 +3,13 @@ name = "origami_rating"
 version.workspace = true
 edition.workspace = true
 description = "Rating related algorithm library for Dojo based games."
+license.workspace = true
+license-file.workspace = true
+repository.workspace = true
 homepage = "https://github.com/dojoengine/origami/tree/main/crates/rating"
+documentation = "https://github.com/dojoengine/origami/tree/main/crates/rating#readme"
+readme = "README.md"
+keywords = ["dojo", "starknet", "cairo", "game", "rating", "elo", "ranking"]
 
 [dev-dependencies]
 cairo_test.workspace = true

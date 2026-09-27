@@ -125,4 +125,3 @@ mod tests {
         assert_eq!(map, 0x180000000300);
     }
 }
-

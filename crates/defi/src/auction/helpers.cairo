@@ -34,4 +34,3 @@ mod tests {
         assert(left_bound <= actual && actual <= right_bound, 'Not approx eq');
     }
 }
-

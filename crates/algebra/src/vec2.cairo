@@ -1,5 +1,3 @@
-use cubit::f128::types::fixed::{FixedTrait, ONE_u128};
-
 struct Vec2<T> {
     x: T,
     y: T,
@@ -100,9 +98,13 @@ impl Vec2Impl<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>> of Vec2Trait<T> {
 
 #[cfg(test)]
 mod tests {
+    // External imports
+
+    use cubit::f128::types::fixed::{FixedTrait, ONE_u128};
+
     // Local imports
 
-    use super::{FixedTrait, ONE_u128, Vec2Trait};
+    use super::Vec2Trait;
 
     #[test]
     fn test_new() {

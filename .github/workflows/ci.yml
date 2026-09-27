@@ -7,7 +7,7 @@ on:
   pull_request:
 
 env:
-  SCARB_VERSION: 2.12.2
+  SCARB_VERSION: 2.19.4
 
 jobs:
   check:
@@ -33,6 +33,19 @@ jobs:
           scarb-version: ${{ env.SCARB_VERSION }}
       - name: Build
         run: scarb build
+        shell: bash
+
+  package:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    name: Package publishable crates
+    steps:
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+      - name: Package
+        run: scarb package -p origami_map -p origami_random -p origami_rating -p origami_security
         shell: bash
 
   algebra:

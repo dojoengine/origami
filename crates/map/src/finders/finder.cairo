@@ -10,7 +10,7 @@ use origami_map::helpers::bitmap::Bitmap;
 
 use origami_map::helpers::heap::{Heap, HeapTrait};
 use origami_map::types::direction::Direction;
-use origami_map::types::node::{Node, NodeTrait};
+use origami_map::types::node::Node;
 
 #[generate_trait]
 pub impl Finder of FinderTrait {
@@ -151,9 +151,13 @@ pub impl Finder of FinderTrait {
 
 #[cfg(test)]
 mod test {
+    // Internal imports
+
+    use origami_map::types::node::NodeTrait;
+
     // Local imports
 
-    use super::{Direction, Felt252Dict, Finder, Heap, HeapTrait, Node, NodeTrait};
+    use super::{Direction, Felt252Dict, Finder, Heap, HeapTrait, Node};
 
     #[test]
     fn test_finder_euclidean() {

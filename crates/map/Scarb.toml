@@ -3,7 +3,13 @@ name = "origami_map"
 version.workspace = true
 edition.workspace = true
 description = "Maps library for Dojo based games."
+license.workspace = true
+license-file.workspace = true
+repository.workspace = true
 homepage = "https://github.com/dojoengine/origami/tree/main/crates/map"
+documentation = "https://github.com/dojoengine/origami/tree/main/crates/map#readme"
+readme = "README.md"
+keywords = ["dojo", "starknet", "cairo", "game", "map", "pathfinding", "procedural-generation"]
 
 [dev-dependencies]
 cairo_test.workspace = true
