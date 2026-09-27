@@ -138,7 +138,84 @@ _To be filled by lot L3._
 
 ## L4 Caver
 
-_To be filled by lot L4._
+Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas), budgets set by the procedure above.
+Tests in `src/tests/bench_caver.cairo`. Every variant is checked against a scalar reference
+automaton (`reference`) on 3x3 to 83x3 boards.
+
+### Library
+
+| Test | Measured | Budget | Note |
+|---|---:|---:|---|
+| `bench_caver_generate_17x14_order_0` | 27_157 | 29_000 | initial fill only (early return) |
+| `bench_caver_generate_17x14_order_1` | 75_727 | 80_000 | + `Layout::new` and 1 generation |
+| **`bench_caver_generate_17x14_order_3`** | **146_747** | 155_000 | target < 250k |
+| `bench_caver_generate_17x14_order_5` | 218_567 | 230_000 | |
+| `bench_caver_generate_19x13_order_3` | 147_247 | 155_000 | |
+| `bench_caver_generate_7x7_order_0` | 27_157 | 29_000 | |
+| `bench_caver_generate_7x7_order_1` | 53_967 | 57_000 | single-limb path |
+| `bench_caver_generate_7x7_order_3` | 86_027 | 91_000 | single-limb path |
+| `bench_caver_keep_component_17x14` | 300_925 | 316_000 | cave of `generate(17, 14, 3, 'CAVER')` |
+| `bench_caver_keep_component_maze_17x14` | 1_245_367 | 1_308_000 | `MAZE_17X14` fixture |
+| `bench_caver_keep_component_serpentine_17x14` | 2_080_829 | 2_185_000 | `SERPENTINE_17X14` fixture |
+| `bench_caver_generate_connected_17x14` | 432_232 | 454_000 | `generate` + `keep_component` |
+
+* **One generation, 17x14: 35_710** (`(order_5 - order_1) / 4`), target < 60k. The first
+  generation also pays `Layout::new` (about 12.9k with the shift constants and the conversion).
+* **One generation, boards <= 128 bits: 16_030** (`(7x7 order_3 - order_1) / 2`).
+* Cost of a generation: 10 applications of the bitwise builtin per limb (1 parity split + 9 for the
+  adder and the rule), 6 felt -> `u256` conversions (one per neighbour plane), and a few field
+  products. The conversions (~1.8k each) are the second cost after the builtin.
+* `origami_map` for the record: `Caver::generate(18, 14, 2, seed)` costs about 85_000_000
+  (`scarb test -p origami_map -f caver`, cairo-test estimate), about 580x the hex version with one
+  more generation.
+
+### Variants (3 generations on the same 17x14 fill, harness baseline 33_740)
+
+Per generation = `(test - bench_caver_variant_baseline_17x14) / 3`. The harness works on `u256`
+values, so its library figure (38.8k) is 3k above the library itself; differences below ~0.6k per
+generation are within code-layout noise (the same network moved between two helpers moved the total
+by 1.8k).
+
+| Variant | Test | Measured | Budget | Per generation | vs library |
+|---|---|---:|---:|---:|---:|
+| **Library**: parity-free planes, carry-save full count, triple builtin per limb | `bench_caver_variant_library_17x14` | 150_090 | 158_000 | 38_783 | |
+| Final stage "at least 2 of `c1, c2, c3, grid`" (same builtin count) | `bench_caver_variant_two_of_four_17x14` | 152_490 | 161_000 | 39_583 | +2.1 % |
+| Full count with the last carry folded into the result | `bench_caver_variant_folded_17x14` | 152_490 | 161_000 | 39_583 | +2.1 % |
+| Design planes: 4 vertical planes all from the parity halves | `bench_caver_variant_split_planes_17x14` | 151_290 | 159_000 | 39_183 | +1.0 % |
+| East plane doubled limb by limb (`overflowing_add`) instead of converted | `bench_caver_variant_east_add_17x14` | 154_770 | 163_000 | 40_343 | +4.0 % |
+| Planes from shared sub-terms (`G & G/2`, `G ^ G/2` pairs, like `expand`) | `bench_caver_variant_pairs_17x14` | 162_444 | 171_000 | 42_901 | +10.6 % |
+| Same network with corelib `u256` `&`, `^`, `\|` (one application per operator) | `bench_caver_variant_u256_ops_17x14` | 184_512 | 194_000 | 50_257 | +29.6 % |
+| Design network (section 2.4): AND-only adders, XOR by field arithmetic, back to `u256` | `bench_caver_variant_design_17x14` | 203_898 | 215_000 | 56_719 | +46.2 % |
+| Rule B4/S3 | `bench_caver_variant_b4s3_17x14` | 158_788 | 167_000 | 41_683 | +7.5 % |
+| Rule B3/S3 (needs the interior mask) | `bench_caver_variant_b3s3_17x14` | 156_988 | 165_000 | 41_083 | +5.9 % |
+| u256 path on 7x7 (baseline `bench_caver_variant_baseline_7x7` 33_050) | `bench_caver_variant_library_u256_7x7` | 152_200 | 160_000 | 39_717 | small path 16_030: -60 % |
+
+Initial fills (17x14, whole test): `bench_caver_fill_half_17x14` 28_097 (budget 30_000, one
+permutation output, ~50 %), `bench_caver_fill_sparse_17x14` and `bench_caver_fill_dense_17x14`
+31_973 (budget 34_000, AND / OR of two outputs of the same permutation, ~25 % / ~75 %).
+
+Connectivity: flood fill with a run fill after each dilation (`open & ~(open + C)` completes each
+reached run toward West by carry propagation):
+
+| Test | Measured | Budget | vs `expand` only |
+|---|---:|---:|---:|
+| `bench_caver_keep_component_runs_17x14` | 376_836 | 396_000 | +25 % |
+| `bench_caver_keep_component_runs_first_17x14` | 380_626 | 400_000 | +26 % |
+| `bench_caver_keep_component_runs_maze_17x14` | 1_445_492 | 1_518_000 | +16 % |
+| `bench_caver_keep_component_runs_serpentine_17x14` | 1_504_878 | 1_581_000 | -28 % |
+
+### Decisions
+
+* Rule **B4/S2** (born with 4+ floor neighbours, survive with 2+), fill **~50 %**. On 32 seeds
+  (17x14, `test_bench_caver_print_stats`): B4/S2 gives 61 % floor at order 3, 1.8 components, 92 %
+  of the floor in the largest component, never empty. B4/S3 gives 37 % floor, 81 % in the largest
+  component and 3 maps in 32 under 20 % floor. B3/S3 keeps growing (70 % at order 3, 78 % at
+  order 5): open fields, not caves. A 25 % fill dies out, a 75 % fill fills the board.
+* Carry-save count with the bitwise builtin called directly: one application yields AND, XOR and
+  OR, so a full adder is 2 applications and carries are additions of disjoint bitmaps.
+* Born tiles need no interior mask: a border tile has at most 3 interior neighbours.
+* `u128` single-limb path for boards of at most 128 bits (-60 % per generation).
+* `keep_component` stays a separate function: it costs about twice `generate(17, 14, 3)`.
 
 ## L5 Mazer and Digger
 
