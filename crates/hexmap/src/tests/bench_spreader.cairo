@@ -4,6 +4,11 @@
 //! run. Per call = run - mean of `bench_spreader_baseline` (the harness around a trivial body).
 //! `#[available_gas]` applies to every run: the budget is the max + 5 %.
 //! The measured losers live here, test-only; the winner is `Spreader::generate`.
+//!
+//! CI time: the library benchmarks take their number of runs from the command line (256 by
+//! default, `--fuzzer-runs 64` in the pull-request job: the budgets hold on any subset of the
+//! seeds); the losers are `#[ignore]`d and run with the non-blocking job on `main`. Every figure
+//! of `GAS.md` comes from `snforge test --package origami_hexmap bench_spreader --include-ignored`.
 
 // Core imports
 
@@ -257,7 +262,7 @@ pub impl RejectSet of RejectSetTrait {
 // Baseline: the fuzz harness around a trivial body, subtracted from every fuzz benchmark
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 72000)]
 fn bench_spreader_baseline(k: u16) {
     assert!(SEED + k.into() != 0);
@@ -266,7 +271,7 @@ fn bench_spreader_baseline(k: u16) {
 // library winner
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 214000)]
 fn bench_spreader_generate_empty_17x14_1(k: u16) {
     let seed = SEED + k.into();
@@ -275,7 +280,7 @@ fn bench_spreader_generate_empty_17x14_1(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 406000)]
 fn bench_spreader_generate_empty_17x14_5(k: u16) {
     let seed = SEED + k.into();
@@ -284,7 +289,7 @@ fn bench_spreader_generate_empty_17x14_5(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 368000)]
 fn bench_spreader_generate_empty_17x14_20(k: u16) {
     let seed = SEED + k.into();
@@ -293,7 +298,7 @@ fn bench_spreader_generate_empty_17x14_20(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 360000)]
 fn bench_spreader_generate_empty_17x14_60(k: u16) {
     let seed = SEED + k.into();
@@ -302,7 +307,7 @@ fn bench_spreader_generate_empty_17x14_60(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 216000)]
 fn bench_spreader_generate_cave_17x14_1(k: u16) {
     let seed = SEED + k.into();
@@ -311,7 +316,7 @@ fn bench_spreader_generate_cave_17x14_1(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 358000)]
 fn bench_spreader_generate_cave_17x14_5(k: u16) {
     let seed = SEED + k.into();
@@ -320,7 +325,7 @@ fn bench_spreader_generate_cave_17x14_5(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 325000)]
 fn bench_spreader_generate_cave_17x14_20(k: u16) {
     let seed = SEED + k.into();
@@ -329,7 +334,7 @@ fn bench_spreader_generate_cave_17x14_20(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 339000)]
 fn bench_spreader_generate_cave_17x14_60(k: u16) {
     let seed = SEED + k.into();
@@ -338,7 +343,7 @@ fn bench_spreader_generate_cave_17x14_60(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 216000)]
 fn bench_spreader_generate_maze_17x14_1(k: u16) {
     let seed = SEED + k.into();
@@ -347,7 +352,7 @@ fn bench_spreader_generate_maze_17x14_1(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 325000)]
 fn bench_spreader_generate_maze_17x14_5(k: u16) {
     let seed = SEED + k.into();
@@ -356,7 +361,7 @@ fn bench_spreader_generate_maze_17x14_5(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 334000)]
 fn bench_spreader_generate_maze_17x14_20(k: u16) {
     let seed = SEED + k.into();
@@ -365,7 +370,7 @@ fn bench_spreader_generate_maze_17x14_20(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 331000)]
 fn bench_spreader_generate_maze_17x14_60(k: u16) {
     let seed = SEED + k.into();
@@ -374,7 +379,7 @@ fn bench_spreader_generate_maze_17x14_60(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 186000)]
 fn bench_spreader_generate_empty_7x7_1(k: u16) {
     let seed = SEED + k.into();
@@ -383,7 +388,7 @@ fn bench_spreader_generate_empty_7x7_1(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 246000)]
 fn bench_spreader_generate_empty_7x7_5(k: u16) {
     let seed = SEED + k.into();
@@ -392,7 +397,7 @@ fn bench_spreader_generate_empty_7x7_5(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 247000)]
 fn bench_spreader_generate_empty_7x7_20(k: u16) {
     let seed = SEED + k.into();
@@ -401,7 +406,7 @@ fn bench_spreader_generate_empty_7x7_20(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 186000)]
 fn bench_spreader_generate_cave_7x7_1(k: u16) {
     let seed = SEED + k.into();
@@ -410,7 +415,7 @@ fn bench_spreader_generate_cave_7x7_1(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 246000)]
 fn bench_spreader_generate_cave_7x7_5(k: u16) {
     let seed = SEED + k.into();
@@ -419,7 +424,7 @@ fn bench_spreader_generate_cave_7x7_5(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 231000)]
 fn bench_spreader_generate_cave_7x7_20(k: u16) {
     let seed = SEED + k.into();
@@ -428,7 +433,7 @@ fn bench_spreader_generate_cave_7x7_20(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 186000)]
 fn bench_spreader_generate_maze_7x7_1(k: u16) {
     let seed = SEED + k.into();
@@ -437,7 +442,7 @@ fn bench_spreader_generate_maze_7x7_1(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 224000)]
 fn bench_spreader_generate_maze_7x7_5(k: u16) {
     let seed = SEED + k.into();
@@ -446,7 +451,7 @@ fn bench_spreader_generate_maze_7x7_5(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 112000)]
 fn bench_spreader_generate_maze_7x7_16(k: u16) {
     let seed = SEED + k.into();
@@ -455,7 +460,7 @@ fn bench_spreader_generate_maze_7x7_16(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 143000)]
 fn bench_spreader_generate_sparse2_10x25_1(k: u16) {
     let seed = SEED + k.into();
@@ -464,7 +469,7 @@ fn bench_spreader_generate_sparse2_10x25_1(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 158000)]
 fn bench_spreader_generate_sparse5_17x14_1(k: u16) {
     let seed = SEED + k.into();
@@ -473,7 +478,7 @@ fn bench_spreader_generate_sparse5_17x14_1(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 158000)]
 fn bench_spreader_generate_sparse5_17x14_2(k: u16) {
     let seed = SEED + k.into();
@@ -482,7 +487,7 @@ fn bench_spreader_generate_sparse5_17x14_2(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 188000)]
 fn bench_spreader_generate_d30_17x14_1(k: u16) {
     let seed = SEED + k.into();
@@ -491,7 +496,7 @@ fn bench_spreader_generate_d30_17x14_1(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 322000)]
 fn bench_spreader_generate_d30_17x14_5(k: u16) {
     let seed = SEED + k.into();
@@ -500,7 +505,7 @@ fn bench_spreader_generate_d30_17x14_5(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 312000)]
 fn bench_spreader_generate_d30_17x14_20(k: u16) {
     let seed = SEED + k.into();
@@ -509,7 +514,7 @@ fn bench_spreader_generate_d30_17x14_20(k: u16) {
 }
 
 #[test]
-#[fuzzer(runs: 256, seed: 7)]
+#[fuzzer(seed: 7)]
 #[available_gas(l2_gas: 330000)]
 fn bench_spreader_generate_d30_17x14_60(k: u16) {
     let seed = SEED + k.into();
@@ -520,6 +525,7 @@ fn bench_spreader_generate_d30_17x14_60(k: u16) {
 // selection sampling (design)
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1716000)]
 fn bench_spreader_selection_empty_17x14_1(k: u16) {
@@ -529,6 +535,7 @@ fn bench_spreader_selection_empty_17x14_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1828000)]
 fn bench_spreader_selection_empty_17x14_5(k: u16) {
@@ -538,6 +545,7 @@ fn bench_spreader_selection_empty_17x14_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1835000)]
 fn bench_spreader_selection_empty_17x14_20(k: u16) {
@@ -547,6 +555,7 @@ fn bench_spreader_selection_empty_17x14_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1853000)]
 fn bench_spreader_selection_empty_17x14_60(k: u16) {
@@ -556,6 +565,7 @@ fn bench_spreader_selection_empty_17x14_60(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1357000)]
 fn bench_spreader_selection_cave_17x14_1(k: u16) {
@@ -565,6 +575,7 @@ fn bench_spreader_selection_cave_17x14_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1359000)]
 fn bench_spreader_selection_cave_17x14_5(k: u16) {
@@ -574,6 +585,7 @@ fn bench_spreader_selection_cave_17x14_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1366000)]
 fn bench_spreader_selection_cave_17x14_20(k: u16) {
@@ -583,6 +595,7 @@ fn bench_spreader_selection_cave_17x14_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1385000)]
 fn bench_spreader_selection_cave_17x14_60(k: u16) {
@@ -592,6 +605,7 @@ fn bench_spreader_selection_cave_17x14_60(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 975000)]
 fn bench_spreader_selection_maze_17x14_1(k: u16) {
@@ -601,6 +615,7 @@ fn bench_spreader_selection_maze_17x14_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 986000)]
 fn bench_spreader_selection_maze_17x14_5(k: u16) {
@@ -610,6 +625,7 @@ fn bench_spreader_selection_maze_17x14_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 993000)]
 fn bench_spreader_selection_maze_17x14_20(k: u16) {
@@ -619,6 +635,7 @@ fn bench_spreader_selection_maze_17x14_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1001000)]
 fn bench_spreader_selection_maze_17x14_60(k: u16) {
@@ -628,6 +645,7 @@ fn bench_spreader_selection_maze_17x14_60(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 346000)]
 fn bench_spreader_selection_empty_7x7_1(k: u16) {
@@ -637,6 +655,7 @@ fn bench_spreader_selection_empty_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 348000)]
 fn bench_spreader_selection_empty_7x7_5(k: u16) {
@@ -646,6 +665,7 @@ fn bench_spreader_selection_empty_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 348000)]
 fn bench_spreader_selection_empty_7x7_20(k: u16) {
@@ -655,6 +675,7 @@ fn bench_spreader_selection_empty_7x7_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 328000)]
 fn bench_spreader_selection_cave_7x7_1(k: u16) {
@@ -664,6 +685,7 @@ fn bench_spreader_selection_cave_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 330000)]
 fn bench_spreader_selection_cave_7x7_5(k: u16) {
@@ -673,6 +695,7 @@ fn bench_spreader_selection_cave_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 329000)]
 fn bench_spreader_selection_cave_7x7_20(k: u16) {
@@ -682,6 +705,7 @@ fn bench_spreader_selection_cave_7x7_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 262000)]
 fn bench_spreader_selection_maze_7x7_1(k: u16) {
@@ -691,6 +715,7 @@ fn bench_spreader_selection_maze_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 264000)]
 fn bench_spreader_selection_maze_7x7_5(k: u16) {
@@ -700,6 +725,7 @@ fn bench_spreader_selection_maze_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 111000)]
 fn bench_spreader_selection_maze_7x7_16(k: u16) {
@@ -711,6 +737,7 @@ fn bench_spreader_selection_maze_7x7_16(k: u16) {
 // rank selection (Floyd)
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1842000)]
 fn bench_spreader_floyd_empty_17x14_1(k: u16) {
@@ -720,6 +747,7 @@ fn bench_spreader_floyd_empty_17x14_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1875000)]
 fn bench_spreader_floyd_empty_17x14_5(k: u16) {
@@ -729,6 +757,7 @@ fn bench_spreader_floyd_empty_17x14_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 2139000)]
 fn bench_spreader_floyd_empty_17x14_20(k: u16) {
@@ -738,6 +767,7 @@ fn bench_spreader_floyd_empty_17x14_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 2763000)]
 fn bench_spreader_floyd_empty_17x14_60(k: u16) {
@@ -747,6 +777,7 @@ fn bench_spreader_floyd_empty_17x14_60(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1352000)]
 fn bench_spreader_floyd_cave_17x14_1(k: u16) {
@@ -756,6 +787,7 @@ fn bench_spreader_floyd_cave_17x14_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1433000)]
 fn bench_spreader_floyd_cave_17x14_5(k: u16) {
@@ -765,6 +797,7 @@ fn bench_spreader_floyd_cave_17x14_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1664000)]
 fn bench_spreader_floyd_cave_17x14_20(k: u16) {
@@ -774,6 +807,7 @@ fn bench_spreader_floyd_cave_17x14_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 2281000)]
 fn bench_spreader_floyd_cave_17x14_60(k: u16) {
@@ -783,6 +817,7 @@ fn bench_spreader_floyd_cave_17x14_60(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1001000)]
 fn bench_spreader_floyd_maze_17x14_1(k: u16) {
@@ -792,6 +827,7 @@ fn bench_spreader_floyd_maze_17x14_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1063000)]
 fn bench_spreader_floyd_maze_17x14_5(k: u16) {
@@ -801,6 +837,7 @@ fn bench_spreader_floyd_maze_17x14_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1294000)]
 fn bench_spreader_floyd_maze_17x14_20(k: u16) {
@@ -810,6 +847,7 @@ fn bench_spreader_floyd_maze_17x14_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1480000)]
 fn bench_spreader_floyd_maze_17x14_60(k: u16) {
@@ -819,6 +857,7 @@ fn bench_spreader_floyd_maze_17x14_60(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 367000)]
 fn bench_spreader_floyd_empty_7x7_1(k: u16) {
@@ -828,6 +867,7 @@ fn bench_spreader_floyd_empty_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 429000)]
 fn bench_spreader_floyd_empty_7x7_5(k: u16) {
@@ -837,6 +877,7 @@ fn bench_spreader_floyd_empty_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 429000)]
 fn bench_spreader_floyd_empty_7x7_20(k: u16) {
@@ -846,6 +887,7 @@ fn bench_spreader_floyd_empty_7x7_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 348000)]
 fn bench_spreader_floyd_cave_7x7_1(k: u16) {
@@ -855,6 +897,7 @@ fn bench_spreader_floyd_cave_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 410000)]
 fn bench_spreader_floyd_cave_7x7_5(k: u16) {
@@ -864,6 +907,7 @@ fn bench_spreader_floyd_cave_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 379000)]
 fn bench_spreader_floyd_cave_7x7_20(k: u16) {
@@ -873,6 +917,7 @@ fn bench_spreader_floyd_cave_7x7_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 282000)]
 fn bench_spreader_floyd_maze_7x7_1(k: u16) {
@@ -882,6 +927,7 @@ fn bench_spreader_floyd_maze_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 343000)]
 fn bench_spreader_floyd_maze_7x7_5(k: u16) {
@@ -891,6 +937,7 @@ fn bench_spreader_floyd_maze_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 117000)]
 fn bench_spreader_floyd_maze_7x7_16(k: u16) {
@@ -902,6 +949,7 @@ fn bench_spreader_floyd_maze_7x7_16(k: u16) {
 // plain rejection sampling
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 142000)]
 fn bench_spreader_reject_empty_17x14_1(k: u16) {
@@ -911,6 +959,7 @@ fn bench_spreader_reject_empty_17x14_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 259000)]
 fn bench_spreader_reject_empty_17x14_5(k: u16) {
@@ -920,6 +969,7 @@ fn bench_spreader_reject_empty_17x14_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 550000)]
 fn bench_spreader_reject_empty_17x14_20(k: u16) {
@@ -929,6 +979,7 @@ fn bench_spreader_reject_empty_17x14_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1417000)]
 fn bench_spreader_reject_empty_17x14_60(k: u16) {
@@ -938,6 +989,7 @@ fn bench_spreader_reject_empty_17x14_60(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 153000)]
 fn bench_spreader_reject_cave_17x14_1(k: u16) {
@@ -947,6 +999,7 @@ fn bench_spreader_reject_cave_17x14_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 301000)]
 fn bench_spreader_reject_cave_17x14_5(k: u16) {
@@ -956,6 +1009,7 @@ fn bench_spreader_reject_cave_17x14_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 723000)]
 fn bench_spreader_reject_cave_17x14_20(k: u16) {
@@ -965,6 +1019,7 @@ fn bench_spreader_reject_cave_17x14_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 2083000)]
 fn bench_spreader_reject_cave_17x14_60(k: u16) {
@@ -974,6 +1029,7 @@ fn bench_spreader_reject_cave_17x14_60(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 185000)]
 fn bench_spreader_reject_maze_17x14_1(k: u16) {
@@ -983,6 +1039,7 @@ fn bench_spreader_reject_maze_17x14_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 375000)]
 fn bench_spreader_reject_maze_17x14_5(k: u16) {
@@ -992,6 +1049,7 @@ fn bench_spreader_reject_maze_17x14_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1045000)]
 fn bench_spreader_reject_maze_17x14_20(k: u16) {
@@ -1001,6 +1059,7 @@ fn bench_spreader_reject_maze_17x14_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1659000)]
 fn bench_spreader_reject_maze_17x14_60(k: u16) {
@@ -1010,6 +1069,7 @@ fn bench_spreader_reject_maze_17x14_60(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 152000)]
 fn bench_spreader_reject_empty_7x7_1(k: u16) {
@@ -1019,6 +1079,7 @@ fn bench_spreader_reject_empty_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 362000)]
 fn bench_spreader_reject_empty_7x7_5(k: u16) {
@@ -1028,6 +1089,7 @@ fn bench_spreader_reject_empty_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 362000)]
 fn bench_spreader_reject_empty_7x7_20(k: u16) {
@@ -1037,6 +1099,7 @@ fn bench_spreader_reject_empty_7x7_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 152000)]
 fn bench_spreader_reject_cave_7x7_1(k: u16) {
@@ -1046,6 +1109,7 @@ fn bench_spreader_reject_cave_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 362000)]
 fn bench_spreader_reject_cave_7x7_5(k: u16) {
@@ -1055,6 +1119,7 @@ fn bench_spreader_reject_cave_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 315000)]
 fn bench_spreader_reject_cave_7x7_20(k: u16) {
@@ -1064,6 +1129,7 @@ fn bench_spreader_reject_cave_7x7_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 183000)]
 fn bench_spreader_reject_maze_7x7_1(k: u16) {
@@ -1073,6 +1139,7 @@ fn bench_spreader_reject_maze_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 414000)]
 fn bench_spreader_reject_maze_7x7_5(k: u16) {
@@ -1082,6 +1149,7 @@ fn bench_spreader_reject_maze_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 106000)]
 fn bench_spreader_reject_maze_7x7_16(k: u16) {
@@ -1091,6 +1159,7 @@ fn bench_spreader_reject_maze_7x7_16(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 3768000)]
 fn bench_spreader_reject_sparse2_10x25_1(k: u16) {
@@ -1100,6 +1169,7 @@ fn bench_spreader_reject_sparse2_10x25_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1613000)]
 fn bench_spreader_reject_sparse5_17x14_1(k: u16) {
@@ -1109,6 +1179,7 @@ fn bench_spreader_reject_sparse5_17x14_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 2244000)]
 fn bench_spreader_reject_sparse5_17x14_2(k: u16) {
@@ -1118,6 +1189,7 @@ fn bench_spreader_reject_sparse5_17x14_2(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 195000)]
 fn bench_spreader_reject_d30_17x14_1(k: u16) {
@@ -1127,6 +1199,7 @@ fn bench_spreader_reject_d30_17x14_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 451000)]
 fn bench_spreader_reject_d30_17x14_5(k: u16) {
@@ -1136,6 +1209,7 @@ fn bench_spreader_reject_d30_17x14_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1430000)]
 fn bench_spreader_reject_d30_17x14_20(k: u16) {
@@ -1145,6 +1219,7 @@ fn bench_spreader_reject_d30_17x14_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 787000)]
 fn bench_spreader_reject_d30_17x14_60(k: u16) {
@@ -1156,6 +1231,7 @@ fn bench_spreader_reject_d30_17x14_60(k: u16) {
 // hash-and-mask, one round
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 171000)]
 fn bench_spreader_mask_empty_17x14_1(k: u16) {
@@ -1165,6 +1241,7 @@ fn bench_spreader_mask_empty_17x14_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 277000)]
 fn bench_spreader_mask_empty_17x14_5(k: u16) {
@@ -1174,6 +1251,7 @@ fn bench_spreader_mask_empty_17x14_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 416000)]
 fn bench_spreader_mask_empty_17x14_20(k: u16) {
@@ -1183,6 +1261,7 @@ fn bench_spreader_mask_empty_17x14_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 624000)]
 fn bench_spreader_mask_empty_17x14_60(k: u16) {
@@ -1192,6 +1271,7 @@ fn bench_spreader_mask_empty_17x14_60(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 182000)]
 fn bench_spreader_mask_cave_17x14_1(k: u16) {
@@ -1201,6 +1281,7 @@ fn bench_spreader_mask_cave_17x14_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 382000)]
 fn bench_spreader_mask_cave_17x14_5(k: u16) {
@@ -1210,6 +1291,7 @@ fn bench_spreader_mask_cave_17x14_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 689000)]
 fn bench_spreader_mask_cave_17x14_20(k: u16) {
@@ -1219,6 +1301,7 @@ fn bench_spreader_mask_cave_17x14_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 627000)]
 fn bench_spreader_mask_cave_17x14_60(k: u16) {
@@ -1228,6 +1311,7 @@ fn bench_spreader_mask_cave_17x14_60(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 203000)]
 fn bench_spreader_mask_maze_17x14_1(k: u16) {
@@ -1237,6 +1321,7 @@ fn bench_spreader_mask_maze_17x14_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 384000)]
 fn bench_spreader_mask_maze_17x14_5(k: u16) {
@@ -1246,6 +1331,7 @@ fn bench_spreader_mask_maze_17x14_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 941000)]
 fn bench_spreader_mask_maze_17x14_20(k: u16) {
@@ -1255,6 +1341,7 @@ fn bench_spreader_mask_maze_17x14_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 594000)]
 fn bench_spreader_mask_maze_17x14_60(k: u16) {
@@ -1264,6 +1351,7 @@ fn bench_spreader_mask_maze_17x14_60(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 254000)]
 fn bench_spreader_mask_empty_7x7_1(k: u16) {
@@ -1273,6 +1361,7 @@ fn bench_spreader_mask_empty_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 689000)]
 fn bench_spreader_mask_empty_7x7_5(k: u16) {
@@ -1282,6 +1371,7 @@ fn bench_spreader_mask_empty_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 689000)]
 fn bench_spreader_mask_empty_7x7_20(k: u16) {
@@ -1291,6 +1381,7 @@ fn bench_spreader_mask_empty_7x7_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 254000)]
 fn bench_spreader_mask_cave_7x7_1(k: u16) {
@@ -1300,6 +1391,7 @@ fn bench_spreader_mask_cave_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 689000)]
 fn bench_spreader_mask_cave_7x7_5(k: u16) {
@@ -1309,6 +1401,7 @@ fn bench_spreader_mask_cave_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 456000)]
 fn bench_spreader_mask_cave_7x7_20(k: u16) {
@@ -1318,6 +1411,7 @@ fn bench_spreader_mask_cave_7x7_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 1284000)]
 fn bench_spreader_mask_maze_7x7_1(k: u16) {
@@ -1327,6 +1421,7 @@ fn bench_spreader_mask_maze_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 533000)]
 fn bench_spreader_mask_maze_7x7_5(k: u16) {
@@ -1336,6 +1431,7 @@ fn bench_spreader_mask_maze_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 32, seed: 7)]
 #[available_gas(l2_gas: 145000)]
 fn bench_spreader_mask_maze_7x7_16(k: u16) {
@@ -1347,6 +1443,7 @@ fn bench_spreader_mask_maze_7x7_16(k: u16) {
 // library algorithm without the u128 path
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 256, seed: 7)]
 #[available_gas(l2_gas: 208000)]
 fn bench_spreader_u256_empty_7x7_1(k: u16) {
@@ -1356,6 +1453,7 @@ fn bench_spreader_u256_empty_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 256, seed: 7)]
 #[available_gas(l2_gas: 283000)]
 fn bench_spreader_u256_empty_7x7_5(k: u16) {
@@ -1365,6 +1463,7 @@ fn bench_spreader_u256_empty_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 256, seed: 7)]
 #[available_gas(l2_gas: 283000)]
 fn bench_spreader_u256_empty_7x7_20(k: u16) {
@@ -1374,6 +1473,7 @@ fn bench_spreader_u256_empty_7x7_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 256, seed: 7)]
 #[available_gas(l2_gas: 208000)]
 fn bench_spreader_u256_cave_7x7_1(k: u16) {
@@ -1383,6 +1483,7 @@ fn bench_spreader_u256_cave_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 256, seed: 7)]
 #[available_gas(l2_gas: 283000)]
 fn bench_spreader_u256_cave_7x7_5(k: u16) {
@@ -1392,6 +1493,7 @@ fn bench_spreader_u256_cave_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 256, seed: 7)]
 #[available_gas(l2_gas: 263000)]
 fn bench_spreader_u256_cave_7x7_20(k: u16) {
@@ -1401,6 +1503,7 @@ fn bench_spreader_u256_cave_7x7_20(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 256, seed: 7)]
 #[available_gas(l2_gas: 208000)]
 fn bench_spreader_u256_maze_7x7_1(k: u16) {
@@ -1410,6 +1513,7 @@ fn bench_spreader_u256_maze_7x7_1(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 256, seed: 7)]
 #[available_gas(l2_gas: 254000)]
 fn bench_spreader_u256_maze_7x7_5(k: u16) {
@@ -1419,6 +1523,7 @@ fn bench_spreader_u256_maze_7x7_5(k: u16) {
 }
 
 #[test]
+#[ignore]
 #[fuzzer(runs: 256, seed: 7)]
 #[available_gas(l2_gas: 113000)]
 fn bench_spreader_u256_maze_7x7_16(k: u16) {

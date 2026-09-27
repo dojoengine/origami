@@ -74,7 +74,27 @@ jobs:
         with:
           starknet-foundry-version: 0.61.0
       - name: Test
-        run: snforge test --package origami_hexmap
+        # Library benchmarks only; the fuzz budgets (max over 256 seeds) are checked on 64 seeds
+        run: snforge test --package origami_hexmap --fuzzer-runs 64
+        shell: bash
+
+  hexmap-full:
+    needs: [check, build]
+    if: github.event_name == 'push'
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    name: Test origami_hexmap (losers, 256 seeds)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+      - uses: foundry-rs/setup-snfoundry@v4
+        with:
+          starknet-foundry-version: 0.61.0
+      - name: Test
+        # Every test, `#[ignore]`d losers included, fuzz tests on 256 seeds (non-blocking)
+        run: snforge test --package origami_hexmap --include-ignored
         shell: bash
 
   map:
