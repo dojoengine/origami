@@ -1472,6 +1472,100 @@ fn bench_dial_variant_dijkstra_heap_7x7() {
     assert!(path.len() != 0);
 }
 
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_backtrack_twice_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    let (layers, time) = forward_winner(@setup);
+    let path = backtrack_winner(@setup, layers.span(), time);
+    let again = backtrack_winner(@setup, layers.span(), time);
+    assert!(path.len() == again.len());
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_backtrack_once_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    let (layers, time) = forward_winner(@setup);
+    let path = backtrack_winner(@setup, layers.span(), time);
+    assert!(path.len() == path.len());
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_micro_step_mask() {
+    let layout = LayoutTrait::new(17, 14);
+    let layer: u256 = CAVE_17X14.into();
+    let bit = Bits::pow(100);
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let (next, _, _, _, _) = step_mask(@layout, layer, 100, bit, false);
+        acc += next.into();
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_micro_cost() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    let classes = harness_classes(CAVE_17X14.into(), costs);
+    let mut acc: u32 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        acc += harness_cost(@classes, 0x100000, false);
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_micro_span_at() {
+    let layers = array![1_u256, 2, 3, 4, 5, 6, 7, 8, 9, 10].span();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        acc += (*layers[5]).low.into();
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_micro_lowest() {
+    let hits: u128 = 0x1100;
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let (rest, _, _) = bitwise(hits, hits - 1);
+        acc += (hits - rest).into();
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_micro_felt_eq() {
+    let bit = Bits::pow(100);
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        if bit * INV_2 == acc {
+            acc += 2;
+        }
+        acc += 1;
+    }
+    assert!(acc != 0);
+}
+
 // Benchmarks: library
 
 #[test]

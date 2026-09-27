@@ -586,9 +586,7 @@ impl DialInternal of DialInternalTrait {
     ) -> Option<(Array<T>, u32)> {
         let empty: T = Set::from_felt(0);
         let mut layers: Array<T> = array![empty];
-        let (mut first, mut second, mut third, mut fourth): (felt252, felt252, felt252, felt252) = (
-            0, 0, 0, 0,
-        );
+        let mut ring: [felt252; 4] = [0, 0, 0, 0];
         let mut unvisited = Set::sub(unvisited, arrivals);
         let mut arrivals = arrivals;
         let mut time: u32 = 0;
@@ -598,32 +596,33 @@ impl DialInternal of DialInternalTrait {
                 break true;
             }
             // [Effect] Schedule the arrivals in the bucket of their cost
-            let mut ones = Set::to_felt(arrivals);
-            if classes.has_two {
-                let two = Set::to_felt(Set::and(arrivals, classes.two));
-                ones -= two;
-                second += two;
-            }
-            if classes.has_three {
-                let three = Set::to_felt(Set::and(arrivals, classes.three));
-                ones -= three;
-                third += three;
-            }
-            if classes.has_four {
-                let four = Set::to_felt(Set::and(arrivals, classes.four));
-                ones -= four;
-                fourth += four;
-            }
-            first += ones;
+            let two = if classes.has_two {
+                Set::to_felt(Set::and(arrivals, classes.two))
+            } else {
+                0
+            };
+            let three = if classes.has_three {
+                Set::to_felt(Set::and(arrivals, classes.three))
+            } else {
+                0
+            };
+            let four = if classes.has_four {
+                Set::to_felt(Set::and(arrivals, classes.four))
+            } else {
+                0
+            };
+            let [first, second, third, fourth] = ring;
+            ring =
+                [
+                    first + Set::to_felt(arrivals) - two - three - four, second + two,
+                    third + three, fourth + four,
+                ];
             // [Effect] Pop the next non-empty bucket, the buckets are disjoint
             let frontier = loop {
-                let frontier = first;
-                first = second;
-                second = third;
-                third = fourth;
-                fourth = 0;
+                let [frontier, second, third, fourth] = ring;
+                ring = [second, third, fourth, 0];
                 time += 1;
-                if frontier != 0 || first + second + third == 0 {
+                if frontier != 0 || second + third + fourth == 0 {
                     break frontier;
                 }
             };
@@ -698,39 +697,38 @@ impl DialInternal of DialInternalTrait {
         unvisited: T,
         arrivals: felt252,
     ) -> felt252 {
-        let (mut first, mut second, mut third, mut fourth): (felt252, felt252, felt252, felt252) = (
-            0, 0, 0, 0,
-        );
+        let mut ring: [felt252; 4] = [0, 0, 0, 0];
         let mut unvisited = unvisited;
         let mut arrivals: T = Set::from_felt(arrivals);
         let mut time: u8 = 0;
         let mut field = start;
         loop {
-            let mut ones = Set::to_felt(arrivals);
-            if classes.has_two {
-                let two = Set::to_felt(Set::and(arrivals, classes.two));
-                ones -= two;
-                second += two;
-            }
-            if classes.has_three {
-                let three = Set::to_felt(Set::and(arrivals, classes.three));
-                ones -= three;
-                third += three;
-            }
-            if classes.has_four {
-                let four = Set::to_felt(Set::and(arrivals, classes.four));
-                ones -= four;
-                fourth += four;
-            }
-            first += ones;
+            let two = if classes.has_two {
+                Set::to_felt(Set::and(arrivals, classes.two))
+            } else {
+                0
+            };
+            let three = if classes.has_three {
+                Set::to_felt(Set::and(arrivals, classes.three))
+            } else {
+                0
+            };
+            let four = if classes.has_four {
+                Set::to_felt(Set::and(arrivals, classes.four))
+            } else {
+                0
+            };
+            let [first, second, third, fourth] = ring;
+            ring =
+                [
+                    first + Set::to_felt(arrivals) - two - three - four, second + two,
+                    third + three, fourth + four,
+                ];
             let frontier = loop {
-                let frontier = first;
-                first = second;
-                second = third;
-                third = fourth;
-                fourth = 0;
+                let [frontier, second, third, fourth] = ring;
+                ring = [second, third, fourth, 0];
                 time += 1;
-                if frontier != 0 || first + second + third == 0 || time == budget {
+                if frontier != 0 || second + third + fourth == 0 || time == budget {
                     break frontier;
                 }
             };
