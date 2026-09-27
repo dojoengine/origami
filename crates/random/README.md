@@ -27,7 +27,13 @@ The crate is designed to work seamlessly with the Dojo engine and other Origami 
 
 ## Installation
 
-To add the Origami Random crate as a dependency in your project, you need to modify your Scarb.toml file. Add the following to your [dependencies] section:
+Add the Origami Random crate from the [scarbs.xyz](https://scarbs.xyz) registry:
+
+```sh
+scarb add origami_random@<version>
+```
+
+Or from git, in the [dependencies] section of your Scarb.toml:
 
 ```toml
 [dependencies]

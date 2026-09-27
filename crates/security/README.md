@@ -24,7 +24,13 @@ Features of the Commitment implementation include:
 
 ## Installation
 
-To add the Origami Security crate as a dependency in your project, you need to modify your Scarb.toml file. Add the following to your [dependencies] section:
+Add the Origami Security crate from the [scarbs.xyz](https://scarbs.xyz) registry:
+
+```sh
+scarb add origami_security@<version>
+```
+
+Or from git, in the [dependencies] section of your Scarb.toml:
 
 ```toml
 [dependencies]

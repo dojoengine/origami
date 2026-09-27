@@ -51,13 +51,22 @@ It provides a set of powerful tools and libraries that enable game developers to
 
 Incorporate `origami` seamlessly into your projects using Scarb.toml.
 
-Add the following to your `[dependencies]`:
+From the [scarbs.xyz](https://scarbs.xyz) registry:
+
+```sh
+scarb add origami_map@<version>
+scarb add origami_random@<version>
+```
+
+Or from git, in your `[dependencies]`:
 
 ```toml
 [dependencies]
-origami_random = { git = "https://github.com/dojoengine/origami" }
-origami_map = { git = "https://github.com/dojoengine/origami" }
+origami_random = { git = "https://github.com/dojoengine/origami", tag = "v<version>" }
+origami_map = { git = "https://github.com/dojoengine/origami", tag = "v<version>" }
 ```
+
+`origami_algebra` and `origami_defi` depend on `cubit` through git and are only available from git.
 
 Now you will be able to use origami like any other Cairo package!
 
