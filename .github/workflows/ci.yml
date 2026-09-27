@@ -74,6 +74,22 @@ jobs:
         run: scarb test --package origami_defi
         shell: bash
 
+  hexmap:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    name: Test origami_hexmap
+    steps:
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+      - uses: foundry-rs/setup-snfoundry@v4
+        with:
+          starknet-foundry-version: 0.61.0
+      - name: Test
+        run: snforge test --package origami_hexmap
+        shell: bash
+
   map:
     needs: [check, build]
     runs-on: ubuntu-latest
