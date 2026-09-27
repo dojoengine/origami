@@ -1,0 +1,18 @@
+[package]
+name = "origami_hexmap"
+version.workspace = true
+edition.workspace = true
+description = "Hexagonal tile maps library for Dojo based games."
+license.workspace = true
+license-file.workspace = true
+repository.workspace = true
+homepage = "https://github.com/dojoengine/origami/tree/main/crates/hexmap"
+documentation = "https://github.com/dojoengine/origami/tree/main/crates/hexmap#readme"
+readme = "README.md"
+keywords = ["dojo", "starknet", "cairo", "game", "hexagon", "pathfinding", "procedural-generation"]
+
+[dev-dependencies]
+snforge_std.workspace = true
+
+[scripts]
+test = "snforge test"

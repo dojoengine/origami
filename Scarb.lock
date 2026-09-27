@@ -21,6 +21,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "origami_hexmap"
+version = "1.1.2"
+dependencies = [
+ "snforge_std",
+]
+
+[[package]]
 name = "origami_map"
 version = "1.1.2"
 
@@ -35,3 +42,18 @@ version = "1.1.2"
 [[package]]
 name = "origami_security"
 version = "1.1.2"
+
+[[package]]
+name = "snforge_scarb_plugin"
+version = "0.61.0"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:6b5d7d4e3fc03b00a9913cb31c9bcf2a1fde23c10760e776fdac493b1f39086b"
+
+[[package]]
+name = "snforge_std"
+version = "0.61.0"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:e54712a6a33b746e1898db099688ed8b980eaed24d4dd21abf54285f04cf3aeb"
+dependencies = [
+ "snforge_scarb_plugin",
+]

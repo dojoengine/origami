@@ -2,6 +2,7 @@
 members = [
     "crates/algebra",
     "crates/defi",
+    "crates/hexmap",
     "crates/map",
     "crates/random",
     "crates/rating",
@@ -19,3 +20,4 @@ repository = "https://github.com/dojoengine/origami"
 cubit = { git = "https://github.com/bengineer42/cubit", branch = "bump-cairo-gt-2.8" }
 starknet = "^2.19.4"
 cairo_test = "^2.19.4"
+snforge_std = "0.61.0"
