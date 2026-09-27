@@ -910,7 +910,11 @@ impl DialInternal of DialInternalTrait {
             1
         };
         let has_upper = classes.has_three || classes.has_four;
+        // [Compute] Constants boxed: the loop state is copied on every iteration
+        let boxed_walk = BoxTrait::new(walk);
+        let boxed_classes = BoxTrait::new(classes);
         loop {
+            let walk = boxed_walk.unbox();
             let previous = time - cost;
             if previous == 0 {
                 break;
@@ -973,6 +977,7 @@ impl DialInternal of DialInternalTrait {
             }
             path.append(position);
             if weighted {
+                let classes = boxed_classes.unbox();
                 cost =
                     Self::cost(
                         lowest,

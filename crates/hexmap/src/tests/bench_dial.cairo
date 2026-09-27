@@ -1511,6 +1511,23 @@ fn bench_dial_micro_step_mask() {
 
 #[test]
 #[available_gas(l2_gas: 100000000)]
+fn bench_dial_micro_step_mask_north_west() {
+    // 100 lies on the odd row 5: its North-West neighbour is 100 + 17 + 1
+    let layout = LayoutTrait::new(17, 14);
+    let layer: u256 = Bits::pow(118).into();
+    let bit = Bits::pow(100);
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let (next, _, _, _, _) = step_mask(@layout, layer, 100, bit, true);
+        acc += next.into();
+    }
+    assert!(acc == 11800);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
 fn bench_dial_micro_cost() {
     let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
     let classes = harness_classes(CAVE_17X14.into(), costs);
@@ -1698,6 +1715,108 @@ fn bench_dial_field_empty_17x14_budget_12() {
 fn bench_dial_field_cave_17x14_budget_8() {
     let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
     Dial::field_of_movement(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, 8, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_field_empty_17x14_classes_0_budget_4() {
+    let costs = array![].span();
+    Dial::field_of_movement(EMPTY_17X14, 17, 14, 110, 4, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_field_empty_17x14_classes_0_budget_12() {
+    let costs = array![].span();
+    Dial::field_of_movement(EMPTY_17X14, 17, 14, 110, 12, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_field_empty_17x14_classes_1_budget_4() {
+    let costs = array![EMPTY_17X14_COST_2 + EMPTY_17X14_COST_3].span();
+    Dial::field_of_movement(EMPTY_17X14, 17, 14, 110, 4, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_field_empty_17x14_classes_1_budget_12() {
+    let costs = array![EMPTY_17X14_COST_2 + EMPTY_17X14_COST_3].span();
+    Dial::field_of_movement(EMPTY_17X14, 17, 14, 110, 12, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_field_empty_17x14_classes_3_budget_4() {
+    let costs = array![EMPTY_17X14_CLASS_2, EMPTY_17X14_COST_3, EMPTY_17X14_CLASS_4].span();
+    Dial::field_of_movement(EMPTY_17X14, 17, 14, 110, 4, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_field_empty_17x14_classes_3_budget_12() {
+    let costs = array![EMPTY_17X14_CLASS_2, EMPTY_17X14_COST_3, EMPTY_17X14_CLASS_4].span();
+    Dial::field_of_movement(EMPTY_17X14, 17, 14, 110, 12, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_field_empty_7x7_classes_0_budget_1() {
+    let costs = array![].span();
+    Dial::field_of_movement(EMPTY_7X7, 7, 7, 8, 1, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_field_empty_7x7_classes_0_budget_4() {
+    let costs = array![].span();
+    Dial::field_of_movement(EMPTY_7X7, 7, 7, 8, 4, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_field_empty_7x7_classes_2_budget_1() {
+    let costs = array![CAVE_7X7_COST_2, CAVE_7X7_COST_3].span();
+    Dial::field_of_movement(EMPTY_7X7, 7, 7, 8, 1, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_field_empty_7x7_classes_2_budget_4() {
+    let costs = array![CAVE_7X7_COST_2, CAVE_7X7_COST_3].span();
+    Dial::field_of_movement(EMPTY_7X7, 7, 7, 8, 4, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_unit_backtrack_twice_17x14() {
+    let costs = array![].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    let (layers, time) = forward_unit(@setup);
+    let path = backtrack_winner(@setup, layers.span(), time);
+    let again = backtrack_winner(@setup, layers.span(), time);
+    assert!(path.len() == again.len());
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_unit_backtrack_once_17x14() {
+    let costs = array![].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    let (layers, time) = forward_unit(@setup);
+    let path = backtrack_winner(@setup, layers.span(), time);
+    assert!(path.len() == path.len());
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_variant_bit_tests_twice_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    let setup = setup(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+    let (layers, time) = forward_winner(@setup);
+    let path = backtrack_bits(@setup, layers.span(), time);
+    let again = backtrack_bits(@setup, layers.span(), time);
+    assert!(path.len() == again.len());
 }
 
 #[cfg(test)]
