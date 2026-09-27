@@ -1500,7 +1500,7 @@ Per op = (test - baseline) / 100, the baseline being the test that builds the sa
 ## P1 Commons
 
 Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas). "Before" is `main` at `7adb9c4` (all lots
-L0-L7 and S1 merged), "after" is the head of the P1 pull request; both from
+L0-L7 and S1 merged), "after" is the head of the P1 pull request (rebased on the L8 facade); both from
 `snforge test --package origami_hexmap --include-ignored --detailed-resources` (256 seeds).
 
 ### Shared primitives
@@ -1519,7 +1519,8 @@ L0-L7 and S1 merged), "after" is the head of the P1 pull request; both from
 
 Kept local: the byte-count select of `Spreader` (one module uses it), the `Frontier<T>` dilation
 and backtracking masks of `Dial` (they need the `Dilation`), the walker's pool loop (locals, both
-limbs of every permutation, `Rng::split216`).
+limbs of every permutation, `Rng::split216`). `BfsInternal::and`, `expand` and `expand_small`
+remain as one-line delegations to `Bits::and` and `Dilation` because `map.cairo` (L8) calls them.
 
 ### Microbenchmarks (per op = (test - loop) / 100, loop 142_090)
 
@@ -1615,6 +1616,43 @@ The L4 `keep_component` (dilation of the whole component, corelib operators) sta
 
 The 100 spreader losers (`#[ignore]`) and the library fuzz benchmarks on 256 seeds run in the
 non-blocking `hexmap-full` job on pushes to `main` (about 9m20s locally).
+
+### L8 facade (merged during P1)
+
+The `HexMap` facade (`eb0f4b1`) merged while P1 was open; its benchmarks move with the libraries
+it calls. Figures of the L8 section against P1 (budgets in `tests/bench_map.cairo`, not changed
+here: that file belongs to L8):
+
+| Test | L8 | P1 | Delta | Budget |
+|---|---:|---:|---:|---:|
+| `bench_map_compute_distribution` | 206_868 | 193_168 | -6.6 % | 218_000 |
+| `bench_map_field_of_movement` | 261_829 | 254_419 | -2.8 % | 275_000 |
+| `bench_map_keep_component` | 555_119 | 536_249 | -3.4 % | 583_000 |
+| `bench_map_keep_component_7x7` | 102_333 | 97_533 | -4.7 % | 108_000 |
+| `bench_map_keep_component_maze` | 1_152_663 | 1_113_493 | -3.4 % | 1_211_000 |
+| `bench_map_new_cave` | 144_927 | 141_917 | -2.1 % | 153_000 |
+| `bench_map_new_maze` | 2_873_670 | 2_898_024 | +0.8 % | 3_018_000 |
+| `bench_map_new_random_walk` | 999_629 | 968_559 | -3.1 % | 1_050_000 |
+| `bench_map_reachable` | 555_119 | 536_249 | -3.4 % | 583_000 |
+| `bench_map_scenario_17x14_1_cave` | 144_927 | 141_917 | -2.1 % | 153_000 |
+| `bench_map_scenario_17x14_2_keep` | 334_234 | 324_254 | -3.0 % | 351_000 |
+| `bench_map_scenario_17x14_3_corridor` | 497_448 | 485_218 | -2.5 % | 523_000 |
+| `bench_map_scenario_17x14_4_distribution` | 686_493 | 661_983 | -3.6 % | 721_000 |
+| `bench_map_scenario_17x14_5_total` | 1_162_931 | 1_138_321 | -2.1 % | 1_222_000 |
+| `bench_map_scenario_7x7_1_cave` | 83_807 | 80_797 | -3.6 % | 88_000 |
+| `bench_map_scenario_7x7_2_keep` | 141_856 | 135_546 | -4.4 % | 149_000 |
+| `bench_map_scenario_7x7_3_corridor` | 189_617 | 183_307 | -3.3 % | 200_000 |
+| `bench_map_scenario_7x7_4_distribution` | 308_662 | 294_602 | -4.6 % | 325_000 |
+| `bench_map_scenario_7x7_5_total` | 485_618 | 471_458 | -2.9 % | 510_000 |
+| `bench_map_search_path_weighted` | 1_427_654 | 1_406_744 | -1.5 % | 1_500_000 |
+| `bench_map_variant_keep_component_caver` | 580_303 | 533_849 | -8.0 % | 610_000 |
+| `bench_map_variant_keep_component_caver_7x7` | 168_195 | 95_333 | -43.3 % | 177_000 |
+| `bench_map_variant_keep_component_caver_maze` | 1_243_447 | 1_111_093 | -10.6 % | 1_306_000 |
+
+`bench_map_new_maze` costs 0.8 % more: the mazer carves 90 tiles instead of 89 on `'SEED'`. The
+`Caver::keep_component` variant of the facade (`bench_map_variant_keep_component_caver*`) is now
+0.4 % to 2.3 % cheaper than `Bfs::reachable`, which the facade calls (it also adds the open edge
+tiles).
 
 ### Before / after, every library benchmark
 
