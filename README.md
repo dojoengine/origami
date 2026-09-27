@@ -39,7 +39,6 @@ It provides a set of powerful tools and libraries that enable game developers to
 
 ### Crates
 
-- [Algebra](./crates/algebra)
 - [Defi](./crates/defi/)
 - [Hexmap](./crates/hexmap)
 - [Map](./crates/map)
@@ -55,19 +54,19 @@ Incorporate `origami` seamlessly into your projects using Scarb.toml.
 From the [scarbs.xyz](https://scarbs.xyz) registry:
 
 ```sh
-scarb add origami_map@<version>
-scarb add origami_random@<version>
+scarb add origami_map@1.8.0
+scarb add origami_random@1.8.0
 ```
 
 Or from git, in your `[dependencies]`:
 
 ```toml
 [dependencies]
-origami_random = { git = "https://github.com/dojoengine/origami", tag = "v<version>" }
-origami_map = { git = "https://github.com/dojoengine/origami", tag = "v<version>" }
+origami_random = { git = "https://github.com/dojoengine/origami", tag = "v1.8.0" }
+origami_map = { git = "https://github.com/dojoengine/origami", tag = "v1.8.0" }
 ```
 
-`origami_algebra` and `origami_defi` depend on `cubit` through git and are only available from git.
+For linear algebra, use the [`nalgebra`](https://scarbs.xyz/packages/nalgebra) and [`glam`](https://scarbs.xyz/packages/glam) packages on scarbs.xyz.
 
 Now you will be able to use origami like any other Cairo package!
 

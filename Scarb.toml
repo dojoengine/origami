@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "crates/algebra",
     "crates/defi",
     "crates/hexmap",
     "crates/map",
@@ -10,14 +9,14 @@ members = [
 ]
 
 [workspace.package]
-version = "1.1.2"
+version = "1.8.0"
 edition = "2024_07"
 license = "MIT"
 license-file = "LICENSE"
 repository = "https://github.com/dojoengine/origami"
 
 [workspace.dependencies]
-cubit = { git = "https://github.com/bengineer42/cubit", branch = "bump-cairo-gt-2.8" }
+fixed = "0.4.0"
 starknet = "^2.19.4"
 cairo_test = "^2.19.4"
 snforge_std = "0.61.0"

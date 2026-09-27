@@ -43,7 +43,7 @@ The crate is designed to work seamlessly with the Dojo engine and other Origami 
 Add the Origami Map crate from the [scarbs.xyz](https://scarbs.xyz) registry:
 
 ```sh
-scarb add origami_map@<version>
+scarb add origami_map@1.8.0
 ```
 
 Or from git, in the [dependencies] section of your Scarb.toml:

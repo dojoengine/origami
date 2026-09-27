@@ -34,14 +34,14 @@ It's possible to compute the purchase price for any quantity of tokens gas-effic
 
 ## Installation
 
-To add the Origami DeFi crate as a dependency in your project, you need to modify your Scarb.toml file. Add the following to your [dependencies] section:
+Add the crate from the [scarbs.xyz](https://scarbs.xyz) registry, with the `fixed` package that provides its `Fixed` type:
 
-```toml
-[dependencies]
-origami_defi = { git = "https://github.com/dojoengine/origami" }
+```sh
+scarb add origami_defi@1.8.0
+scarb add fixed@0.4.0
 ```
 
-Make sure you have dojo installed and configured in your project.
+Values are signed Q32.32 fixed-point numbers (`fixed::Fixed`): the range is `[-2^31, 2^31)` and the resolution is `2^-32`. Only the inputs and the result have to fit: the intermediate products are kept wide. The remaining domain limits are documented on each function (`# Domain`).
 
 ## How to Use
 
@@ -53,10 +53,10 @@ The `DiscreteGDA` structure represents a Gradual Dutch Auction using discrete ti
 
 ```rust
 let gda = DiscreteGDA {
-    sold: Fixed::new_unscaled(0),
-    initial_price: Fixed::new_unscaled(100, false),
-    scale_factor: FixedTrait::new_unscaled(11, false) / FixedTrait::new_unscaled(10, false), // 1.1
-    decay_constant: FixedTrait::new_unscaled(1, false) / FixedTrait::new_unscaled(2, false), // 0.5,
+    sold: FixedTrait::from_int(0),
+    initial_price: FixedTrait::from_int(100),
+    scale_factor: FixedTrait::from_ratio(11, 10), // 1.1
+    decay_constant: FixedTrait::from_ratio(1, 2), // 0.5
 };
 ```
 
@@ -65,8 +65,8 @@ let gda = DiscreteGDA {
 You can calculate the purchase price for a specific quantity at a given time using the `purchase_price` method.
 
 ```rust
-let time_since_start = FixedTrait::new(2, false); // 2 days since the start, it must be scaled to avoid overflow.
-let quantity = FixedTrait::new_unscaled(5, false); // Quantity to purchase
+let time_since_start = FixedTrait::from_int(2); // 2 days since the start
+let quantity = FixedTrait::from_int(5); // Quantity to purchase
 let price = gda.purchase_price(time_since_start, quantity);
 ```
 
@@ -78,9 +78,9 @@ The `ContinuousGDA` structure represents a Gradual Dutch Auction using continuou
 
 ```rust
 let gda = ContinuousGDA {
-    initial_price: FixedTrait::new_unscaled(1000, false),
-    emission_rate: FixedTrait::ONE(),
-    decay_constant: FixedTrait::new_unscaled(1, false) / FixedTrait::new_unscaled(2, false),
+    initial_price: FixedTrait::from_int(1000),
+    emission_rate: ONE,
+    decay_constant: FixedTrait::from_ratio(1, 2),
 };
 ```
 
@@ -89,8 +89,8 @@ let gda = ContinuousGDA {
 Just like with the discrete version, you can calculate the purchase price for a specific quantity at a given time using the `purchase_price` method.
 
 ```rust
-let time_since_last = FixedTrait::new(1, false); // 1 day since the last purchase, it must be scaled to avoid overflow.
-let quantity = FixedTrait::new_unscaled(3, false); // Quantity to purchase
+let time_since_last = FixedTrait::from_int(1); // 1 day since the last purchase
+let quantity = FixedTrait::from_int(3); // Quantity to purchase
 let price = gda.purchase_price(time_since_last, quantity);
 ```
 
@@ -98,7 +98,7 @@ let price = gda.purchase_price(time_since_last, quantity);
 
 These examples demonstrate how to create instances of the `DiscreteGDA` and `ContinuousGDA` structures, and how to utilize their `purchase_price` methods to calculate the price for purchasing specific quantities at given times.
 
-You'll need to include the `cubit` crate in your project to work with the `Fixed` type and mathematical operations like `exp` and `pow`. Make sure to follow the respective documentation for additional details and proper integration into your project.
+You'll need the `fixed` package in your project to build the `Fixed` values: `use fixed::{FixedTrait, ONE};`.
 
 ## Conclusion
 
@@ -119,13 +119,10 @@ The `LinearVRGDA` struct represents a linear auction where the price decays base
 #### Creating a LinearVRGDA instance
 
 ```rust
-const _69_42: u128 = 1280572973596917000000;
-const _0_31: u128 = 5718490662849961000;
-
 let auction = LinearVRGDA {
-    target_price: FixedTrait::new(_69_42, false),
-    decay_constant: FixedTrait::new(_0_31, false),
-    target_units_per_time: FixedTrait::new_unscaled(2, false),
+    target_price: FixedTrait::from_ratio(6942, 100), // 69.42
+    decay_constant: FixedTrait::from_ratio(31, 100), // 0.31
+    target_units_per_time: FixedTrait::from_int(2),
 };
 ```
 
@@ -148,14 +145,11 @@ The `LogisticVRGDA` struct represents an auction where the price decays accordin
 #### Creating a LogisticVRGDA instance
 
 ```rust
-const MAX_SELLABLE: u128 = 6392;
-const _0_0023: u128 = 42427511369531970;
-
 let auction = LogisticVRGDA {
-    target_price: FixedTrait::new(_69_42, false),
-    decay_constant: FixedTrait::new(_0_31, false),
-    max_sellable: FixedTrait::new_unscaled(MAX_SELLABLE, false),
-    time_scale: FixedTrait::new(_0_0023, false),
+    target_price: FixedTrait::from_ratio(6942, 100), // 69.42
+    decay_constant: FixedTrait::from_ratio(31, 100), // 0.31
+    max_sellable: FixedTrait::from_int(6392),
+    time_scale: FixedTrait::from_ratio(23, 10000), // 0.0023
 };
 ```
 
@@ -174,7 +168,7 @@ let price = auction.get_vrgda_price(time_since_start, sold_quantity);
 Make sure to import the required dependencies at the beginning of your Cairo file:
 
 ```rust
-use cubit::f128::types::fixed::{Fixed, FixedTrait};
+use fixed::{Fixed, FixedTrait};
 ```
 
 These examples show you how to create instances of both `LinearVRGDA` and `LogisticVRGDA` and how to use their methods to calculate the target sale time and VRGDA price.

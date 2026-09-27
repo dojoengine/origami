@@ -45,20 +45,7 @@ jobs:
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - name: Package
-        run: scarb package -p origami_map -p origami_random -p origami_rating -p origami_security
-        shell: bash
-
-  algebra:
-    needs: [check, build]
-    runs-on: ubuntu-latest
-    name: Test origami_algebra
-    steps:
-      - uses: actions/checkout@v4
-      - uses: software-mansion/setup-scarb@v1
-        with:
-          scarb-version: ${{ env.SCARB_VERSION }}
-      - name: Test
-        run: scarb test --package origami_algebra
+        run: scarb package -p origami_defi -p origami_map -p origami_random -p origami_rating -p origami_security
         shell: bash
 
   defi:
