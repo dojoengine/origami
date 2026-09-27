@@ -15,7 +15,7 @@ use origami_hexmap::generators::walker::Walker;
 use origami_hexmap::helpers::asserter::Asserter;
 use origami_hexmap::helpers::bits::Bits;
 use origami_hexmap::helpers::geometry::Geometry;
-use origami_hexmap::helpers::layout::LayoutTrait;
+use origami_hexmap::helpers::layout::{DilationTrait, LayoutTrait};
 use origami_hexmap::types::direction::Direction;
 
 // Constants
@@ -315,10 +315,10 @@ pub impl HexMapImpl of HexMapTrait {
             return outer - Bfs::tiles_within_range(grid, width, height, position, radius - 1);
         }
         if radius == 1 {
-            return Bits::to_felt(BfsInternal::and(centre.around.into(), open));
+            return Bits::to_felt(Bits::and(centre.around.into(), open));
         }
         // [Compute] Balls of radius `radius - 1` and `radius - 2`
-        let first = BfsInternal::and((centre.around + power).into(), free);
+        let first = Bits::and((centre.around + power).into(), free);
         let edges = grid - Bits::to_felt(free);
         if width * height <= SMALL_SIZE {
             let (ball, inner) = BfsInternal::flood_small(@step, first.low, free.low, radius - 2);
@@ -328,14 +328,14 @@ pub impl HexMapImpl of HexMapTrait {
                 inner
             };
             // [Compute] Interior tiles of the ring
-            let near = BfsInternal::expand_small(@step, ball.try_into().unwrap());
+            let near = step.expand_small(ball.try_into().unwrap());
             let ring: felt252 = (near & free.low).into() - ball;
             if edges == 0 {
                 return ring;
             }
             // [Return] Plus the edge tiles next to the ball but not to the inner ball
             let edges: u128 = edges.try_into().unwrap();
-            let far = BfsInternal::expand_small(@step, inner.try_into().unwrap());
+            let far = step.expand_small(inner.try_into().unwrap());
             return ring + (near & edges).into() - (far & edges).into();
         }
         let (ball, inner) = BfsInternal::flood(@step, first, free, radius - 2);
@@ -346,20 +346,18 @@ pub impl HexMapImpl of HexMapTrait {
         };
         // [Compute] Interior tiles of the ring
         let wide: u256 = ball.into();
-        let (low, high) = BfsInternal::expand(@step, wide.low, wide.high, ball);
+        let (low, high) = step.dilate(wide.low, wide.high, ball);
         let near = u256 { low, high };
-        let ring = Bits::to_felt(BfsInternal::and(near, free)) - ball;
+        let ring = Bits::to_felt(Bits::and(near, free)) - ball;
         if edges == 0 {
             return ring;
         }
         // [Return] Plus the edge tiles next to the ball but not to the inner ball
         let edges: u256 = edges.into();
         let wide: u256 = inner.into();
-        let (low, high) = BfsInternal::expand(@step, wide.low, wide.high, inner);
+        let (low, high) = step.dilate(wide.low, wide.high, inner);
         let far = u256 { low, high };
-        ring
-            + Bits::to_felt(BfsInternal::and(near, edges))
-            - Bits::to_felt(BfsInternal::and(far, edges))
+        ring + Bits::to_felt(Bits::and(near, edges)) - Bits::to_felt(Bits::and(far, edges))
     }
 
     /// Neighbour of a position, `None` outside the board.

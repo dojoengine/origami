@@ -444,7 +444,8 @@ stopped after three consecutive ideas below 2 % (loops x8, window backtracking, 
 
 ## L2 A* baseline
 
-_To be filled by lot L2._
+Dropped: the bit-parallel BFS (L1) and Dial (L3) cover unweighted and weighted searches; the A*
+and heap modules were removed by L8.
 
 ## L3 Dial
 
@@ -1520,7 +1521,8 @@ L0-L7 and S1 merged), "after" is the head of the P1 pull request (rebased on the
 Kept local: the byte-count select of `Spreader` (one module uses it), the `Frontier<T>` dilation
 and backtracking masks of `Dial` (they need the `Dilation`), the walker's pool loop (locals, both
 limbs of every permutation, `Rng::split216`). `BfsInternal::and`, `expand` and `expand_small`
-remain as one-line delegations to `Bits::and` and `Dilation` because `map.cairo` (L8) calls them.
+remained as one-line delegations to `Bits::and` and `Dilation` for `map.cairo` (L8); F1 removed
+them, the facade calls `Bits::and` and `Dilation::dilate` / `expand_small` directly.
 
 ### Microbenchmarks (per op = (test - loop) / 100, loop 142_090)
 
@@ -1837,3 +1839,23 @@ tiles).
 | `bench_spreader_generate_sparse5_17x14_1` | 149_625 / 139_223 | 145_545 / 135_143 | -2.7 % / -2.9 % |
 | `bench_spreader_generate_sparse5_17x14_2` | 149_865 / 143_721 | 145_445 / 139_301 | -2.9 % / -3.1 % |
 
+## F1 Release preparation
+
+Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas), `snforge test -p origami_hexmap`.
+
+* **Facade.** `HexMap::ring` calls `Bits::and` and `Dilation::dilate` / `expand_small` directly;
+  the three `BfsInternal` delegations are gone. `bench_map_ring` 99_903, `bench_map_ring_7x7`
+  46_403, `bench_map_ring_open_edge` 167_673: unchanged (the delegations were
+  `#[inline(always)]`). `keep_component` stays on `Bfs::reachable` for its edge semantics.
+* **Budgets lowered** (more than 5 % under their L8 budget after P1, rule of this file):
+
+| Test | Measured | Budget before | Budget |
+|---|---:|---:|---:|
+| `bench_map_compute_distribution` | 193_168 | 218_000 | 203_000 |
+| `bench_map_direct_compute_distribution` | 193_168 | 218_000 | 203_000 |
+| `bench_map_variant_keep_component_caver` | 533_849 | 610_000 | 561_000 |
+| `bench_map_variant_keep_component_caver_7x7` | 95_333 | 177_000 | 101_000 |
+| `bench_map_variant_keep_component_caver_maze` | 1_111_093 | 1_306_000 | 1_167_000 |
+
+* **Package.** `.scarbignore` keeps `src/tests/`, `src/helpers/printer.cairo` (test-only modules,
+  declared under `#[cfg(target: "test")]`) and this file out of the published package.

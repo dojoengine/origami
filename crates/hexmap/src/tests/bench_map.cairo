@@ -149,7 +149,8 @@ fn bench_map_direct_open_with_maze() {
     Digger::maze(17, 14, 0, MAZE_ENTRANCE, CAVE_17X14, SEED);
 }
 
-// Connectivity: the facade uses `Bfs::reachable`, `Caver::keep_component` is the loser
+// Connectivity: the facade uses `Bfs::reachable` for its edge semantics (open edge tiles next to
+// the component are kept); `Caver::keep_component` floods the interior only, without the checks
 
 #[test]
 #[available_gas(l2_gas: 583000)]
@@ -165,7 +166,7 @@ fn bench_map_direct_keep_component() {
 }
 
 #[test]
-#[available_gas(l2_gas: 610000)]
+#[available_gas(l2_gas: 561000)]
 fn bench_map_variant_keep_component_caver() {
     Caver::keep_component(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM);
 }
@@ -178,7 +179,7 @@ fn bench_map_keep_component_7x7() {
 }
 
 #[test]
-#[available_gas(l2_gas: 177000)]
+#[available_gas(l2_gas: 101000)]
 fn bench_map_variant_keep_component_caver_7x7() {
     Caver::keep_component(CAVE_7X7, 7, 7, CAVE_7X7_FAR_FROM);
 }
@@ -191,7 +192,7 @@ fn bench_map_keep_component_maze() {
 }
 
 #[test]
-#[available_gas(l2_gas: 1306000)]
+#[available_gas(l2_gas: 1167000)]
 fn bench_map_variant_keep_component_caver_maze() {
     Caver::keep_component(MAZE_17X14, 17, 14, MAZE_17X14_FAR_FROM);
 }
@@ -199,13 +200,13 @@ fn bench_map_variant_keep_component_caver_maze() {
 // Distribution
 
 #[test]
-#[available_gas(l2_gas: 218000)]
+#[available_gas(l2_gas: 203000)]
 fn bench_map_compute_distribution() {
     cave().compute_distribution(10, SEED);
 }
 
 #[test]
-#[available_gas(l2_gas: 218000)]
+#[available_gas(l2_gas: 203000)]
 fn bench_map_direct_compute_distribution() {
     Spreader::generate(CAVE_17X14, 17, 14, 10, SEED);
 }
