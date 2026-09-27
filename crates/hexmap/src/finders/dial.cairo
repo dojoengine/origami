@@ -989,3 +989,232 @@ impl DialInternal of DialInternalTrait {
         path.span()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    // Internal imports
+
+    use origami_hexmap::generators::caver::Caver;
+    use origami_hexmap::helpers::bits::Bits;
+    use origami_hexmap::tests::bench_dial::{check_path, dijkstra, field_oracle};
+    use origami_hexmap::tests::fixtures::{
+        CAVE_17X14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, EMPTY_7X7, UNREACHABLE_7X7,
+        UNREACHABLE_7X7_FAR_FROM, UNREACHABLE_7X7_FAR_TO,
+    };
+
+    // Local imports
+
+    use super::Dial;
+
+    // Constants
+
+    /// Row 3 of a 7x7 board, x = 2..5.
+    const SWAMP_7X7: felt252 = 0xf * 0x800000;
+
+    /// Search and check the path against the oracle.
+    fn search_checked(
+        grid: felt252, width: u8, height: u8, from: u8, to: u8, costs: Span<felt252>,
+    ) -> Span<u8> {
+        let path = Dial::search(grid, width, height, from, to, costs);
+        let expected = *dijkstra(grid, width, height, from, costs)[to.into()];
+        check_path(grid, width, height, from, to, costs, path, expected);
+        assert!(path == Dial::search(grid, width, height, from, to, costs));
+        path
+    }
+
+    #[test]
+    fn test_dial_search_detour() {
+        // Cost 4 on x = 2..5 of row 3: 7 tiles of cost 1 instead of 6 tiles of cost 9
+        //  0 0 0 0 0 0 0
+        // 0 S 1 1 1 1 0
+        //  0 * * * * 1 0
+        // 0 1 1 1 1 * 0      <- 4 4 4 4 on this row, the path crosses at x = 1
+        //  0 1 1 1 1 * 0
+        // 0 1 1 1 1 E 0
+        //  0 0 0 0 0 0 0
+        let path = search_checked(EMPTY_7X7, 7, 7, 40, 8, array![0, 0, SWAMP_7X7].span());
+        assert!(path == array![8, 15, 22, 30, 31, 32, 33].span());
+    }
+
+    #[test]
+    fn test_dial_search_unit() {
+        //  0 0 0 0 0 0 0
+        // 0 S 1 1 1 1 0
+        //  0 * 1 1 1 1 0
+        // 0 1 * 1 1 1 0
+        //  0 1 * 1 1 1 0
+        // 0 1 1 * * E 0
+        //  0 0 0 0 0 0 0
+        let path = search_checked(EMPTY_7X7, 7, 7, 40, 8, array![].span());
+        assert!(path == array![8, 9, 10, 18, 25, 33].span());
+    }
+
+    #[test]
+    fn test_dial_search_overlap_highest_class_wins() {
+        // The swamp is in the classes of cost 2 and 4: it costs 4
+        let overlap = Dial::search(EMPTY_7X7, 7, 7, 40, 8, array![SWAMP_7X7, 0, SWAMP_7X7].span());
+        let four = Dial::search(EMPTY_7X7, 7, 7, 40, 8, array![0, 0, SWAMP_7X7].span());
+        assert!(overlap == four);
+        // Cost 3 and 2: crossing costs 8, the detour 7
+        let path = search_checked(EMPTY_7X7, 7, 7, 40, 8, array![SWAMP_7X7, SWAMP_7X7].span());
+        assert!(path.len() == 7);
+    }
+
+    #[test]
+    fn test_dial_search_trivial() {
+        assert!(Dial::search(EMPTY_7X7, 7, 7, 24, 24, array![SWAMP_7X7].span()).len() == 0);
+        // Adjacent: the target only, whatever its cost
+        let path = Dial::search(EMPTY_7X7, 7, 7, 31, 24, array![0, 0, SWAMP_7X7].span());
+        assert!(path == array![24].span());
+        let path = Dial::search(
+            UNREACHABLE_7X7,
+            7,
+            7,
+            UNREACHABLE_7X7_FAR_FROM,
+            UNREACHABLE_7X7_FAR_TO,
+            array![SWAMP_7X7].span(),
+        );
+        assert!(path.len() == 0);
+    }
+
+    #[test]
+    fn test_dial_search_edges() {
+        // Open edge tiles: 3 (bottom), 21 (x = 0), 27 (x = 6), 45 (top), corner 48
+        let grid = EMPTY_7X7
+            + Bits::pow(3)
+            + Bits::pow(21)
+            + Bits::pow(27)
+            + Bits::pow(45)
+            + Bits::pow(48);
+        let costs = array![0, 0, SWAMP_7X7].span();
+        // Edge to interior, interior to edge, edge to edge, corner
+        search_checked(grid, 7, 7, 3, 40, costs);
+        search_checked(grid, 7, 7, 40, 3, costs);
+        search_checked(grid, 7, 7, 3, 45, costs);
+        search_checked(grid, 7, 7, 21, 27, costs);
+        // The corner (even row) reaches the interior through its South-East neighbour 40
+        search_checked(grid, 7, 7, 48, 24, costs);
+        let path = search_checked(grid, 7, 7, 24, 48, costs);
+        assert!(*path[1] == 40);
+    }
+
+    #[test]
+    fn test_dial_search_edges_adjacent() {
+        // Two adjacent open edge tiles 3 and 4 (bottom row), 4 also next to 11
+        let grid = EMPTY_7X7 + Bits::pow(3) + Bits::pow(4);
+        let path = Dial::search(grid, 7, 7, 3, 4, array![SWAMP_7X7].span());
+        assert!(path == array![4].span());
+        let path = search_checked(grid, 7, 7, 11, 4, array![].span());
+        assert!(path == array![4].span());
+    }
+
+    #[test]
+    fn test_dial_search_dimensions() {
+        // 3x3: a single interior tile between open edge tiles
+        let grid: felt252 = 0x1ff - 1 - 0x100;
+        let path = search_checked(grid, 3, 3, 1, 7, array![0x10].span());
+        assert!(path == array![7, 4].span());
+        // 17x14 and 19x13 (u256 path), 7x7 (u128 path)
+        let costs = array![0x5555555555555555555555555555555555555555555555555555555555555].span();
+        search_checked(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+        let grid = Caver::generate(19, 13, 3, 'DIAL');
+        let open: u256 = grid.into();
+        let mut from: u8 = 20;
+        while !Bits::get(open, from) {
+            from += 1;
+        }
+        let mut to: u8 = 226;
+        while !Bits::get(open, to) {
+            to -= 1;
+        }
+        search_checked(grid, 19, 13, from, to, costs);
+        search_checked(EMPTY_7X7, 7, 7, 36, 12, costs);
+    }
+
+    #[test]
+    fn test_dial_field_of_movement() {
+        // From 24 with budget 2, the swamp costs 2: its tiles next to 24 only
+        //  0 0 0 0 0 0 0
+        // 0 0 1 1 1 0 0
+        //  0 1 1 1 1 0 0
+        // 0 0 1 1 1 0 0
+        //  0 1 1 1 1 0 0
+        // 0 0 1 1 1 0 0
+        //  0 0 0 0 0 0 0
+        let field = Dial::field_of_movement(EMPTY_7X7, 7, 7, 24, 2, array![SWAMP_7X7].span());
+        assert!(field == 978238508544);
+        // Budget 0: the start only
+        let field = Dial::field_of_movement(EMPTY_7X7, 7, 7, 24, 0, array![SWAMP_7X7].span());
+        assert!(field == Bits::pow(24));
+        // Unit costs, budget 1: the start and its 6 neighbours
+        let field = Dial::field_of_movement(EMPTY_7X7, 7, 7, 24, 1, array![].span());
+        let expected = Bits::pow(24)
+            + Bits::pow(23)
+            + Bits::pow(25)
+            + Bits::pow(31)
+            + Bits::pow(32)
+            + Bits::pow(17)
+            + Bits::pow(18);
+        assert!(field == expected);
+        // A large budget floods the component
+        let field = Dial::field_of_movement(EMPTY_7X7, 7, 7, 24, 255, array![SWAMP_7X7].span());
+        assert!(field == EMPTY_7X7);
+    }
+
+    #[test]
+    fn test_dial_field_of_movement_edges() {
+        // An edge start reaches its open neighbours, an open edge tile is an endpoint only
+        let grid = EMPTY_7X7 + Bits::pow(3) + Bits::pow(4);
+        let field = Dial::field_of_movement(grid, 7, 7, 3, 1, array![].span());
+        assert!(field == Bits::pow(3) + Bits::pow(4) + Bits::pow(9) + Bits::pow(10));
+        let costs = array![SWAMP_7X7].span();
+        let mut budget: u8 = 0;
+        while budget != 8 {
+            let field = Dial::field_of_movement(grid, 7, 7, 17, budget, costs);
+            assert!(field == field_oracle(dijkstra(grid, 7, 7, 17, costs), budget));
+            budget += 1;
+        }
+    }
+
+    #[test]
+    #[should_panic(expected: 'Dial: too many costs')]
+    fn test_dial_search_revert_too_many_costs() {
+        Dial::search(EMPTY_7X7, 7, 7, 40, 8, array![0, 0, 0, 0].span());
+    }
+
+    #[test]
+    #[should_panic(expected: 'Dial: too many costs')]
+    fn test_dial_field_revert_too_many_costs() {
+        Dial::field_of_movement(EMPTY_7X7, 7, 7, 40, 3, array![0, 0, 0, 0].span());
+    }
+
+    #[test]
+    #[should_panic(expected: 'Dial: position not walkable')]
+    fn test_dial_search_revert_from_not_walkable() {
+        Dial::search(EMPTY_7X7, 7, 7, 0, 8, array![].span());
+    }
+
+    #[test]
+    #[should_panic(expected: 'Dial: position not walkable')]
+    fn test_dial_search_revert_to_not_walkable() {
+        Dial::search(EMPTY_7X7, 7, 7, 8, 6, array![].span());
+    }
+
+    #[test]
+    #[should_panic(expected: 'Dial: position not walkable')]
+    fn test_dial_field_revert_not_walkable() {
+        Dial::field_of_movement(EMPTY_7X7, 7, 7, 0, 3, array![].span());
+    }
+
+    #[test]
+    #[should_panic(expected: 'Asserter: position not inside')]
+    fn test_dial_search_revert_outside() {
+        Dial::search(EMPTY_7X7, 7, 7, 8, 49, array![].span());
+    }
+
+    #[test]
+    #[should_panic(expected: 'Asserter: invalid dimension')]
+    fn test_dial_search_revert_dimension() {
+        Dial::search(EMPTY_7X7, 18, 14, 8, 9, array![].span());
+    }
+}
