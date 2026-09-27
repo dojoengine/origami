@@ -27,7 +27,7 @@ use core::traits::{BitAnd, BitOr};
 // Internal imports
 
 use origami_hexmap::helpers::asserter::Asserter;
-use origami_hexmap::helpers::bits::{Bits, POW128, TWO_POW_128};
+use origami_hexmap::helpers::bits::{BYTES_ONE, Bits, POW128, TWO_POW_128};
 use origami_hexmap::helpers::rng::{Rng, RngTrait};
 
 // Constants
@@ -51,24 +51,8 @@ const TABLE_MAX: u8 = 8;
 const WALK_MAX: u8 = 8;
 /// Largest number of rejection trials of a pick, before the select.
 const TRIALS: u8 = 2;
-/// Odd bits mask 0xAAAA... on 128 bits.
-const MASK_ODD_BITS: u128 = 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa;
-/// Low pairs mask 0x3333... on 128 bits.
-const MASK_PAIRS: u128 = 0x33333333333333333333333333333333;
-/// Low nibbles mask 0x0F0F... on 128 bits.
-const MASK_NIBBLES: u128 = 0x0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f;
 /// High bit of every byte, 0x8080... on 128 bits.
 const MASK_BYTE_HIGH: u128 = 0x80808080808080808080808080808080;
-/// Byte-sum multiplier 0x0101...01 (16 bytes).
-const BYTES_ONE: felt252 = 0x01010101010101010101010101010101;
-/// 2^120, the byte-sum lands in the top byte of the low limb.
-const TWO_POW_120: NonZero<u128> = 0x1000000000000000000000000000000;
-/// 1/2 in the field.
-const INV_2: felt252 = 0x400000000000008800000000000000000000000000000000000000000000001;
-/// 1/4 in the field.
-const INV_4: felt252 = 0x60000000000000cc00000000000000000000000000000000000000000000001;
-/// 1/16 in the field.
-const INV_16: felt252 = 0x78000000000000ff00000000000000000000000000000000000000000000001;
 /// 1/128 in the field.
 const INV_128: felt252 = 0x7f0000000000010de0000000000000000000000000000000000000000000001;
 /// 1/255 in the field.
@@ -128,7 +112,7 @@ pub mod errors {
 
 /// Byte counts of a set, per `u128` limb, kept up to date across removals.
 #[derive(Copy, Drop)]
-pub struct Counts {
+pub(crate) struct Counts {
     /// Byte `j` holds the number of set bits in bytes `0..=j` of the low limb.
     pub low_prefix: u128,
     /// Byte `j` holds the number of set bits of byte `j` of the low limb.
@@ -140,7 +124,7 @@ pub struct Counts {
 }
 
 /// Set operations of the draw: `u256` on any board, `u128` on boards of at most 128 bits.
-pub trait BitSetTrait<T> {
+pub(crate) trait BitSetTrait<T> {
     /// The set as a felt bitmap.
     fn to_felt(self: T) -> felt252;
     /// A Poseidon output as a set of random bits.
@@ -163,7 +147,7 @@ pub trait BitSetTrait<T> {
     fn forget(ref counts: Counts, index: u32);
 }
 
-pub impl U256BitSet of BitSetTrait<u256> {
+pub(crate) impl U256BitSet of BitSetTrait<u256> {
     #[inline]
     fn to_felt(self: u256) -> felt252 {
         Bits::to_felt(self)
@@ -174,13 +158,9 @@ pub impl U256BitSet of BitSetTrait<u256> {
         word.into()
     }
 
-    /// Byte counts of both limbs summed, then one byte-sum (cheaper than `Bits::popcount`).
+    #[inline]
     fn popcount(self: u256) -> u8 {
-        let bytes = byte_counts(self.low) + byte_counts(self.high);
-        // [Compute] Every byte of the sum is at most 16, every prefix sum at most 251
-        let total: u256 = (bytes * BYTES_ONE).into();
-        let (count, _) = DivRem::div_rem(total.low, TWO_POW_120);
-        count.try_into().unwrap()
+        Bits::popcount(self)
     }
 
     #[inline]
@@ -248,13 +228,8 @@ pub impl U256BitSet of BitSetTrait<u256> {
     fn counts(self: u256) -> Counts {
         let (low_prefix, low_bytes) = prefix_counts(self.low);
         let (high_prefix, high_bytes) = prefix_counts(self.high);
-        let (low_count, _) = DivRem::div_rem(low_prefix, TWO_POW_120);
         Counts {
-            low_prefix,
-            low_bytes,
-            high_prefix,
-            high_bytes,
-            low_count: low_count.try_into().unwrap(),
+            low_prefix, low_bytes, high_prefix, high_bytes, low_count: Bits::top_byte(low_prefix),
         }
     }
 
@@ -281,7 +256,7 @@ pub impl U256BitSet of BitSetTrait<u256> {
     }
 }
 
-pub impl U128BitSet of BitSetTrait<u128> {
+pub(crate) impl U128BitSet of BitSetTrait<u128> {
     #[inline]
     fn to_felt(self: u128) -> felt252 {
         self.into()
@@ -293,10 +268,9 @@ pub impl U128BitSet of BitSetTrait<u128> {
         word.low
     }
 
+    #[inline]
     fn popcount(self: u128) -> u8 {
-        let total: u256 = (byte_counts(self) * BYTES_ONE).into();
-        let (count, _) = DivRem::div_rem(total.low, TWO_POW_120);
-        count.try_into().unwrap()
+        Bits::popcount_small(self)
     }
 
     #[inline]
@@ -355,20 +329,6 @@ pub impl U128BitSet of BitSetTrait<u128> {
     }
 }
 
-/// Byte counts of a limb (SWAR, shifts as exact field divisions).
-/// # Arguments
-/// * `value` - The limb
-/// # Returns
-/// * Byte `j` holds the number of set bits of byte `j` (at most 8), below 2^128
-fn byte_counts(value: u128) -> felt252 {
-    let felt: felt252 = value.into();
-    let pairs = felt - (value & MASK_ODD_BITS).into() * INV_2;
-    let low: felt252 = (pairs.try_into().unwrap() & MASK_PAIRS).into();
-    let nibbles = low + (pairs - low) * INV_4;
-    let low: felt252 = (nibbles.try_into().unwrap() & MASK_NIBBLES).into();
-    low + (nibbles - low) * INV_16
-}
-
 /// Byte counts of a limb and their inclusive prefix sums.
 /// # Arguments
 /// * `value` - The limb
@@ -376,7 +336,7 @@ fn byte_counts(value: u128) -> felt252 {
 /// * The prefix sums, byte `j` holds the number of set bits in bytes `0..=j` (at most 128)
 /// * The byte counts, byte `j` holds the number of set bits of byte `j` (at most 8)
 fn prefix_counts(value: u128) -> (u128, u128) {
-    let bytes = byte_counts(value);
+    let bytes = Bits::byte_counts(value);
     // [Compute] No carry between bytes: every prefix sum is at most 128
     let prefix: u256 = (bytes * BYTES_ONE).into();
     (prefix.low, bytes.try_into().unwrap())
@@ -422,11 +382,10 @@ fn select_in(value: u128, prefix: u128, bytes: u128, rank: u8) -> (u128, u128) {
     let base_nz: NonZero<u128> = base.try_into().unwrap();
     // [Compute] The byte and the number of set bits below it
     let (above, _) = DivRem::div_rem(value, base_nz);
-    let (_, byte) = DivRem::div_rem(above, 256);
+    let (_, byte) = Bits::low_byte(above);
     let (above, _) = DivRem::div_rem(prefix - bytes, base_nz);
-    let (_, below) = DivRem::div_rem(above, 256);
-    let byte: u8 = byte.try_into().unwrap();
-    let rank: u8 = rank - below.try_into().unwrap();
+    let (_, below) = Bits::low_byte(above);
+    let rank: u8 = rank - below;
     // [Compute] The nibble, then a table
     let (high, low) = DivRem::div_rem(byte, 16);
     let low_count = *NIBBLE_COUNT.span().at(low.into());
@@ -444,19 +403,19 @@ fn select_in(value: u128, prefix: u128, bytes: u128, rank: u8) -> (u128, u128) {
 pub impl Spreader of SpreaderTrait {
     /// Pick `count` walkable tiles uniformly.
     ///
-    /// Uniform up to a total variation below `2^-15` in the worst case and `2^-23` in practice,
+    /// Uniform up to a total variation below `2^-47` in the worst case and `2^-51` in practice,
     /// from the two random sources (every other step is exact):
     /// * a key word is a Poseidon output, uniform below the prime `P = 2^251 + 17 * 2^192 + 1`;
     ///   its 251 low bits are within `(17 * 2^192 + 1) / P < 2^-54.9` of 251 fair coins
     ///   (`test_spreader_bias_field_bits`), and a call uses at most `LEVELS = 12` words:
     ///   `< 2^-51.3`;
-    /// * `Rng` draws by mixed radix from 128-bit pools refilled below 2^32: a draw from a pool
-    ///   holding at least 2^32 means the bounds already drawn from it multiply to less than 2^96,
-    ///   so the bounds of all the draws of one pool multiply to less than `2^96 * 251 < 2^104`,
-    ///   and these draws, digits of a uniform 128-bit integer, are within `2^104 / 2^128 = 2^-24`
+    /// * `Rng` draws by mixed radix from 128-bit pools refilled below 2^64: a draw from a pool
+    ///   holding at least 2^64 means the bounds already drawn from it multiply to less than 2^64,
+    ///   so the bounds of all the draws of one pool multiply to less than `2^64 * 251 < 2^72`,
+    ///   and these draws, digits of a uniform 128-bit integer, are within `2^72 / 2^128 = 2^-56`
     ///   of independent uniform draws (`test_spreader_bias_pool`). One pool serves the whole call
     ///   in practice (at most 3 draws per pick, 1 for the table); the worst case is one pool per
-    ///   draw, at most `3 * 125 = 375` draws (see the loop bounds): `< 2^-15.4`.
+    ///   draw, at most `3 * 125 = 375` draws (see the loop bounds): `< 2^-47.4`.
     /// # Arguments
     /// * `grid` - The grid, `1` is walkable
     /// * `width` - The width of the map
@@ -474,15 +433,22 @@ pub impl Spreader of SpreaderTrait {
         Asserter::assert_valid_dimension(width, height);
         let size = width * height;
         let value: u256 = grid.into();
-        assert(value < Bits::pow(size).into(), errors::SPREADER_INVALID_GRID);
-        // [Return] The chosen tiles
+        // [Return] The chosen tiles, the grid checked on the limb that holds the board end
         if size <= 128 {
-            Self::choose(value.low, count, size, seed)
+            let valid = value.high == 0
+                && (size == 128 || value.low < *POW128.span().at(size.into()));
+            assert(valid, errors::SPREADER_INVALID_GRID);
+            SpreaderInternal::choose(value.low, count, size, seed)
         } else {
-            Self::choose(value, count, size, seed)
+            let limit = *POW128.span().at((size - 128).into());
+            assert(value.high < limit, errors::SPREADER_INVALID_GRID);
+            SpreaderInternal::choose(value, count, size, seed)
         }
     }
+}
 
+#[generate_trait]
+pub(crate) impl SpreaderInternal of SpreaderInternalTrait {
     /// Choose `count` tiles uniformly in a set.
     /// # Arguments
     /// * `set` - The set, below 2^251
@@ -506,7 +472,9 @@ pub impl Spreader of SpreaderTrait {
             (count, false)
         };
         // [Compute] Radix select, unless k picks are cheaper (never above PICKS_MAX)
-        let chosen = if k <= PICKS_MAX && Self::prefer_picks(total, k, size) {
+        // (one tile on a set of more than 8: a pick, 30k-42k, always beats a level and the table)
+        let chosen = if (k == 1 && total > TABLE_MAX)
+            || (k <= PICKS_MAX && Self::prefer_picks(total, k, size)) {
             Self::picks(set, total, k, size, seed)
         } else {
             Self::radix(set, total, k, size, seed)
@@ -611,8 +579,8 @@ pub impl Spreader of SpreaderTrait {
             let row: u32 = (n * 10 + k).into();
             let start = *SUBSET_OFFSETS.span().at(row);
             let end = *SUBSET_OFFSETS.span().at(row + 1);
-            let range: u128 = (end - start).into();
-            let index: u32 = rng.draw(range.try_into().unwrap()).try_into().unwrap();
+            let range: u8 = (end - start).try_into().unwrap();
+            let index: u32 = rng.next_below(range).into();
             let mask = *SUBSETS.span().at(start.into() + index);
             return base + set.deposit(mask);
         }
@@ -638,8 +606,7 @@ pub impl Spreader of SpreaderTrait {
         set: T, total: u8, k: u8, size: u8, seed: felt252,
     ) -> felt252 {
         // [Compute] At most k <= 125 iterations, each bounded (see `pick`)
-        let range: u128 = size.into();
-        let range: NonZero<u128> = range.try_into().unwrap();
+        let range: NonZero<u8> = size.try_into().unwrap();
         let mut rng = RngTrait::new(seed);
         let mut counts: Option<Counts> = Option::None;
         let mut set = set;
@@ -668,7 +635,7 @@ pub impl Spreader of SpreaderTrait {
     /// * The picked tile, as a set
     #[inline]
     fn pick<T, +BitSetTrait<T>, +Copy<T>, +Drop<T>>(
-        set: T, total: u8, size: u8, range: NonZero<u128>, ref counts: Option<Counts>, ref rng: Rng,
+        set: T, total: u8, size: u8, range: NonZero<u8>, ref counts: Option<Counts>, ref rng: Rng,
     ) -> T {
         // [Compute] Small set, byte counts not built: a walk of at most WALK_MAX - 1 steps
         if total <= WALK_MAX && counts.is_none() {
@@ -680,7 +647,7 @@ pub impl Spreader of SpreaderTrait {
         if 10 * total_u16 >= 3 * size_u16 {
             let mut trials = TRIALS;
             while trials != 0 {
-                let index: u32 = rng.draw(range).try_into().unwrap();
+                let index: u32 = rng.draw_byte(range).into();
                 if let Option::Some(bit) = set.probe(index) {
                     if let Option::Some(mut built) = counts {
                         BitSetTrait::<T>::forget(ref built, index);
@@ -710,7 +677,7 @@ mod tests {
 
     // Internal imports
 
-    use origami_hexmap::helpers::bits::{Bits, TWO_POW_128, TWO_POW_32};
+    use origami_hexmap::helpers::bits::{Bits, TWO_POW_128, TWO_POW_64};
     use origami_hexmap::tests::fixtures::*;
 
     // Local imports
@@ -1086,9 +1053,9 @@ mod tests {
 
     #[test]
     fn test_spreader_bias_pool() {
-        // `Rng` refills below 2^32: a pool holding at least 2^32 has served bounds multiplying
-        // to at most 2^128 / 2^32 = 2^96
-        assert!(TWO_POW_32 == 0x100000000);
+        // `Rng` refills below 2^64: a pool holding at least 2^64 has served bounds multiplying
+        // to at most 2^128 / 2^64 = 2^64
+        assert!(TWO_POW_64 == 0x10000000000000000);
         // Every bound drawn here is at most 251: the board size, a set size, or C(d, j) <= 70
         let mut row: u32 = 0;
         while row != 89 {
@@ -1097,10 +1064,10 @@ mod tests {
             assert!(end - start <= 70);
             row += 1;
         }
-        // So the bounds of one pool multiply to less than 2^96 * 251 < 2^104, and its draws are
-        // within 2^104 / 2^128 = 2^-24 of independent uniform draws
-        let two_96: u256 = Bits::pow(96).into();
-        assert!(two_96 * 251 < Bits::pow(104).into());
+        // So the bounds of one pool multiply to less than 2^64 * 251 < 2^72, and its draws are
+        // within 2^72 / 2^128 = 2^-56 of independent uniform draws
+        let two_64: u256 = Bits::pow(64).into();
+        assert!(two_64 * 251 < Bits::pow(72).into());
     }
 
     #[test]

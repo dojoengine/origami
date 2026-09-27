@@ -733,7 +733,7 @@ fn bench_mazer_17x14_order_0() {
 }
 
 #[test]
-#[available_gas(l2_gas: 1918000)]
+#[available_gas(l2_gas: 1575000)]
 fn bench_mazer_17x14_order_1() {
     assert!(Mazer::generate(17, 14, 1, SEED) != 0);
 }
@@ -745,7 +745,7 @@ fn bench_mazer_7x7_order_0() {
 }
 
 #[test]
-#[available_gas(l2_gas: 3326000)]
+#[available_gas(l2_gas: 3036000)]
 fn bench_mazer_19x13_order_0() {
     assert!(Mazer::generate(19, 13, 0, SEED) != 0);
 }
@@ -761,7 +761,7 @@ fn bench_mazer_17x14_order_0_seeds() {
 }
 
 #[test]
-#[available_gas(l2_gas: 15537000)]
+#[available_gas(l2_gas: 14551000)]
 fn bench_mazer_17x14_order_1_seeds() {
     let mut seed = SEEDS;
     while seed != 0 {
@@ -791,7 +791,7 @@ fn bench_mazer_variant_base_17x14() {
 }
 
 #[test]
-#[available_gas(l2_gas: 2025000)]
+#[available_gas(l2_gas: 1670000)]
 fn bench_mazer_variant_base_17x14_order_1() {
     assert!(generate::<BaseEngine>(17, 14, 1, SEED) != 0);
 }

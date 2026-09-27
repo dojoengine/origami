@@ -47,8 +47,6 @@ use origami_hexmap::types::direction::{Direction, DirectionTrait};
 const INV_2: felt252 = 0x400000000000008800000000000000000000000000000000000000000000001;
 /// 1/4 in the field.
 const INV_4: felt252 = 0x60000000000000cc00000000000000000000000000000000000000000000001;
-/// Number of orders of the three forward directions.
-const ORDER_COUNT: NonZero<u128> = 6;
 
 /// Errors module.
 pub mod errors {
@@ -57,7 +55,7 @@ pub mod errors {
 
 /// Per-map constants of the carve test, computed once per generation.
 #[derive(Copy, Drop)]
-pub struct Carver {
+pub(crate) struct Carver {
     /// Last interior column, `W - 2`.
     pub right: felt252,
     /// Last interior row, `H - 2`.
@@ -83,7 +81,7 @@ pub struct Carver {
 }
 
 #[generate_trait]
-pub impl CarverImpl of CarverTrait {
+pub(crate) impl CarverImpl of CarverTrait {
     /// Compute the carve constants of a map.
     /// # Arguments
     /// * `width` - The width of the map
@@ -333,7 +331,7 @@ pub impl CarverImpl of CarverTrait {
 
 /// Turns of a direction.
 #[generate_trait]
-pub impl TurnImpl of TurnTrait {
+pub(crate) impl TurnImpl of TurnTrait {
     /// The direction turned by 60 degrees clockwise (seen from above, `x` toward the West).
     #[inline]
     fn left(self: Direction) -> Direction {
@@ -363,7 +361,7 @@ pub impl TurnImpl of TurnTrait {
 
 /// A direction known at compile time: the carve code is specialised per direction, so the
 /// direction dispatch happens once per carved tile instead of once per candidate.
-pub trait Heading {
+pub(crate) trait Heading {
     /// The direction.
     fn direction() -> Direction;
     /// Neighbour of an interior tile if it is an interior tile, see `CarverTrait::locate`.
@@ -374,7 +372,7 @@ pub trait Heading {
     fn cone(carver: @Carver, odd: bool) -> felt252;
 }
 
-pub impl EastHeading of Heading {
+pub(crate) impl EastHeading of Heading {
     #[inline]
     fn direction() -> Direction {
         Direction::East
@@ -397,7 +395,7 @@ pub impl EastHeading of Heading {
     }
 }
 
-pub impl NorthEastHeading of Heading {
+pub(crate) impl NorthEastHeading of Heading {
     #[inline]
     fn direction() -> Direction {
         Direction::NorthEast
@@ -424,7 +422,7 @@ pub impl NorthEastHeading of Heading {
     }
 }
 
-pub impl NorthWestHeading of Heading {
+pub(crate) impl NorthWestHeading of Heading {
     #[inline]
     fn direction() -> Direction {
         Direction::NorthWest
@@ -451,7 +449,7 @@ pub impl NorthWestHeading of Heading {
     }
 }
 
-pub impl WestHeading of Heading {
+pub(crate) impl WestHeading of Heading {
     #[inline]
     fn direction() -> Direction {
         Direction::West
@@ -474,7 +472,7 @@ pub impl WestHeading of Heading {
     }
 }
 
-pub impl SouthWestHeading of Heading {
+pub(crate) impl SouthWestHeading of Heading {
     #[inline]
     fn direction() -> Direction {
         Direction::SouthWest
@@ -501,7 +499,7 @@ pub impl SouthWestHeading of Heading {
     }
 }
 
-pub impl SouthEastHeading of Heading {
+pub(crate) impl SouthEastHeading of Heading {
     #[inline]
     fn direction() -> Direction {
         Direction::SouthEast
@@ -557,22 +555,22 @@ pub impl Mazer of MazerTrait {
         let mut count: u8 = 6;
         while count != 0 {
             match DirectionTrait::pop_front(ref directions) {
-                Direction::East => Self::visit::<
+                Direction::East => MazerInternal::visit::<
                     EastHeading,
                 >(carver, ref maze, ref rng, power, x, y, odd),
-                Direction::NorthEast => Self::visit::<
+                Direction::NorthEast => MazerInternal::visit::<
                     NorthEastHeading,
                 >(carver, ref maze, ref rng, power, x, y, odd),
-                Direction::NorthWest => Self::visit::<
+                Direction::NorthWest => MazerInternal::visit::<
                     NorthWestHeading,
                 >(carver, ref maze, ref rng, power, x, y, odd),
-                Direction::West => Self::visit::<
+                Direction::West => MazerInternal::visit::<
                     WestHeading,
                 >(carver, ref maze, ref rng, power, x, y, odd),
-                Direction::SouthWest => Self::visit::<
+                Direction::SouthWest => MazerInternal::visit::<
                     SouthWestHeading,
                 >(carver, ref maze, ref rng, power, x, y, odd),
-                Direction::SouthEast => Self::visit::<
+                Direction::SouthEast => MazerInternal::visit::<
                     SouthEastHeading,
                 >(carver, ref maze, ref rng, power, x, y, odd),
             }
@@ -581,7 +579,10 @@ pub impl Mazer of MazerTrait {
         // [Return] Maze
         Bits::to_felt(maze)
     }
+}
 
+#[generate_trait]
+pub(crate) impl MazerInternal of MazerInternalTrait {
     /// Carve the candidate and, if carved, its subtree.
     /// # Arguments
     /// * `carver` - The carve constants
@@ -691,7 +692,7 @@ pub impl Mazer of MazerTrait {
         y: felt252,
         odd: bool,
     ) {
-        match rng.draw(ORDER_COUNT) {
+        match rng.draw6() {
             0 => {
                 // [Effect] L, F, R
                 if Self::visit::<L>(carver, ref maze, ref rng, power, x, y, odd)
@@ -828,13 +829,13 @@ mod tests {
     #[test]
     fn test_mazer_generate_17x14_order_0() {
         // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-        //  0 1 1 0 0 0 1 0 1 0 1 1 1 1 0 1 0
-        // 0 0 0 1 1 1 0 1 0 1 0 0 0 0 1 1 0
-        //  0 1 1 0 0 1 0 1 0 1 1 1 1 1 0 0 0
-        // 0 1 0 0 1 0 1 1 0 1 0 0 0 0 1 1 0
-        //  0 1 0 0 1 1 0 0 0 1 0 1 1 0 0 1 0
-        // 0 0 1 0 0 0 0 1 1 1 0 1 0 1 1 1 0
-        //  0 1 0 1 1 1 1 0 0 1 0 1 0 0 0 0 0
+        //  0 0 1 1 1 0 1 1 1 0 0 1 1 0 1 1 0
+        // 0 1 1 0 0 1 0 0 0 1 1 0 0 1 1 0 0
+        //  0 0 0 1 0 1 1 0 1 0 1 1 1 0 1 1 0
+        // 0 0 1 1 0 1 0 1 1 0 0 0 0 0 1 0 0
+        //  0 1 0 1 1 0 0 0 0 1 1 0 1 1 0 1 0
+        // 0 1 0 0 0 0 0 1 1 1 0 1 0 0 1 1 0
+        //  0 1 0 1 1 1 1 0 0 1 0 1 1 0 0 0 0
         // 0 0 1 1 0 0 0 0 0 0 0 1 0 0 1 1 0
         //  0 1 0 0 0 1 0 1 1 0 0 1 1 1 0 1 0
         // 0 1 0 0 1 1 0 0 0 1 0 0 0 0 0 1 0
@@ -842,7 +843,7 @@ mod tests {
         // 0 0 1 1 0 1 0 0 1 0 0 1 1 1 1 1 0
         //  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
         let maze = Mazer::generate(17, 14, 0, SEED);
-        assert!(maze == 0xc57a1d4332be12d0c98b221d72f280c04c8b3a4c412bb08d27c0000);
+        assert!(maze == 0x773664660b5d8d608b0da41d32f2c0c04c8b3a4c412bb08d27c0000);
         check(maze, 17, 14);
         check_tree(maze, 17, 14);
     }
@@ -850,21 +851,21 @@ mod tests {
     #[test]
     fn test_mazer_generate_17x14_order_1() {
         // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-        //  0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 1 0
-        // 0 1 0 0 1 1 0 0 0 0 0 0 0 1 0 0 0
-        //  0 0 0 0 0 1 1 0 0 0 0 0 1 0 0 0 0
-        // 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0
-        //  0 0 0 0 0 0 0 1 1 0 0 0 1 0 0 0 0
-        // 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 0 0
-        //  0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0
-        // 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 0 0
-        //  0 0 0 0 0 0 1 1 1 0 0 0 1 1 0 0 0
-        // 0 0 0 1 1 1 1 0 0 1 0 0 0 0 0 0 0
-        //  0 1 1 0 0 0 0 0 0 1 1 0 0 0 0 1 0
-        // 0 1 0 0 0 0 0 0 0 0 0 1 1 1 1 1 0
+        //  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        // 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0
+        //  0 1 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0
+        // 0 1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0
+        //  0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 0
+        // 0 0 0 0 0 0 0 0 0 1 0 0 1 1 1 1 0
+        //  0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 1 0
+        // 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0
+        //  0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 0 0
+        // 0 1 1 1 0 0 0 0 0 1 0 0 0 0 0 0 0
+        //  0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 1 0
+        // 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 0
         //  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
         let maze = Mazer::generate(17, 14, 1, SEED);
-        assert!(maze == 0xe00e4c040304004200310004800380012007181e4030309007c0000);
+        assert!(maze == 0x1c003300104000302004f0038801003f00704000308007c0000);
         check(maze, 17, 14);
         check_tree(maze, 17, 14);
         check_sparse(maze, 17, 14);
@@ -906,37 +907,20 @@ mod tests {
     #[test]
     fn test_mazer_generate_19x13() {
         //  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-        // 0 1 1 0 0 1 0 1 1 1 0 1 1 1 1 1 0 1 0
-        //  0 0 1 1 1 0 1 0 0 1 1 0 0 0 0 1 0 1 0
-        // 0 0 1 0 0 1 0 1 1 0 0 1 0 1 1 0 1 1 0
-        //  0 1 0 0 0 1 1 0 0 0 0 1 0 0 1 0 0 1 0
-        // 0 0 1 1 1 0 0 0 1 1 1 1 0 1 1 0 1 1 0
-        //  0 1 0 0 1 1 0 1 0 0 0 0 1 0 1 0 0 1 0
-        // 0 1 0 0 1 0 0 1 0 1 0 1 0 0 0 1 1 1 0
-        //  0 0 1 0 1 0 0 1 0 1 0 1 1 1 1 0 0 0 0
-        // 0 1 0 1 0 1 1 0 1 0 1 1 0 0 0 0 1 1 0
-        //  0 1 1 0 0 0 0 1 0 1 0 1 1 0 1 1 0 1 0
-        // 0 1 0 1 1 1 1 1 0 1 0 1 0 1 1 0 0 1 0
-        //  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-        let maze = Mazer::generate(19, 13, 0, SEED);
-        assert!(maze == 0x65df474c28965b2309238f6c9a149254714af056b0cc2b697d5900000);
-        check(maze, 19, 13);
-        check_tree(maze, 19, 13);
-        //  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-        // 0 0 0 0 0 1 0 0 1 0 0 1 0 0 1 0 0 0 0
-        //  0 0 1 1 1 0 0 0 1 1 1 0 0 0 1 1 1 1 0
-        // 0 1 1 0 0 1 0 0 1 0 0 0 0 0 1 0 0 0 0
-        //  0 0 0 0 0 1 1 1 0 0 0 0 1 1 0 0 0 0 0
-        // 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1 0 0 0 0
-        //  0 0 0 1 1 0 0 0 1 1 1 0 0 0 1 1 1 1 0
-        // 0 0 0 1 0 0 0 0 0 0 0 1 0 0 1 0 0 0 0
-        //  0 0 1 0 0 0 1 0 0 0 0 1 1 1 0 0 0 0 0
-        // 0 0 0 1 0 0 1 0 0 0 0 1 0 0 1 0 0 0 0
-        //  0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 1 0 0 0
-        // 0 0 0 1 0 0 0 1 1 1 1 0 0 0 0 0 1 1 0
+        // 0 1 1 1 1 0 0 0 0 1 0 0 1 0 0 0 0 0 0
+        //  0 0 0 0 1 0 0 0 1 0 0 0 1 1 1 0 0 1 0
+        // 0 0 0 0 0 1 0 0 1 0 0 0 1 0 0 1 1 1 0
+        //  0 0 0 0 0 1 1 1 0 0 0 1 0 0 0 0 0 0 0
+        // 0 0 0 0 0 1 0 0 1 0 0 1 0 0 0 0 0 0 0
+        //  0 0 0 1 1 0 0 0 1 1 1 0 0 0 0 0 0 1 0
+        // 0 0 0 1 0 0 0 0 1 0 0 1 0 0 1 1 1 1 0
+        //  0 0 1 0 0 0 0 0 0 0 0 1 1 1 0 0 0 1 0
+        // 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0
+        //  0 0 1 0 0 1 1 1 0 0 1 0 0 0 0 0 0 0 0
+        // 0 0 0 1 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0
         //  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
         let maze = Mazer::generate(19, 13, 1, SEED);
-        assert!(maze == 0x492071c799208038600482031c784048110e01212044460478300000);
+        assert!(maze == 0x78480111c81227038800490031c08424f100e2101004e400438000000);
         check(maze, 19, 13);
         check_sparse(maze, 19, 13);
     }

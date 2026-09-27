@@ -26,12 +26,9 @@ use origami_hexmap::types::direction::Direction;
 
 // Constants
 
-/// Number of orders of the three forward directions.
-const ORDER_COUNT: NonZero<u128> = 6;
-
 /// Constants of a dig: carve constants, original grid and mode.
 #[derive(Copy, Drop)]
-pub struct Dig {
+pub(crate) struct Dig {
     pub carver: Carver,
     /// The original grid.
     pub grid: u256,
@@ -52,7 +49,7 @@ pub impl Digger of DiggerTrait {
     /// # Returns
     /// * The grid with the maze
     fn maze(width: u8, height: u8, order: u8, start: u8, grid: felt252, seed: felt252) -> felt252 {
-        Self::dig(width, height, order, start, grid, seed, false)
+        DiggerInternal::dig(width, height, order, start, grid, seed, false)
     }
 
     /// Dig a corridor from an edge tile until it reaches an open tile.
@@ -68,9 +65,12 @@ pub impl Digger of DiggerTrait {
     fn corridor(
         width: u8, height: u8, order: u8, start: u8, grid: felt252, seed: felt252,
     ) -> felt252 {
-        Self::dig(width, height, order, start, grid, seed, true)
+        DiggerInternal::dig(width, height, order, start, grid, seed, true)
     }
+}
 
+#[generate_trait]
+pub(crate) impl DiggerInternal of DiggerInternalTrait {
     /// Dig from an edge tile.
     /// # Arguments
     /// * `width` - The width of the map
@@ -318,7 +318,7 @@ pub impl Digger of DiggerTrait {
         y: felt252,
         odd: bool,
     ) {
-        match rng.draw(ORDER_COUNT) {
+        match rng.draw6() {
             0 => {
                 // [Effect] L, F, R
                 if Self::visit::<L>(dig, ref maze, ref rng, ref stop, power, x, y, odd)
@@ -492,21 +492,21 @@ mod tests {
     #[test]
     fn test_digger_maze_order_0() {
         // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-        //  0 1 0 1 1 1 1 1 1 1 1 0 0 1 1 0 0
-        // 0 0 1 1 0 0 0 0 0 0 0 1 1 0 0 1 0
-        //  0 1 0 1 1 0 0 1 1 1 0 0 1 1 0 1 0
-        // 0 1 0 0 0 0 1 1 0 0 1 0 1 0 1 1 0
-        //  0 1 1 0 0 1 0 0 0 0 1 0 1 0 0 1 0
-        // 0 1 0 1 0 1 0 1 1 1 0 1 0 0 1 1 0
-        //  0 1 0 1 1 0 0 1 1 1 1 0 0 1 0 1 0
-        // 0 1 0 1 0 0 1 0 0 0 0 1 1 0 0 1 0
-        //  0 0 1 0 1 0 1 1 0 1 0 0 1 1 0 1 0
-        // 0 1 1 0 0 1 1 0 0 1 0 1 1 0 1 0 0
-        //  0 0 1 1 1 0 1 0 1 0 1 0 1 0 1 1 0
-        // 0 1 1 0 0 1 0 1 1 0 1 0 1 0 1 0 0
+        //  0 1 0 1 1 1 1 1 1 1 1 0 0 1 1 1 0
+        // 0 0 1 1 0 0 0 0 0 0 0 1 1 1 0 0 0
+        //  0 1 0 1 1 0 0 1 1 1 0 0 0 1 1 1 0
+        // 0 1 0 1 0 0 1 1 0 0 1 0 0 1 0 0 0
+        //  0 1 0 1 0 1 0 0 0 0 1 0 1 0 1 1 0
+        // 0 1 0 1 0 1 0 1 1 1 0 1 0 1 1 0 0
+        //  0 1 0 1 1 0 0 1 1 1 1 0 0 0 1 1 0
+        // 0 1 0 1 0 0 0 0 0 0 0 1 1 0 0 0 0
+        //  0 0 1 0 0 1 1 1 1 0 1 0 1 1 0 0 0
+        // 0 1 1 0 1 1 0 0 0 1 0 1 0 0 1 0 0
+        //  0 0 1 1 0 1 0 1 0 1 0 0 1 0 1 1 0
+        // 0 1 1 0 1 0 1 1 0 0 1 1 1 0 1 0 0
         //  0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0
         let result = Digger::maze(17, 14, 0, START, ROOM, SEED);
-        assert!(result == 0xbfcc30192ce690cacc85255d32cf294864569a665a1d55996a80008);
+        assert!(result == 0xbfce301c2ce394c90a85655d62cf1940604f586c521aa59ace80008);
         check(result, ROOM, 17, 14, START);
     }
 

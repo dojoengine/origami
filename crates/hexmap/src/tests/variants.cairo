@@ -63,6 +63,38 @@ pub impl MaskLayoutImpl of MaskLayoutTrait {
 
 #[generate_trait]
 pub impl Variants of VariantsTrait {
+    /// (a) The `Layout::expand` of lot L0: felt shifts, corelib `u256` operators, two products
+    /// per vertical direction. Replaced in the library by the limb form of lot L1 (`dilate`).
+    #[inline]
+    fn expand_felt(layout: @Layout, frontier: u256) -> u256 {
+        let layout = *layout;
+        let pairs = frontier | (frontier + frontier);
+        let pairs_even = Bits::to_felt(pairs & layout.even);
+        let pairs_felt = Bits::to_felt(pairs);
+        let pairs_odd = pairs_felt - pairs_even;
+        let up = pairs_even * layout.up_even + pairs_odd * layout.up_odd;
+        let down = pairs_even * layout.down_even + pairs_odd * layout.down_odd;
+        let east = Bits::to_felt(frontier) * INV_2;
+        pairs | east.into() | up.into() | down.into()
+    }
+
+    /// (c') The `Layout::expand_small` of lot L0, corelib `u128` operators.
+    #[inline]
+    fn expand_small_corelib(layout: @Layout, frontier: u128) -> u128 {
+        let layout = *layout;
+        let pairs = frontier | (frontier + frontier);
+        let pairs_even: felt252 = (pairs & layout.even.low).into();
+        let pairs_odd = pairs.into() - pairs_even;
+        let up: u128 = (pairs_even * layout.up_even + pairs_odd * layout.up_odd)
+            .try_into()
+            .unwrap();
+        let down: u128 = (pairs_even * layout.down_even + pairs_odd * layout.down_odd)
+            .try_into()
+            .unwrap();
+        let east: u128 = (frontier.into() * INV_2).try_into().unwrap();
+        pairs | east | up | down
+    }
+
     /// (a') Felt dilation with the West shift converted from a felt instead of a `u256` add.
     fn expand_felt_double(layout: @Layout, frontier: u256) -> u256 {
         let layout = *layout;

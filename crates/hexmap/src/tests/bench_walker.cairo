@@ -25,8 +25,11 @@ use origami_hexmap::types::direction::{Direction, DirectionTrait};
 const SEED: felt252 = 'SEED';
 /// Steps of the variant benchmarks: a multiple of 36.
 const STEPS: u16 = 504;
-/// Grid of the library walker on 17x14, 504 steps, `SEED` (see `bench_walker_17x14_504`).
+/// Grid of the lot L6 walker on 17x14, 504 steps, `SEED`: the draws of the variants.
 const EXPECTED: felt252 = 0xfc007e003f111ffccfbfe7fff1fff83ffc0ffe077f038f0080c0000;
+/// `Walker::generate(17, 14, 504, SEED)` since lot P1: 6 draws per pool, both limbs of every
+/// permutation (the variants keep the draws of lot L6, 12 per pool, and assert `EXPECTED`).
+const LIBRARY: felt252 = 0x7f807fe01ff007f807fc00f600fe01f600ff007fc03fc01fe000000;
 /// 1/2 in the field.
 const INV_2: felt252 = 0x400000000000008800000000000000000000000000000000000000000000001;
 const TRIPLE_COUNT: NonZero<u128> = 216;
@@ -1613,7 +1616,7 @@ fn bench_walker_17x14_500() {
 #[available_gas(l2_gas: 2587000)]
 fn bench_walker_17x14_504() {
     let grid = Walker::generate(17, 14, 504, SEED);
-    assert!(grid == EXPECTED);
+    assert!(grid == LIBRARY);
 }
 
 #[test]
@@ -1773,7 +1776,7 @@ fn bench_walker_variant_loop_36_inline() {
 }
 
 #[test]
-#[available_gas(l2_gas: 4113000)]
+#[available_gas(l2_gas: 3676000)]
 fn bench_walker_variant_random_next_below() {
     let (x, y, seed) = start(17, 14, SEED);
     let mut walk = doubled(17, 14, x, y);
@@ -1800,7 +1803,7 @@ fn bench_walker_variant_random_pairs() {
 }
 
 #[test]
-#[available_gas(l2_gas: 7238000)]
+#[available_gas(l2_gas: 6744000)]
 fn bench_walker_variant_naive() {
     let grid = naive(17, 14, STEPS, SEED);
     assert_closed(grid, 17, 14);

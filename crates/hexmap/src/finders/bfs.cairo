@@ -15,17 +15,11 @@
 //! Boards of at most 128 bits run the same loops on a single `u128` limb. The loops are unrolled
 //! four times; see `GAS.md` for the measured alternatives.
 
-// Core imports
-
-use core::felt252_div;
-use core::integer::Bitwise;
-
 // Internal imports
 
 use origami_hexmap::helpers::asserter::Asserter;
 use origami_hexmap::helpers::bits::{Bits, TWO_POW_128};
-use origami_hexmap::helpers::layout::LayoutTrait;
-use origami_hexmap::types::direction::Direction;
+use origami_hexmap::helpers::layout::{Dilation, DilationTrait, LayoutTrait};
 
 // Constants
 
@@ -39,25 +33,9 @@ pub mod errors {
     pub const BFS_POSITION_NOT_WALKABLE: felt252 = 'Bfs: position not walkable';
 }
 
-/// AND, XOR and OR of two limbs in a single application of the bitwise builtin, see
-/// `generators::caver`.
-extern fn bitwise(lhs: u128, rhs: u128) -> (u128, u128, u128) implicits(Bitwise) nopanic;
-
-/// Constants of the layer step.
-#[derive(Copy, Drop)]
-pub struct Step {
-    /// Bits of the even rows.
-    pub even_low: u128,
-    pub even_high: u128,
-    /// 2^(W-1): up shift of the even rows (the odd rows shift by twice as much).
-    pub up: felt252,
-    /// 2^-(W+1): down shift of the even rows (the odd rows shift by twice as much).
-    pub down: felt252,
-}
-
 /// Constants of the backtracking.
 #[derive(Copy, Drop)]
-pub struct Back {
+pub(crate) struct Back {
     pub width: u8,
     /// W - 1
     pub narrow: u8,
@@ -83,7 +61,7 @@ pub struct Back {
 
 /// An endpoint.
 #[derive(Copy, Drop)]
-pub struct Endpoint {
+pub(crate) struct Endpoint {
     pub position: u8,
     /// 2^position
     pub power: felt252,
@@ -102,18 +80,18 @@ pub struct Endpoint {
 }
 
 /// Where the layers go: stored for the backtracking, or only counted.
-pub trait Store<S> {
+pub(crate) trait Store<S> {
     fn push(ref self: S, low: u128, high: u128);
 }
 
-pub impl ArrayStore of Store<Array<u256>> {
+pub(crate) impl ArrayStore of Store<Array<u256>> {
     #[inline(always)]
     fn push(ref self: Array<u256>, low: u128, high: u128) {
         self.append(u256 { low, high });
     }
 }
 
-pub impl CountStore of Store<u8> {
+pub(crate) impl CountStore of Store<u8> {
     #[inline(always)]
     fn push(ref self: u8, low: u128, high: u128) {
         self += 1;
@@ -121,18 +99,18 @@ pub impl CountStore of Store<u8> {
 }
 
 /// Where the layers of a single-limb board go.
-pub trait SmallStore<S> {
+pub(crate) trait SmallStore<S> {
     fn push(ref self: S, layer: u128);
 }
 
-pub impl SmallArrayStore of SmallStore<Array<u128>> {
+pub(crate) impl SmallArrayStore of SmallStore<Array<u128>> {
     #[inline(always)]
     fn push(ref self: Array<u128>, layer: u128) {
         self.append(layer);
     }
 }
 
-pub impl SmallCountStore of SmallStore<u8> {
+pub(crate) impl SmallCountStore of SmallStore<u8> {
     #[inline(always)]
     fn push(ref self: u8, layer: u128) {
         self += 1;
@@ -140,26 +118,26 @@ pub impl SmallCountStore of SmallStore<u8> {
 }
 
 /// Target test of a layer: the open interior neighbours of the target, on the limbs they use.
-pub trait Goal<G> {
+pub(crate) trait Goal<G> {
     fn hit(self: G, low: u128, high: u128) -> bool;
 }
 
 /// Goal in the low limb.
 #[derive(Copy, Drop)]
-pub struct LowGoal {
+pub(crate) struct LowGoal {
     pub mask: u128,
 }
 
 /// Goal in the high limb.
 #[derive(Copy, Drop)]
-pub struct HighGoal {
+pub(crate) struct HighGoal {
     pub mask: u128,
 }
 
 impl LowGoalImpl of Goal<LowGoal> {
     #[inline(always)]
     fn hit(self: LowGoal, low: u128, high: u128) -> bool {
-        let (hit, _, _) = bitwise(low, self.mask);
+        let (hit, _, _) = Bits::bitwise(low, self.mask);
         hit != 0
     }
 }
@@ -167,7 +145,7 @@ impl LowGoalImpl of Goal<LowGoal> {
 impl HighGoalImpl of Goal<HighGoal> {
     #[inline(always)]
     fn hit(self: HighGoal, low: u128, high: u128) -> bool {
-        let (hit, _, _) = bitwise(high, self.mask);
+        let (hit, _, _) = Bits::bitwise(high, self.mask);
         hit != 0
     }
 }
@@ -175,8 +153,8 @@ impl HighGoalImpl of Goal<HighGoal> {
 impl WideGoalImpl of Goal<u256> {
     #[inline(always)]
     fn hit(self: u256, low: u128, high: u128) -> bool {
-        let (hit_low, _, _) = bitwise(low, self.low);
-        let (hit_high, _, _) = bitwise(high, self.high);
+        let (hit_low, _, _) = Bits::bitwise(low, self.low);
+        let (hit_high, _, _) = Bits::bitwise(high, self.high);
         hit_low != 0 || hit_high != 0
     }
 }
@@ -268,7 +246,43 @@ pub impl Bfs of BfsTrait {
     /// # Panics
     /// * If the dimensions are invalid, or `from` is outside the board or not walkable
     fn reachable(grid: felt252, width: u8, height: u8, from: u8) -> felt252 {
-        Self::tiles_within_range(grid, width, height, from, 0xff)
+        // [Check] Dimensions and position
+        let open: u256 = BfsInternal::check_one(grid, width, height, from);
+        // [Compute] Flood from the open interior neighbourhood until the frontier runs out
+        let (step, back, free) = BfsInternal::constants(open, width, height);
+        let centre = BfsInternal::endpoint(@back, height, from);
+        let closed = if centre.interior {
+            centre.around + centre.power
+        } else {
+            centre.around
+        };
+        let first = Bits::and(closed.into(), free);
+        let small = width * height <= SMALL_SIZE;
+        let ball = if small {
+            BfsInternal::fill_small(@step, first.low, free.low)
+        } else {
+            BfsInternal::fill(@step, first, free)
+        };
+        let whole = if centre.interior {
+            ball
+        } else {
+            ball + centre.power
+        };
+        // [Return] Open edge tiles end a path: add those next to the closed ball
+        let edges = Bits::to_felt(open) - Bits::to_felt(free);
+        if edges == 0 {
+            return whole;
+        }
+        let next: u256 = if small {
+            step.expand_small(ball.try_into().unwrap()).into()
+        } else {
+            let ball_u256: u256 = ball.into();
+            let (low, high) = step.dilate(ball_u256.low, ball_u256.high, ball);
+            u256 { low, high }
+        };
+        let near = Bits::or(next, centre.around.into());
+        let reach = Bits::and(near, edges.into());
+        Bits::to_felt(Bits::or(reach, whole.into()))
     }
 
     /// Every walkable tile reachable within `range` steps of a position.
@@ -300,7 +314,7 @@ pub impl Bfs of BfsTrait {
         } else {
             centre.around
         };
-        let first = BfsInternal::and(closed.into(), free);
+        let first = Bits::and(closed.into(), free);
         // [Compute] Remaining layers, `inner` is the ball of radius `range - 1`
         let small = width * height <= SMALL_SIZE;
         let (ball, inner) = if small {
@@ -321,20 +335,20 @@ pub impl Bfs of BfsTrait {
         let near: u256 = if range == 1 {
             centre.around.into()
         } else if small {
-            let next: u256 = BfsInternal::expand_small(@step, inner.try_into().unwrap()).into();
-            BfsInternal::or(next, centre.around.into())
+            let next: u256 = step.expand_small(inner.try_into().unwrap()).into();
+            Bits::or(next, centre.around.into())
         } else {
             let inner_u256: u256 = inner.into();
-            let (low, high) = BfsInternal::expand(@step, inner_u256.low, inner_u256.high, inner);
-            BfsInternal::or(u256 { low, high }, centre.around.into())
+            let (low, high) = step.dilate(inner_u256.low, inner_u256.high, inner);
+            Bits::or(u256 { low, high }, centre.around.into())
         };
-        let reach = BfsInternal::and(near, edges.into());
-        Bits::to_felt(BfsInternal::or(reach, ball.into()))
+        let reach = Bits::and(near, edges.into());
+        Bits::to_felt(Bits::or(reach, ball.into()))
     }
 }
 
 #[generate_trait]
-pub impl BfsInternal of BfsInternalTrait {
+pub(crate) impl BfsInternal of BfsInternalTrait {
     /// `search` once the endpoints are known, two limbs.
     /// # Arguments
     /// * `step` - The layer constants
@@ -347,7 +361,7 @@ pub impl BfsInternal of BfsInternalTrait {
     /// * The path from the target (included) to the start (excluded), empty if unreachable
     #[inline]
     fn search_wide(
-        step: @Step, back: Back, start: @Endpoint, target: @Endpoint, height: u8, free: u256,
+        step: @Dilation, back: Back, start: @Endpoint, target: @Endpoint, height: u8, free: u256,
     ) -> Span<u8> {
         let mut layers: Array<u256> = array![];
         if !Self::advance(step, start, target, free, ref layers) {
@@ -386,7 +400,7 @@ pub impl BfsInternal of BfsInternalTrait {
     /// * The path from the target (included) to the start (excluded), empty if unreachable
     #[inline]
     fn search_small(
-        step: @Step, back: Back, start: @Endpoint, target: @Endpoint, height: u8, free: u128,
+        step: @Dilation, back: Back, start: @Endpoint, target: @Endpoint, height: u8, free: u128,
     ) -> Span<u8> {
         let mut layers: Array<u128> = array![];
         if !Self::advance_small(step, start, target, free, ref layers) {
@@ -484,25 +498,10 @@ pub impl BfsInternal of BfsInternalTrait {
     /// # Returns
     /// * The layer constants, the backtracking constants and the walkable interior tiles
     #[inline]
-    fn constants(open: u256, width: u8, height: u8) -> (Step, Back, u256) {
-        let row = Bits::pow(width);
-        let inv_row = Bits::inv(width);
-        let board = Bits::pow(width * height);
-        let up = row * INV_2;
-        let down = inv_row * INV_2;
-        // [Compute] Even rows, ROW * (2^(2W * ceil(H/2)) - 1) / (2^(2W) - 1)
-        let top = if height % 2 == 0 {
-            board
-        } else {
-            board * row
-        };
-        let even: u256 = felt252_div((row - 1) * (top - 1), (row * row - 1).try_into().unwrap())
-            .into();
-        // [Compute] Interior, (2^(W-1) - 2) * 2^W * (2^(W*(H-2)) - 1) / (2^W - 1)
-        let rows = board * inv_row * inv_row - 1;
-        let interior = felt252_div((up - 2) * row * rows, (row - 1).try_into().unwrap());
-        let step = Step { even_low: even.low, even_high: even.high, up, down };
-        (step, Self::back_constants(width, up, down), Self::and(open, interior.into()))
+    fn constants(open: u256, width: u8, height: u8) -> (Dilation, Back, u256) {
+        let (layout, interior) = LayoutTrait::with_interior(width, height);
+        let back = Self::back_constants(width, layout.up_even, layout.down_even);
+        (layout.dilation(), back, Bits::and(open, interior.into()))
     }
 
     /// Describe an endpoint.
@@ -531,7 +530,7 @@ pub impl BfsInternal of BfsInternalTrait {
                 back.around_even
             }
         } else {
-            Self::around_edge(width, height, position)
+            LayoutTrait::edge_neighbours(width, height, position)
         };
         Endpoint { position, power, interior, odd, x, y, half, around }
     }
@@ -569,32 +568,6 @@ pub impl BfsInternal of BfsInternalTrait {
         }
     }
 
-    /// Board neighbours of an edge tile, one direction at a time.
-    /// # Arguments
-    /// * `width` - The width of the map
-    /// * `height` - The height of the map
-    /// * `position` - The edge tile
-    /// # Returns
-    /// * The bits of its neighbours
-    fn around_edge(width: u8, height: u8, position: u8) -> felt252 {
-        let mut around: felt252 = 0;
-        for direction in Self::directions().span() {
-            if let Option::Some(next) = LayoutTrait::neighbor(width, height, position, *direction) {
-                around += Bits::pow(next);
-            }
-        }
-        around
-    }
-
-    /// The 6 directions.
-    #[inline]
-    fn directions() -> [Direction; 6] {
-        [
-            Direction::East, Direction::NorthEast, Direction::NorthWest, Direction::West,
-            Direction::SouthWest, Direction::SouthEast,
-        ]
-    }
-
     /// Advance layer by layer from the start neighbourhood until a layer touches the open
     /// interior neighbours of the target.
     /// # Arguments
@@ -608,10 +581,10 @@ pub impl BfsInternal of BfsInternalTrait {
     /// * `true` if the target is reached, the last stored layer touches it
     #[inline]
     fn advance<S, +Store<S>, +Drop<S>>(
-        step: @Step, start: @Endpoint, target: @Endpoint, free: u256, ref store: S,
+        step: @Dilation, start: @Endpoint, target: @Endpoint, free: u256, ref store: S,
     ) -> bool {
         // [Compute] Target neighbourhood, empty means unreachable
-        let goal = Self::and((*target.around).into(), free);
+        let goal = Bits::and((*target.around).into(), free);
         if goal.low == 0 && goal.high == 0 {
             return false;
         }
@@ -621,7 +594,7 @@ pub impl BfsInternal of BfsInternalTrait {
         } else {
             *start.around
         };
-        let first = Self::and(closed.into(), free);
+        let first = Bits::and(closed.into(), free);
         let mut low = first.low;
         let mut high = first.high;
         let mut free_low = free.low - low;
@@ -658,7 +631,7 @@ pub impl BfsInternal of BfsInternalTrait {
     /// * `false` if the frontier runs out
     #[inline]
     fn skip<S, +Store<S>, +Drop<S>>(
-        step: @Step,
+        step: @Dilation,
         count: u8,
         ref low: u128,
         ref high: u128,
@@ -714,7 +687,13 @@ pub impl BfsInternal of BfsInternalTrait {
     /// * `true` if the target is reached
     #[inline]
     fn reach<S, G, +Store<S>, +Drop<S>, +Goal<G>, +Copy<G>, +Drop<G>>(
-        step: @Step, goal: G, low: u128, high: u128, free_low: u128, free_high: u128, ref store: S,
+        step: @Dilation,
+        goal: G,
+        low: u128,
+        high: u128,
+        free_low: u128,
+        free_high: u128,
+        ref store: S,
     ) -> bool {
         let mut low = low;
         let mut high = high;
@@ -761,15 +740,15 @@ pub impl BfsInternal of BfsInternalTrait {
     /// * `false` if the frontier is empty
     #[inline(always)]
     fn layer(
-        step: @Step, ref low: u128, ref high: u128, ref free_low: u128, ref free_high: u128,
+        step: @Dilation, ref low: u128, ref high: u128, ref free_low: u128, ref free_high: u128,
     ) -> bool {
         let felt: felt252 = low.into() + high.into() * TWO_POW_128;
         if felt == 0 {
             return false;
         }
-        let (next_low, next_high) = Self::expand(step, low, high, felt);
-        let (next_low, _, _) = bitwise(next_low, free_low);
-        let (next_high, _, _) = bitwise(next_high, free_high);
+        let (next_low, next_high) = step.dilate(low, high, felt);
+        let (next_low, _, _) = Bits::bitwise(next_low, free_low);
+        let (next_high, _, _) = Bits::bitwise(next_high, free_high);
         free_low -= next_low;
         free_high -= next_high;
         low = next_low;
@@ -786,7 +765,7 @@ pub impl BfsInternal of BfsInternalTrait {
     /// # Returns
     /// * The ball and the ball of one step less
     #[inline]
-    fn flood(step: @Step, first: u256, free: u256, steps: u8) -> (felt252, felt252) {
+    fn flood(step: @Dilation, first: u256, free: u256, steps: u8) -> (felt252, felt252) {
         let mut low = first.low;
         let mut high = first.high;
         let mut free_low = free.low - low;
@@ -801,9 +780,9 @@ pub impl BfsInternal of BfsInternalTrait {
             }
             steps -= 1;
             inner = total - free_low.into() - free_high.into() * TWO_POW_128;
-            let (next_low, next_high) = Self::expand(step, low, high, felt);
-            let (next_low, _, _) = bitwise(next_low, free_low);
-            let (next_high, _, _) = bitwise(next_high, free_high);
+            let (next_low, next_high) = step.dilate(low, high, felt);
+            let (next_low, _, _) = Bits::bitwise(next_low, free_low);
+            let (next_high, _, _) = Bits::bitwise(next_high, free_high);
             free_low -= next_low;
             free_high -= next_high;
             low = next_low;
@@ -817,41 +796,51 @@ pub impl BfsInternal of BfsInternalTrait {
         (ball, inner)
     }
 
-    /// Hex dilation of a frontier of interior tiles, see `Layout::expand`. With the West pairs
-    /// `P` split by row parity, the up neighbours are `Pe * 2^(W-1) + Po * 2^W`, that is
-    /// `(2P - Pe) * 2^(W-1)`, and the down neighbours `(2P - Pe) * 2^-(W+1)`.
+    /// Connected component of an interior walkable tile on a grid without open edge tiles: the
+    /// flood of `Bfs::reachable` without the checks (`Caver::keep_component`).
     /// # Arguments
-    /// * `step` - The layer constants
-    /// * `low` - The low limb of the frontier
-    /// * `high` - The high limb of the frontier
-    /// * `felt` - The frontier as a felt
+    /// * `open` - The grid, interior tiles only
+    /// * `width` - The width of the map, valid dimensions
+    /// * `height` - The height of the map
+    /// * `from` - The position, an interior walkable tile
     /// # Returns
-    /// * The frontier and its neighbours
-    #[inline(always)]
-    fn expand(step: @Step, low: u128, high: u128, felt: felt252) -> (u128, u128) {
-        let step = *step;
-        // [Compute] Frontier and its West neighbours, then split by row parity
-        let double: u256 = (felt + felt).into();
-        let (double_low, double_high) = (double.low, double.high);
-        let (_, _, pairs_low) = bitwise(low, double_low);
-        let (_, _, pairs_high) = bitwise(high, double_high);
-        let (even_low, _, _) = bitwise(pairs_low, step.even_low);
-        let (even_high, _, _) = bitwise(pairs_high, step.even_high);
-        let pairs: felt252 = pairs_low.into() + pairs_high.into() * TWO_POW_128;
-        let even: felt252 = even_low.into() + even_high.into() * TWO_POW_128;
-        let rows = pairs + pairs - even;
-        // [Compute] NE/NW, SE/SW and East neighbours
-        let up: u256 = (rows * step.up).into();
-        let down: u256 = (rows * step.down).into();
-        let east: u256 = (felt * INV_2).into();
-        // [Return] Union
-        let (_, _, side_low) = bitwise(pairs_low, east.low);
-        let (_, _, side_high) = bitwise(pairs_high, east.high);
-        let (_, _, vertical_low) = bitwise(up.low, down.low);
-        let (_, _, vertical_high) = bitwise(up.high, down.high);
-        let (_, _, low) = bitwise(side_low, vertical_low);
-        let (_, _, high) = bitwise(side_high, vertical_high);
-        (low, high)
+    /// * The component of `from`
+    #[inline]
+    fn component(open: u256, width: u8, height: u8, from: u8) -> felt252 {
+        let (step, back, free) = Self::constants(open, width, height);
+        let centre = Self::endpoint(@back, height, from);
+        let first = Bits::and((centre.around + centre.power).into(), free);
+        if width * height <= SMALL_SIZE {
+            Self::fill_small(@step, first.low, free.low)
+        } else {
+            Self::fill(@step, first, free)
+        }
+    }
+
+    /// Flood from a first layer until the frontier runs out.
+    /// # Arguments
+    /// * `step` - The layout
+    /// * `first` - The first layer
+    /// * `free` - The walkable interior tiles
+    /// # Returns
+    /// * The closed ball
+    #[inline]
+    fn fill(step: @Dilation, first: u256, free: u256) -> felt252 {
+        let mut low = first.low;
+        let mut high = first.high;
+        let mut free_low = free.low - low;
+        let mut free_high = free.high - high;
+        while Self::layer(step, ref low, ref high, ref free_low, ref free_high) {}
+        Bits::to_felt(free) - free_low.into() - free_high.into() * TWO_POW_128
+    }
+
+    /// `fill` on a single limb.
+    #[inline]
+    fn fill_small(step: @Dilation, first: u128, free: u128) -> felt252 {
+        let mut layer = first;
+        let mut unvisited = free - first;
+        while Self::layer_small(step, ref layer, ref unvisited) {}
+        (free - unvisited).into()
     }
 
     /// Backtrack through the layers, four per iteration.
@@ -929,21 +918,21 @@ pub impl BfsInternal of BfsInternalTrait {
             back.around_even
         }).into();
         let lowest: felt252 = if mask.high == 0 {
-            let (hit, _, _) = bitwise(mask.low, layer.low);
-            let (rest, _, _) = bitwise(hit, hit - 1);
+            let (hit, _, _) = Bits::bitwise(mask.low, layer.low);
+            let (rest, _, _) = Bits::bitwise(hit, hit - 1);
             hit.into() - rest.into()
         } else if mask.low == 0 {
-            let (hit, _, _) = bitwise(mask.high, layer.high);
-            let (rest, _, _) = bitwise(hit, hit - 1);
+            let (hit, _, _) = Bits::bitwise(mask.high, layer.high);
+            let (rest, _, _) = Bits::bitwise(hit, hit - 1);
             (hit.into() - rest.into()) * TWO_POW_128
         } else {
-            let (hit, _, _) = bitwise(mask.low, layer.low);
+            let (hit, _, _) = Bits::bitwise(mask.low, layer.low);
             if hit != 0 {
-                let (rest, _, _) = bitwise(hit, hit - 1);
+                let (rest, _, _) = Bits::bitwise(hit, hit - 1);
                 hit.into() - rest.into()
             } else {
-                let (hit, _, _) = bitwise(mask.high, layer.high);
-                let (rest, _, _) = bitwise(hit, hit - 1);
+                let (hit, _, _) = Bits::bitwise(mask.high, layer.high);
+                let (rest, _, _) = Bits::bitwise(hit, hit - 1);
                 (hit.into() - rest.into()) * TWO_POW_128
             }
         };
@@ -997,10 +986,10 @@ pub impl BfsInternal of BfsInternalTrait {
     /// `advance` for boards of at most 128 bits, on a single limb.
     #[inline]
     fn advance_small<S, +SmallStore<S>, +Drop<S>>(
-        step: @Step, start: @Endpoint, target: @Endpoint, free: u128, ref store: S,
+        step: @Dilation, start: @Endpoint, target: @Endpoint, free: u128, ref store: S,
     ) -> bool {
         // [Compute] Target neighbourhood, empty means unreachable
-        let (goal, _, _) = bitwise((*target.around).try_into().unwrap(), free);
+        let (goal, _, _) = Bits::bitwise((*target.around).try_into().unwrap(), free);
         if goal == 0 {
             return false;
         }
@@ -1010,7 +999,7 @@ pub impl BfsInternal of BfsInternalTrait {
         } else {
             *start.around
         };
-        let (mut layer, _, _) = bitwise(closed.try_into().unwrap(), free);
+        let (mut layer, _, _) = Bits::bitwise(closed.try_into().unwrap(), free);
         let mut free = free - layer;
         // [Compute] Layers closer than the hex distance minus one cannot touch the goal
         let gap = Self::gap(start, target);
@@ -1041,7 +1030,7 @@ pub impl BfsInternal of BfsInternalTrait {
         // [Compute] Layers with the target test
         loop {
             store.push(layer);
-            let (hit, _, _) = bitwise(layer, goal);
+            let (hit, _, _) = Bits::bitwise(layer, goal);
             if hit != 0 {
                 break true;
             }
@@ -1049,7 +1038,7 @@ pub impl BfsInternal of BfsInternalTrait {
                 break false;
             }
             store.push(layer);
-            let (hit, _, _) = bitwise(layer, goal);
+            let (hit, _, _) = Bits::bitwise(layer, goal);
             if hit != 0 {
                 break true;
             }
@@ -1067,41 +1056,19 @@ pub impl BfsInternal of BfsInternalTrait {
     /// # Returns
     /// * `false` if the frontier is empty
     #[inline(always)]
-    fn layer_small(step: @Step, ref layer: u128, ref free: u128) -> bool {
+    fn layer_small(step: @Dilation, ref layer: u128, ref free: u128) -> bool {
         if layer == 0 {
             return false;
         }
-        let (next, _, _) = bitwise(Self::expand_small(step, layer), free);
+        let (next, _, _) = Bits::bitwise(step.expand_small(layer), free);
         free -= next;
         layer = next;
         true
     }
 
-    /// Hex dilation for boards of at most 128 bits, see `expand`: every shift fits the limb.
-    /// # Arguments
-    /// * `step` - The layer constants
-    /// * `frontier` - The frontier, interior tiles only
-    /// # Returns
-    /// * The frontier and its neighbours
-    #[inline(always)]
-    fn expand_small(step: @Step, frontier: u128) -> u128 {
-        let step = *step;
-        let (_, _, pairs) = bitwise(frontier, frontier + frontier);
-        let (even, _, _) = bitwise(pairs, step.even_low);
-        let pairs_felt: felt252 = pairs.into();
-        let rows = pairs_felt + pairs_felt - even.into();
-        let up: u128 = (rows * step.up).try_into().unwrap();
-        let down: u128 = (rows * step.down).try_into().unwrap();
-        let east: u128 = (frontier.into() * INV_2).try_into().unwrap();
-        let (_, _, side) = bitwise(pairs, east);
-        let (_, _, vertical) = bitwise(up, down);
-        let (_, _, next) = bitwise(side, vertical);
-        next
-    }
-
     /// Flood `steps` more layers from a first layer, single limb, see `flood`.
     #[inline]
-    fn flood_small(step: @Step, first: u128, free: u128, steps: u8) -> (felt252, felt252) {
+    fn flood_small(step: @Dilation, first: u128, free: u128, steps: u8) -> (felt252, felt252) {
         let mut layer = first;
         let mut unvisited = free - first;
         let total: felt252 = free.into();
@@ -1113,7 +1080,7 @@ pub impl BfsInternal of BfsInternalTrait {
             }
             steps -= 1;
             inner = total - unvisited.into();
-            let (next, _, _) = bitwise(Self::expand_small(step, layer), unvisited);
+            let (next, _, _) = Bits::bitwise(step.expand_small(layer), unvisited);
             unvisited -= next;
             layer = next;
         }
@@ -1191,8 +1158,8 @@ pub impl BfsInternal of BfsInternalTrait {
         })
             .try_into()
             .unwrap();
-        let (hit, _, _) = bitwise(mask, layer);
-        let (rest, _, _) = bitwise(hit, hit - 1);
+        let (hit, _, _) = Bits::bitwise(mask, layer);
+        let (rest, _, _) = Bits::bitwise(hit, hit - 1);
         Self::identify(boxed, position, power, odd, hit.into() - rest.into())
     }
 
@@ -1206,31 +1173,26 @@ pub impl BfsInternal of BfsInternalTrait {
     /// * The neighbour, its power and its row parity
     fn enter(back: @Back, height: u8, position: u8, layer: u256) -> (u8, felt252, bool) {
         let width = *back.width;
-        for direction in Self::directions().span() {
-            if let Option::Some(next) = LayoutTrait::neighbor(width, height, position, *direction) {
-                if Bits::get(layer, next) {
-                    let (_, odd) = LayoutTrait::parity(width, next);
-                    return (next, Bits::pow(next), odd);
-                }
-            }
-        }
-        panic!("unreachable")
+        let next = LayoutTrait::neighbour_in(width, height, position, layer).unwrap();
+        let (_, odd) = LayoutTrait::parity(width, next);
+        (next, Bits::pow(next), odd)
     }
-
-    /// `u256` AND with the bitwise builtin.
+    /// `u256` AND with the bitwise builtin, see `Bits::and` (used by the `HexMap` facade).
     #[inline(always)]
     fn and(lhs: u256, rhs: u256) -> u256 {
-        let (low, _, _) = bitwise(lhs.low, rhs.low);
-        let (high, _, _) = bitwise(lhs.high, rhs.high);
-        u256 { low, high }
+        Bits::and(lhs, rhs)
+    }
+    /// Hex dilation of a frontier given by its limbs and as a felt, see `Dilation::dilate`
+    /// (used by the `HexMap` facade).
+    #[inline(always)]
+    fn expand(step: @Dilation, low: u128, high: u128, felt: felt252) -> (u128, u128) {
+        step.dilate(low, high, felt)
     }
 
-    /// `u256` OR with the bitwise builtin.
+    /// Hex dilation on a single limb, see `Dilation::expand_small` (used by the `HexMap` facade).
     #[inline(always)]
-    fn or(lhs: u256, rhs: u256) -> u256 {
-        let (_, _, low) = bitwise(lhs.low, rhs.low);
-        let (_, _, high) = bitwise(lhs.high, rhs.high);
-        u256 { low, high }
+    fn expand_small(step: @Dilation, frontier: u128) -> u128 {
+        step.expand_small(frontier)
     }
 }
 
@@ -1250,16 +1212,24 @@ mod tests {
     use origami_hexmap::helpers::printer::HexPrinter;
     use origami_hexmap::tests::fixtures::*;
     use origami_hexmap::tests::variants::Variants;
+    use origami_hexmap::types::direction::Direction;
 
     // Local imports
 
     use super::{Bfs, BfsInternal};
 
+    // Constants
+
+    const DIRECTIONS: [Direction; 6] = [
+        Direction::East, Direction::NorthEast, Direction::NorthWest, Direction::West,
+        Direction::SouthWest, Direction::SouthEast,
+    ];
+
     // Helpers
 
     /// Whether two tiles are neighbours.
     fn adjacent(width: u8, height: u8, lhs: u8, rhs: u8) -> bool {
-        for direction in BfsInternal::directions().span() {
+        for direction in DIRECTIONS.span() {
             if LayoutTrait::neighbor(width, height, lhs, *direction) == Option::Some(rhs) {
                 return true;
             }
@@ -1279,7 +1249,7 @@ mod tests {
         let mut queue: Array<u8> = array![from];
         while let Option::Some(current) = queue.pop_front() {
             let next = distances.get(current.into()) + 1;
-            for direction in BfsInternal::directions().span() {
+            for direction in DIRECTIONS.span() {
                 if let Option::Some(tile) =
                     LayoutTrait::neighbor(width, height, current, *direction) {
                     if Bits::get(open, tile) && distances.get(tile.into()) == 0 {

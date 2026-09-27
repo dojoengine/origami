@@ -10,31 +10,26 @@
 // Core imports
 
 use core::dict::{Felt252Dict, Felt252DictTrait};
-use core::integer::Bitwise;
 
 // Internal imports
 
-use origami_hexmap::finders::bfs::{
-    ArrayStore, Back, Bfs, BfsInternal, CountStore, Endpoint, Step, Store,
-};
+use origami_hexmap::finders::bfs::{ArrayStore, Back, Bfs, BfsInternal, CountStore, Endpoint, Store};
 use origami_hexmap::generators::caver::Caver;
 use origami_hexmap::helpers::bits::{Bits, POW128, TWO_POW_128};
-use origami_hexmap::helpers::layout::LayoutTrait;
+use origami_hexmap::helpers::layout::{Dilation, DilationTrait, LayoutTrait};
 use origami_hexmap::tests::fixtures::*;
+use origami_hexmap::tests::variants::Variants;
 
 // Constants
 
 const INV_2: felt252 = 0x400000000000008800000000000000000000000000000000000000000000001;
-
-/// AND, XOR and OR of two limbs in one builtin application, see `finders::bfs`.
-extern fn bitwise(lhs: u128, rhs: u128) -> (u128, u128, u128) implicits(Bitwise) nopanic;
 
 // Shared prologue
 
 /// Library prologue: checks, constants, endpoints and walkable interior tiles.
 fn setup(
     grid: felt252, width: u8, height: u8, from: u8, to: u8,
-) -> (Step, Back, Endpoint, Endpoint, u256) {
+) -> (Dilation, Back, Endpoint, Endpoint, u256) {
     let open = BfsInternal::check(grid, width, height, from, to);
     let (step, back, free) = BfsInternal::constants(open, width, height);
     let start = BfsInternal::endpoint(@back, height, from);
@@ -53,19 +48,19 @@ fn backtrack(back: Back, target: @Endpoint, layers: Span<u256>) -> Span<u8> {
 
 /// First layer: the closed neighbourhood of an interior start.
 fn first_layer(start: @Endpoint, free: u256) -> u256 {
-    BfsInternal::and((*start.around + *start.power).into(), free)
+    Bits::and((*start.around + *start.power).into(), free)
 }
 
 /// Target neighbourhood.
 fn goal(target: @Endpoint, free: u256) -> u256 {
-    BfsInternal::and((*target.around).into(), free)
+    Bits::and((*target.around).into(), free)
 }
 
 /// Whether a layer touches the goal, both limbs.
 #[inline(always)]
 fn touches(low: u128, high: u128, goal: u256) -> bool {
-    let (hit_low, _, _) = bitwise(low, goal.low);
-    let (hit_high, _, _) = bitwise(high, goal.high);
+    let (hit_low, _, _) = Bits::bitwise(low, goal.low);
+    let (hit_high, _, _) = Bits::bitwise(high, goal.high);
     hit_low != 0 || hit_high != 0
 }
 
@@ -108,9 +103,9 @@ impl CheckpointStore of Store<Checkpoints> {
 }
 
 /// Next layer from the two previous ones, corelib operators.
-fn next_layer(step: @Step, previous: u256, current: u256, free: u256) -> u256 {
+fn next_layer(step: @Dilation, previous: u256, current: u256, free: u256) -> u256 {
     let felt = Bits::to_felt(current);
-    let (low, high) = BfsInternal::expand(step, current.low, current.high, felt);
+    let (low, high) = step.dilate(current.low, current.high, felt);
     u256 { low, high } & free & ~current & ~previous
 }
 
@@ -161,7 +156,7 @@ fn search_checkpoints(grid: felt252, width: u8, height: u8, from: u8, to: u8) ->
 }
 
 /// Layer `index` recomputed from the start neighbourhood.
-fn layer_at(step: @Step, first: u256, free: u256, index: u8) -> u256 {
+fn layer_at(step: @Dilation, first: u256, free: u256, index: u8) -> u256 {
     let mut low = first.low;
     let mut high = first.high;
     let mut free_low = free.low - low;
@@ -307,9 +302,9 @@ fn back_straight(back: Box<Back>, walk: Walk, layer: u256) -> Walk {
     let power = walk.power * walk.factor;
     let bits: u256 = power.into();
     let (hit, _, _) = if bits.high == 0 {
-        bitwise(bits.low, layer.low)
+        Bits::bitwise(bits.low, layer.low)
     } else {
-        bitwise(bits.high, layer.high)
+        Bits::bitwise(bits.high, layer.high)
     };
     if hit == 0 {
         return turn(back, walk, layer);
@@ -433,8 +428,8 @@ fn back_window(
     } else {
         back.around_even
     }).into();
-    let (low, _, _) = bitwise(mask.low, layer.low);
-    let (high, _, _) = bitwise(mask.high, layer.high);
+    let (low, _, _) = Bits::bitwise(mask.low, layer.low);
+    let (high, _, _) = Bits::bitwise(mask.high, layer.high);
     let hit: u128 = ((low.into() + high.into() * TWO_POW_128) * shift).try_into().unwrap();
     if odd {
         if hit >= window.top_odd {
@@ -560,7 +555,7 @@ fn distance_harness_two(grid: felt252, width: u8, height: u8, from: u8, to: u8) 
 fn distance_every_two(grid: felt252, width: u8, height: u8, from: u8, to: u8) -> u8 {
     let (step, _, start, target, free) = setup(grid, width, height, from, to);
     let goal = goal(@target, free);
-    let closed = BfsInternal::and((target.around + target.power).into(), free);
+    let closed = Bits::and((target.around + target.power).into(), free);
     let first = first_layer(@start, free);
     let mut low = first.low;
     let mut high = first.high;
@@ -617,8 +612,8 @@ fn distance_free_test(grid: felt252, width: u8, height: u8, from: u8, to: u8) ->
         count += 1;
     }
     loop {
-        let (left_low, _, _) = bitwise(free_low, goal.low);
-        let (left_high, _, _) = bitwise(free_high, goal.high);
+        let (left_low, _, _) = Bits::bitwise(free_low, goal.low);
+        let (left_high, _, _) = Bits::bitwise(free_high, goal.high);
         if left_low != goal.low || left_high != goal.high {
             break;
         }
@@ -644,12 +639,12 @@ fn distance_corelib(grid: felt252, width: u8, height: u8, from: u8, to: u8) -> u
     };
     while skip != 0 {
         skip -= 1;
-        layer = layout.expand(layer) & unvisited;
+        layer = Variants::expand_felt(@layout, layer) & unvisited;
         unvisited = unvisited - layer;
         count += 1;
     }
     while layer & goal == 0 {
-        layer = layout.expand(layer) & unvisited;
+        layer = Variants::expand_felt(@layout, layer) & unvisited;
         assert!(layer != 0);
         unvisited = unvisited - layer;
         count += 1;
@@ -667,24 +662,24 @@ fn distance_bidirectional(grid: felt252, width: u8, height: u8, from: u8, to: u8
     let mut free_b = free - b;
     let mut count: u8 = 0;
     loop {
-        let (low, high) = BfsInternal::expand(@step, a.low, a.high, Bits::to_felt(a));
-        let next = BfsInternal::and(u256 { low, high }, free_a);
+        let (low, high) = step.dilate(a.low, a.high, Bits::to_felt(a));
+        let next = Bits::and(u256 { low, high }, free_a);
         if next == 0 {
             break Option::None;
         }
         count += 1;
-        if !(BfsInternal::and(next, b) == 0) {
+        if !(Bits::and(next, b) == 0) {
             break Option::Some(count);
         }
         free_a = free_a - next;
         a = next;
-        let (low, high) = BfsInternal::expand(@step, b.low, b.high, Bits::to_felt(b));
-        let next = BfsInternal::and(u256 { low, high }, free_b);
+        let (low, high) = step.dilate(b.low, b.high, Bits::to_felt(b));
+        let next = Bits::and(u256 { low, high }, free_b);
         if next == 0 {
             break Option::None;
         }
         count += 1;
-        if !(BfsInternal::and(next, a) == 0) {
+        if !(Bits::and(next, a) == 0) {
             break Option::Some(count);
         }
         free_b = free_b - next;
@@ -1033,7 +1028,7 @@ fn bench_bfs_reachable_cave_17x14() {
 }
 
 #[test]
-#[available_gas(l2_gas: 612000)]
+#[available_gas(l2_gas: 563000)]
 fn bench_bfs_keep_component_cave_17x14() {
     let component = Caver::keep_component(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM);
     assert!(component != 0);
@@ -1047,7 +1042,7 @@ fn bench_bfs_reachable_maze_17x14() {
 }
 
 #[test]
-#[available_gas(l2_gas: 1308000)]
+#[available_gas(l2_gas: 1169000)]
 fn bench_bfs_keep_component_maze_17x14() {
     let component = Caver::keep_component(MAZE_17X14, 17, 14, MAZE_17X14_FAR_FROM);
     assert!(component != 0);
@@ -1061,7 +1056,7 @@ fn bench_bfs_reachable_serpentine_17x14() {
 }
 
 #[test]
-#[available_gas(l2_gas: 2185000)]
+#[available_gas(l2_gas: 1933000)]
 fn bench_bfs_keep_component_serpentine_17x14() {
     let component = Caver::keep_component(SERPENTINE_17X14, 17, 14, SERPENTINE_17X14_FAR_FROM);
     assert!(component != 0);
@@ -1075,7 +1070,7 @@ fn bench_bfs_reachable_unreachable_17x14() {
 }
 
 #[test]
-#[available_gas(l2_gas: 298000)]
+#[available_gas(l2_gas: 278000)]
 fn bench_bfs_keep_component_unreachable_17x14() {
     let component = Caver::keep_component(UNREACHABLE_17X14, 17, 14, UNREACHABLE_17X14_FAR_FROM);
     assert!(component != 0);
@@ -1089,7 +1084,7 @@ fn bench_bfs_reachable_cave_7x7() {
 }
 
 #[test]
-#[available_gas(l2_gas: 179000)]
+#[available_gas(l2_gas: 103000)]
 fn bench_bfs_keep_component_cave_7x7() {
     let component = Caver::keep_component(CAVE_7X7, 7, 7, CAVE_7X7_FAR_FROM);
     assert!(component != 0);
@@ -1103,7 +1098,7 @@ fn bench_bfs_reachable_maze_7x7() {
 }
 
 #[test]
-#[available_gas(l2_gas: 326000)]
+#[available_gas(l2_gas: 173000)]
 fn bench_bfs_keep_component_maze_7x7() {
     let component = Caver::keep_component(MAZE_7X7, 7, 7, MAZE_7X7_FAR_FROM);
     assert!(component != 0);
@@ -1117,7 +1112,7 @@ fn bench_bfs_reachable_serpentine_7x7() {
 }
 
 #[test]
-#[available_gas(l2_gas: 347000)]
+#[available_gas(l2_gas: 183000)]
 fn bench_bfs_keep_component_serpentine_7x7() {
     let component = Caver::keep_component(SERPENTINE_7X7, 7, 7, SERPENTINE_7X7_FAR_FROM);
     assert!(component != 0);
@@ -1131,7 +1126,7 @@ fn bench_bfs_reachable_unreachable_7x7() {
 }
 
 #[test]
-#[available_gas(l2_gas: 137000)]
+#[available_gas(l2_gas: 82000)]
 fn bench_bfs_keep_component_unreachable_7x7() {
     let component = Caver::keep_component(UNREACHABLE_7X7, 7, 7, UNREACHABLE_7X7_FAR_FROM);
     assert!(component != 0);

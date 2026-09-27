@@ -7,6 +7,8 @@
 use core::dict::Felt252Dict;
 use core::felt252_div;
 use core::hash::HashStateTrait;
+#[feature("bounded-int-utils")]
+use core::internal::bounded_int::{BoundedInt, DivRemHelper, UnitInt, div_rem, upcast};
 use core::poseidon::PoseidonTrait;
 
 // Internal imports
@@ -373,7 +375,7 @@ fn bench_bit_set_or() {
 }
 
 #[test]
-#[available_gas(l2_gas: 2149000)]
+#[available_gas(l2_gas: 1562000)]
 fn bench_popcount_swar_dense() {
     let value: u256 = EMPTY_17X14.into();
     let mut acc: felt252 = 0;
@@ -399,7 +401,7 @@ fn bench_popcount_sparse_dense() {
 }
 
 #[test]
-#[available_gas(l2_gas: 2159000)]
+#[available_gas(l2_gas: 1572000)]
 fn bench_popcount_swar_sparse() {
     // 8 bits, 4 per limb
     let value: u256 = (Bits::pow(20)
@@ -468,7 +470,7 @@ fn bench_poseidon_hades() {
 }
 
 #[test]
-#[available_gas(l2_gas: 628000)]
+#[available_gas(l2_gas: 542000)]
 fn bench_rng_next_below() {
     let mut rng = RngTrait::new('seed');
     let mut acc: felt252 = 0;
@@ -503,6 +505,118 @@ fn bench_rng_shuffle6() {
     while n != 0 {
         n -= 1;
         acc += rng.shuffle6().into();
+    }
+    assert!(acc != 0);
+}
+
+// Lot P1: draws of a constant bound (`bounded_int::div_rem`) and a counter-refilled pool
+
+/// A pool with a refill counter instead of the `pool < 2^64` test (loser, see `GAS.md`, P1).
+#[derive(Copy, Drop)]
+struct CountedPool {
+    seed: felt252,
+    pool: u128,
+    left: felt252,
+}
+
+/// `DivRem` of a pool by 6, with the ranges of the quotient and the remainder.
+impl BenchDivRem6 of DivRemHelper<u128, UnitInt<6>> {
+    type DivT = BoundedInt<0, 0x2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa>;
+    type RemT = BoundedInt<0, 5>;
+}
+
+#[test]
+#[available_gas(l2_gas: 542000)]
+fn bench_rng_draw6() {
+    let mut rng = RngTrait::new('seed');
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        acc += rng.draw6().into();
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[feature("bounded-int-utils")]
+#[available_gas(l2_gas: 265000)]
+fn bench_u128_divrem_bounded() {
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let value = u256 { low: n.into(), high: n.into() };
+        let (q, r) = div_rem::<_, _, BenchDivRem6>(value.low, 6);
+        acc += upcast::<_, felt252>(q) + upcast::<_, felt252>(r);
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[feature("bounded-int-utils")]
+#[available_gas(l2_gas: 515000)]
+fn bench_rng_draw6_counter() {
+    // 24 draws of 6 per 128-bit pool (6^24 < 2^63), the refill decided by a felt counter
+    let mut state = CountedPool { seed: 'seed', pool: 0, left: 0 };
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        if state.left == 0 {
+            let (seed, word, _) = core::poseidon::hades_permutation(state.seed, 0, 2);
+            let word: u256 = word.into();
+            state.seed = seed;
+            state.pool = word.low;
+            state.left = 24;
+        }
+        state.left -= 1;
+        let (pool, value) = div_rem::<_, _, BenchDivRem6>(state.pool, 6);
+        state.pool = upcast(pool);
+        acc += upcast::<_, felt252>(value);
+    }
+    assert!(acc != 0);
+}
+
+/// `DivRem` of a pool by a runtime bound of at most 255.
+impl BenchDivRemByte of DivRemHelper<u128, u8> {
+    type DivT = BoundedInt<0, 0xffffffffffffffffffffffffffffffff>;
+    type RemT = BoundedInt<0, 254>;
+}
+
+/// `DivRem` of a position by a runtime width.
+impl BenchDivRemPosition of DivRemHelper<u8, u8> {
+    type DivT = BoundedInt<0, 255>;
+    type RemT = BoundedInt<0, 254>;
+}
+
+#[test]
+#[feature("bounded-int-utils")]
+#[available_gas(l2_gas: 265000)]
+fn bench_u128_divrem_bounded_byte() {
+    let divisor: NonZero<u8> = 6;
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let value = u256 { low: n.into(), high: n.into() };
+        let (q, r) = div_rem::<_, _, BenchDivRemByte>(value.low, divisor);
+        acc += upcast::<_, felt252>(q) + upcast::<_, felt252>(r);
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[feature("bounded-int-utils")]
+#[available_gas(l2_gas: 265000)]
+fn bench_u8_divrem_bounded() {
+    let divisor: NonZero<u8> = 17;
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let (q, r) = div_rem::<_, _, BenchDivRemPosition>(n, divisor);
+        acc += upcast::<_, felt252>(q) + upcast::<_, felt252>(r);
     }
     assert!(acc != 0);
 }
@@ -703,7 +817,7 @@ fn bench_expand_limbs() {
 }
 
 #[test]
-#[available_gas(l2_gas: 1912000)]
+#[available_gas(l2_gas: 1771000)]
 fn bench_expand_felt_7x7() {
     let layout = LayoutTrait::new(7, 7);
     let frontier: u256 = CAVE_7X7.into();
@@ -745,7 +859,7 @@ fn bench_expand_small_felt_double_7x7() {
 }
 
 #[test]
-#[available_gas(l2_gas: 2352000)]
+#[available_gas(l2_gas: 2210000)]
 fn bench_step_or() {
     let layout = LayoutTrait::new(17, 14);
     let frontier: u256 = Bits::pow(CAVE_17X14_FAR_FROM).into();

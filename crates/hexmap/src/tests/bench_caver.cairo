@@ -6,7 +6,6 @@
 
 // Core imports
 
-use core::integer::Bitwise;
 use core::num::traits::OverflowingAdd;
 use core::poseidon::hades_permutation;
 
@@ -19,6 +18,7 @@ use origami_hexmap::helpers::printer::HexPrinter;
 use origami_hexmap::tests::fixtures::{
     MAZE_17X14, MAZE_17X14_FAR_FROM, SERPENTINE_17X14, SERPENTINE_17X14_FAR_FROM,
 };
+use origami_hexmap::tests::variants::Variants;
 use origami_hexmap::types::direction::Direction;
 
 // Constants
@@ -31,9 +31,6 @@ const FILL_17X14: felt252 = 0xced810e216a71359cdfca69663bef8793026be673435110eb0
 const FILL_7X7: felt252 = 0x110e30a9500;
 /// `Caver::generate(17, 14, 3, SEED)`.
 const CAVE_17X14: felt252 = 0x47c833e61fe70ff9cffcc7fe73fff07ffc7ffc7f3e3f100e0000000;
-
-/// AND, XOR and OR of two limbs in one builtin application, see `generators::caver`.
-extern fn bitwise(lhs: u128, rhs: u128) -> (u128, u128, u128) implicits(Bitwise) nopanic;
 
 // Reference
 
@@ -133,8 +130,8 @@ pub fn evolve<impl S: Step>(width: u8, height: u8, order: u8, grid: felt252) -> 
 
 #[inline(always)]
 fn bw(lhs: u256, rhs: u256) -> (u256, u256, u256) {
-    let (la, lx, lo) = bitwise(lhs.low, rhs.low);
-    let (ha, hx, ho) = bitwise(lhs.high, rhs.high);
+    let (la, lx, lo) = Bits::bitwise(lhs.low, rhs.low);
+    let (ha, hx, ho) = Bits::bitwise(lhs.high, rhs.high);
     (u256 { low: la, high: ha }, u256 { low: lx, high: hx }, u256 { low: lo, high: ho })
 }
 
@@ -385,7 +382,7 @@ pub fn keep_component_runs(grid: felt252, width: u8, height: u8, from: u8) -> fe
     let layout = LayoutTrait::new(width, height);
     let mut component: u256 = Bits::pow(from).into();
     loop {
-        let dilated = layout.expand(component) & open;
+        let dilated = Variants::expand_felt(@layout, component) & open;
         let carried: u256 = (grid + Bits::to_felt(dilated)).into();
         let (kept, _, _) = bw(open, carried);
         let run = u256 { low: open.low - kept.low, high: open.high - kept.high };
@@ -408,7 +405,7 @@ pub fn keep_component_runs_first(grid: felt252, width: u8, height: u8, from: u8)
         let (kept, _, _) = bw(open, carried);
         let run = u256 { low: open.low - kept.low, high: open.high - kept.high };
         let (_, _, filled) = bw(run, component);
-        let next = layout.expand(filled) & open;
+        let next = Variants::expand_felt(@layout, filled) & open;
         if next == filled {
             component = next;
             break;
@@ -566,7 +563,7 @@ fn bench_caver_generate_7x7_order_0() {
 }
 
 #[test]
-#[available_gas(l2_gas: 57000)]
+#[available_gas(l2_gas: 54000)]
 fn bench_caver_generate_7x7_order_1() {
     assert!(Caver::generate(7, 7, 1, SEED) != 0);
 }
@@ -578,10 +575,33 @@ fn bench_caver_generate_7x7_order_3() {
 }
 
 #[test]
-#[available_gas(l2_gas: 316000)]
+#[available_gas(l2_gas: 299000)]
 fn bench_caver_keep_component_17x14() {
     // 7 * 17 + 8: centre of the board, floor in CAVE_17X14
     assert!(Caver::keep_component(CAVE_17X14, 17, 14, 127) != 0);
+}
+
+/// The `Caver::keep_component` of lot L4 (loser): dilate the whole component until stable,
+/// `Layout::expand` of lot L0 and corelib `u256` operators. The library delegates to
+/// `Bfs::reachable`, which dilates the frontier only.
+pub fn keep_component_dilation(grid: felt252, width: u8, height: u8, from: u8) -> felt252 {
+    let open: u256 = grid.into();
+    let layout = LayoutTrait::new(width, height);
+    let mut component: u256 = Bits::pow(from).into();
+    loop {
+        let next = Variants::expand_felt(@layout, component) & open;
+        if next == component {
+            break;
+        }
+        component = next;
+    }
+    Bits::to_felt(component)
+}
+
+#[test]
+#[available_gas(l2_gas: 316000)]
+fn bench_caver_variant_keep_component_dilation_17x14() {
+    assert!(keep_component_dilation(CAVE_17X14, 17, 14, 127) != 0);
 }
 
 #[test]
@@ -604,7 +624,7 @@ fn bench_caver_keep_component_runs_first_17x14() {
 }
 
 #[test]
-#[available_gas(l2_gas: 1308000)]
+#[available_gas(l2_gas: 1169000)]
 fn bench_caver_keep_component_maze_17x14() {
     assert!(Caver::keep_component(MAZE_17X14, 17, 14, MAZE_17X14_FAR_FROM) != 0);
 }
@@ -616,7 +636,7 @@ fn bench_caver_keep_component_runs_maze_17x14() {
 }
 
 #[test]
-#[available_gas(l2_gas: 2185000)]
+#[available_gas(l2_gas: 1933000)]
 fn bench_caver_keep_component_serpentine_17x14() {
     assert!(Caver::keep_component(SERPENTINE_17X14, 17, 14, SERPENTINE_17X14_FAR_FROM) != 0);
 }

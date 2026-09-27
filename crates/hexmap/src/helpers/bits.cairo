@@ -2,24 +2,33 @@
 //!
 //! A bitmap of at most 251 bits is stored as a `felt252`. Shifts are field multiplications,
 //! exact as long as no set bit is dropped (right shift) and the result stays below 2^251 (left
-//! shift). Set operations (`&`, `|`) need the bitwise builtin and therefore the `u256` form.
+//! shift). Set operations (`&`, `|`, `^`) need the bitwise builtin: `Bits::bitwise` yields the
+//! three of them from one application, limb by limb.
+
+// Core imports
+
+use core::integer::Bitwise;
+#[feature("bounded-int-utils")]
+use core::internal::bounded_int::{BoundedInt, DivRemHelper, UnitInt, div_rem, upcast};
 
 // Constants
 
 /// 2^128 as a felt, used to rebuild a felt from its `u256` limbs.
 pub const TWO_POW_128: felt252 = 0x100000000000000000000000000000000;
-/// 2^32, lower bound of the random pool before a refill.
+/// 2^32, lower bound of the random pool before a refill until lot P1 (see `GAS.md`).
 pub const TWO_POW_32: u128 = 0x100000000;
+/// 2^64, lower bound of the random pool before a refill.
+pub const TWO_POW_64: u128 = 0x10000000000000000;
 /// Byte-sum multiplier 0x0101...01 (16 bytes).
-const BYTES_ONE: felt252 = 0x01010101010101010101010101010101;
-/// Odd bits mask 0xAAAA... on 252 bits.
-const MASK_ODD_BITS: u256 = 0x0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa;
-/// Low pairs mask 0x3333... on 252 bits.
-const MASK_PAIRS: u256 = 0x0333333333333333333333333333333333333333333333333333333333333333;
-/// Low nibbles mask 0x0F0F... on 252 bits.
-const MASK_NIBBLES: u256 = 0x0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f;
+pub const BYTES_ONE: felt252 = 0x01010101010101010101010101010101;
+/// Odd bits mask 0xAAAA... on 128 bits.
+const MASK_ODD_BITS: u128 = 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa;
+/// Low pairs mask 0x3333... on 128 bits.
+const MASK_PAIRS: u128 = 0x33333333333333333333333333333333;
+/// Low nibbles mask 0x0F0F... on 128 bits.
+const MASK_NIBBLES: u128 = 0x0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f;
 /// 2^120, the byte-sum lands in the top byte of the low limb.
-const TWO_POW_120: NonZero<u128> = 0x1000000000000000000000000000000;
+pub const TWO_POW_120: NonZero<u128> = 0x1000000000000000000000000000000;
 /// 1/2 in the field.
 const INV_2: felt252 = 0x400000000000008800000000000000000000000000000000000000000000001;
 /// 1/4 in the field.
@@ -27,8 +36,75 @@ const INV_4: felt252 = 0x60000000000000cc000000000000000000000000000000000000000
 /// 1/16 in the field.
 const INV_16: felt252 = 0x78000000000000ff00000000000000000000000000000000000000000000001;
 
+/// `DivRem` of a limb by 2^120: its top byte.
+impl DivRemTopByte of DivRemHelper<u128, UnitInt<0x1000000000000000000000000000000>> {
+    type DivT = BoundedInt<0, 0xff>;
+    type RemT = BoundedInt<0, 0xffffffffffffffffffffffffffffff>;
+}
+
+/// `DivRem` of a limb by 256: its low byte.
+impl DivRemLowByte of DivRemHelper<u128, UnitInt<0x100>> {
+    type DivT = BoundedInt<0, 0xffffffffffffffffffffffffffffff>;
+    type RemT = BoundedInt<0, 0xff>;
+}
+
+/// AND, XOR and OR of two limbs in a single application of the bitwise builtin. The corelib
+/// declares the same libfunc but keeps it private, and its `&`, `^`, `|` each pay a full
+/// application (owner decision: the local declaration is allowed, see `GAS.md`).
+extern fn bitwise(lhs: u128, rhs: u128) -> (u128, u128, u128) implicits(Bitwise) nopanic;
+
 #[generate_trait]
 pub impl Bits of BitsTrait {
+    /// AND, XOR and OR of two limbs, one application of the bitwise builtin.
+    /// # Arguments
+    /// * `lhs` - The left limb
+    /// * `rhs` - The right limb
+    /// # Returns
+    /// * `lhs & rhs`, `lhs ^ rhs`, `lhs | rhs`
+    #[inline(always)]
+    fn bitwise(lhs: u128, rhs: u128) -> (u128, u128, u128) {
+        bitwise(lhs, rhs)
+    }
+
+    /// `u256` AND, one application per limb.
+    /// # Arguments
+    /// * `lhs` - The left set
+    /// * `rhs` - The right set
+    /// # Returns
+    /// * `lhs & rhs`
+    #[inline(always)]
+    fn and(lhs: u256, rhs: u256) -> u256 {
+        let (low, _, _) = bitwise(lhs.low, rhs.low);
+        let (high, _, _) = bitwise(lhs.high, rhs.high);
+        u256 { low, high }
+    }
+
+    /// `u256` OR, one application per limb.
+    /// # Arguments
+    /// * `lhs` - The left set
+    /// * `rhs` - The right set
+    /// # Returns
+    /// * `lhs | rhs`
+    #[inline(always)]
+    fn or(lhs: u256, rhs: u256) -> u256 {
+        let (_, _, low) = bitwise(lhs.low, rhs.low);
+        let (_, _, high) = bitwise(lhs.high, rhs.high);
+        u256 { low, high }
+    }
+
+    /// `u256` XOR, one application per limb.
+    /// # Arguments
+    /// * `lhs` - The left set
+    /// * `rhs` - The right set
+    /// # Returns
+    /// * `lhs ^ rhs`
+    #[inline(always)]
+    fn xor(lhs: u256, rhs: u256) -> u256 {
+        let (_, low, _) = bitwise(lhs.low, rhs.low);
+        let (_, high, _) = bitwise(lhs.high, rhs.high);
+        u256 { low, high }
+    }
+
     /// Return 2^exp as a felt.
     /// # Arguments
     /// * `exp` - The exponent, at most 251
@@ -118,26 +194,71 @@ pub impl Bits of BitsTrait {
         value - Self::pow(index)
     }
 
-    /// Count the set bits, SWAR form: 3 ANDs, shifts as exact field divisions.
+    /// Count the set bits: byte counts of both limbs (SWAR), summed, then one byte-sum.
     /// # Arguments
     /// * `value` - The bitmap, below 2^251
     /// # Returns
     /// * The number of set bits
     fn popcount(value: u256) -> u8 {
+        // [Compute] Every byte of the sum is at most 16, every prefix sum at most 251
+        let bytes = Self::byte_counts(value.low) + Self::byte_counts(value.high);
+        let total: u256 = (bytes * BYTES_ONE).into();
+        // [Return] Byte 15 of the product holds the total
+        Self::top_byte(total.low)
+    }
+
+    /// Count the set bits of a single limb.
+    /// # Arguments
+    /// * `value` - The limb
+    /// # Returns
+    /// * The number of set bits
+    fn popcount_small(value: u128) -> u8 {
+        let total: u256 = (Self::byte_counts(value) * BYTES_ONE).into();
+        Self::top_byte(total.low)
+    }
+
+    /// Top byte of a limb, `value / 2^120` (`bounded_int` division, see `GAS.md`).
+    /// # Arguments
+    /// * `value` - The limb
+    /// # Returns
+    /// * Byte 15
+    #[feature("bounded-int-utils")]
+    #[inline(always)]
+    fn top_byte(value: u128) -> u8 {
+        let (byte, _) = div_rem::<_, _, DivRemTopByte>(value, 0x1000000000000000000000000000000);
+        upcast(byte)
+    }
+
+    /// Low byte of a limb and the rest (`bounded_int` division).
+    /// # Arguments
+    /// * `value` - The limb
+    /// # Returns
+    /// * `value / 256` and `value % 256`
+    #[feature("bounded-int-utils")]
+    #[inline(always)]
+    fn low_byte(value: u128) -> (u128, u8) {
+        let (rest, byte) = div_rem::<_, _, DivRemLowByte>(value, 0x100);
+        (upcast(rest), upcast(byte))
+    }
+
+    /// Byte counts of a limb, SWAR with the shifts as exact field divisions.
+    /// # Arguments
+    /// * `value` - The limb
+    /// # Returns
+    /// * Byte `j` holds the number of set bits of byte `j` (at most 8), below 2^128
+    #[inline]
+    fn byte_counts(value: u128) -> felt252 {
         // [Compute] Bit pairs: v - (v >> 1 & 0x55..) = v - (v & 0xAA..) / 2
-        let pairs = Self::to_felt(value) - Self::to_felt(value & MASK_ODD_BITS) * INV_2;
+        let (odd, _, _) = bitwise(value, MASK_ODD_BITS);
+        let pairs: felt252 = value.into() - odd.into() * INV_2;
         // [Compute] Nibbles: low pairs + high pairs / 4
-        let low = Self::to_felt(pairs.into() & MASK_PAIRS);
+        let (low, _, _) = bitwise(pairs.try_into().unwrap(), MASK_PAIRS);
+        let low: felt252 = low.into();
         let nibbles = low + (pairs - low) * INV_4;
         // [Compute] Bytes: low nibbles + high nibbles / 16, each byte is at most 8
-        let low = Self::to_felt(nibbles.into() & MASK_NIBBLES);
-        let bytes: u256 = (low + (nibbles - low) * INV_16).into();
-        // [Compute] Sum the bytes of both limbs, byte 15 of the product holds the total
-        let total: felt252 = (bytes.low.into() + bytes.high.into()) * BYTES_ONE;
-        let total: u256 = total.into();
-        let (count, _) = DivRem::div_rem(total.low, TWO_POW_120);
-        // [Return] Count, at most 251
-        count.try_into().unwrap()
+        let (low, _, _) = bitwise(nibbles.try_into().unwrap(), MASK_NIBBLES);
+        let low: felt252 = low.into();
+        low + (nibbles - low) * INV_16
     }
 
     /// Count the set bits, one AND per set bit: cheaper than `popcount` up to 4 set bits.
@@ -158,6 +279,122 @@ pub impl Bits of BitsTrait {
             count += 1;
         }
         count
+    }
+}
+
+/// Set operations of the generic bit-parallel loops (lot L3): a `u256`, or a single `u128` limb
+/// on boards of at most 128 bits. Every function is inlined, the generic code costs nothing.
+pub trait Set<T> {
+    /// The set of a felt below 2^251 (below 2^128 for `u128`).
+    fn from_felt(value: felt252) -> T;
+    /// The set of a `u256` (its low limb for `u128`).
+    fn from_wide(value: u256) -> T;
+    /// The set as a felt.
+    fn to_felt(self: T) -> felt252;
+    /// Intersection.
+    fn and(self: T, other: T) -> T;
+    /// Set difference when `other` is a subset of `self`.
+    fn sub(self: T, other: T) -> T;
+    /// Whether the set is empty.
+    fn is_empty(self: T) -> bool;
+    /// Whether the set meets the limb of a one-hot target.
+    fn hits(self: T, target: T) -> bool;
+    /// Limb `high` of the set.
+    fn limb(self: T, high: bool) -> u128;
+}
+
+pub impl WideSet of Set<u256> {
+    #[inline(always)]
+    fn from_felt(value: felt252) -> u256 {
+        value.into()
+    }
+
+    #[inline(always)]
+    fn from_wide(value: u256) -> u256 {
+        value
+    }
+
+    #[inline(always)]
+    fn to_felt(self: u256) -> felt252 {
+        Bits::to_felt(self)
+    }
+
+    #[inline(always)]
+    fn and(self: u256, other: u256) -> u256 {
+        Bits::and(self, other)
+    }
+
+    #[inline(always)]
+    fn sub(self: u256, other: u256) -> u256 {
+        u256 { low: self.low - other.low, high: self.high - other.high }
+    }
+
+    #[inline(always)]
+    fn is_empty(self: u256) -> bool {
+        self.low == 0 && self.high == 0
+    }
+
+    #[inline(always)]
+    fn hits(self: u256, target: u256) -> bool {
+        let (hit, _, _) = if target.low != 0 {
+            bitwise(self.low, target.low)
+        } else {
+            bitwise(self.high, target.high)
+        };
+        hit != 0
+    }
+
+    #[inline(always)]
+    fn limb(self: u256, high: bool) -> u128 {
+        if high {
+            self.high
+        } else {
+            self.low
+        }
+    }
+}
+
+pub impl SmallSet of Set<u128> {
+    #[inline(always)]
+    fn from_felt(value: felt252) -> u128 {
+        value.try_into().unwrap()
+    }
+
+    #[inline(always)]
+    fn from_wide(value: u256) -> u128 {
+        value.low
+    }
+
+    #[inline(always)]
+    fn to_felt(self: u128) -> felt252 {
+        self.into()
+    }
+
+    #[inline(always)]
+    fn and(self: u128, other: u128) -> u128 {
+        let (value, _, _) = bitwise(self, other);
+        value
+    }
+
+    #[inline(always)]
+    fn sub(self: u128, other: u128) -> u128 {
+        self - other
+    }
+
+    #[inline(always)]
+    fn is_empty(self: u128) -> bool {
+        self == 0
+    }
+
+    #[inline(always)]
+    fn hits(self: u128, target: u128) -> bool {
+        let (hit, _, _) = bitwise(self, target);
+        hit != 0
+    }
+
+    #[inline(always)]
+    fn limb(self: u128, high: bool) -> u128 {
+        self
     }
 }
 
@@ -653,5 +890,19 @@ mod tests {
             assert!(Bits::popcount_sparse(value.into()) == count);
             exp += 5;
         }
+        assert!(Bits::popcount_small(0) == 0);
+        assert!(Bits::popcount_small(0xffffffffffffffffffffffffffffffff) == 128);
+        assert!(Bits::popcount_small(0x0123456789abcdef0123456789abcdef) == 64);
+    }
+
+    #[test]
+    fn test_bits_bitwise() {
+        let (and, xor, or) = Bits::bitwise(0b1100, 0b1010);
+        assert!(and == 0b1000 && xor == 0b0110 && or == 0b1110);
+        let lhs: u256 = 0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef;
+        let rhs: u256 = 0x0fedcba9876543210fedcba9876543210fedcba9876543210fedcba987654321;
+        assert!(Bits::and(lhs, rhs) == lhs & rhs);
+        assert!(Bits::or(lhs, rhs) == lhs | rhs);
+        assert!(Bits::xor(lhs, rhs) == lhs ^ rhs);
     }
 }

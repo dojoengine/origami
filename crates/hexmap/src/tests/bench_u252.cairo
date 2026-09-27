@@ -1382,7 +1382,7 @@ fn bench_u252_expand() {
 }
 
 #[test]
-#[available_gas(l2_gas: 2352000)]
+#[available_gas(l2_gas: 2210000)]
 fn bench_u252_step_u256() {
     let layout = LayoutTrait::new(17, 14);
     let frontier: u256 = Bits::pow(CAVE_17X14_FAR_FROM).into();
