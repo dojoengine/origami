@@ -13,13 +13,12 @@ use core::dict::{Felt252Dict, Felt252DictTrait};
 
 // Internal imports
 
-use origami_hexmap::finders::bfs::{
-    ArrayStore, Back, Bfs, BfsInternal, CountStore, Endpoint, Step, Store,
-};
+use origami_hexmap::finders::bfs::{ArrayStore, Back, Bfs, BfsInternal, CountStore, Endpoint, Store};
 use origami_hexmap::generators::caver::Caver;
 use origami_hexmap::helpers::bits::{Bits, POW128, TWO_POW_128};
-use origami_hexmap::helpers::layout::LayoutTrait;
+use origami_hexmap::helpers::layout::{Dilation, DilationTrait, LayoutTrait};
 use origami_hexmap::tests::fixtures::*;
+use origami_hexmap::tests::variants::Variants;
 
 // Constants
 
@@ -30,7 +29,7 @@ const INV_2: felt252 = 0x4000000000000088000000000000000000000000000000000000000
 /// Library prologue: checks, constants, endpoints and walkable interior tiles.
 fn setup(
     grid: felt252, width: u8, height: u8, from: u8, to: u8,
-) -> (Step, Back, Endpoint, Endpoint, u256) {
+) -> (Dilation, Back, Endpoint, Endpoint, u256) {
     let open = BfsInternal::check(grid, width, height, from, to);
     let (step, back, free) = BfsInternal::constants(open, width, height);
     let start = BfsInternal::endpoint(@back, height, from);
@@ -104,9 +103,9 @@ impl CheckpointStore of Store<Checkpoints> {
 }
 
 /// Next layer from the two previous ones, corelib operators.
-fn next_layer(step: @Step, previous: u256, current: u256, free: u256) -> u256 {
+fn next_layer(step: @Dilation, previous: u256, current: u256, free: u256) -> u256 {
     let felt = Bits::to_felt(current);
-    let (low, high) = BfsInternal::expand(step, current.low, current.high, felt);
+    let (low, high) = step.dilate(current.low, current.high, felt);
     u256 { low, high } & free & ~current & ~previous
 }
 
@@ -157,7 +156,7 @@ fn search_checkpoints(grid: felt252, width: u8, height: u8, from: u8, to: u8) ->
 }
 
 /// Layer `index` recomputed from the start neighbourhood.
-fn layer_at(step: @Step, first: u256, free: u256, index: u8) -> u256 {
+fn layer_at(step: @Dilation, first: u256, free: u256, index: u8) -> u256 {
     let mut low = first.low;
     let mut high = first.high;
     let mut free_low = free.low - low;
@@ -640,12 +639,12 @@ fn distance_corelib(grid: felt252, width: u8, height: u8, from: u8, to: u8) -> u
     };
     while skip != 0 {
         skip -= 1;
-        layer = layout.expand(layer) & unvisited;
+        layer = Variants::expand_felt(@layout, layer) & unvisited;
         unvisited = unvisited - layer;
         count += 1;
     }
     while layer & goal == 0 {
-        layer = layout.expand(layer) & unvisited;
+        layer = Variants::expand_felt(@layout, layer) & unvisited;
         assert!(layer != 0);
         unvisited = unvisited - layer;
         count += 1;
@@ -663,7 +662,7 @@ fn distance_bidirectional(grid: felt252, width: u8, height: u8, from: u8, to: u8
     let mut free_b = free - b;
     let mut count: u8 = 0;
     loop {
-        let (low, high) = BfsInternal::expand(@step, a.low, a.high, Bits::to_felt(a));
+        let (low, high) = step.dilate(a.low, a.high, Bits::to_felt(a));
         let next = Bits::and(u256 { low, high }, free_a);
         if next == 0 {
             break Option::None;
@@ -674,7 +673,7 @@ fn distance_bidirectional(grid: felt252, width: u8, height: u8, from: u8, to: u8
         }
         free_a = free_a - next;
         a = next;
-        let (low, high) = BfsInternal::expand(@step, b.low, b.high, Bits::to_felt(b));
+        let (low, high) = step.dilate(b.low, b.high, Bits::to_felt(b));
         let next = Bits::and(u256 { low, high }, free_b);
         if next == 0 {
             break Option::None;

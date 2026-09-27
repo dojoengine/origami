@@ -14,6 +14,7 @@ use origami_hexmap::types::direction::{Direction, DirectionTrait};
 fn check_expand(layout: @Layout, width: u8, height: u8, frontier: u256) {
     let expected = MaskLayoutTrait::new(width, height).expand(frontier);
     assert!(layout.expand(frontier) == expected);
+    assert!(Variants::expand_felt(layout, frontier) == expected);
     assert!(Variants::expand_felt_double(layout, frontier) == expected);
     assert!(Variants::expand_felt_vertical(layout, frontier) == expected);
     let (low, high) = Variants::expand_limbs(layout, frontier.low, frontier.high);
@@ -22,6 +23,7 @@ fn check_expand(layout: @Layout, width: u8, height: u8, frontier: u256) {
     if size <= 128 {
         assert!(layout.expand_small(frontier.low).into() == expected);
         assert!(Variants::expand_small_felt_double(layout, frontier.low).into() == expected);
+        assert!(Variants::expand_small_corelib(layout, frontier.low).into() == expected);
     }
 }
 
@@ -29,6 +31,12 @@ fn check_expand(layout: @Layout, width: u8, height: u8, frontier: u256) {
 fn check_expand_random(width: u8, height: u8) {
     let layout = LayoutTrait::new(width, height);
     let interior: u256 = LayoutTrait::interior(width, height).into();
+    // The shared lookups give the same layout and interior
+    let (shared, inside) = LayoutTrait::with_interior(width, height);
+    assert!(inside.into() == interior);
+    assert!(shared.even == layout.even && shared.up_even == layout.up_even);
+    assert!(shared.up_odd == layout.up_odd && shared.down_even == layout.down_even);
+    assert!(shared.down_odd == layout.down_odd);
     let mut index: felt252 = 0;
     while index != 12 {
         let dense: u256 = RngTrait::mix(index, width.into()).into() & interior;

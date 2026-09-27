@@ -358,7 +358,7 @@ fn bench_dial_micro_expand_corelib() {
     let mut n = REPS;
     while n != 0 {
         n -= 1;
-        acc += (layout.expand(frontier) & unvisited).low.into();
+        acc += (Variants::expand_felt(@layout, frontier) & unvisited).low.into();
     }
     assert!(acc != 0);
 }
@@ -883,7 +883,7 @@ pub fn forward_corelib(setup: @Setup) -> (Array<u256>, u32) {
         }
         let set: u256 = frontier.into();
         layers.append(set);
-        arrivals = setup.layout.expand(set) & unvisited;
+        arrivals = Variants::expand_felt(@setup.layout, set) & unvisited;
         unvisited = unvisited - arrivals;
     }
     (layers, time)

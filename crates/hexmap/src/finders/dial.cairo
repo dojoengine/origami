@@ -21,9 +21,8 @@
 // Internal imports
 
 use origami_hexmap::helpers::asserter::Asserter;
-use origami_hexmap::helpers::bits::{Bits, TWO_POW_128};
-use origami_hexmap::helpers::layout::{Layout, LayoutTrait};
-use origami_hexmap::types::direction::Direction;
+use origami_hexmap::helpers::bits::{Bits, Set, TWO_POW_128};
+use origami_hexmap::helpers::layout::{Dilation, DilationTrait, Layout, LayoutTrait};
 
 // Constants
 
@@ -94,23 +93,11 @@ struct Ends {
     to_odd: bool,
 }
 
-/// Bitmap operations of the loops: a `u256`, or a single `u128` for boards of at most 128 bits.
-trait Set<T> {
-    /// The bitmap of a felt below 2^251 (below 2^128 for `u128`).
-    fn from_felt(value: felt252) -> T;
-    /// The bitmap of a `u256` (its low limb for `u128`).
-    fn from_wide(value: u256) -> T;
-    fn to_felt(self: T) -> felt252;
-    fn and(self: T, other: T) -> T;
-    /// Set difference when `other` is a subset of `self`.
-    fn sub(self: T, other: T) -> T;
-    fn is_empty(self: T) -> bool;
-    /// Whether the set meets the limb of a one-hot target.
-    fn hits(self: T, target: T) -> bool;
-    /// Limb `high` of the set.
-    fn limb(self: T, high: bool) -> u128;
-    /// Hex dilation (`Layout::expand`) intersected with `unvisited`.
-    fn expand(layout: @Layout, frontier: T, felt: felt252, unvisited: T) -> T;
+/// Dilation and backtracking masks on a `Set`: a `u256`, or a single `u128` for boards of at most
+/// 128 bits.
+trait Frontier<T> {
+    /// Hex dilation (`Dilation::dilate`) intersected with `unvisited`.
+    fn expand(dilation: @Dilation, frontier: T, felt: felt252, unvisited: T) -> T;
     /// The neighbours of an interior position in a layer, on the limb that holds them: the
     /// mask is `2^position` times the field sum of the neighbour offsets.
     fn neighbours(
@@ -118,82 +105,12 @@ trait Set<T> {
     ) -> (u128, bool);
 }
 
-impl WideSet of Set<u256> {
+impl WideFrontier of Frontier<u256> {
+    /// `Dilation::dilate` and the intersection (12 applications of the bitwise builtin).
     #[inline(always)]
-    fn from_felt(value: felt252) -> u256 {
-        value.into()
-    }
-
-    #[inline(always)]
-    fn from_wide(value: u256) -> u256 {
-        value
-    }
-
-    #[inline(always)]
-    fn to_felt(self: u256) -> felt252 {
-        Bits::to_felt(self)
-    }
-
-    #[inline(always)]
-    fn and(self: u256, other: u256) -> u256 {
-        let (low, _, _) = Bits::bitwise(self.low, other.low);
-        let (high, _, _) = Bits::bitwise(self.high, other.high);
-        u256 { low, high }
-    }
-
-    #[inline(always)]
-    fn sub(self: u256, other: u256) -> u256 {
-        u256 { low: self.low - other.low, high: self.high - other.high }
-    }
-
-    #[inline(always)]
-    fn is_empty(self: u256) -> bool {
-        self.low == 0 && self.high == 0
-    }
-
-    #[inline(always)]
-    fn hits(self: u256, target: u256) -> bool {
-        let (hit, _, _) = if target.low != 0 {
-            Bits::bitwise(self.low, target.low)
-        } else {
-            Bits::bitwise(self.high, target.high)
-        };
-        hit != 0
-    }
-
-    #[inline(always)]
-    fn limb(self: u256, high: bool) -> u128 {
-        if high {
-            self.high
-        } else {
-            self.low
-        }
-    }
-
-    /// The field shifts of `Layout::expand`, set operations on limbs (12 applications).
-    #[inline(always)]
-    fn expand(layout: @Layout, frontier: u256, felt: felt252, unvisited: u256) -> u256 {
-        let layout = *layout;
-        let double: u256 = (felt + felt).into();
-        // [Compute] Frontier and its West neighbours, split by row parity
-        let (_, _, pairs_low) = Bits::bitwise(frontier.low, double.low);
-        let (_, _, pairs_high) = Bits::bitwise(frontier.high, double.high);
-        let (even_low, _, _) = Bits::bitwise(pairs_low, layout.even.low);
-        let (even_high, _, _) = Bits::bitwise(pairs_high, layout.even.high);
-        let pairs_even: felt252 = even_low.into() + even_high.into() * TWO_POW_128;
-        let pairs_odd: felt252 = pairs_low.into() + pairs_high.into() * TWO_POW_128 - pairs_even;
-        // [Compute] NE/NW, SE/SW and East neighbours
-        let up: u256 = (pairs_even * layout.up_even + pairs_odd * layout.up_odd).into();
-        let down: u256 = (pairs_even * layout.down_even + pairs_odd * layout.down_odd).into();
-        let east: u256 = (felt * INV_2).into();
-        // [Return] Union, intersected
-        let (_, _, low) = Bits::bitwise(pairs_low, east.low);
-        let (_, _, low) = Bits::bitwise(low, up.low);
-        let (_, _, low) = Bits::bitwise(low, down.low);
+    fn expand(dilation: @Dilation, frontier: u256, felt: felt252, unvisited: u256) -> u256 {
+        let (low, high) = dilation.dilate(frontier.low, frontier.high, felt);
         let (low, _, _) = Bits::bitwise(low, unvisited.low);
-        let (_, _, high) = Bits::bitwise(pairs_high, east.high);
-        let (_, _, high) = Bits::bitwise(high, up.high);
-        let (_, _, high) = Bits::bitwise(high, down.high);
         let (high, _, _) = Bits::bitwise(high, unvisited.high);
         u256 { low, high }
     }
@@ -222,69 +139,11 @@ impl WideSet of Set<u256> {
     }
 }
 
-impl SmallSet of Set<u128> {
+impl SmallFrontier of Frontier<u128> {
+    /// `Dilation::expand_small` and the intersection (6 applications).
     #[inline(always)]
-    fn from_felt(value: felt252) -> u128 {
-        value.try_into().unwrap()
-    }
-
-    #[inline(always)]
-    fn from_wide(value: u256) -> u128 {
-        value.low
-    }
-
-    #[inline(always)]
-    fn to_felt(self: u128) -> felt252 {
-        self.into()
-    }
-
-    #[inline(always)]
-    fn and(self: u128, other: u128) -> u128 {
-        let (value, _, _) = Bits::bitwise(self, other);
-        value
-    }
-
-    #[inline(always)]
-    fn sub(self: u128, other: u128) -> u128 {
-        self - other
-    }
-
-    #[inline(always)]
-    fn is_empty(self: u128) -> bool {
-        self == 0
-    }
-
-    #[inline(always)]
-    fn hits(self: u128, target: u128) -> bool {
-        let (hit, _, _) = Bits::bitwise(self, target);
-        hit != 0
-    }
-
-    #[inline(always)]
-    fn limb(self: u128, high: bool) -> u128 {
-        self
-    }
-
-    /// `Layout::expand_small` with the intersection (6 applications).
-    #[inline(always)]
-    fn expand(layout: @Layout, frontier: u128, felt: felt252, unvisited: u128) -> u128 {
-        let layout = *layout;
-        let double: u128 = (felt + felt).try_into().unwrap();
-        let (_, _, pairs) = Bits::bitwise(frontier, double);
-        let (pairs_even, _, _) = Bits::bitwise(pairs, layout.even.low);
-        let pairs_even: felt252 = pairs_even.into();
-        let pairs_odd = pairs.into() - pairs_even;
-        let up: u128 = (pairs_even * layout.up_even + pairs_odd * layout.up_odd)
-            .try_into()
-            .unwrap();
-        let down: u128 = (pairs_even * layout.down_even + pairs_odd * layout.down_odd)
-            .try_into()
-            .unwrap();
-        let east: u128 = (felt * INV_2).try_into().unwrap();
-        let (_, _, value) = Bits::bitwise(pairs, east);
-        let (_, _, value) = Bits::bitwise(value, up);
-        let (_, _, value) = Bits::bitwise(value, down);
-        let (value, _, _) = Bits::bitwise(value, unvisited);
+    fn expand(dilation: @Dilation, frontier: u128, felt: felt252, unvisited: u128) -> u128 {
+        let (value, _, _) = Bits::bitwise(dilation.expand_small(frontier), unvisited);
         value
     }
 
@@ -325,8 +184,8 @@ pub impl Dial of DialTrait {
             return array![].span();
         }
         // [Compute] Endpoints and unvisited set: interior tiles, plus an edge target
-        let layout = LayoutTrait::new(width, height);
-        let interior: u256 = LayoutTrait::interior(width, height).into();
+        let (layout, interior) = LayoutTrait::with_interior(width, height);
+        let interior: u256 = interior.into();
         let (from_y, from_x) = DivRem::div_rem(from, width.try_into().unwrap());
         let (to_y, to_x) = DivRem::div_rem(to, width.try_into().unwrap());
         let ends = Ends {
@@ -379,8 +238,8 @@ pub impl Dial of DialTrait {
             return from_bit;
         }
         // [Compute] Unvisited set, open edge tiles included
-        let layout = LayoutTrait::new(width, height);
-        let interior: u256 = LayoutTrait::interior(width, height).into();
+        let (layout, interior) = LayoutTrait::with_interior(width, height);
+        let interior: u256 = interior.into();
         let (from_y, from_x) = DivRem::div_rem(from, width.try_into().unwrap());
         let from_edge = Asserter::is_edge(width, height, from_x, from_y);
         let inside = Bits::and(open, interior);
@@ -420,14 +279,14 @@ impl DialInternal of DialInternalTrait {
         let mut rest = open;
         let four = if count == 3 {
             let four = Bits::and(rest, (*costs[2]).into());
-            rest = WideSet::sub(rest, four);
+            rest = Set::sub(rest, four);
             four
         } else {
             zero
         };
         let three = if count >= 2 {
             let three = Bits::and(rest, (*costs[1]).into());
-            rest = WideSet::sub(rest, three);
+            rest = Set::sub(rest, three);
             three
         } else {
             zero
@@ -459,27 +318,15 @@ impl DialInternal of DialInternalTrait {
     /// # Returns
     /// * The neighbours in `unvisited` and whether `to` is a neighbour
     fn seeds(width: u8, height: u8, from: u8, to: u8, unvisited: felt252) -> (felt252, bool) {
-        let unvisited: u256 = unvisited.into();
-        let mut seeds: felt252 = 0;
-        let mut adjacent = false;
-        for direction in array![
-            Direction::East, Direction::NorthEast, Direction::NorthWest, Direction::West,
-            Direction::SouthWest, Direction::SouthEast,
-        ]
-            .span() {
-            if let Option::Some(next) = LayoutTrait::neighbor(width, height, from, *direction) {
-                if next == to {
-                    adjacent = true;
-                } else if Bits::get(unvisited, next) {
-                    seeds += Bits::pow(next);
-                }
-            }
+        let around: u256 = LayoutTrait::edge_neighbours(width, height, from).into();
+        if Bits::get(around, to) {
+            return (0, true);
         }
-        (seeds, adjacent)
+        (Bits::to_felt(Bits::and(around, unvisited.into())), false)
     }
 
     /// Cheapest path on one set representation.
-    fn solve<T, +Set<T>, +Copy<T>, +Drop<T>>(
+    fn solve<T, +Set<T>, +Frontier<T>, +Copy<T>, +Drop<T>>(
         layout: @Layout,
         height: u8,
         open: u256,
@@ -487,6 +334,7 @@ impl DialInternal of DialInternalTrait {
         ends: Ends,
         unvisited: felt252,
     ) -> Span<u8> {
+        let dilation = layout.dilation();
         let unvisited: T = Set::from_felt(unvisited);
         // [Compute] First arrivals: dilation of an interior start, open neighbours of an edge one
         let arrivals: T = if ends.from_edge {
@@ -498,13 +346,13 @@ impl DialInternal of DialInternalTrait {
             }
             Set::from_felt(seeds)
         } else {
-            Set::expand(layout, Set::from_felt(ends.from_bit), ends.from_bit, unvisited)
+            Frontier::expand(@dilation, Set::from_felt(ends.from_bit), ends.from_bit, unvisited)
         };
         let target: T = Set::from_felt(ends.to_bit);
         let walk = Self::walk(layout);
         // [Compute] Forward search, then backtrack from the target
         if costs.len() == 0 {
-            return match Self::forward_unit(layout, unvisited, arrivals, target) {
+            return match Self::forward_unit(@dilation, unvisited, arrivals, target) {
                 Option::Some((
                     layers, time,
                 )) => {
@@ -525,7 +373,7 @@ impl DialInternal of DialInternalTrait {
             };
         }
         let classes: Classes<T> = Self::classes(open, costs);
-        match Self::forward(layout, classes, unvisited, arrivals, target) {
+        match Self::forward(@dilation, classes, unvisited, arrivals, target) {
             Option::Some((
                 layers, time,
             )) => Self::backtrack(walk, classes, true, layers.span(), height, ends, time),
@@ -534,7 +382,7 @@ impl DialInternal of DialInternalTrait {
     }
 
     /// Field of movement on one set representation.
-    fn field<T, +Set<T>, +Copy<T>, +Drop<T>>(
+    fn field<T, +Set<T>, +Frontier<T>, +Copy<T>, +Drop<T>>(
         layout: @Layout,
         height: u8,
         open: u256,
@@ -546,26 +394,29 @@ impl DialInternal of DialInternalTrait {
         budget: u8,
         unvisited: felt252,
     ) -> felt252 {
+        let dilation = layout.dilation();
         let start = Bits::pow(from);
         let arrivals = if from_edge {
             let (seeds, _) = Self::seeds(*layout.width, height, from, from, unvisited);
             seeds
         } else {
             let unvisited: T = Set::from_felt(unvisited);
-            Set::to_felt(Set::expand(layout, Set::from_felt(start), start, unvisited))
+            Set::to_felt(Frontier::expand(@dilation, Set::from_felt(start), start, unvisited))
         };
         let interior: T = Set::from_wide(interior);
         let unvisited: T = Set::from_felt(unvisited - arrivals);
         if costs.len() == 0 {
-            return Self::field_unit(layout, interior, edges, start, budget, unvisited, arrivals);
+            return Self::field_unit(@dilation, interior, edges, start, budget, unvisited, arrivals);
         }
         let classes: Classes<T> = Self::classes(open, costs);
-        Self::field_weighted(layout, classes, interior, edges, start, budget, unvisited, arrivals)
+        Self::field_weighted(
+            @dilation, classes, interior, edges, start, budget, unvisited, arrivals,
+        )
     }
 
     /// Settle buckets until the target is scheduled.
     /// # Arguments
-    /// * `layout` - The layout
+    /// * `dilation` - The dilation constants
     /// * `classes` - The cost classes
     /// * `unvisited` - The tiles not yet scheduled, `arrivals` included
     /// * `arrivals` - The tiles entered from the start
@@ -573,8 +424,8 @@ impl DialInternal of DialInternalTrait {
     /// # Returns
     /// * The settled layers (index = time, layer 0 left empty) and the time of the layer that
     /// schedules the target, `None` if unreachable
-    fn forward<T, +Set<T>, +Copy<T>, +Drop<T>>(
-        layout: @Layout, classes: Classes<T>, unvisited: T, arrivals: T, target: T,
+    fn forward<T, +Set<T>, +Frontier<T>, +Copy<T>, +Drop<T>>(
+        dilation: @Dilation, classes: Classes<T>, unvisited: T, arrivals: T, target: T,
     ) -> Option<(Array<T>, u32)> {
         let empty: T = Set::from_felt(0);
         let mut layers: Array<T> = array![empty];
@@ -627,7 +478,7 @@ impl DialInternal of DialInternalTrait {
             }
             let set: T = Set::from_felt(frontier);
             layers.append(set);
-            arrivals = Set::expand(layout, set, frontier, unvisited);
+            arrivals = Frontier::expand(dilation, set, frontier, unvisited);
             unvisited = Set::sub(unvisited, arrivals);
         };
         if found {
@@ -641,8 +492,8 @@ impl DialInternal of DialInternalTrait {
     /// # Returns
     /// * The layers (index = distance, layer 0 left empty) and the distance of the target minus
     /// one, `None` if unreachable
-    fn forward_unit<T, +Set<T>, +Copy<T>, +Drop<T>>(
-        layout: @Layout, unvisited: T, arrivals: T, target: T,
+    fn forward_unit<T, +Set<T>, +Frontier<T>, +Copy<T>, +Drop<T>>(
+        dilation: @Dilation, unvisited: T, arrivals: T, target: T,
     ) -> Option<(Array<T>, u32)> {
         let mut layers: Array<T> = array![Set::from_felt(0)];
         let mut unvisited = Set::sub(unvisited, arrivals);
@@ -657,7 +508,7 @@ impl DialInternal of DialInternalTrait {
             }
             time += 1;
             layers.append(arrivals);
-            arrivals = Set::expand(layout, arrivals, Set::to_felt(arrivals), unvisited);
+            arrivals = Frontier::expand(dilation, arrivals, Set::to_felt(arrivals), unvisited);
             unvisited = Set::sub(unvisited, arrivals);
         };
         if found {
@@ -669,7 +520,7 @@ impl DialInternal of DialInternalTrait {
 
     /// Settle buckets up to the budget.
     /// # Arguments
-    /// * `layout` - The layout
+    /// * `dilation` - The dilation constants
     /// * `classes` - The cost classes
     /// * `interior` - The interior mask
     /// * `edges` - Whether `unvisited` holds edge tiles, which are never expanded
@@ -679,8 +530,8 @@ impl DialInternal of DialInternalTrait {
     /// * `arrivals` - The tiles entered from the start
     /// # Returns
     /// * The settled tiles
-    fn field_weighted<T, +Set<T>, +Copy<T>, +Drop<T>>(
-        layout: @Layout,
+    fn field_weighted<T, +Set<T>, +Frontier<T>, +Copy<T>, +Drop<T>>(
+        dilation: @Dilation,
         classes: Classes<T>,
         interior: T,
         edges: bool,
@@ -732,17 +583,17 @@ impl DialInternal of DialInternalTrait {
             arrivals =
                 if edges {
                     let inner = Set::and(set, interior);
-                    Set::expand(layout, inner, Set::to_felt(inner), unvisited)
+                    Frontier::expand(dilation, inner, Set::to_felt(inner), unvisited)
                 } else {
-                    Set::expand(layout, set, frontier, unvisited)
+                    Frontier::expand(dilation, set, frontier, unvisited)
                 };
             unvisited = Set::sub(unvisited, arrivals);
         }
     }
 
     /// Unit costs: plain breadth-first layers up to the budget.
-    fn field_unit<T, +Set<T>, +Copy<T>, +Drop<T>>(
-        layout: @Layout,
+    fn field_unit<T, +Set<T>, +Frontier<T>, +Copy<T>, +Drop<T>>(
+        dilation: @Dilation,
         interior: T,
         edges: bool,
         start: felt252,
@@ -763,9 +614,9 @@ impl DialInternal of DialInternalTrait {
             let set: T = Set::from_felt(felt);
             let arrivals = if edges {
                 let inner = Set::and(set, interior);
-                Set::expand(layout, inner, Set::to_felt(inner), unvisited)
+                Frontier::expand(dilation, inner, Set::to_felt(inner), unvisited)
             } else {
-                Set::expand(layout, set, felt, unvisited)
+                Frontier::expand(dilation, set, felt, unvisited)
             };
             unvisited = Set::sub(unvisited, arrivals);
             felt = Set::to_felt(arrivals);
@@ -818,7 +669,7 @@ impl DialInternal of DialInternalTrait {
 
     /// Cost of a tile given its limb.
     #[inline]
-    fn cost_limb<T, +Set<T>, +Copy<T>, +Drop<T>>(
+    fn cost_limb<T, +Set<T>, +Frontier<T>, +Copy<T>, +Drop<T>>(
         classes: @Classes<T>, bit: u128, high: bool,
     ) -> u32 {
         let classes = *classes;
@@ -834,7 +685,9 @@ impl DialInternal of DialInternalTrait {
 
     /// Cost of a tile given its bit.
     #[inline]
-    fn cost_of<T, +Set<T>, +Copy<T>, +Drop<T>>(classes: @Classes<T>, bit: felt252) -> u32 {
+    fn cost_of<T, +Set<T>, +Frontier<T>, +Copy<T>, +Drop<T>>(
+        classes: @Classes<T>, bit: felt252,
+    ) -> u32 {
         let value: u256 = bit.into();
         if value.low != 0 {
             Self::cost_limb(classes, value.low, false)
@@ -854,7 +707,7 @@ impl DialInternal of DialInternalTrait {
     /// * `time` - The time of the layer that schedules the target
     /// # Returns
     /// * The path from the target (included) to the start (excluded)
-    fn backtrack<T, +Set<T>, +Copy<T>, +Drop<T>>(
+    fn backtrack<T, +Set<T>, +Frontier<T>, +Copy<T>, +Drop<T>>(
         walk: Walk,
         classes: Classes<T>,
         weighted: bool,
@@ -871,20 +724,7 @@ impl DialInternal of DialInternalTrait {
         // [Compute] First tile: an edge target has no exact neighbour mask, scan its neighbours
         let (mut position, mut bit, mut odd, mut time) = if ends.to_edge {
             let layer: u256 = Set::to_felt(*layers[time]).into();
-            let mut found: u8 = 0;
-            for direction in array![
-                Direction::East, Direction::NorthEast, Direction::NorthWest, Direction::West,
-                Direction::SouthWest, Direction::SouthEast,
-            ]
-                .span() {
-                if let Option::Some(next) =
-                    LayoutTrait::neighbor(width, height, ends.to, *direction) {
-                    if Bits::get(layer, next) {
-                        found = next;
-                        break;
-                    }
-                }
-            }
+            let found = LayoutTrait::neighbour_in(width, height, ends.to, layer).unwrap();
             path.append(found);
             let (y, _) = DivRem::div_rem(found, width.try_into().unwrap());
             (found, Bits::pow(found), y % 2 == 1, time)
@@ -917,7 +757,7 @@ impl DialInternal of DialInternalTrait {
             } else {
                 bit * walk.mask_even
             };
-            let (hits, high) = Set::neighbours(
+            let (hits, high) = Frontier::neighbours(
                 *layers[previous], mask, position, walk.low_limit, walk.high_limit,
             );
             let (rest, _, _) = Bits::bitwise(hits, hits - 1);

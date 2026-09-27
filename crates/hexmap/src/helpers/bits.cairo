@@ -244,6 +244,122 @@ pub impl Bits of BitsTrait {
     }
 }
 
+/// Set operations of the generic bit-parallel loops (lot L3): a `u256`, or a single `u128` limb
+/// on boards of at most 128 bits. Every function is inlined, the generic code costs nothing.
+pub trait Set<T> {
+    /// The set of a felt below 2^251 (below 2^128 for `u128`).
+    fn from_felt(value: felt252) -> T;
+    /// The set of a `u256` (its low limb for `u128`).
+    fn from_wide(value: u256) -> T;
+    /// The set as a felt.
+    fn to_felt(self: T) -> felt252;
+    /// Intersection.
+    fn and(self: T, other: T) -> T;
+    /// Set difference when `other` is a subset of `self`.
+    fn sub(self: T, other: T) -> T;
+    /// Whether the set is empty.
+    fn is_empty(self: T) -> bool;
+    /// Whether the set meets the limb of a one-hot target.
+    fn hits(self: T, target: T) -> bool;
+    /// Limb `high` of the set.
+    fn limb(self: T, high: bool) -> u128;
+}
+
+pub impl WideSet of Set<u256> {
+    #[inline(always)]
+    fn from_felt(value: felt252) -> u256 {
+        value.into()
+    }
+
+    #[inline(always)]
+    fn from_wide(value: u256) -> u256 {
+        value
+    }
+
+    #[inline(always)]
+    fn to_felt(self: u256) -> felt252 {
+        Bits::to_felt(self)
+    }
+
+    #[inline(always)]
+    fn and(self: u256, other: u256) -> u256 {
+        Bits::and(self, other)
+    }
+
+    #[inline(always)]
+    fn sub(self: u256, other: u256) -> u256 {
+        u256 { low: self.low - other.low, high: self.high - other.high }
+    }
+
+    #[inline(always)]
+    fn is_empty(self: u256) -> bool {
+        self.low == 0 && self.high == 0
+    }
+
+    #[inline(always)]
+    fn hits(self: u256, target: u256) -> bool {
+        let (hit, _, _) = if target.low != 0 {
+            bitwise(self.low, target.low)
+        } else {
+            bitwise(self.high, target.high)
+        };
+        hit != 0
+    }
+
+    #[inline(always)]
+    fn limb(self: u256, high: bool) -> u128 {
+        if high {
+            self.high
+        } else {
+            self.low
+        }
+    }
+}
+
+pub impl SmallSet of Set<u128> {
+    #[inline(always)]
+    fn from_felt(value: felt252) -> u128 {
+        value.try_into().unwrap()
+    }
+
+    #[inline(always)]
+    fn from_wide(value: u256) -> u128 {
+        value.low
+    }
+
+    #[inline(always)]
+    fn to_felt(self: u128) -> felt252 {
+        self.into()
+    }
+
+    #[inline(always)]
+    fn and(self: u128, other: u128) -> u128 {
+        let (value, _, _) = bitwise(self, other);
+        value
+    }
+
+    #[inline(always)]
+    fn sub(self: u128, other: u128) -> u128 {
+        self - other
+    }
+
+    #[inline(always)]
+    fn is_empty(self: u128) -> bool {
+        self == 0
+    }
+
+    #[inline(always)]
+    fn hits(self: u128, target: u128) -> bool {
+        let (hit, _, _) = bitwise(self, target);
+        hit != 0
+    }
+
+    #[inline(always)]
+    fn limb(self: u128, high: bool) -> u128 {
+        self
+    }
+}
+
 // Tables, generated offline (`2**k` and `pow(2, -k, P)`).
 
 pub const POW: [felt252; 252] = [

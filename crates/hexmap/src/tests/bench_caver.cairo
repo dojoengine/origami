@@ -18,6 +18,7 @@ use origami_hexmap::helpers::printer::HexPrinter;
 use origami_hexmap::tests::fixtures::{
     MAZE_17X14, MAZE_17X14_FAR_FROM, SERPENTINE_17X14, SERPENTINE_17X14_FAR_FROM,
 };
+use origami_hexmap::tests::variants::Variants;
 use origami_hexmap::types::direction::Direction;
 
 // Constants
@@ -381,7 +382,7 @@ pub fn keep_component_runs(grid: felt252, width: u8, height: u8, from: u8) -> fe
     let layout = LayoutTrait::new(width, height);
     let mut component: u256 = Bits::pow(from).into();
     loop {
-        let dilated = layout.expand(component) & open;
+        let dilated = Variants::expand_felt(@layout, component) & open;
         let carried: u256 = (grid + Bits::to_felt(dilated)).into();
         let (kept, _, _) = bw(open, carried);
         let run = u256 { low: open.low - kept.low, high: open.high - kept.high };
@@ -404,7 +405,7 @@ pub fn keep_component_runs_first(grid: felt252, width: u8, height: u8, from: u8)
         let (kept, _, _) = bw(open, carried);
         let run = u256 { low: open.low - kept.low, high: open.high - kept.high };
         let (_, _, filled) = bw(run, component);
-        let next = layout.expand(filled) & open;
+        let next = Variants::expand_felt(@layout, filled) & open;
         if next == filled {
             component = next;
             break;
@@ -578,6 +579,29 @@ fn bench_caver_generate_7x7_order_3() {
 fn bench_caver_keep_component_17x14() {
     // 7 * 17 + 8: centre of the board, floor in CAVE_17X14
     assert!(Caver::keep_component(CAVE_17X14, 17, 14, 127) != 0);
+}
+
+/// The `Caver::keep_component` of lot L4 (loser): dilate the whole component until stable,
+/// `Layout::expand` of lot L0 and corelib `u256` operators. The library delegates to
+/// `Bfs::reachable`, which dilates the frontier only.
+pub fn keep_component_dilation(grid: felt252, width: u8, height: u8, from: u8) -> felt252 {
+    let open: u256 = grid.into();
+    let layout = LayoutTrait::new(width, height);
+    let mut component: u256 = Bits::pow(from).into();
+    loop {
+        let next = Variants::expand_felt(@layout, component) & open;
+        if next == component {
+            break;
+        }
+        component = next;
+    }
+    Bits::to_felt(component)
+}
+
+#[test]
+#[available_gas(l2_gas: 335000)]
+fn bench_caver_variant_keep_component_dilation_17x14() {
+    assert!(keep_component_dilation(CAVE_17X14, 17, 14, 127) != 0);
 }
 
 #[test]

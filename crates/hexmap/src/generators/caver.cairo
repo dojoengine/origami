@@ -6,6 +6,7 @@
 
 // Internal imports
 
+use origami_hexmap::finders::bfs::BfsInternal;
 use origami_hexmap::helpers::asserter::Asserter;
 use origami_hexmap::helpers::bits::Bits;
 use origami_hexmap::helpers::layout::{Layout, LayoutTrait};
@@ -53,12 +54,13 @@ pub impl Caver of CaverTrait {
         // [Check] Dimensions
         Asserter::assert_valid_dimension(width, height);
         // [Compute] Initial fill: half of the interior
-        let grid = CaverInternal::fill(width, height, seed);
         if order == 0 {
-            return Bits::to_felt(grid);
+            let interior = LayoutTrait::interior(width, height);
+            return Bits::to_felt(CaverInternal::fill(interior, seed));
         }
+        let (layout, interior) = LayoutTrait::with_interior(width, height);
+        let grid = CaverInternal::fill(interior, seed);
         // [Compute] Generations
-        let layout = LayoutTrait::new(width, height);
         if width * height <= SMALL_SIZE {
             CaverInternal::evolve_small(@layout, grid.low, order)
         } else {
@@ -66,9 +68,8 @@ pub impl Caver of CaverTrait {
         }
     }
 
-    /// Keep the floor tiles connected to a position: flood fill by hex dilations.
-    /// One dilation per BFS layer from `from`: on a 17x14 cave it costs about twice
-    /// `generate(17, 14, 3, seed)`, which is why `generate` does not call it (see `GAS.md`).
+    /// Keep the floor tiles connected to a position: the flood fill of `Bfs::reachable`, one
+    /// dilation per layer on the frontier only (see `GAS.md`, P1).
     /// # Arguments
     /// * `grid` - The grid, interior tiles only
     /// * `width` - The width of the map
@@ -76,21 +77,15 @@ pub impl Caver of CaverTrait {
     /// * `from` - The position, a floor tile
     /// # Returns
     /// * The connected component of `from`
+    /// # Panics
+    /// * If `from` is not floor, or the dimensions are invalid
     fn keep_component(grid: felt252, width: u8, height: u8, from: u8) -> felt252 {
         // [Check] Start is floor
         let open: u256 = grid.into();
         assert(Bits::get(open, from), errors::CAVER_POSITION_NOT_FLOOR);
-        // [Compute] Dilate until stable
-        let layout = LayoutTrait::new(width, height);
-        let mut component: u256 = Bits::pow(from).into();
-        loop {
-            let next = layout.expand(component) & open;
-            if next == component {
-                break;
-            }
-            component = next;
-        }
-        Bits::to_felt(component)
+        // [Return] Flood fill, the grid has no open edge tile
+        Asserter::assert_valid_dimension(width, height);
+        BfsInternal::component(open, width, height, from)
     }
 }
 
@@ -98,17 +93,14 @@ pub impl Caver of CaverTrait {
 impl CaverInternal of CaverInternalTrait {
     /// Random initial fill, each interior tile is floor with probability 1/2.
     /// # Arguments
-    /// * `width` - The width of the map
-    /// * `height` - The height of the map
+    /// * `interior` - The interior mask
     /// * `seed` - The seed
     /// # Returns
     /// * The initial grid, interior tiles only
     #[inline]
-    fn fill(width: u8, height: u8, seed: felt252) -> u256 {
+    fn fill(interior: felt252, seed: felt252) -> u256 {
         let (noise, _, _) = core::poseidon::hades_permutation(seed, 0, 2);
-        let noise: u256 = noise.into();
-        let interior: u256 = LayoutTrait::interior(width, height).into();
-        noise & interior
+        Bits::and(noise.into(), interior.into())
     }
 
     /// Run `order` generations of the automaton on a grid of interior tiles.
@@ -263,7 +255,7 @@ mod tests {
 
     use origami_hexmap::helpers::bits::Bits;
     use origami_hexmap::helpers::layout::LayoutTrait;
-    use origami_hexmap::tests::bench_caver::{fill_half, reference};
+    use origami_hexmap::tests::bench_caver::{fill_half, keep_component_dilation, reference};
     use origami_hexmap::tests::fixtures::{UNREACHABLE_17X14, UNREACHABLE_17X14_FAR_FROM};
 
     // Local imports
@@ -452,6 +444,8 @@ mod tests {
                     assert!(component & open == component);
                     assert!(layout.expand(component) & open == component);
                     assert!(Bits::get(component, position));
+                    let felt = Bits::to_felt(component);
+                    assert!(felt == keep_component_dilation(cave, 17, 14, position));
                 }
                 position += 29;
             }

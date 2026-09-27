@@ -13,13 +13,18 @@ use core::felt252_div;
 
 // Internal imports
 
-use origami_hexmap::helpers::bits::Bits;
+use origami_hexmap::helpers::bits::{Bits, TWO_POW_128};
 use origami_hexmap::types::direction::Direction;
 
 // Constants
 
 /// 1/2 in the field.
 const INV_2: felt252 = 0x400000000000008800000000000000000000000000000000000000000000001;
+/// The 6 directions, in `Direction` order.
+const DIRECTIONS: [Direction; 6] = [
+    Direction::East, Direction::NorthEast, Direction::NorthWest, Direction::West,
+    Direction::SouthWest, Direction::SouthEast,
+];
 
 /// Per-map constants of the neighbour expansion, computed once per call.
 #[derive(Copy, Drop)]
@@ -36,6 +41,19 @@ pub struct Layout {
     pub down_even: felt252,
     /// 2^-W: down shift of the odd rows.
     pub down_odd: felt252,
+}
+
+/// Constants of the hex dilation (`Layout::dilation`): the 4 values the layer loops carry.
+#[derive(Copy, Drop)]
+pub struct Dilation {
+    /// Bits of the even rows, low limb.
+    pub even_low: u128,
+    /// Bits of the even rows, high limb.
+    pub even_high: u128,
+    /// 2^(W-1): up shift of the even rows (the odd rows shift by twice as much).
+    pub up: felt252,
+    /// 2^-(W+1): down shift of the even rows (the odd rows shift by twice as much).
+    pub down: felt252,
 }
 
 #[generate_trait]
@@ -132,8 +150,39 @@ pub impl LayoutImpl of LayoutTrait {
         mask
     }
 
+    /// The layout and the interior mask, from 3 shared table lookups (`new` and `interior`
+    /// computed together).
+    /// # Arguments
+    /// * `width` - The width of the map
+    /// * `height` - The height of the map
+    /// # Returns
+    /// * The layout and the interior mask
+    #[inline]
+    fn with_interior(width: u8, height: u8) -> (Layout, felt252) {
+        let row = Bits::pow(width);
+        let inv_row = Bits::inv(width);
+        let board = Bits::pow(width * height);
+        let up_even = row * INV_2;
+        let down_even = inv_row * INV_2;
+        // [Compute] Even rows, ROW * (2^(2W * ceil(H/2)) - 1) / (2^(2W) - 1)
+        let top = if height % 2 == 0 {
+            board
+        } else {
+            board * row
+        };
+        let even = felt252_div((row - 1) * (top - 1), (row * row - 1).try_into().unwrap());
+        // [Compute] Interior, (2^(W-1) - 2) * 2^W * (2^(W*(H-2)) - 1) / (2^W - 1)
+        let rows = board * inv_row * inv_row - 1;
+        let interior = felt252_div((up_even - 2) * row * rows, (row - 1).try_into().unwrap());
+        let layout = Layout {
+            width, height, even: even.into(), up_even, up_odd: row, down_even, down_odd: inv_row,
+        };
+        (layout, interior)
+    }
+
     /// Hex dilation: the frontier and all its neighbours (design section 2.2).
-    /// 5 `u256` set operations, 3 felt-to-`u256` conversions, all shifts are field products.
+    /// 10 applications of the bitwise builtin, 4 felt-to-`u256` conversions, all shifts are field
+    /// products (see `Dilation::dilate`).
     /// # Arguments
     /// * `self` - The layout
     /// * `frontier` - The frontier, interior tiles only (border invariant)
@@ -141,23 +190,13 @@ pub impl LayoutImpl of LayoutTrait {
     /// * The frontier and its neighbours
     #[inline]
     fn expand(self: @Layout, frontier: u256) -> u256 {
-        let layout = *self;
-        // [Compute] Frontier and its West neighbours, then split by row parity
-        let pairs = frontier | (frontier + frontier);
-        let pairs_even = Bits::to_felt(pairs & layout.even);
-        let pairs_felt = Bits::to_felt(pairs);
-        let pairs_odd = pairs_felt - pairs_even;
-        // [Compute] NE/NW and SE/SW, parities land on disjoint rows
-        let up = pairs_even * layout.up_even + pairs_odd * layout.up_odd;
-        let down = pairs_even * layout.down_even + pairs_odd * layout.down_odd;
-        // [Compute] East neighbours
-        let east = Bits::to_felt(frontier) * INV_2;
-        // [Return] Union
-        pairs | east.into() | up.into() | down.into()
+        let dilation = self.dilation();
+        let (low, high) = dilation.dilate(frontier.low, frontier.high, Bits::to_felt(frontier));
+        u256 { low, high }
     }
 
     /// Hex dilation for boards of at most 128 bits (`W * H <= 128`): the same formulation on a
-    /// single `u128` limb, about a third cheaper than `expand` (see `GAS.md`).
+    /// single `u128` limb, about half the cost of `expand` (see `GAS.md`).
     /// # Arguments
     /// * `self` - The layout
     /// * `frontier` - The frontier, interior tiles only (border invariant)
@@ -165,18 +204,61 @@ pub impl LayoutImpl of LayoutTrait {
     /// * The frontier and its neighbours
     #[inline]
     fn expand_small(self: @Layout, frontier: u128) -> u128 {
+        self.dilation().expand_small(frontier)
+    }
+
+    /// The constants of the dilation, for the layer loops.
+    /// # Arguments
+    /// * `self` - The layout
+    /// # Returns
+    /// * The 4 constants
+    #[inline(always)]
+    fn dilation(self: @Layout) -> Dilation {
         let layout = *self;
-        let pairs = frontier | (frontier + frontier);
-        let pairs_even: felt252 = (pairs & layout.even.low).into();
-        let pairs_odd = pairs.into() - pairs_even;
-        let up: u128 = (pairs_even * layout.up_even + pairs_odd * layout.up_odd)
-            .try_into()
-            .unwrap();
-        let down: u128 = (pairs_even * layout.down_even + pairs_odd * layout.down_odd)
-            .try_into()
-            .unwrap();
-        let east: u128 = (frontier.into() * INV_2).try_into().unwrap();
-        pairs | east | up | down
+        Dilation {
+            even_low: layout.even.low,
+            even_high: layout.even.high,
+            up: layout.up_even,
+            down: layout.down_even,
+        }
+    }
+
+    /// Board neighbours of a tile, one direction at a time: the neighbourhood of an edge
+    /// endpoint, which has no exact field mask (edge-endpoint helper of `Bfs` and `Dial`).
+    /// # Arguments
+    /// * `width` - The width of the map
+    /// * `height` - The height of the map
+    /// * `position` - The tile
+    /// # Returns
+    /// * The bits of its neighbours
+    fn edge_neighbours(width: u8, height: u8, position: u8) -> felt252 {
+        let mut around: felt252 = 0;
+        for direction in DIRECTIONS.span() {
+            if let Option::Some(next) = Self::neighbor(width, height, position, *direction) {
+                around += Bits::pow(next);
+            }
+        }
+        around
+    }
+
+    /// First neighbour of a tile in a set, directions in `Direction` order: the predecessor of
+    /// an edge target in the last layer of a search (edge-endpoint helper of `Bfs` and `Dial`).
+    /// # Arguments
+    /// * `width` - The width of the map
+    /// * `height` - The height of the map
+    /// * `position` - The tile
+    /// * `set` - The set
+    /// # Returns
+    /// * The first neighbour in the set, `None` if there is none
+    fn neighbour_in(width: u8, height: u8, position: u8, set: u256) -> Option<u8> {
+        for direction in DIRECTIONS.span() {
+            if let Option::Some(next) = Self::neighbor(width, height, position, *direction) {
+                if Bits::get(set, next) {
+                    return Option::Some(next);
+                }
+            }
+        }
+        Option::None
     }
 
     /// The 6 neighbour bits of an interior position.
@@ -300,5 +382,66 @@ pub impl LayoutImpl of LayoutTrait {
                 Some(position + 1 - width)
             },
         }
+    }
+}
+
+#[generate_trait]
+pub impl DilationImpl of DilationTrait {
+    /// Hex dilation on the limbs of a frontier also given as a felt (lot L1). With the West pairs
+    /// `P` split by row parity, the up neighbours are `Pe * 2^(W-1) + Po * 2^W`, that is
+    /// `(2P - Pe) * 2^(W-1)`, and the down neighbours `(2P - Pe) * 2^-(W+1)`: one product each.
+    /// # Arguments
+    /// * `self` - The constants
+    /// * `low` - The low limb of the frontier, interior tiles only (border invariant)
+    /// * `high` - The high limb of the frontier
+    /// * `felt` - The frontier as a felt
+    /// # Returns
+    /// * The limbs of the frontier and its neighbours
+    #[inline(always)]
+    fn dilate(self: @Dilation, low: u128, high: u128, felt: felt252) -> (u128, u128) {
+        let dilation = *self;
+        // [Compute] Frontier and its West neighbours, then split by row parity
+        let double: u256 = (felt + felt).into();
+        let (_, _, pairs_low) = Bits::bitwise(low, double.low);
+        let (_, _, pairs_high) = Bits::bitwise(high, double.high);
+        let (even_low, _, _) = Bits::bitwise(pairs_low, dilation.even_low);
+        let (even_high, _, _) = Bits::bitwise(pairs_high, dilation.even_high);
+        let pairs: felt252 = pairs_low.into() + pairs_high.into() * TWO_POW_128;
+        let even: felt252 = even_low.into() + even_high.into() * TWO_POW_128;
+        let rows = pairs + pairs - even;
+        // [Compute] NE/NW, SE/SW and East neighbours
+        let up: u256 = (rows * dilation.up).into();
+        let down: u256 = (rows * dilation.down).into();
+        let east: u256 = (felt * INV_2).into();
+        // [Return] Union
+        let (_, _, side_low) = Bits::bitwise(pairs_low, east.low);
+        let (_, _, side_high) = Bits::bitwise(pairs_high, east.high);
+        let (_, _, vertical_low) = Bits::bitwise(up.low, down.low);
+        let (_, _, vertical_high) = Bits::bitwise(up.high, down.high);
+        let (_, _, low) = Bits::bitwise(side_low, vertical_low);
+        let (_, _, high) = Bits::bitwise(side_high, vertical_high);
+        (low, high)
+    }
+
+    /// `dilate` for boards of at most 128 bits: every shift fits the limb.
+    /// # Arguments
+    /// * `self` - The constants
+    /// * `frontier` - The frontier, interior tiles only (border invariant)
+    /// # Returns
+    /// * The frontier and its neighbours
+    #[inline(always)]
+    fn expand_small(self: @Dilation, frontier: u128) -> u128 {
+        let dilation = *self;
+        let (_, _, pairs) = Bits::bitwise(frontier, frontier + frontier);
+        let (even, _, _) = Bits::bitwise(pairs, dilation.even_low);
+        let pairs_felt: felt252 = pairs.into();
+        let rows = pairs_felt + pairs_felt - even.into();
+        let up: u128 = (rows * dilation.up).try_into().unwrap();
+        let down: u128 = (rows * dilation.down).try_into().unwrap();
+        let east: u128 = (frontier.into() * INV_2).try_into().unwrap();
+        let (_, _, side) = Bits::bitwise(pairs, east);
+        let (_, _, vertical) = Bits::bitwise(up, down);
+        let (_, _, next) = Bits::bitwise(side, vertical);
+        next
     }
 }
