@@ -41,6 +41,7 @@ It provides a set of powerful tools and libraries that enable game developers to
 
 - [Algebra](./crates/algebra)
 - [Defi](./crates/defi/)
+- [Hexmap](./crates/hexmap)
 - [Map](./crates/map)
 - Physics (WIP)
 - [Random](./crates/random)
