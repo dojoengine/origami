@@ -8,6 +8,13 @@
 //! `compute_distribution(10)` + `search_path`, one test per prefix: the cost of a step is the
 //! difference between two consecutive prefixes.
 
+// Core imports
+
+#[feature("bounded-int-utils")]
+use core::internal::bounded_int::{
+    BoundedInt, ConstrainHelper, MulHelper, SubHelper, constrain, mul, sub,
+};
+
 // Internal imports
 
 use origami_hexmap::finders::bfs::Bfs;
@@ -358,7 +365,7 @@ fn bench_map_loop_baseline() {
 }
 
 #[test]
-#[available_gas(l2_gas: 1143000)]
+#[available_gas(l2_gas: 1241000)]
 fn bench_map_hex_distance() {
     let map = cave();
     let mut acc: felt252 = 0;
@@ -383,7 +390,7 @@ fn bench_map_direct_hex_distance() {
 }
 
 #[test]
-#[available_gas(l2_gas: 821000)]
+#[available_gas(l2_gas: 880000)]
 fn bench_map_neighbor() {
     let map = cave();
     let mut acc: felt252 = 0;
@@ -412,7 +419,7 @@ fn bench_map_direct_neighbor() {
 }
 
 #[test]
-#[available_gas(l2_gas: 837000)]
+#[available_gas(l2_gas: 892000)]
 fn bench_map_is_walkable() {
     let map = cave();
     let mut acc: felt252 = 0;
@@ -524,4 +531,283 @@ fn bench_map_scenario_7x7_5_total() {
     map.compute_distribution(10, SMALL_SEED);
     let path = map.search_path(SMALL_ENTRANCE, SMALL_TARGET);
     assert!(path.len() != 0);
+}
+
+// Audit A4: bound checks of `neighbor`, `is_walkable` and `hex_distance`. The library uses the
+// `bounded_int` form of `map.cairo` (`bench_map_neighbor`, `bench_map_is_walkable`,
+// `bench_map_hex_distance`); the losers below are test-only, see `GAS.md`, F1.
+
+/// `W * H` as a bounded integer.
+impl SizeMul of MulHelper<u8, u8> {
+    type Result = BoundedInt<0, 65025>;
+}
+
+/// `position - W * H`.
+impl PositionSub of SubHelper<u8, BoundedInt<0, 65025>> {
+    type Result = BoundedInt<-65025, 255>;
+}
+
+/// Sign of `position - W * H`.
+impl PositionConstrain of ConstrainHelper<BoundedInt<-65025, 255>, 0> {
+    type LowT = BoundedInt<-65025, -1>;
+    type HighT = BoundedInt<0, 255>;
+}
+
+/// Inside test: `u16` product and comparison.
+#[inline(always)]
+fn inside_u16(width: u8, height: u8, position: u8) -> bool {
+    let size: u16 = width.into() * height.into();
+    position.into() < size
+}
+
+/// Inside test: `u8` product (panics on dimensions above 255 tiles).
+#[inline(always)]
+fn inside_u8(width: u8, height: u8, position: u8) -> bool {
+    position < width * height
+}
+
+/// `LayoutTrait::neighbor` with the row test `y >= H` after its division.
+fn neighbor_row(width: u8, height: u8, position: u8, direction: Direction) -> Option<u8> {
+    let (y, x) = DivRem::div_rem(position, width.try_into().unwrap());
+    if y >= height {
+        return None;
+    }
+    let odd = y % 2 == 1;
+    match direction {
+        Direction::East => if x == 0 {
+            None
+        } else {
+            Some(position - 1)
+        },
+        Direction::West => if x == width - 1 {
+            None
+        } else {
+            Some(position + 1)
+        },
+        Direction::NorthEast => if y == height - 1 {
+            None
+        } else if odd {
+            Some(position + width)
+        } else if x == 0 {
+            None
+        } else {
+            Some(position + width - 1)
+        },
+        Direction::NorthWest => if y == height - 1 {
+            None
+        } else if !odd {
+            Some(position + width)
+        } else if x == width - 1 {
+            None
+        } else {
+            Some(position + width + 1)
+        },
+        Direction::SouthEast => if y == 0 {
+            None
+        } else if odd {
+            Some(position - width)
+        } else if x == 0 {
+            None
+        } else {
+            Some(position - width - 1)
+        },
+        Direction::SouthWest => if y == 0 {
+            None
+        } else if !odd {
+            Some(position - width)
+        } else if x == width - 1 {
+            None
+        } else {
+            Some(position + 1 - width)
+        },
+    }
+}
+
+#[test]
+#[available_gas(l2_gas: 901000)]
+fn bench_map_variant_neighbor_u16() {
+    let map = cave();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let position = n + 20;
+        if !inside_u16(map.width, map.height, position) {
+            continue;
+        }
+        if let Some(next) =
+            LayoutTrait::neighbor(map.width, map.height, position, Direction::NorthEast) {
+            acc += next.into();
+        }
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 901000)]
+fn bench_map_variant_neighbor_u8() {
+    let map = cave();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let position = n + 20;
+        if !inside_u8(map.width, map.height, position) {
+            continue;
+        }
+        if let Some(next) =
+            LayoutTrait::neighbor(map.width, map.height, position, Direction::NorthEast) {
+            acc += next.into();
+        }
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 890000)]
+fn bench_map_variant_neighbor_row() {
+    let map = cave();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        if let Some(next) = neighbor_row(map.width, map.height, n + 20, Direction::NorthEast) {
+            acc += next.into();
+        }
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 907000)]
+fn bench_map_variant_is_walkable_u16() {
+    let map = cave();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let position = n + n;
+        if inside_u16(map.width, map.height, position) && Bits::get(map.grid.into(), position) {
+            acc += 1;
+        }
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 907000)]
+fn bench_map_variant_is_walkable_u8() {
+    let map = cave();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let position = n + n;
+        if inside_u8(map.width, map.height, position) && Bits::get(map.grid.into(), position) {
+            acc += 1;
+        }
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 1282000)]
+fn bench_map_variant_hex_distance_u16() {
+    let map = cave();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let (from, to) = (n, 237 - n);
+        let size: u16 = map.width.into() * map.height.into();
+        assert(from.into() < size && to.into() < size, 'Asserter: position not inside');
+        acc += Geometry::distance(map.width, from, to).into();
+    }
+    assert!(acc != 0);
+}
+
+/// `Geometry::distance` with the row tests `y < H` after its divisions.
+fn distance_rows(width: u8, height: u8, from: u8, to: u8) -> u8 {
+    let (x_from, y_from) = LayoutTrait::coords(width, from);
+    let (x_to, y_to) = LayoutTrait::coords(width, to);
+    assert(y_from < height && y_to < height, 'Asserter: position not inside');
+    let lhs = x_to + y_from / 2;
+    let rhs = x_from + y_to / 2;
+    let (dq, dq_negative) = if lhs >= rhs {
+        (lhs - rhs, false)
+    } else {
+        (rhs - lhs, true)
+    };
+    let (dr, dr_negative) = if y_to >= y_from {
+        (y_to - y_from, false)
+    } else {
+        (y_from - y_to, true)
+    };
+    if dq_negative == dr_negative {
+        dq + dr
+    } else if dq > dr {
+        dq
+    } else {
+        dr
+    }
+}
+
+#[test]
+#[available_gas(l2_gas: 1445000)]
+fn bench_map_variant_hex_distance_rows() {
+    let map = cave();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        acc += distance_rows(map.width, map.height, n, 237 - n).into();
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 1345000)]
+#[feature("bounded-int-utils")]
+fn bench_map_variant_hex_distance_bounded_once() {
+    let map = cave();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let (from, to) = (n, 237 - n);
+        let size = mul::<_, _, SizeMul>(map.width, map.height);
+        let from_ok =
+            match constrain::<_, 0, PositionConstrain>(sub::<_, _, PositionSub>(from, size)) {
+            Ok(_) => true,
+            Err(_) => false,
+        };
+        let to_ok = match constrain::<_, 0, PositionConstrain>(sub::<_, _, PositionSub>(to, size)) {
+            Ok(_) => true,
+            Err(_) => false,
+        };
+        assert(from_ok && to_ok, 'Asserter: position not inside');
+        acc += Geometry::distance(map.width, from, to).into();
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 1304000)]
+fn bench_map_variant_hex_distance_max() {
+    let map = cave();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let (from, to) = (n, 237 - n);
+        // One comparison: the larger endpoint
+        let top = if from > to {
+            from
+        } else {
+            to
+        };
+        Asserter::assert_inside(map.width, map.height, top);
+        acc += Geometry::distance(map.width, from, to).into();
+    }
+    assert!(acc != 0);
 }

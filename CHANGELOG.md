@@ -2,7 +2,7 @@
 
 All notable changes to the Origami crates. The six crates share one version.
 
-## [1.8.0] - unreleased
+## [1.8.0] - 2026-09-27
 
 First release published on the [scarbs.xyz](https://scarbs.xyz) registry: `origami_defi`,
 `origami_hexmap`, `origami_map`, `origami_random`, `origami_rating`, `origami_security`.
