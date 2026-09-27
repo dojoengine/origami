@@ -16,7 +16,7 @@ use core::poseidon::hades_permutation;
 
 // Internal imports
 
-use origami_hexmap::generators::spreader::{BitSetTrait, Spreader};
+use origami_hexmap::generators::spreader::{BitSetTrait, Spreader, SpreaderInternal};
 use origami_hexmap::helpers::bits::{BYTES_ONE, Bits, POW128, TWO_POW_120};
 use origami_hexmap::helpers::rng::{Rng, RngTrait};
 use origami_hexmap::tests::fixtures::*;
@@ -237,7 +237,7 @@ pub impl SpreaderVariants of SpreaderVariantsTrait {
     /// The library algorithm forced on `u256` (no single-limb path).
     fn choose_u256(grid: felt252, size: u8, count: u8, seed: felt252) -> felt252 {
         let value: u256 = grid.into();
-        Spreader::choose(value, count, size, seed)
+        SpreaderInternal::choose(value, count, size, seed)
     }
 }
 

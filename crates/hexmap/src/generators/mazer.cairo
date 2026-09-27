@@ -55,7 +55,7 @@ pub mod errors {
 
 /// Per-map constants of the carve test, computed once per generation.
 #[derive(Copy, Drop)]
-pub struct Carver {
+pub(crate) struct Carver {
     /// Last interior column, `W - 2`.
     pub right: felt252,
     /// Last interior row, `H - 2`.
@@ -81,7 +81,7 @@ pub struct Carver {
 }
 
 #[generate_trait]
-pub impl CarverImpl of CarverTrait {
+pub(crate) impl CarverImpl of CarverTrait {
     /// Compute the carve constants of a map.
     /// # Arguments
     /// * `width` - The width of the map
@@ -331,7 +331,7 @@ pub impl CarverImpl of CarverTrait {
 
 /// Turns of a direction.
 #[generate_trait]
-pub impl TurnImpl of TurnTrait {
+pub(crate) impl TurnImpl of TurnTrait {
     /// The direction turned by 60 degrees clockwise (seen from above, `x` toward the West).
     #[inline]
     fn left(self: Direction) -> Direction {
@@ -361,7 +361,7 @@ pub impl TurnImpl of TurnTrait {
 
 /// A direction known at compile time: the carve code is specialised per direction, so the
 /// direction dispatch happens once per carved tile instead of once per candidate.
-pub trait Heading {
+pub(crate) trait Heading {
     /// The direction.
     fn direction() -> Direction;
     /// Neighbour of an interior tile if it is an interior tile, see `CarverTrait::locate`.
@@ -372,7 +372,7 @@ pub trait Heading {
     fn cone(carver: @Carver, odd: bool) -> felt252;
 }
 
-pub impl EastHeading of Heading {
+pub(crate) impl EastHeading of Heading {
     #[inline]
     fn direction() -> Direction {
         Direction::East
@@ -395,7 +395,7 @@ pub impl EastHeading of Heading {
     }
 }
 
-pub impl NorthEastHeading of Heading {
+pub(crate) impl NorthEastHeading of Heading {
     #[inline]
     fn direction() -> Direction {
         Direction::NorthEast
@@ -422,7 +422,7 @@ pub impl NorthEastHeading of Heading {
     }
 }
 
-pub impl NorthWestHeading of Heading {
+pub(crate) impl NorthWestHeading of Heading {
     #[inline]
     fn direction() -> Direction {
         Direction::NorthWest
@@ -449,7 +449,7 @@ pub impl NorthWestHeading of Heading {
     }
 }
 
-pub impl WestHeading of Heading {
+pub(crate) impl WestHeading of Heading {
     #[inline]
     fn direction() -> Direction {
         Direction::West
@@ -472,7 +472,7 @@ pub impl WestHeading of Heading {
     }
 }
 
-pub impl SouthWestHeading of Heading {
+pub(crate) impl SouthWestHeading of Heading {
     #[inline]
     fn direction() -> Direction {
         Direction::SouthWest
@@ -499,7 +499,7 @@ pub impl SouthWestHeading of Heading {
     }
 }
 
-pub impl SouthEastHeading of Heading {
+pub(crate) impl SouthEastHeading of Heading {
     #[inline]
     fn direction() -> Direction {
         Direction::SouthEast
@@ -555,22 +555,22 @@ pub impl Mazer of MazerTrait {
         let mut count: u8 = 6;
         while count != 0 {
             match DirectionTrait::pop_front(ref directions) {
-                Direction::East => Self::visit::<
+                Direction::East => MazerInternal::visit::<
                     EastHeading,
                 >(carver, ref maze, ref rng, power, x, y, odd),
-                Direction::NorthEast => Self::visit::<
+                Direction::NorthEast => MazerInternal::visit::<
                     NorthEastHeading,
                 >(carver, ref maze, ref rng, power, x, y, odd),
-                Direction::NorthWest => Self::visit::<
+                Direction::NorthWest => MazerInternal::visit::<
                     NorthWestHeading,
                 >(carver, ref maze, ref rng, power, x, y, odd),
-                Direction::West => Self::visit::<
+                Direction::West => MazerInternal::visit::<
                     WestHeading,
                 >(carver, ref maze, ref rng, power, x, y, odd),
-                Direction::SouthWest => Self::visit::<
+                Direction::SouthWest => MazerInternal::visit::<
                     SouthWestHeading,
                 >(carver, ref maze, ref rng, power, x, y, odd),
-                Direction::SouthEast => Self::visit::<
+                Direction::SouthEast => MazerInternal::visit::<
                     SouthEastHeading,
                 >(carver, ref maze, ref rng, power, x, y, odd),
             }
@@ -579,7 +579,10 @@ pub impl Mazer of MazerTrait {
         // [Return] Maze
         Bits::to_felt(maze)
     }
+}
 
+#[generate_trait]
+pub(crate) impl MazerInternal of MazerInternalTrait {
     /// Carve the candidate and, if carved, its subtree.
     /// # Arguments
     /// * `carver` - The carve constants

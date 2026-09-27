@@ -112,7 +112,7 @@ pub mod errors {
 
 /// Byte counts of a set, per `u128` limb, kept up to date across removals.
 #[derive(Copy, Drop)]
-pub struct Counts {
+pub(crate) struct Counts {
     /// Byte `j` holds the number of set bits in bytes `0..=j` of the low limb.
     pub low_prefix: u128,
     /// Byte `j` holds the number of set bits of byte `j` of the low limb.
@@ -124,7 +124,7 @@ pub struct Counts {
 }
 
 /// Set operations of the draw: `u256` on any board, `u128` on boards of at most 128 bits.
-pub trait BitSetTrait<T> {
+pub(crate) trait BitSetTrait<T> {
     /// The set as a felt bitmap.
     fn to_felt(self: T) -> felt252;
     /// A Poseidon output as a set of random bits.
@@ -147,7 +147,7 @@ pub trait BitSetTrait<T> {
     fn forget(ref counts: Counts, index: u32);
 }
 
-pub impl U256BitSet of BitSetTrait<u256> {
+pub(crate) impl U256BitSet of BitSetTrait<u256> {
     #[inline]
     fn to_felt(self: u256) -> felt252 {
         Bits::to_felt(self)
@@ -261,7 +261,7 @@ pub impl U256BitSet of BitSetTrait<u256> {
     }
 }
 
-pub impl U128BitSet of BitSetTrait<u128> {
+pub(crate) impl U128BitSet of BitSetTrait<u128> {
     #[inline]
     fn to_felt(self: u128) -> felt252 {
         self.into()
@@ -442,12 +442,15 @@ pub impl Spreader of SpreaderTrait {
         assert(value < Bits::pow(size).into(), errors::SPREADER_INVALID_GRID);
         // [Return] The chosen tiles
         if size <= 128 {
-            Self::choose(value.low, count, size, seed)
+            SpreaderInternal::choose(value.low, count, size, seed)
         } else {
-            Self::choose(value, count, size, seed)
+            SpreaderInternal::choose(value, count, size, seed)
         }
     }
+}
 
+#[generate_trait]
+pub(crate) impl SpreaderInternal of SpreaderInternalTrait {
     /// Choose `count` tiles uniformly in a set.
     /// # Arguments
     /// * `set` - The set, below 2^251

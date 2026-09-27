@@ -35,7 +35,7 @@ pub mod errors {
 
 /// Constants of the backtracking.
 #[derive(Copy, Drop)]
-pub struct Back {
+pub(crate) struct Back {
     pub width: u8,
     /// W - 1
     pub narrow: u8,
@@ -61,7 +61,7 @@ pub struct Back {
 
 /// An endpoint.
 #[derive(Copy, Drop)]
-pub struct Endpoint {
+pub(crate) struct Endpoint {
     pub position: u8,
     /// 2^position
     pub power: felt252,
@@ -80,18 +80,18 @@ pub struct Endpoint {
 }
 
 /// Where the layers go: stored for the backtracking, or only counted.
-pub trait Store<S> {
+pub(crate) trait Store<S> {
     fn push(ref self: S, low: u128, high: u128);
 }
 
-pub impl ArrayStore of Store<Array<u256>> {
+pub(crate) impl ArrayStore of Store<Array<u256>> {
     #[inline(always)]
     fn push(ref self: Array<u256>, low: u128, high: u128) {
         self.append(u256 { low, high });
     }
 }
 
-pub impl CountStore of Store<u8> {
+pub(crate) impl CountStore of Store<u8> {
     #[inline(always)]
     fn push(ref self: u8, low: u128, high: u128) {
         self += 1;
@@ -99,18 +99,18 @@ pub impl CountStore of Store<u8> {
 }
 
 /// Where the layers of a single-limb board go.
-pub trait SmallStore<S> {
+pub(crate) trait SmallStore<S> {
     fn push(ref self: S, layer: u128);
 }
 
-pub impl SmallArrayStore of SmallStore<Array<u128>> {
+pub(crate) impl SmallArrayStore of SmallStore<Array<u128>> {
     #[inline(always)]
     fn push(ref self: Array<u128>, layer: u128) {
         self.append(layer);
     }
 }
 
-pub impl SmallCountStore of SmallStore<u8> {
+pub(crate) impl SmallCountStore of SmallStore<u8> {
     #[inline(always)]
     fn push(ref self: u8, layer: u128) {
         self += 1;
@@ -118,19 +118,19 @@ pub impl SmallCountStore of SmallStore<u8> {
 }
 
 /// Target test of a layer: the open interior neighbours of the target, on the limbs they use.
-pub trait Goal<G> {
+pub(crate) trait Goal<G> {
     fn hit(self: G, low: u128, high: u128) -> bool;
 }
 
 /// Goal in the low limb.
 #[derive(Copy, Drop)]
-pub struct LowGoal {
+pub(crate) struct LowGoal {
     pub mask: u128,
 }
 
 /// Goal in the high limb.
 #[derive(Copy, Drop)]
-pub struct HighGoal {
+pub(crate) struct HighGoal {
     pub mask: u128,
 }
 
@@ -348,7 +348,7 @@ pub impl Bfs of BfsTrait {
 }
 
 #[generate_trait]
-pub impl BfsInternal of BfsInternalTrait {
+pub(crate) impl BfsInternal of BfsInternalTrait {
     /// `search` once the endpoints are known, two limbs.
     /// # Arguments
     /// * `step` - The layer constants

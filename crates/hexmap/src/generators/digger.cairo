@@ -28,7 +28,7 @@ use origami_hexmap::types::direction::Direction;
 
 /// Constants of a dig: carve constants, original grid and mode.
 #[derive(Copy, Drop)]
-pub struct Dig {
+pub(crate) struct Dig {
     pub carver: Carver,
     /// The original grid.
     pub grid: u256,
@@ -49,7 +49,7 @@ pub impl Digger of DiggerTrait {
     /// # Returns
     /// * The grid with the maze
     fn maze(width: u8, height: u8, order: u8, start: u8, grid: felt252, seed: felt252) -> felt252 {
-        Self::dig(width, height, order, start, grid, seed, false)
+        DiggerInternal::dig(width, height, order, start, grid, seed, false)
     }
 
     /// Dig a corridor from an edge tile until it reaches an open tile.
@@ -65,9 +65,12 @@ pub impl Digger of DiggerTrait {
     fn corridor(
         width: u8, height: u8, order: u8, start: u8, grid: felt252, seed: felt252,
     ) -> felt252 {
-        Self::dig(width, height, order, start, grid, seed, true)
+        DiggerInternal::dig(width, height, order, start, grid, seed, true)
     }
+}
 
+#[generate_trait]
+pub(crate) impl DiggerInternal of DiggerInternalTrait {
     /// Dig from an edge tile.
     /// # Arguments
     /// * `width` - The width of the map
