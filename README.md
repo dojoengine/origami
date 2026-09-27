@@ -54,6 +54,7 @@ Incorporate `origami` seamlessly into your projects using Scarb.toml.
 From the [scarbs.xyz](https://scarbs.xyz) registry:
 
 ```sh
+scarb add origami_hexmap@1.8.0
 scarb add origami_map@1.8.0
 scarb add origami_random@1.8.0
 ```
@@ -63,6 +64,7 @@ Or from git, in your `[dependencies]`:
 ```toml
 [dependencies]
 origami_random = { git = "https://github.com/dojoengine/origami", tag = "v1.8.0" }
+origami_hexmap = { git = "https://github.com/dojoengine/origami", tag = "v1.8.0" }
 origami_map = { git = "https://github.com/dojoengine/origami", tag = "v1.8.0" }
 ```
 
