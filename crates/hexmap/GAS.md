@@ -142,7 +142,88 @@ _To be filled by lot L4._
 
 ## L5 Mazer and Digger
 
-_To be filled by lot L5._
+Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas), seed `'SEED'` unless stated. "Per tile"
+divides by the open tiles of the result (the dug tiles for the digger, entrance included).
+
+### Library
+
+| Test | Measured | Budget | Tiles | Per tile |
+|---|---:|---:|---:|---:|
+| `bench_mazer_17x14_order_0` (target < 3M) | 2_875_890 | 3_020_000 | 89 | 32_314 |
+| `bench_mazer_17x14_order_1` | 1_826_661 | 1_918_000 | 46 | 39_710 |
+| `bench_mazer_17x14_order_0_seeds` (seeds 0..7) | 23_573_184 | 24_752_000 | 729 | 32_336 |
+| `bench_mazer_17x14_order_1_seeds` (seeds 0..7) | 14_796_998 | 15_537_000 | 385 | 38_434 |
+| `bench_mazer_7x7_order_0` | 524_603 | 551_000 | | |
+| `bench_mazer_19x13_order_0` | 3_167_395 | 3_326_000 | | |
+| `bench_digger_corridor_17x14` (3x2 room, entrance (3, 0)) | 314_852 | 331_000 | 9 | 34_984 |
+| `bench_digger_maze_17x14` (same) | 3_229_661 | 3_392_000 | 90 | 35_885 |
+
+Reference `origami_map` (cairo-test "gas usage est.", 18x14, 4 directions): maze order 0
+27_966_300 (122 tiles, 229k per tile), order 1 29_823_584 (105 tiles, 284k per tile); digger
+corridor 1_486_492, maze 3_957_108 (order 0) and 4_216_884 (order 1). The hex maze costs about
+7x less per tile.
+
+### Variants (`tests/bench_mazer.cairo`)
+
+The variants share a base: the library carve rule dispatched at runtime (`CarverTrait::carve`),
+recursion, `u256` maze, `(x, y)` tracked incrementally, one draw of the 6 orders of the forward
+directions. Each changes one choice. The first group produces the same maze as the library
+(checked by `test_bench_mazer_variants_same_maze`); the second changes the draws and is compared
+per tile over 8 seeds.
+
+| Variant | Test | Measured | Budget | Per tile | vs base |
+|---|---|---:|---:|---:|---:|
+| **Library: per-direction code (`Heading`), static turns (winner)** | `bench_mazer_17x14_order_0` | 2_875_890 | 3_020_000 | 32_314 | -4.4 % |
+| Base: runtime direction dispatch | `bench_mazer_variant_base_17x14` | 3_006_900 | 3_158_000 | 33_785 | |
+| Base, order 1 (library: 1_826_661, -5.3 %) | `bench_mazer_variant_base_17x14_order_1` | 1_928_381 | 2_025_000 | 41_921 | |
+| Explicit stack (`Felt252Dict<Nullable<Frame>>`) | `bench_mazer_variant_stack_17x14` | 4_543_190 | 4_771_000 | 51_047 | +51.1 % |
+| Per-neighbour bit tests (`Bits::get`, early exit) | `bench_mazer_variant_bits_17x14` | 9_633_733 | 10_116_000 | 108_244 | +220.4 % |
+| Maze kept as `felt252`, set by addition | `bench_mazer_variant_felt_17x14` | 3_064_030 | 3_218_000 | 34_427 | +1.9 % |
+| Index tracked, `(x, y)` by `DivRem` once per tile | `bench_mazer_variant_divrem_17x14` | 3_379_210 | 3_549_000 | 37_969 | +12.4 % |
+| Base, 8 seeds (729 tiles) | `bench_mazer_variant_base_17x14_seeds` | 24_663_054 | 25_897_000 | 33_831 | |
+| One draw of 3, rotation of (L, F, R) (719 tiles) | `bench_mazer_variant_rotation_17x14_seeds` | 23_167_600 | 24_326_000 | 32_222 | -4.8 % |
+| Lazy draws: 3, then 2 if the first fails (726 tiles) | `bench_mazer_variant_lazy_17x14_seeds` | 26_386_034 | 27_706_000 | 36_344 | +7.4 % |
+| `Rng::shuffle6` per tile, non forward skipped (727 tiles) | `bench_mazer_variant_shuffle_17x14_seeds` | 73_624_530 | 77_306_000 | 101_272 | +199.4 % |
+
+Formulations measured while iterating on the library (not kept as tests; same maze, order 0 /
+order 1 on 17x14):
+
+| Formulation | Order 0 | Order 1 |
+|---|---:|---:|
+| v1: `u8` direction codes (`match` compiles to compare chains), `u8` coordinates, `@Carver` | 3_535_390 | 2_467_011 |
+| v1 with one `u256` AND instead of two short-circuit `u128` ANDs | 3_558_127 | 2_481_586 |
+| v1 with `Box<Carver>` | 3_498_920 | 2_446_911 |
+| v2: `Direction` enum (jump table), `felt252` coordinates, precomputed closed masks | 2_973_530 | 1_861_331 |
+| v2 with the AND restricted to the limbs the mask touches (extra branches) | 3_197_064 | 1_987_572 |
+| **v3 = library: v2 + per-direction code (`Heading`)** | **2_875_890** | **1_826_661** |
+| v3 with `@Carver` instead of `Box<Carver>` | 3_050_080 | 1_918_431 |
+| v3 with each `Heading` calling `branch` directly (no `match` on the direction per tile) | 2_895_700 | 1_848_571 |
+| v3 with the rotation order, per tile over 8 seeds (719 / 397 tiles) | 31_772 | 38_007 |
+
+Microbenchmarks on v1 / v2 (per call, loop baseline subtracted): v1 `next` 2.3k, `step` 1.2k,
+`mask` 2.7k, successful carve 13.2k; v2 `locate` 2.1k, `mask` 1.0k, successful carve 10.2k,
+failed carve 8.4k, draw of 6 + order selection 6.2k. The two felt-to-`u256` conversions (1.8k
+each) and the AND dominate a carve.
+
+### Library decisions
+
+* Carve test: **one mask test** `maze & 2^c * K`, where `K` is a field constant of the direction
+  and parity (closed neighbourhood of the candidate minus `c`, order 1: ball of radius 2 minus `c`
+  and the three tiles behind it). 3.2x cheaper than per-neighbour bit tests on the same base.
+* **Forward cone**: only the 3 forward neighbours of a tile are candidates, and a carved middle
+  candidate excludes both sides (a carved side excludes the middle) without a test.
+* **Recursion**, not an explicit stack: Cairo arrays cannot pop from the back, and a dictionary
+  stack costs +51 %.
+* Maze kept as `u256` (two limb additions per carve) rather than a felt converted before every
+  test (+1.9 %).
+* `(x, y)` as felts tracked incrementally (+12.4 % with `DivRem`). They are needed for the
+  interior test: the mask cannot detect border candidates, because the neighbours of an
+  interior tile next to the border are border tiles.
+* One uniform draw of the 6 orders per tile. The rotation order is 1.7 % cheaper per tile in the
+  library (4.8 % on the base, whose turns cost a `match`), below the 2 % threshold, and it biases
+  the side order (right before left in 2 orders out of 3), so it is not used. Lazy draws and
+  `shuffle6` lose.
+* Constants in a `Box<Carver>`: 6 % cheaper than a snapshot through the recursion.
 
 ## L6 Walker
 
