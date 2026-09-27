@@ -7,14 +7,15 @@
 // Core imports
 
 use core::dict::Felt252Dict;
+use core::integer::Bitwise;
 
 // Internal imports
 
 use origami_hexmap::finders::dial::Dial;
 use origami_hexmap::generators::caver::Caver;
 use origami_hexmap::helpers::asserter::Asserter;
-use origami_hexmap::helpers::bits::Bits;
-use origami_hexmap::helpers::layout::LayoutTrait;
+use origami_hexmap::helpers::bits::{Bits, TWO_POW_128};
+use origami_hexmap::helpers::layout::{Layout, LayoutTrait};
 use origami_hexmap::helpers::rng::RngTrait;
 use origami_hexmap::tests::fixtures::*;
 use origami_hexmap::tests::variants::Variants;
@@ -22,8 +23,59 @@ use origami_hexmap::types::direction::Direction;
 
 // Constants
 
+/// 1/2 in the field.
+const INV_2: felt252 = 0x400000000000008800000000000000000000000000000000000000000000001;
+/// Repetitions of the microbenchmarks.
+const REPS: u8 = 100;
+
+/// AND, XOR and OR of two limbs in one builtin application, see `generators::caver`.
+extern fn bitwise(lhs: u128, rhs: u128) -> (u128, u128, u128) implicits(Bitwise) nopanic;
+
 /// Distance of an unreachable tile.
 pub const UNREACHABLE: u32 = 0xffffffff;
+
+// Cost maps of the benchmarks (generated offline, endpoints of the far pairs excluded).
+
+/// EMPTY_17X14: 2 classes over 30 % of the floor (35 tiles cost 2, 18 cost 3); with `_CLASS_2`
+/// and `_CLASS_4` instead of `_COST_2`: 3 classes (21, 18 and 14 tiles).
+pub const EMPTY_17X14_COST_2: felt252 = 0x48000000005184004970051110b010190401408122000020280000;
+pub const EMPTY_17X14_COST_3: felt252 = 0x8005003708000000000888000000000020030040800080000000;
+pub const EMPTY_17X14_CLASS_2: felt252 = 0x40000000001084000010051110a000110001408120000020080000;
+pub const EMPTY_17X14_CLASS_4: felt252 = 0x80000000041000049600000001010080400000002000000200000;
+/// CAVE_17X14: 2 classes over 30 % of the floor (25 tiles cost 2, 13 cost 3); with `_CLASS_2`
+/// and `_CLASS_4` instead of `_COST_2`: 3 classes (15, 13 and 10 tiles).
+pub const CAVE_17X14_COST_2: felt252 = 0x44002200043402000b4003041000000000104018082400001000000;
+pub const CAVE_17X14_COST_3: felt252 = 0x1080011400000040000000180000080000008200100000000800000;
+pub const CAVE_17X14_CLASS_2: felt252 = 0x400220004240200084001000000000000000018002400001000000;
+pub const CAVE_17X14_CLASS_4: felt252 = 0x4000000000100000030002041000000000104000080000000000000;
+/// MAZE_17X14: 2 classes over 30 % of the floor (18 tiles cost 2, 9 cost 3); with `_CLASS_2`
+/// and `_CLASS_4` instead of `_COST_2`: 3 classes (10, 9 and 8 tiles).
+pub const MAZE_17X14_COST_2: felt252 = 0x4008000000c0000000080040002000002004006041000a002300000;
+pub const MAZE_17X14_COST_3: felt252 = 0x200020008000000010080000000000004001000000420000000000;
+pub const MAZE_17X14_CLASS_2: felt252 = 0x4008000000c00000000000400020000020040020000000002000000;
+pub const MAZE_17X14_CLASS_4: felt252 = 0x80000000000000000004041000a000300000;
+/// SERPENTINE_17X14: 2 classes over 30 % of the floor (18 tiles cost 2, 9 cost 3); with `_CLASS_2`
+/// and `_CLASS_4` instead of `_COST_2`: 3 classes (11, 9 and 7 tiles).
+pub const SERPENTINE_17X14_COST_2: felt252 = 0x148200000612080004010000000440000000000000888300000;
+pub const SERPENTINE_17X14_COST_3: felt252 = 0x20000000000000000004000004200000002100000006800000;
+pub const SERPENTINE_17X14_CLASS_2: felt252 = 0x100200000210080000010000000400000000000000888100000;
+pub const SERPENTINE_17X14_CLASS_4: felt252 = 0x48000000402000004000000000040000000000000000200000;
+/// UNREACHABLE_17X14: 2 classes over 30 % of the floor (32 tiles cost 2, 17 cost 3); with
+/// `_CLASS_2`
+/// and `_CLASS_4` instead of `_COST_2`: 3 classes (19, 17 and 13 tiles).
+pub const UNREACHABLE_17X14_COST_2: felt252 =
+    0x100404300d940184000580c4004800000000c000220802141100000;
+pub const UNREACHABLE_17X14_COST_3: felt252 =
+    0x20044000014000040412000000100a000000a000004800080000;
+pub const UNREACHABLE_17X14_CLASS_2: felt252 = 0x42005940104000480840008000000000000200800101100000;
+pub const UNREACHABLE_17X14_CLASS_4: felt252 =
+    0x100400100800008000010040004000000000c000020002040000000;
+/// CAVE_7X7: 2 classes over 30 % of the floor (4 tiles cost 2, 2 cost 3); with `_CLASS_2`
+/// and `_CLASS_4` instead of `_COST_2`: 3 classes (2, 2 and 2 tiles).
+pub const CAVE_7X7_COST_2: felt252 = 0x281000800;
+pub const CAVE_7X7_COST_3: felt252 = 0x30000;
+pub const CAVE_7X7_CLASS_2: felt252 = 0x80000800;
+pub const CAVE_7X7_CLASS_4: felt252 = 0x201000000;
 
 // Oracle
 
@@ -247,6 +299,278 @@ pub fn check_unit(grid: felt252, width: u8, height: u8, from: u8, to: u8, distan
     check_path(grid, width, height, from, to, array![].span(), path, expected);
 }
 
+// Harness: copies of the library building blocks, for the microbenchmarks and the variants
+
+/// Library dilation intersected with a set (bitwise triple per limb).
+#[inline(always)]
+pub fn expand_triple(layout: @Layout, frontier: u256, unvisited: u256) -> u256 {
+    let layout = *layout;
+    let felt = Bits::to_felt(frontier);
+    let double: u256 = (felt + felt).into();
+    let (_, _, pairs_low) = bitwise(frontier.low, double.low);
+    let (_, _, pairs_high) = bitwise(frontier.high, double.high);
+    let (even_low, _, _) = bitwise(pairs_low, layout.even.low);
+    let (even_high, _, _) = bitwise(pairs_high, layout.even.high);
+    let pairs_even: felt252 = even_low.into() + even_high.into() * TWO_POW_128;
+    let pairs_odd: felt252 = pairs_low.into() + pairs_high.into() * TWO_POW_128 - pairs_even;
+    let up: u256 = (pairs_even * layout.up_even + pairs_odd * layout.up_odd).into();
+    let down: u256 = (pairs_even * layout.down_even + pairs_odd * layout.down_odd).into();
+    let east: u256 = (felt * INV_2).into();
+    let (_, _, low) = bitwise(pairs_low, east.low);
+    let (_, _, low) = bitwise(low, up.low);
+    let (_, _, low) = bitwise(low, down.low);
+    let (low, _, _) = bitwise(low, unvisited.low);
+    let (_, _, high) = bitwise(pairs_high, east.high);
+    let (_, _, high) = bitwise(high, up.high);
+    let (_, _, high) = bitwise(high, down.high);
+    let (high, _, _) = bitwise(high, unvisited.high);
+    u256 { low, high }
+}
+
+/// Set intersection, one builtin application per limb.
+#[inline(always)]
+pub fn and(lhs: u256, rhs: u256) -> u256 {
+    let (low, _, _) = bitwise(lhs.low, rhs.low);
+    let (high, _, _) = bitwise(lhs.high, rhs.high);
+    u256 { low, high }
+}
+
+// Microbenchmarks (17x14, per op = (test - loop) / 100)
+
+#[test]
+#[available_gas(l2_gas: 1000000)]
+fn bench_dial_micro_loop() {
+    let frontier: u256 = CAVE_17X14.into();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        acc += frontier.low.into();
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 10000000)]
+fn bench_dial_micro_expand_corelib() {
+    let layout = LayoutTrait::new(17, 14);
+    let frontier: u256 = CAVE_17X14_COST_2.into();
+    let unvisited: u256 = CAVE_17X14.into();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        acc += (layout.expand(frontier) & unvisited).low.into();
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 10000000)]
+fn bench_dial_micro_expand_triple() {
+    let layout = LayoutTrait::new(17, 14);
+    let frontier: u256 = CAVE_17X14_COST_2.into();
+    let unvisited: u256 = CAVE_17X14.into();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        acc += expand_triple(@layout, frontier, unvisited).low.into();
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 10000000)]
+fn bench_dial_micro_and_triple() {
+    let lhs: u256 = CAVE_17X14_COST_2.into();
+    let rhs: u256 = CAVE_17X14.into();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        acc += and(lhs, rhs).low.into();
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 10000000)]
+fn bench_dial_micro_and_limb() {
+    let lhs: u256 = CAVE_17X14_COST_2.into();
+    let rhs: u256 = CAVE_17X14.into();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let (low, _, _) = bitwise(lhs.low, rhs.low);
+        acc += low.into();
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 10000000)]
+fn bench_dial_micro_limb_sub() {
+    let lhs: u256 = CAVE_17X14.into();
+    let rhs: u256 = CAVE_17X14_COST_2.into();
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        acc += (lhs.low - rhs.low).into();
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[available_gas(l2_gas: 10000000)]
+fn bench_dial_micro_felt_to_u256() {
+    let value: felt252 = CAVE_17X14;
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let wide: u256 = (value + n.into()).into();
+        acc += wide.low.into();
+    }
+    assert!(acc != 0);
+}
+
+// Benchmarks: library
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_baseline_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    assert!(CAVE_17X14 != 0 && costs.len() == 2);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_empty_17x14() {
+    let costs = array![EMPTY_17X14_COST_2, EMPTY_17X14_COST_3].span();
+    Dial::search(EMPTY_17X14, 17, 14, EMPTY_17X14_FAR_FROM, EMPTY_17X14_FAR_TO, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_cave_17x14() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    Dial::search(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_maze_17x14() {
+    let costs = array![MAZE_17X14_COST_2, MAZE_17X14_COST_3].span();
+    Dial::search(MAZE_17X14, 17, 14, MAZE_17X14_FAR_FROM, MAZE_17X14_FAR_TO, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_serpentine_17x14() {
+    let costs = array![SERPENTINE_17X14_COST_2, SERPENTINE_17X14_COST_3].span();
+    Dial::search(
+        SERPENTINE_17X14, 17, 14, SERPENTINE_17X14_FAR_FROM, SERPENTINE_17X14_FAR_TO, costs,
+    );
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_unreachable_17x14() {
+    let costs = array![UNREACHABLE_17X14_COST_2, UNREACHABLE_17X14_COST_3].span();
+    Dial::search(
+        UNREACHABLE_17X14, 17, 14, UNREACHABLE_17X14_FAR_FROM, UNREACHABLE_17X14_FAR_TO, costs,
+    );
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_cave_7x7() {
+    let costs = array![CAVE_7X7_COST_2, CAVE_7X7_COST_3].span();
+    Dial::search(CAVE_7X7, 7, 7, CAVE_7X7_FAR_FROM, CAVE_7X7_FAR_TO, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_cave_17x14_near() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    Dial::search(CAVE_17X14, 17, 14, CAVE_17X14_NEAR_FROM, CAVE_17X14_NEAR_TO, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_empty_17x14_classes_0() {
+    Dial::search(EMPTY_17X14, 17, 14, EMPTY_17X14_FAR_FROM, EMPTY_17X14_FAR_TO, array![].span());
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_cave_17x14_classes_0() {
+    Dial::search(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, array![].span());
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_maze_17x14_classes_0() {
+    Dial::search(MAZE_17X14, 17, 14, MAZE_17X14_FAR_FROM, MAZE_17X14_FAR_TO, array![].span());
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_serpentine_17x14_classes_0() {
+    Dial::search(
+        SERPENTINE_17X14,
+        17,
+        14,
+        SERPENTINE_17X14_FAR_FROM,
+        SERPENTINE_17X14_FAR_TO,
+        array![].span(),
+    );
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_cave_7x7_classes_0() {
+    Dial::search(CAVE_7X7, 7, 7, CAVE_7X7_FAR_FROM, CAVE_7X7_FAR_TO, array![].span());
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_cave_17x14_classes_1() {
+    let costs = array![CAVE_17X14_COST_2 + CAVE_17X14_COST_3].span();
+    Dial::search(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_cave_17x14_classes_3() {
+    let costs = array![CAVE_17X14_CLASS_2, CAVE_17X14_COST_3, CAVE_17X14_CLASS_4].span();
+    Dial::search(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, CAVE_17X14_FAR_TO, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_field_empty_17x14_budget_4() {
+    let costs = array![EMPTY_17X14_COST_2, EMPTY_17X14_COST_3].span();
+    Dial::field_of_movement(EMPTY_17X14, 17, 14, 110, 4, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_field_empty_17x14_budget_12() {
+    let costs = array![EMPTY_17X14_COST_2, EMPTY_17X14_COST_3].span();
+    Dial::field_of_movement(EMPTY_17X14, 17, 14, 110, 12, costs);
+}
+
+#[test]
+#[available_gas(l2_gas: 100000000)]
+fn bench_dial_field_cave_17x14_budget_8() {
+    let costs = array![CAVE_17X14_COST_2, CAVE_17X14_COST_3].span();
+    Dial::field_of_movement(CAVE_17X14, 17, 14, CAVE_17X14_FAR_FROM, 8, costs);
+}
+
 #[cfg(test)]
 mod tests {
     // Local imports
@@ -439,6 +763,74 @@ mod tests {
             let costs = random_costs(grid, 17, 14, seed, 3);
             check_all(grid, 17, 14, from, costs, 13);
             seed += 1;
+        }
+    }
+
+    /// Oracle check of the benchmark inputs, and their statistics (path length, cost).
+    #[test]
+    fn test_dial_bench_inputs() {
+        let inputs = array![
+            (
+                EMPTY_17X14,
+                EMPTY_17X14_FAR_FROM,
+                EMPTY_17X14_FAR_TO,
+                EMPTY_17X14_COST_2,
+                EMPTY_17X14_COST_3,
+            ),
+            (
+                CAVE_17X14,
+                CAVE_17X14_FAR_FROM,
+                CAVE_17X14_FAR_TO,
+                CAVE_17X14_COST_2,
+                CAVE_17X14_COST_3,
+            ),
+            (
+                MAZE_17X14,
+                MAZE_17X14_FAR_FROM,
+                MAZE_17X14_FAR_TO,
+                MAZE_17X14_COST_2,
+                MAZE_17X14_COST_3,
+            ),
+            (
+                SERPENTINE_17X14,
+                SERPENTINE_17X14_FAR_FROM,
+                SERPENTINE_17X14_FAR_TO,
+                SERPENTINE_17X14_COST_2,
+                SERPENTINE_17X14_COST_3,
+            ),
+            (
+                UNREACHABLE_17X14,
+                UNREACHABLE_17X14_FAR_FROM,
+                UNREACHABLE_17X14_FAR_TO,
+                UNREACHABLE_17X14_COST_2,
+                UNREACHABLE_17X14_COST_3,
+            ),
+            (
+                CAVE_17X14,
+                CAVE_17X14_NEAR_FROM,
+                CAVE_17X14_NEAR_TO,
+                CAVE_17X14_COST_2,
+                CAVE_17X14_COST_3,
+            ),
+        ];
+        for (grid, from, to, two, three) in inputs.span() {
+            let classes = array![
+                array![].span(), array![*two + *three].span(), array![*two, *three].span(),
+            ];
+            for costs in classes.span() {
+                let distances = dijkstra(*grid, 17, 14, *from, *costs);
+                let path = Dial::search(*grid, 17, 14, *from, *to, *costs);
+                let expected = *distances[(*to).into()];
+                check_path(*grid, 17, 14, *from, *to, *costs, path, expected);
+                println!(
+                    "{} -> {}: {} classes, cost {}, {} tiles",
+                    from,
+                    to,
+                    costs.len(),
+                    expected,
+                    path.len(),
+                );
+            }
         }
     }
 }
