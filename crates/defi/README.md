@@ -98,7 +98,12 @@ let price = gda.purchase_price(time_since_last, quantity);
 
 These examples demonstrate how to create instances of the `DiscreteGDA` and `ContinuousGDA` structures, and how to utilize their `purchase_price` methods to calculate the price for purchasing specific quantities at given times.
 
-You'll need the `fixed` package in your project to build the `Fixed` values: `use fixed::{FixedTrait, ONE};`.
+The imports of these examples (the `fixed` package builds the `Fixed` values):
+
+```rust
+use fixed::{FixedTrait, ONE};
+use origami_defi::auction::gda::{ContinuousGDA, ContinuousGDATrait, DiscreteGDA, DiscreteGDATrait};
+```
 
 ## Conclusion
 
@@ -169,7 +174,10 @@ Make sure to import the required dependencies at the beginning of your Cairo fil
 
 ```rust
 use fixed::{Fixed, FixedTrait};
+use origami_defi::auction::vrgda::{LinearVRGDA, LogisticVRGDA, VRGDATargetTimeTrait, VRGDATrait};
 ```
+
+Every example of this README is compiled by `tests/readme.cairo`.
 
 These examples show you how to create instances of both `LinearVRGDA` and `LogisticVRGDA` and how to use their methods to calculate the target sale time and VRGDA price.
 

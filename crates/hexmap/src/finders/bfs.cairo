@@ -1177,23 +1177,6 @@ pub(crate) impl BfsInternal of BfsInternalTrait {
         let (_, odd) = LayoutTrait::parity(width, next);
         (next, Bits::pow(next), odd)
     }
-    /// `u256` AND with the bitwise builtin, see `Bits::and` (used by the `HexMap` facade).
-    #[inline(always)]
-    fn and(lhs: u256, rhs: u256) -> u256 {
-        Bits::and(lhs, rhs)
-    }
-    /// Hex dilation of a frontier given by its limbs and as a felt, see `Dilation::dilate`
-    /// (used by the `HexMap` facade).
-    #[inline(always)]
-    fn expand(step: @Dilation, low: u128, high: u128, felt: felt252) -> (u128, u128) {
-        step.dilate(low, high, felt)
-    }
-
-    /// Hex dilation on a single limb, see `Dilation::expand_small` (used by the `HexMap` facade).
-    #[inline(always)]
-    fn expand_small(step: @Dilation, frontier: u128) -> u128 {
-        step.expand_small(frontier)
-    }
 }
 
 #[cfg(test)]

@@ -444,7 +444,8 @@ stopped after three consecutive ideas below 2 % (loops x8, window backtracking, 
 
 ## L2 A* baseline
 
-_To be filled by lot L2._
+Dropped: the bit-parallel BFS (L1) and Dial (L3) cover unweighted and weighted searches; the A*
+and heap modules were removed by L8.
 
 ## L3 Dial
 
@@ -1214,7 +1215,8 @@ inputs are folded by the compiler); per call = `(test - bench_map_loop_baseline)
 | `is_walkable` | 797_080 | 849_980 | -52_900 |
 
 Per call: `hex_distance` 9_461, `neighbor` 6_391, `is_walkable` 6_549 (the direct loop
-re-converts the constant fixture: 7_078).
+re-converts the constant fixture: 7_078). These three queries now check their positions against
+`W * H` (audit A4): see the F1 section for the current figures and budgets.
 
 ### `keep_component`: `Bfs::reachable` (library) vs `Caver::keep_component`
 
@@ -1520,7 +1522,8 @@ L0-L7 and S1 merged), "after" is the head of the P1 pull request (rebased on the
 Kept local: the byte-count select of `Spreader` (one module uses it), the `Frontier<T>` dilation
 and backtracking masks of `Dial` (they need the `Dilation`), the walker's pool loop (locals, both
 limbs of every permutation, `Rng::split216`). `BfsInternal::and`, `expand` and `expand_small`
-remain as one-line delegations to `Bits::and` and `Dilation` because `map.cairo` (L8) calls them.
+remained as one-line delegations to `Bits::and` and `Dilation` for `map.cairo` (L8); F1 removed
+them, the facade calls `Bits::and` and `Dilation::dilate` / `expand_small` directly.
 
 ### Microbenchmarks (per op = (test - loop) / 100, loop 142_090)
 
@@ -1837,3 +1840,52 @@ tiles).
 | `bench_spreader_generate_sparse5_17x14_1` | 149_625 / 139_223 | 145_545 / 135_143 | -2.7 % / -2.9 % |
 | `bench_spreader_generate_sparse5_17x14_2` | 149_865 / 143_721 | 145_445 / 139_301 | -2.9 % / -3.1 % |
 
+## F1 Release preparation
+
+Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas), `snforge test -p origami_hexmap`.
+
+* **Facade.** `HexMap::ring` calls `Bits::and` and `Dilation::dilate` / `expand_small` directly;
+  the three `BfsInternal` delegations are gone. `bench_map_ring` 99_903, `bench_map_ring_7x7`
+  46_403, `bench_map_ring_open_edge` 167_673: unchanged (the delegations were
+  `#[inline(always)]`). `keep_component` stays on `Bfs::reachable` for its edge semantics.
+* **Budgets lowered** (more than 5 % under their L8 budget after P1, rule of this file):
+
+| Test | Measured | Budget before | Budget |
+|---|---:|---:|---:|
+| `bench_map_compute_distribution` | 193_168 | 218_000 | 203_000 |
+| `bench_map_direct_compute_distribution` | 193_168 | 218_000 | 203_000 |
+| `bench_map_variant_keep_component_caver` | 533_849 | 610_000 | 561_000 |
+| `bench_map_variant_keep_component_caver_7x7` | 95_333 | 177_000 | 101_000 |
+| `bench_map_variant_keep_component_caver_maze` | 1_111_093 | 1_306_000 | 1_167_000 |
+
+* **Audit A4: bound checks.** `neighbor` returns `None` and `is_walkable` `false` for a position
+  at or above `W * H`, and `hex_distance` panics (`Asserter: position not inside`). Formulations of
+  `position < W * H` for any `u8` dimensions (`HexMapTrait::new` is unchecked), same 100-call loops
+  as L8, per call = `(test - 142_090) / 100`:
+
+| Function | Formulation | Test | Measured | Budget | Per call |
+|---|---|---|---:|---:|---:|
+| `neighbor` | none (before) | `bench_map_direct_neighbor` | 781_230 | 821_000 | 6_391 |
+| `neighbor` | **`bounded_int` product, difference and sign (library)** | `bench_map_neighbor` | 837_960 | 880_000 | 6_959 |
+| `neighbor` | row test `y >= H` after the division of `LayoutTrait::neighbor` | `bench_map_variant_neighbor_row` | 847_560 | 890_000 | 7_055 |
+| `neighbor` | `u16` product and comparison | `bench_map_variant_neighbor_u16` | 857_460 | 901_000 | 7_154 |
+| `neighbor` | `u8` product (panics above 255 tiles) | `bench_map_variant_neighbor_u8` | 857_460 | 901_000 | 7_154 |
+| `is_walkable` | none (before) | L8 `bench_map_is_walkable` | 797_080 | 837_000 | 6_550 |
+| `is_walkable` | **`bounded_int` (library)** | `bench_map_is_walkable` | 849_410 | 892_000 | 7_073 |
+| `is_walkable` | `u16` | `bench_map_variant_is_walkable_u16` | 863_410 | 907_000 | 7_213 |
+| `is_walkable` | `u8` | `bench_map_variant_is_walkable_u8` | 863_410 | 907_000 | 7_213 |
+| `hex_distance` | none (before) | `bench_map_direct_hex_distance` | 1_088_280 | 1_143_000 | 9_462 |
+| `hex_distance` | **`bounded_int`, one test per position (library)** | `bench_map_hex_distance` | 1_181_340 | 1_241_000 | 10_393 |
+| `hex_distance` | `u16`, one product for both | `bench_map_variant_hex_distance_u16` | 1_220_940 | 1_282_000 | 10_789 |
+| `hex_distance` | `Asserter::assert_inside` of the larger position | `bench_map_variant_hex_distance_max` | 1_241_730 | 1_304_000 | 10_996 |
+| `hex_distance` | `bounded_int`, one product for both | `bench_map_variant_hex_distance_bounded_once` | 1_280_340 | 1_345_000 | 11_383 |
+| `hex_distance` | row tests `y < H` after the divisions of the distance | `bench_map_variant_hex_distance_rows` | 1_375_530 | 1_445_000 | 12_334 |
+
+  The `bounded_int` form is 1.1 % to 2.3 % cheaper than the runners-up, under the 5 % rule, so the
+  code size decides: in a contract with the three queries it is also the smallest, 903 Sierra /
+  1_704 CASM felts against 918 / 1_772 for `u16` (861 / 1_614 unchecked). The non-inlined helper
+  variants (`rows`, `bounded_once`) lose to the inlined forms.
+* **Package.** `.scarbignore` keeps `tests/`, `src/tests/`, `src/helpers/printer.cairo` and this
+  file out of the published package (943.98 KiB -> 400.42 KiB). The test-only modules are declared
+  under `#[cfg(test)]`, set for this package's own tests only: `#[cfg(target: "test")]` is also set
+  when a dependent runs its tests, which then looked for the missing files.

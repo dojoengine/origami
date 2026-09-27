@@ -3,3 +3,6 @@ target
 abis
 manifests
 .snfoundry_cache
+.scratch
+.p1
+REPORT.md

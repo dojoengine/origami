@@ -5,7 +5,7 @@ pathfinding and range queries on bitmaps packed in a single `felt252`. It is the
 of [`origami_map`](../map) and mirrors its `Map` API name for name.
 
 Every operation is bit-parallel: a whole board is processed by a few field products and bitwise
-operations per step, so a 17x14 cave, its entrance, 10 objects and a path cost about 1.2M gas,
+operations per step, so a 17x14 cave, its entrance, 10 objects and a path cost about 1.14M gas,
 more than 100 times less than the same scenario on `origami_map` (see [Gas](#gas)).
 
 ## Installation
@@ -64,8 +64,13 @@ This is `HexPrinter`'s layout: top row first, `x = 0` on the right, even rows in
   (not a corner) and dig inward. A path may start or end on an open edge tile but never crosses
   one; `reachable`, `range`, `ring` and `field_of_movement` include the open edge tiles on which a
   path can end. `compute_distribution` treats them as any walkable tile.
-- `HexMapTrait::new` accepts any grid, but the finders and generators assume the border ring is
-  wall except for such entrances.
+- `HexMapTrait::new` is the raw constructor and checks nothing, like `origami_map`'s: the caller
+  is responsible for valid dimensions and for a grid without bits at or above `W * H`, with the
+  border ring wall except for such entrances. The dimensions and positions are validated by
+  `open_with_corridor`, `open_with_maze`, `compute_distribution`, `search_path`,
+  `search_path_weighted`, `field_of_movement`, `distance_to`, `reachable`, `range`, `ring` and
+  `keep_component` (they panic); `hex_distance`, `neighbor` and `is_walkable` check their
+  positions against `W * H` only.
 
 ### Limits
 
@@ -90,7 +95,7 @@ The names follow the Rust crate [`hexx`](https://docs.rs/hexx) where they apply 
 ### Create a map
 
 ```rust
-// From an existing grid (no check)
+// From an existing grid, unchecked (see Border ring and entrances)
 let map = HexMapTrait::new(grid, 17, 14, seed);
 // Every interior tile walkable
 let map = HexMapTrait::new_empty(17, 14, seed);
@@ -131,7 +136,7 @@ let objects: felt252 = map.compute_distribution(10, seed);
 ```rust
 // Shortest path, from the target (included) to the start (excluded), empty if unreachable
 let path: Span<u8> = map.search_path(8, 202);
-// Number of steps only, `None` if unreachable
+// Number of steps of the shortest path (walls block), `None` if unreachable
 let steps: Option<u8> = map.distance_to(8, 202);
 // Distance on an empty board, walls ignored
 let d: u8 = map.hex_distance(8, 202);
@@ -166,7 +171,7 @@ let open: bool = map.is_walkable(113);
 | Message | When |
 |---|---|
 | `Asserter: invalid dimension` | `W < 3`, `H < 3` or `W * H > 251` (constructors, digger, finders, spreader); `new_hexagon` with a radius above 6 |
-| `Asserter: position not inside` | a finder endpoint or a `ring` / `range` centre outside the board |
+| `Asserter: position not inside` | a finder endpoint, a `ring` / `range` centre or a `hex_distance` position outside the board (`position >= W * H`) |
 | `Asserter: position not an edge` | `open_with_*` from a tile that is not on the edge |
 | `Asserter: position is a corner` | `open_with_*` from a corner |
 | `Mazer: order > 1 not supported` | `new_maze` or `open_with_*` with an order above 1 |
@@ -177,38 +182,61 @@ let open: bool = map.is_walkable(113);
 | `Spreader: invalid grid` | `compute_distribution` on a grid with a walkable bit outside the board |
 
 `search_path` returns an empty path when the target is unreachable and when `from == to`;
-`distance_to` returns `None` and `Some(0)` respectively. `hex_distance`, `neighbor` and
-`is_walkable` do not check their positions.
+`distance_to` returns `None` and `Some(0)` respectively. Outside the board
+(`position >= W * H`), `neighbor` returns `None` and `is_walkable` returns `false`; `hex_distance`
+panics, since a distance has no neutral value.
+
+**Endpoints on walls panic.** This differs from `origami_map`, whose `search_path` returns an
+empty path when the start or the target is a wall. In `origami_hexmap` an empty path only means
+"unreachable" (or `from == to`); test `is_walkable` first if an endpoint may be a wall.
+
+## Randomness and determinism
+
+- **Deterministic.** A seed gives the same map, the same objects and the same walk for a given
+  package version: the generators draw from a Poseidon stream of the seed only (no block data, no
+  caller). Store the seed, not the grid, when the version is pinned.
+- **Streams are part of the API from 1.8.0 on.** Each generator (`new_maze`, `new_cave`,
+  `new_random_walk`, `open_with_corridor`, `open_with_maze`, `compute_distribution`) has a test
+  pinning the exact grid of one seed; a change of those outputs is a breaking change.
+- **Bias.** The internal `Rng` draws bounded integers from a 128-bit pool (one Poseidon
+  permutation) refilled below 2^64: the draws of one pool are within `2^-56` of independent
+  uniform draws for bounds up to 251 (`2^-54.5` for a shuffle of 6). `compute_distribution` is
+  uniform over the `count`-subsets of the walkable tiles up to these sources (its Poseidon key
+  words add `< 2^-51.3` per call, see `GAS.md`, L7).
+- **Not a secret.** The seed decides everything: use a commit-reveal scheme or a VRF for the
+  seed when players must not predict the map (see `origami_security`).
 
 ## Gas
 
-Sierra gas measured by snforge 0.61.0 (scarb 2.19.4) in [`bench_map.cairo`](./src/tests/bench_map.cairo),
+Sierra gas measured by snforge 0.61.0 (scarb 2.19.4) in [`bench_map.cairo`](https://github.com/dojoengine/origami/blob/main/crates/hexmap/src/tests/bench_map.cairo),
 each test including a ~14k test baseline. The facade adds no gas over the library call it forwards
-to (identical or lower figures on every function). Details and the per-lot measurements: [GAS.md](./GAS.md).
+to (identical or lower figures on every function). Details and the per-lot measurements:
+[GAS.md](https://github.com/dojoengine/origami/blob/main/crates/hexmap/GAS.md) (in the repository,
+not in the package).
 
 | Function | Input | Gas |
 |---|---|---:|
 | `new_empty` | 17x14 | 18k |
-| `new_maze` | 17x14, order 0 (89 tiles carved) | 2.87M |
-| `new_cave` | 17x14, order 3 | 145k |
-| `new_cave` | 7x7, order 3 | 84k |
-| `new_random_walk` | 17x14, 200 steps | 1.00M (~4.8k per step) |
+| `new_maze` | 17x14, order 0 (90 tiles carved) | 2.90M |
+| `new_cave` | 17x14, order 3 | 142k |
+| `new_cave` | 7x7, order 3 | 81k |
+| `new_random_walk` | 17x14, 200 steps | 969k (~4.8k per step) |
 | `new_hexagon` | radius 6 | 126k |
 | `open_with_corridor` | 17x14 cave, entrance 8 | 63k |
-| `keep_component` / `reachable` | 17x14 cave / maze | 555k / 1.15M |
-| `keep_component` / `reachable` | 7x7 cave | 102k |
-| `compute_distribution` | 17x14 cave, 10 objects | 207k |
+| `keep_component` / `reachable` | 17x14 cave / maze | 536k / 1.11M |
+| `keep_component` / `reachable` | 7x7 cave | 98k |
+| `compute_distribution` | 17x14 cave, 10 objects | 193k |
 | `search_path` | 17x14 cave, 24 steps | 706k |
 | `search_path` | 7x7, 6 steps | 132k |
 | `distance_to` | 17x14 cave, 24 steps | 502k |
-| `search_path_weighted` | 17x14 cave, 2 cost classes | 1.43M |
-| `field_of_movement` | 17x14 cave, budget 6, 2 classes | 262k |
+| `search_path_weighted` | 17x14 cave, 2 cost classes | 1.41M |
+| `field_of_movement` | 17x14 cave, budget 6, 2 classes | 254k |
 | `range` | 17x14 cave, radius 4 | 104k |
 | `ring` | 17x14 cave, radius 4 | 100k |
 | `ring` | 7x7 cave, radius 2 | 46k |
-| `hex_distance` | per call | 9.5k |
-| `neighbor` | per call | 6.4k |
-| `is_walkable` | per call | 6.5k |
+| `hex_distance` | per call, both positions checked | 10.4k |
+| `neighbor` | per call, position checked | 7.0k |
+| `is_walkable` | per call, position checked | 7.1k |
 
 Rules of thumb: a BFS layer costs ~19k on a two-limb board and ~10k on a single-limb board, a
 backtracking step ~8k; a weighted time step ~37k with 2 cost classes.
@@ -221,12 +249,12 @@ backtracking step ~8k; a weighted time step ~37k with 2 cost classes.
 
 | Step | hexmap 17x14 | hexmap 7x7 | origami_map 18x14 |
 |---|---:|---:|---:|
-| `new_cave` | 145k | 84k | 126.0M |
-| `keep_component` | 189k | 58k | - |
-| `open_with_corridor` | 163k | 48k | 60k |
-| `compute_distribution(10)` | 189k | 119k | 8.96M |
+| `new_cave` | 142k | 81k | 126.0M |
+| `keep_component` | 182k | 55k | - |
+| `open_with_corridor` | 161k | 48k | 60k |
+| `compute_distribution(10)` | 177k | 111k | 8.96M |
 | `search_path` | 476k (15 steps) | 177k (6 steps) | 10.77M (25 steps) |
-| **Total** | **1.16M** | **486k** | **145.8M** |
+| **Total** | **1.14M** | **471k** | **145.8M** |
 
 ## Bitmaps and `u252`
 

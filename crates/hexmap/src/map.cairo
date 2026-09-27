@@ -3,6 +3,13 @@
 //! The facade mirrors `origami_map::map::MapTrait` name for name, plus the hex additions. Every
 //! method forwards to one library call (see `tests/bench_map.cairo` for the facade overhead).
 
+// Core imports
+
+#[feature("bounded-int-utils")]
+use core::internal::bounded_int::{
+    BoundedInt, ConstrainHelper, MulHelper, SubHelper, constrain, mul, sub,
+};
+
 // Internal imports
 
 use origami_hexmap::finders::bfs::{Bfs, BfsInternal};
@@ -12,16 +19,45 @@ use origami_hexmap::generators::digger::Digger;
 use origami_hexmap::generators::mazer::Mazer;
 use origami_hexmap::generators::spreader::Spreader;
 use origami_hexmap::generators::walker::Walker;
-use origami_hexmap::helpers::asserter::Asserter;
+use origami_hexmap::helpers::asserter::{Asserter, errors};
 use origami_hexmap::helpers::bits::Bits;
 use origami_hexmap::helpers::geometry::Geometry;
-use origami_hexmap::helpers::layout::LayoutTrait;
+use origami_hexmap::helpers::layout::{DilationTrait, LayoutTrait};
 use origami_hexmap::types::direction::Direction;
 
 // Constants
 
 /// Largest board of the single-limb path, as in `finders::bfs`.
 const SMALL_SIZE: u8 = 128;
+
+/// `W * H` for any `u8` dimensions.
+impl SizeMul of MulHelper<u8, u8> {
+    type Result = BoundedInt<0, 65025>;
+}
+
+/// `position - W * H`.
+impl PositionSub of SubHelper<u8, BoundedInt<0, 65025>> {
+    type Result = BoundedInt<-65025, 255>;
+}
+
+/// Sign of `position - W * H`.
+impl PositionConstrain of ConstrainHelper<BoundedInt<-65025, 255>, 0> {
+    type LowT = BoundedInt<-65025, -1>;
+    type HighT = BoundedInt<0, 255>;
+}
+
+/// Whether a position lies in the board, `position < W * H`, for any `u8` dimensions: a
+/// `bounded_int` product, difference and sign, cheaper than a `u16` product and comparison (see
+/// `GAS.md`, F1).
+#[feature("bounded-int-utils")]
+#[inline(always)]
+fn is_inside(width: u8, height: u8, position: u8) -> bool {
+    let size = mul::<_, _, SizeMul>(width, height);
+    match constrain::<_, 0, PositionConstrain>(sub::<_, _, PositionSub>(position, size)) {
+        Ok(_) => true,
+        Err(_) => false,
+    }
+}
 
 /// Types.
 #[derive(Copy, Drop, Serde)]
@@ -35,7 +71,14 @@ pub struct HexMap {
 /// Implementation of the `HexMapTrait` trait for the `HexMap` struct.
 #[generate_trait]
 pub impl HexMapImpl of HexMapTrait {
-    /// Create a map.
+    /// Create a map from an existing grid, unchecked (the raw constructor, as in `origami_map`).
+    /// The caller is responsible for valid dimensions (`W, H >= 3`, `W * H <= 251`) and for a grid
+    /// without bits at or above `W * H`; the border ring is expected to be wall except for
+    /// entrances. The dimensions are validated later by the functions that take them in charge:
+    /// `open_with_corridor`, `open_with_maze`, `compute_distribution`, `search_path`,
+    /// `search_path_weighted`, `field_of_movement`, `distance_to`, `reachable`, `range`, `ring` and
+    /// `keep_component` (they panic on invalid dimensions or positions); `hex_distance`,
+    /// `neighbor` and `is_walkable` only check their positions against `W * H`.
     /// # Arguments
     /// * `grid` - The grid of the map, `1` is walkable
     /// * `width` - The width of the map
@@ -233,7 +276,8 @@ pub impl HexMapImpl of HexMapTrait {
         Dial::field_of_movement(self.grid, self.width, self.height, from, budget, costs)
     }
 
-    /// Length of the shortest path between two tiles, walls included.
+    /// Length of the shortest path between two tiles through walkable tiles: walls block, as in
+    /// `search_path`.
     /// # Arguments
     /// * `self` - The map
     /// * `from` - The starting position
@@ -254,9 +298,18 @@ pub impl HexMapImpl of HexMapTrait {
     /// * `to` - The second position
     /// # Returns
     /// * The distance
+    /// # Panics
+    /// * If a position is outside the board (`position >= W * H`)
     #[inline]
     fn hex_distance(self: HexMap, from: u8, to: u8) -> u8 {
-        Geometry::distance(self.width, from, to)
+        // [Check] Positions, a distance has no neutral value
+        let (width, height) = (self.width, self.height);
+        assert(
+            is_inside(width, height, from) && is_inside(width, height, to),
+            errors::ASSERTER_POSITION_NOT_INSIDE,
+        );
+        // [Return] Distance
+        Geometry::distance(width, from, to)
     }
 
     /// Every tile reachable from a position.
@@ -315,10 +368,10 @@ pub impl HexMapImpl of HexMapTrait {
             return outer - Bfs::tiles_within_range(grid, width, height, position, radius - 1);
         }
         if radius == 1 {
-            return Bits::to_felt(BfsInternal::and(centre.around.into(), open));
+            return Bits::to_felt(Bits::and(centre.around.into(), open));
         }
         // [Compute] Balls of radius `radius - 1` and `radius - 2`
-        let first = BfsInternal::and((centre.around + power).into(), free);
+        let first = Bits::and((centre.around + power).into(), free);
         let edges = grid - Bits::to_felt(free);
         if width * height <= SMALL_SIZE {
             let (ball, inner) = BfsInternal::flood_small(@step, first.low, free.low, radius - 2);
@@ -328,14 +381,14 @@ pub impl HexMapImpl of HexMapTrait {
                 inner
             };
             // [Compute] Interior tiles of the ring
-            let near = BfsInternal::expand_small(@step, ball.try_into().unwrap());
+            let near = step.expand_small(ball.try_into().unwrap());
             let ring: felt252 = (near & free.low).into() - ball;
             if edges == 0 {
                 return ring;
             }
             // [Return] Plus the edge tiles next to the ball but not to the inner ball
             let edges: u128 = edges.try_into().unwrap();
-            let far = BfsInternal::expand_small(@step, inner.try_into().unwrap());
+            let far = step.expand_small(inner.try_into().unwrap());
             return ring + (near & edges).into() - (far & edges).into();
         }
         let (ball, inner) = BfsInternal::flood(@step, first, free, radius - 2);
@@ -346,43 +399,45 @@ pub impl HexMapImpl of HexMapTrait {
         };
         // [Compute] Interior tiles of the ring
         let wide: u256 = ball.into();
-        let (low, high) = BfsInternal::expand(@step, wide.low, wide.high, ball);
+        let (low, high) = step.dilate(wide.low, wide.high, ball);
         let near = u256 { low, high };
-        let ring = Bits::to_felt(BfsInternal::and(near, free)) - ball;
+        let ring = Bits::to_felt(Bits::and(near, free)) - ball;
         if edges == 0 {
             return ring;
         }
         // [Return] Plus the edge tiles next to the ball but not to the inner ball
         let edges: u256 = edges.into();
         let wide: u256 = inner.into();
-        let (low, high) = BfsInternal::expand(@step, wide.low, wide.high, inner);
+        let (low, high) = step.dilate(wide.low, wide.high, inner);
         let far = u256 { low, high };
-        ring
-            + Bits::to_felt(BfsInternal::and(near, edges))
-            - Bits::to_felt(BfsInternal::and(far, edges))
+        ring + Bits::to_felt(Bits::and(near, edges)) - Bits::to_felt(Bits::and(far, edges))
     }
 
-    /// Neighbour of a position, `None` outside the board.
+    /// Neighbour of a position, `None` if the neighbour or the position is outside the board.
     /// # Arguments
     /// * `self` - The map
     /// * `position` - The position
     /// * `direction` - The direction
     /// # Returns
-    /// * The neighbour position
+    /// * The neighbour position, `None` if `position >= W * H` or the neighbour is off the board
     #[inline]
     fn neighbor(self: HexMap, position: u8, direction: Direction) -> Option<u8> {
-        LayoutTrait::neighbor(self.width, self.height, position, direction)
+        let (width, height) = (self.width, self.height);
+        if !is_inside(width, height, position) {
+            return None;
+        }
+        LayoutTrait::neighbor(width, height, position, direction)
     }
 
     /// Whether a position is walkable.
     /// # Arguments
     /// * `self` - The map
-    /// * `position` - The position, at most 251
+    /// * `position` - The position
     /// # Returns
-    /// * `true` if the tile is walkable
+    /// * `true` if the tile is walkable, `false` if it is a wall or `position >= W * H`
     #[inline]
     fn is_walkable(self: HexMap, position: u8) -> bool {
-        Bits::get(self.grid.into(), position)
+        is_inside(self.width, self.height, position) && Bits::get(self.grid.into(), position)
     }
 }
 
@@ -589,6 +644,62 @@ mod tests {
         assert!(map.is_walkable(CAVE_17X14_FAR_TO));
         assert!(!map.is_walkable(0));
         assert!(!map.is_walkable(237));
+    }
+
+    #[test]
+    fn test_map_neighbor_outside() {
+        // Audit A4: position 9 is outside a 3x3 board (0..=8), `LayoutTrait::neighbor` alone
+        // returns `Some(10)` West
+        let map = HexMapTrait::new_empty(3, 3, 0);
+        assert!(map.neighbor(9, Direction::West).is_none());
+        let directions = array![
+            Direction::East, Direction::NorthEast, Direction::NorthWest, Direction::West,
+            Direction::SouthWest, Direction::SouthEast,
+        ]
+            .span();
+        for direction in directions {
+            assert!(map.neighbor(9, *direction).is_none());
+            assert!(map.neighbor(255, *direction).is_none());
+        }
+        // The last tile of the board still has neighbours
+        assert!(map.neighbor(8, Direction::SouthEast) == Some(4));
+        assert!(map.neighbor(8, Direction::West).is_none());
+    }
+
+    #[test]
+    fn test_map_is_walkable_outside() {
+        // Audit A4: an unchecked grid with bit 9 set on a 3x3 board
+        let map = HexMapTrait::new(0x200, 3, 3, 0);
+        assert!(!map.is_walkable(9));
+        assert!(!map.is_walkable(255));
+        let map = HexMapTrait::new(0x1ff, 3, 3, 0);
+        assert!(map.is_walkable(8));
+        // Dimensions beyond `u8` products: every `u8` position is inside, no overflow
+        let map = HexMapTrait::new(0x1, 255, 255, 0);
+        assert!(map.is_walkable(0));
+        assert!(!map.is_walkable(255));
+    }
+
+    #[test]
+    fn test_map_distance_to_walls_block() {
+        // Audit A4: 5x3, walkable 6 and 8, wall 7 between them: no path, walls are not crossed
+        let map = HexMapTrait::new(0x140, 5, 3, 0);
+        assert!(map.distance_to(6, 8).is_none());
+        assert!(map.search_path(6, 8).len() == 0);
+        // The grid distance ignores the wall
+        assert!(map.hex_distance(6, 8) == 2);
+    }
+
+    #[test]
+    #[should_panic(expected: 'Asserter: position not inside')]
+    fn test_map_hex_distance_revert_from_outside() {
+        HexMapTrait::new_empty(3, 3, 0).hex_distance(9, 0);
+    }
+
+    #[test]
+    #[should_panic(expected: 'Asserter: position not inside')]
+    fn test_map_hex_distance_revert_to_outside() {
+        HexMapTrait::new_empty(3, 3, 0).hex_distance(4, 9);
     }
 
     #[test]

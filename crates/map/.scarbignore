@@ -1,0 +1,5 @@
+# Kept out of the published package (`scarb package`), still in the repository.
+# Integration tests (README examples).
+/tests/
+# `src/helpers/printer.cairo` stays: it is declared under `#[cfg(target: "test")]`, which scarb
+# also sets when a dependent runs its tests, so the file must ship.

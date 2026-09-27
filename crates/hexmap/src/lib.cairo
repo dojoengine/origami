@@ -27,12 +27,12 @@ pub mod helpers {
     pub mod geometry;
     pub mod layout;
 
-    #[cfg(target: "test")]
+    #[cfg(test)]
     pub mod printer;
     pub mod rng;
 }
 
-#[cfg(target: "test")]
+#[cfg(test)]
 pub mod tests {
     pub mod bench_bfs;
     pub mod bench_caver;

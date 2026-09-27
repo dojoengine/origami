@@ -1,0 +1,10 @@
+# Kept out of the published package (`scarb package`), still in the repository.
+# Integration tests (README examples).
+/tests/
+# Test-only modules: declared under `#[cfg(test)]` in `src/lib.cairo`, set for this package's own
+# tests only (not `#[cfg(target: "test")]`, which scarb also sets when a dependent runs its
+# tests), so the verification build and dependents compile without them.
+/src/tests/
+/src/helpers/printer.cairo
+# Measurements, linked from the README on GitHub.
+/GAS.md
