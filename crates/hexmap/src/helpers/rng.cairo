@@ -1,21 +1,54 @@
 //! Pooled random number generator.
 //!
-//! One Poseidon permutation yields a 128-bit pool; bounded integers are drawn from it by mixed
-//! radix (`(pool, r) = DivRem(pool, n)`), and the pool is refilled when it drops below 2^32, so the
-//! bias of a draw stays below `n / 2^32`.
+//! One Poseidon permutation yields a 128-bit pool (the low limb of its second output; the first
+//! output is the next seed). Bounded integers are drawn from it by mixed radix
+//! (`(pool, r) = DivRem(pool, n)`), and the pool is refilled when it drops below 2^64. The
+//! divisions by the constant bounds 6, 216 and 720 use `bounded_int::div_rem` (see `GAS.md`).
+//!
+//! Bias: while the pool holds at least 2^64, the bounds already drawn from it multiply to less
+//! than `2^128 / 2^64`, so the bounds of all the draws of one pool multiply to less than
+//! `2^64 * B` (`B` the largest bound): these draws, digits of one uniform 128-bit integer, are
+//! within `2^64 * B / 2^128` of independent uniform draws: `2^-56` per pool for `B <= 251` (every
+//! bound of the generators), `2^-54.5` for `shuffle6` (`B = 720`). The low limb of a Poseidon
+//! output is within `2^-123` of uniform.
+//!
+//! The other outputs of the permutation are not kept: a spare pool in the generator (one more
+//! field carried through the recursions of `Mazer` and `Digger`) costs 2 % per carved tile, more
+//! than the permutations it saves (see `GAS.md`, P1). `Walker`, which keeps its pool in locals,
+//! uses both limbs.
 
 // Core imports
 
+#[feature("bounded-int-utils")]
+use core::internal::bounded_int::{BoundedInt, DivRemHelper, UnitInt, div_rem, upcast};
 use core::poseidon::hades_permutation;
 
 // Internal imports
 
-use origami_hexmap::helpers::bits::TWO_POW_32;
+use origami_hexmap::helpers::bits::TWO_POW_64;
 
 // Constants
 
 /// Number of permutations of the 6 directions.
 const PERMUTATION_COUNT: NonZero<u128> = 720;
+
+/// `DivRem` of a pool by 6, with the ranges of the quotient and the remainder.
+impl DivRem6 of DivRemHelper<u128, UnitInt<6>> {
+    type DivT = BoundedInt<0, 0x2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa>;
+    type RemT = BoundedInt<0, 5>;
+}
+
+/// `DivRem` of a pool by 216.
+impl DivRem216 of DivRemHelper<u128, UnitInt<216>> {
+    type DivT = BoundedInt<0, 0x12f684bda12f684bda12f684bda12f6>;
+    type RemT = BoundedInt<0, 215>;
+}
+
+/// `DivRem` of a pool by 720.
+impl DivRem720 of DivRemHelper<u128, UnitInt<720>> {
+    type DivT = BoundedInt<0, 0x5b05b05b05b05b05b05b05b05b05b0>;
+    type RemT = BoundedInt<0, 719>;
+}
 
 /// Types.
 #[derive(Copy, Drop)]
@@ -58,12 +91,28 @@ pub impl RngImpl of RngTrait {
     /// * The pool is consumed, and refilled when it runs low
     #[inline]
     fn draw(ref self: Rng, bound: NonZero<u128>) -> u128 {
-        if self.pool < TWO_POW_32 {
+        if self.pool < TWO_POW_64 {
             self.refill();
         }
         let (pool, value) = DivRem::div_rem(self.pool, bound);
         self.pool = pool;
         value
+    }
+
+    /// Draw an integer in `[0, 6)`: a division by a constant (`bounded_int`, see `GAS.md`).
+    /// # Arguments
+    /// * `self` - The generator
+    /// # Returns
+    /// * The drawn integer
+    #[feature("bounded-int-utils")]
+    #[inline]
+    fn draw6(ref self: Rng) -> u128 {
+        if self.pool < TWO_POW_64 {
+            self.refill();
+        }
+        let (pool, value) = div_rem::<_, _, DivRem6>(self.pool, 6);
+        self.pool = upcast(pool);
+        upcast(value)
     }
 
     /// Draw an integer in `[0, bound)`.
@@ -86,10 +135,28 @@ pub impl RngImpl of RngTrait {
     /// * `self` - The generator
     /// # Returns
     /// * The packed permutation
+    #[feature("bounded-int-utils")]
     #[inline]
     fn shuffle6(ref self: Rng) -> u32 {
-        let index = self.draw(PERMUTATION_COUNT);
+        if self.pool < TWO_POW_64 {
+            self.refill();
+        }
+        let (pool, index) = div_rem::<_, _, DivRem720>(self.pool, 720);
+        self.pool = upcast(pool);
+        let index: felt252 = upcast(index);
         *PERMUTATIONS.span().at(index.try_into().unwrap())
+    }
+
+    /// Divide a pool by 216: three base-6 digits (`Walker`).
+    /// # Arguments
+    /// * `pool` - The pool
+    /// # Returns
+    /// * The quotient and the remainder
+    #[feature("bounded-int-utils")]
+    #[inline(always)]
+    fn split216(pool: u128) -> (u128, u128) {
+        let (quotient, remainder) = div_rem::<_, _, DivRem216>(pool, 216);
+        (upcast(quotient), upcast(remainder))
     }
 
     /// Refill the pool from the next seed.
@@ -99,10 +166,10 @@ pub impl RngImpl of RngTrait {
     /// * The seed and the pool are replaced
     #[inline]
     fn refill(ref self: Rng) {
-        let (seed, pool, _) = hades_permutation(self.seed, 0, 2);
-        let pool: u256 = pool.into();
+        let (seed, word, _) = hades_permutation(self.seed, 0, 2);
+        let word: u256 = word.into();
         self.seed = seed;
-        self.pool = pool.low;
+        self.pool = word.low;
     }
 }
 

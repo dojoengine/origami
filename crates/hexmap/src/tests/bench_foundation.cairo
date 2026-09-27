@@ -7,6 +7,8 @@
 use core::dict::Felt252Dict;
 use core::felt252_div;
 use core::hash::HashStateTrait;
+#[feature("bounded-int-utils")]
+use core::internal::bounded_int::{BoundedInt, DivRemHelper, UnitInt, div_rem, upcast};
 use core::poseidon::PoseidonTrait;
 
 // Internal imports
@@ -503,6 +505,75 @@ fn bench_rng_shuffle6() {
     while n != 0 {
         n -= 1;
         acc += rng.shuffle6().into();
+    }
+    assert!(acc != 0);
+}
+
+// Lot P1: draws of a constant bound (`bounded_int::div_rem`) and a counter-refilled pool
+
+/// A pool with a refill counter instead of the `pool < 2^64` test (loser, see `GAS.md`, P1).
+#[derive(Copy, Drop)]
+struct CountedPool {
+    seed: felt252,
+    pool: u128,
+    left: felt252,
+}
+
+/// `DivRem` of a pool by 6, with the ranges of the quotient and the remainder.
+impl BenchDivRem6 of DivRemHelper<u128, UnitInt<6>> {
+    type DivT = BoundedInt<0, 0x2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa>;
+    type RemT = BoundedInt<0, 5>;
+}
+
+#[test]
+#[available_gas(l2_gas: 600000)]
+fn bench_rng_draw6() {
+    let mut rng = RngTrait::new('seed');
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        acc += rng.draw6().into();
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[feature("bounded-int-utils")]
+#[available_gas(l2_gas: 600000)]
+fn bench_u128_divrem_bounded() {
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        let value = u256 { low: n.into(), high: n.into() };
+        let (q, r) = div_rem::<_, _, BenchDivRem6>(value.low, 6);
+        acc += upcast::<_, felt252>(q) + upcast::<_, felt252>(r);
+    }
+    assert!(acc != 0);
+}
+
+#[test]
+#[feature("bounded-int-utils")]
+#[available_gas(l2_gas: 600000)]
+fn bench_rng_draw6_counter() {
+    // 24 draws of 6 per 128-bit pool (6^24 < 2^63), the refill decided by a felt counter
+    let mut state = CountedPool { seed: 'seed', pool: 0, left: 0 };
+    let mut acc: felt252 = 0;
+    let mut n = REPS;
+    while n != 0 {
+        n -= 1;
+        if state.left == 0 {
+            let (seed, word, _) = core::poseidon::hades_permutation(state.seed, 0, 2);
+            let word: u256 = word.into();
+            state.seed = seed;
+            state.pool = word.low;
+            state.left = 24;
+        }
+        state.left -= 1;
+        let (pool, value) = div_rem::<_, _, BenchDivRem6>(state.pool, 6);
+        state.pool = upcast(pool);
+        acc += upcast::<_, felt252>(value);
     }
     assert!(acc != 0);
 }

@@ -6,7 +6,7 @@
 //! Gas layout (see `GAS.md`, L6):
 //! * Directions are drawn three at a time: one pool division by 216 and a 216-arm table (not
 //!   inlined: one copy of the table, one call per three moves).
-//! * The main loop makes 18 moves per iteration (6 draws, two iterations per pool refill).
+//! * The main loop makes 18 moves per iteration (6 draws from one pool: a limb of a permutation).
 //! * The column is tracked doubled, `c = 2x + (y & 1)`: every move shifts it by a constant
 //!   (East -2, West +2, NorthEast/SouthEast -1, NorthWest/SouthWest +1) and every bound test is
 //!   one felt equality, with no parity branch.
@@ -30,10 +30,9 @@ use origami_hexmap::helpers::rng::RngTrait;
 
 /// 1/2 in the field.
 const INV_2: felt252 = 0x400000000000008800000000000000000000000000000000000000000000001;
-/// Number of direction triples, one draw per three moves.
-const TRIPLE_COUNT: NonZero<u128> = 216;
-/// Iterations per pool refill: 12 draws, 216^12 < 2^96, the pool stays above 2^32 like `Rng`.
-const BLOCKS_PER_POOL: felt252 = 2;
+/// Iterations per permutation: one per limb of its output, 6 draws of 216 per pool (216^6 < 2^47,
+/// so the draws of a pool are within 2^-54 of independent draws: see `Rng` for the high limb).
+const BLOCKS_PER_PERMUTATION: felt252 = 2;
 
 /// Walker state.
 #[derive(Copy, Drop)]
@@ -100,6 +99,7 @@ pub impl Walker of WalkerTrait {
         let mut blocks: felt252 = blocks.into();
         let mut seed = rng.seed;
         let mut pool: u128 = 0;
+        let mut spare: u128 = 0;
         let mut left: felt252 = 0;
         while blocks != 0 {
             blocks -= 1;
@@ -108,40 +108,44 @@ pub impl Walker of WalkerTrait {
                 let word: u256 = word.into();
                 seed = next;
                 pool = word.low;
-                left = BLOCKS_PER_POOL;
+                spare = word.high;
+                left = BLOCKS_PER_PERMUTATION;
+            } else {
+                pool = spare;
             }
             left -= 1;
-            let (quotient, draw) = DivRem::div_rem(pool, TRIPLE_COUNT);
+            let (quotient, draw) = RngTrait::split216(pool);
             grid = grid | walk.walk3(@bounds, draw).into();
-            let (quotient, draw) = DivRem::div_rem(quotient, TRIPLE_COUNT);
+            let (quotient, draw) = RngTrait::split216(quotient);
             grid = grid | walk.walk3(@bounds, draw).into();
-            let (quotient, draw) = DivRem::div_rem(quotient, TRIPLE_COUNT);
+            let (quotient, draw) = RngTrait::split216(quotient);
             grid = grid | walk.walk3(@bounds, draw).into();
-            let (quotient, draw) = DivRem::div_rem(quotient, TRIPLE_COUNT);
+            let (quotient, draw) = RngTrait::split216(quotient);
             grid = grid | walk.walk3(@bounds, draw).into();
-            let (quotient, draw) = DivRem::div_rem(quotient, TRIPLE_COUNT);
+            let (quotient, draw) = RngTrait::split216(quotient);
             grid = grid | walk.walk3(@bounds, draw).into();
-            let (quotient, draw) = DivRem::div_rem(quotient, TRIPLE_COUNT);
+            let (_, draw) = RngTrait::split216(quotient);
             grid = grid | walk.walk3(@bounds, draw).into();
-            pool = quotient;
         }
-        // [Compute] Remaining moves, at most 6 draws: the pool holds them
+        // [Compute] Remaining moves, at most 6 draws: one pool holds them
         if tail != 0 {
             if left == 0 {
                 let (_, word, _) = hades_permutation(seed, 0, 2);
                 let word: u256 = word.into();
                 pool = word.low;
+            } else {
+                pool = spare;
             }
             let (full, count) = DivRem::div_rem(tail, 3);
             let mut full: felt252 = full.into();
             while full != 0 {
                 full -= 1;
-                let (quotient, draw) = DivRem::div_rem(pool, TRIPLE_COUNT);
+                let (quotient, draw) = RngTrait::split216(pool);
                 pool = quotient;
                 grid = grid | walk.walk3(@bounds, draw).into();
             }
             if count != 0 {
-                let (_, draw) = DivRem::div_rem(pool, TRIPLE_COUNT);
+                let (_, draw) = RngTrait::split216(pool);
                 grid = grid | walk.walk2(@bounds, draw, count).into();
             }
         }
@@ -536,17 +540,22 @@ mod tests {
         let mut grid = Bits::pow(position);
         let mut seed = rng.seed;
         let mut pool: u128 = 0;
+        let mut spare: u128 = 0;
         let mut draws: u32 = 0;
         let mut digits: u128 = 0;
         let mut remaining: u8 = 0;
         let mut index: u16 = 0;
         while index != steps {
             if remaining == 0 {
+                // 6 draws per pool: the low limb of a permutation output, then its high limb
                 if draws % 12 == 0 {
                     let (next, word, _) = hades_permutation(seed, 0, 2);
                     let word: u256 = word.into();
                     seed = next;
                     pool = word.low;
+                    spare = word.high;
+                } else if draws % 12 == 6 {
+                    pool = spare;
                 }
                 let (quotient, draw) = DivRem::div_rem(pool, 216);
                 pool = quotient;
@@ -587,53 +596,53 @@ mod tests {
     #[test]
     fn test_walker_generate_17x14() {
         // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-        //  0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0
-        // 0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0
-        //  0 1 1 1 1 1 1 0 0 0 1 0 0 0 1 0 0
-        // 0 1 1 1 1 1 1 1 1 1 1 1 0 0 1 1 0
-        //  0 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 0
-        // 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0
-        //  0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0
-        // 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0
-        //  0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 0
-        // 0 0 0 0 0 1 1 1 0 1 1 1 1 1 1 1 0
-        //  0 0 0 0 0 1 1 1 0 0 0 1 1 1 1 0 0
-        // 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 1 0
+        //  0 0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0
+        // 0 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0
+        //  0 0 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0
+        // 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 0 0
+        //  0 0 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0
+        // 0 0 0 0 1 1 1 1 0 1 1 0 0 0 0 0 0
+        //  0 0 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0
+        // 0 1 1 1 1 1 0 1 1 0 0 0 0 0 0 0 0
+        //  0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0
+        // 0 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0
+        //  0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0
+        // 0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0
         //  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
         let grid = Walker::generate(17, 14, 500, SEED);
-        assert!(grid == 0xfc007e003f111ffccfbfe7fff1fff83ffc0ffe077f038f0080c0000);
+        assert!(grid == 0x7f807fe01ff007f807fc00f600fe01f600ff007fc03fc01fe000000);
     }
 
     #[test]
     fn test_walker_generate_7x7() {
         //  0 0 0 0 0 0 0
-        // 0 1 1 1 1 1 0
+        // 0 1 1 1 0 0 0
         //  0 1 1 1 1 0 0
-        // 0 0 1 1 1 1 0
+        // 0 1 1 1 1 1 0
         //  0 0 1 0 1 1 0
         // 0 0 0 0 0 0 0
         //  0 0 0 0 0 0 0
         let grid = Walker::generate(7, 7, 50, SEED);
-        assert!(grid == 0x1f3c3c58000);
+        assert!(grid == 0x1c3c7c58000);
     }
 
     #[test]
     fn test_walker_generate_19x13() {
         //  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-        // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-        //  0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0
-        // 0 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0
-        //  0 0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0
-        // 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0
-        //  0 0 1 1 1 1 1 1 1 1 0 0 0 1 1 0 0 0 0
-        // 0 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 0
-        //  0 1 1 0 1 1 1 1 0 1 0 1 1 1 1 1 1 1 0
-        // 0 1 1 1 0 1 1 0 0 0 0 1 1 1 1 1 1 1 0
-        //  0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0
-        // 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        // 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        //  0 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        // 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0
+        //  0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        // 0 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        //  0 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        // 0 1 0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0
+        //  0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0
+        // 0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0
+        //  0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0
+        // 0 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0
         //  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
         let grid = Walker::generate(19, 13, 200, SEED);
-        assert!(grid == 0x40001c0007e001fe007f8c1fff737afe761fc80200000000000);
+        assert!(grid == 0x800070000f00038000380007000170003f0007f800fc001fc0000000);
     }
 
     #[test]

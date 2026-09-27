@@ -409,19 +409,19 @@ fn select_in(value: u128, prefix: u128, bytes: u128, rank: u8) -> (u128, u128) {
 pub impl Spreader of SpreaderTrait {
     /// Pick `count` walkable tiles uniformly.
     ///
-    /// Uniform up to a total variation below `2^-15` in the worst case and `2^-23` in practice,
+    /// Uniform up to a total variation below `2^-47` in the worst case and `2^-51` in practice,
     /// from the two random sources (every other step is exact):
     /// * a key word is a Poseidon output, uniform below the prime `P = 2^251 + 17 * 2^192 + 1`;
     ///   its 251 low bits are within `(17 * 2^192 + 1) / P < 2^-54.9` of 251 fair coins
     ///   (`test_spreader_bias_field_bits`), and a call uses at most `LEVELS = 12` words:
     ///   `< 2^-51.3`;
-    /// * `Rng` draws by mixed radix from 128-bit pools refilled below 2^32: a draw from a pool
-    ///   holding at least 2^32 means the bounds already drawn from it multiply to less than 2^96,
-    ///   so the bounds of all the draws of one pool multiply to less than `2^96 * 251 < 2^104`,
-    ///   and these draws, digits of a uniform 128-bit integer, are within `2^104 / 2^128 = 2^-24`
+    /// * `Rng` draws by mixed radix from 128-bit pools refilled below 2^64: a draw from a pool
+    ///   holding at least 2^64 means the bounds already drawn from it multiply to less than 2^64,
+    ///   so the bounds of all the draws of one pool multiply to less than `2^64 * 251 < 2^72`,
+    ///   and these draws, digits of a uniform 128-bit integer, are within `2^72 / 2^128 = 2^-56`
     ///   of independent uniform draws (`test_spreader_bias_pool`). One pool serves the whole call
     ///   in practice (at most 3 draws per pick, 1 for the table); the worst case is one pool per
-    ///   draw, at most `3 * 125 = 375` draws (see the loop bounds): `< 2^-15.4`.
+    ///   draw, at most `3 * 125 = 375` draws (see the loop bounds): `< 2^-47.4`.
     /// # Arguments
     /// * `grid` - The grid, `1` is walkable
     /// * `width` - The width of the map
@@ -675,7 +675,7 @@ mod tests {
 
     // Internal imports
 
-    use origami_hexmap::helpers::bits::{Bits, TWO_POW_128, TWO_POW_32};
+    use origami_hexmap::helpers::bits::{Bits, TWO_POW_128, TWO_POW_64};
     use origami_hexmap::tests::fixtures::*;
 
     // Local imports
@@ -1051,9 +1051,9 @@ mod tests {
 
     #[test]
     fn test_spreader_bias_pool() {
-        // `Rng` refills below 2^32: a pool holding at least 2^32 has served bounds multiplying
-        // to at most 2^128 / 2^32 = 2^96
-        assert!(TWO_POW_32 == 0x100000000);
+        // `Rng` refills below 2^64: a pool holding at least 2^64 has served bounds multiplying
+        // to at most 2^128 / 2^64 = 2^64
+        assert!(TWO_POW_64 == 0x10000000000000000);
         // Every bound drawn here is at most 251: the board size, a set size, or C(d, j) <= 70
         let mut row: u32 = 0;
         while row != 89 {
@@ -1062,10 +1062,10 @@ mod tests {
             assert!(end - start <= 70);
             row += 1;
         }
-        // So the bounds of one pool multiply to less than 2^96 * 251 < 2^104, and its draws are
-        // within 2^104 / 2^128 = 2^-24 of independent uniform draws
-        let two_96: u256 = Bits::pow(96).into();
-        assert!(two_96 * 251 < Bits::pow(104).into());
+        // So the bounds of one pool multiply to less than 2^64 * 251 < 2^72, and its draws are
+        // within 2^72 / 2^128 = 2^-56 of independent uniform draws
+        let two_64: u256 = Bits::pow(64).into();
+        assert!(two_64 * 251 < Bits::pow(72).into());
     }
 
     #[test]

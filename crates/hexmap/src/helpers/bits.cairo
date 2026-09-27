@@ -13,8 +13,10 @@ use core::integer::Bitwise;
 
 /// 2^128 as a felt, used to rebuild a felt from its `u256` limbs.
 pub const TWO_POW_128: felt252 = 0x100000000000000000000000000000000;
-/// 2^32, lower bound of the random pool before a refill.
+/// 2^32, lower bound of the random pool before a refill until lot P1 (see `GAS.md`).
 pub const TWO_POW_32: u128 = 0x100000000;
+/// 2^64, lower bound of the random pool before a refill.
+pub const TWO_POW_64: u128 = 0x10000000000000000;
 /// Byte-sum multiplier 0x0101...01 (16 bytes).
 pub const BYTES_ONE: felt252 = 0x01010101010101010101010101010101;
 /// Odd bits mask 0xAAAA... on 128 bits.
