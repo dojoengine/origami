@@ -34,6 +34,7 @@ pub mod helpers {
 
 #[cfg(test)]
 pub mod tests {
+    pub mod bench_astar;
     pub mod bench_bfs;
     pub mod bench_caver;
     pub mod bench_dial;

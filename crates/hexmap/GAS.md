@@ -442,10 +442,247 @@ stopped after three consecutive ideas below 2 % (loops x8, window backtracking, 
 * `Bfs::distance` added (forward pass only, 70 % of `search` on SERPENTINE, 71 % on EMPTY).
 * `Bfs::reachable` = `tiles_within_range(.., 255)`; it could replace `Caver::keep_component`.
 
-## L2 A* baseline
+## L2 A*
 
-Dropped: the bit-parallel BFS (L1) and Dial (L3) cover unweighted and weighted searches; the A*
-and heap modules were removed by L8.
+Measured with scarb 2.19.4, snforge 0.61.0 (sierra gas), budgets set by the procedure above.
+Everything is test-only in `tests/bench_astar.cairo`: **no A\* formulation beats `Bfs::search`
+by more than 5 % on a realistic class of inputs**, so `finders/astar.cairo` is not declared and
+nothing is exported. Every search is checked against `Bfs::search` (same length, valid path) on
+the fixtures, samples of CAVE, MAZE, EMPTY and SERPENTINE, 3 random caves (17x14, 19x13, 7x7), 3
+mazes, 3x3, 8x16, 9x15, 25x10, 83x3, 3x83, open edge tiles (entrances, corners, a whole open row,
+a closed entrance, `Digger` corridors and mazes); `Astar::search` also has the panics of
+`Bfs::search`. The greedy search is checked for validity only (not shortest).
+
+Pairs: the fixtures of `bench_bfs.cairo`, plus pairs from the centre of EMPTY 17x14 (110) and
+from a cave tile of CAVE 17x14 (104) at hex distance 1, 2, 5 and 10 (on CAVE the walls lengthen
+the path to 7 and 12). `Bfs::search` of the fixture pairs is the L1 library figure above;
+the extra pairs have their own `bench_astar_bfs_*` benchmarks.
+
+### Formulations
+
+* **`Astar::search` (bitmap buckets, the best one).** With unit costs and the hex distance as
+  heuristic, a neighbour's `f` is the parent's `f` plus 0, 1 or 2, so only three buckets are
+  live (`f`, `f + 1`, `f + 2`), each two `u128` limbs. The directions that bring a tile closer or
+  take it away depend only on the signs of the cube offset to the target (12 cases): the
+  neighbours are split into the three classes by 3 field products (`2^i * M_class`), converted
+  to one limb when the neighbourhood fits in it, and one AND with the unclosed set each. The
+  closer neighbours of the last expanded tile are expanded first (tie-break towards the smaller
+  `h`), then the bucket `f` by lowest bit; the index of a popped bit is `LOG[bit mod 131]` (2 is a
+  primitive root of 131). Stale copies in the later buckets are dropped by one AND when a bucket
+  becomes current. The search stops when the target enters the bucket `f`. The path is rebuilt
+  from the list of expanded tiles walked backwards once (a tile popped as a closer neighbour of
+  the previous entry follows it, the others take the last expanded neighbour at depth `g - 1`).
+  Same contract as `Bfs::search`, edge endpoints included.
+* **Other open lists** (same expansion and classes, entries `f << 16 | h << 8 | position`, lazy
+  deletion of closed tiles): binary heap in a `Felt252Dict` (`variant_heap`), array kept sorted
+  by one copy per insertion (`variant_sorted`; a heap in an immutable `Array` would copy the array
+  on every swap), unsorted array scanned for the minimum and rebuilt (`variant_scan`).
+* **Greedy best-first** (`variant_greedy`, not shortest): buckets by `h` in a `Felt252Dict`, the
+  closer class first, every tile pushed once.
+* **BFS pruned by the hex distance** (`variant_pruned`): layer `i` is intersected with the ball of
+  radius `bound - i` around the target (balls by dilating the target on the empty interior),
+  iterative deepening on `bound` from the hex distance, backtracking by `BfsInternal::backtrack`.
+
+### `Astar::search` against `Bfs::search`
+
+`BFS layers / tiles`: layers of `Bfs::search` and tiles in them. `Per expanded tile`: gas divided
+by the expanded tiles (fixed cost included); the marginal cost is 35.5k per expanded tile (EMPTY
+d5 -> d10, path tiles included). A BFS layer costs 19.3k on 17x14 whatever its size (3.2k per
+tile touched on EMPTY far).
+
+| Pair | Path | `Bfs::search` | BFS layers / tiles | **`Astar::search`** | vs BFS | Expanded | Per expanded tile |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| EMPTY NEAR 17x14 | 3 | 107_285 | 2 / 19 | 132_457 | +23.5 % | 3 | 44_152 |
+| EMPTY FAR 17x14 | 19 | 570_033 | 18 / 178 | 661_956 | +16.1 % | 19 | 34_839 |
+| CAVE NEAR 17x14 | 3 | 112_141 | 2 / 11 | 131_292 | +17.1 % | 3 | 43_764 |
+| CAVE FAR 17x14 | 24 | 706_135 | 23 / 130 | 2_806_132 | +297.4 % | 69 | 40_668 |
+| MAZE NEAR 17x14 | 3 | 102_815 | 2 / 3 | 123_382 | +20.0 % | 3 | 41_127 |
+| MAZE FAR 17x14 | 53 | 1_519_526 | 52 / 91 | 3_562_373 | +134.4 % | 90 | 39_581 |
+| SERPENTINE NEAR 17x14 | 3 | 102_295 | 2 / 5 | 123_302 | +20.5 % | 3 | 41_100 |
+| SERPENTINE FAR 17x14 | 90 | 2_532_090 | 89 / 94 | 4_001_051 | +58.0 % | 94 | 42_564 |
+| UNREACHABLE NEAR 17x14 | 0 | 266_118 | 10 / 84 | 3_038_427 | +1041.8 % | 84 | 36_171 |
+| UNREACHABLE FAR 17x14 | 0 | 263_320 | 12 / 84 | 2_862_550 | +987.1 % | 84 | 34_077 |
+| EMPTY NEAR 7x7 | 3 | 82_241 | 2 / 13 | 121_042 | +47.2 % | 3 | 40_347 |
+| EMPTY FAR 7x7 | 6 | 131_733 | 5 / 23 | 218_654 | +66.0 % | 6 | 36_442 |
+| CAVE NEAR 7x7 | 3 | 81_521 | 2 / 18 | 120_172 | +47.4 % | 3 | 40_057 |
+| CAVE FAR 7x7 | 6 | 131_733 | 5 / 22 | 218_654 | +66.0 % | 6 | 36_442 |
+| MAZE NEAR 7x7 | 3 | 78_204 | 2 / 5 | 130_828 | +67.3 % | 3 | 43_609 |
+| MAZE FAR 7x7 | 13 | 239_984 | 12 / 15 | 622_646 | +159.5 % | 15 | 41_509 |
+| SERPENTINE NEAR 7x7 | 3 | 80_361 | 2 / 5 | 120_112 | +49.5 % | 3 | 40_037 |
+| SERPENTINE FAR 7x7 | 14 | 257_269 | 13 / 16 | 628_832 | +144.4 % | 16 | 39_302 |
+| UNREACHABLE NEAR 7x7 | 0 | 67_873 | 3 / 10 | 393_652 | +480.0 % | 10 | 39_365 |
+| UNREACHABLE FAR 7x7 | 0 | 89_843 | 5 / 10 | 368_820 | +310.5 % | 10 | 36_882 |
+| EMPTY D1 17x14 | 1 | 62_023 | 1 / 7 | 57_141 | -7.9 % | 1 | 57_141 |
+| EMPTY D2 17x14 | 2 | 79_109 | 1 / 7 | 98_018 | +23.9 % | 2 | 49_009 |
+| EMPTY D5 17x14 | 5 | 165_609 | 4 / 61 | 203_385 | +22.8 % | 5 | 40_677 |
+| EMPTY D10 17x14 | 10 | 313_179 | 9 / 176 | 380_930 | +21.6 % | 10 | 38_093 |
+| CAVE D1 17x14 | 1 | 60_350 | 1 / 7 | 56_351 | -6.6 % | 1 | 56_351 |
+| CAVE D2 17x14 | 2 | 77_756 | 1 / 7 | 94_598 | +21.7 % | 2 | 47_299 |
+| CAVE D5 17x14 | 7 | 221_088 | 6 / 34 | 625_567 | +182.9 % | 15 | 41_704 |
+| CAVE D10 17x14 | 12 | 371_744 | 11 / 65 | 900_830 | +142.3 % | 22 | 40_946 |
+
+### Other formulations
+
+Gas (ratio to `Bfs::search`), tiles expanded by the heap (the sorted and scanned arrays expand the
+same tiles), tiles expanded by the greedy search and its path length, rounds of the pruned BFS.
+
+| Pair | dict heap | sorted array | unsorted scan | heap expanded | greedy | greedy expanded / path | pruned BFS | pruned rounds |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| EMPTY NEAR 17x14 | 526_980 (4.9x) | 449_400 (4.2x) | 398_470 (3.7x) | 3 | 229_457 (2.1x) | 3 / 3 | 182_424 (1.7x) | 1 |
+| EMPTY FAR 17x14 | 3_964_506 (7.0x) | 6_269_976 (11.0x) | 4_711_706 (8.3x) | 19 | 1_125_953 (2.0x) | 19 / 19 | 1_132_860 (2.0x) | 1 |
+| CAVE NEAR 17x14 | 473_914 (4.2x) | 392_184 (3.5x) | 368_244 (3.3x) | 3 | 237_247 (2.1x) | 3 / 3 | 198_417 (1.8x) | 1 |
+| CAVE FAR 17x14 | 13_438_391 (19.0x) | 12_255_881 (17.4x) | 18_318_801 (25.9x) | 69 | 2_846_397 (4.0x) | 53 / 29 | 5_924_221 (8.4x) | 22 |
+| MAZE NEAR 17x14 | 243_163 (2.4x) | 219_743 (2.1x) | 234_523 (2.3x) | 3 | 207_117 (2.0x) | 3 / 3 | 180_474 (1.8x) | 1 |
+| MAZE FAR 17x14 | 7_420_844 (4.9x) | 6_230_994 (4.1x) | 7_242_454 (4.8x) | 90 | 4_287_755 (2.8x) | 81 / 53 | 30_241_295 (19.9x) | 39 |
+| SERPENTINE NEAR 17x14 | 280_186 (2.7x) | 237_936 (2.3x) | 254_676 (2.5x) | 3 | 215_477 (2.1x) | 3 / 3 | 180_634 (1.8x) | 1 |
+| SERPENTINE FAR 17x14 | 7_021_471 (2.8x) | 6_385_261 (2.5x) | 7_184_491 (2.8x) | 94 | 4_983_388 (2.0x) | 94 / 90 | 100_641_557 (39.7x) | 81 |
+| UNREACHABLE NEAR 17x14 | 18_717_394 (70.3x) | 17_377_224 (65.3x) | 35_567_134 (133.7x) | 84 | 3_878_363 (14.6x) | 84 / 0 | 3_749_462 (14.1x) | 19 |
+| UNREACHABLE FAR 17x14 | 21_851_214 (83.0x) | 28_371_344 (107.7x) | 60_003_474 (227.9x) | 84 | 3_863_143 (14.7x) | 84 / 0 | 3_040_664 (11.5x) | 7 |
+| EMPTY NEAR 7x7 | 484_117 (5.9x) | 405_967 (4.9x) | 373_777 (4.5x) | 3 | 221_327 (2.7x) | 3 / 3 | 176_944 (2.2x) | 1 |
+| EMPTY FAR 7x7 | 932_187 (7.1x) | 862_897 (6.6x) | 773_997 (5.9x) | 6 | 371_940 (2.8x) | 6 / 6 | 340_814 (2.6x) | 1 |
+| CAVE NEAR 7x7 | 514_800 (6.3x) | 436_250 (5.4x) | 387_040 (4.7x) | 3 | 223_437 (2.7x) | 3 / 3 | 176_214 (2.2x) | 1 |
+| CAVE FAR 7x7 | 886_461 (6.7x) | 768_271 (5.8x) | 720_191 (5.5x) | 6 | 368_750 (2.8x) | 6 / 6 | 341_564 (2.6x) | 1 |
+| MAZE NEAR 7x7 | 278_516 (3.6x) | 236_266 (3.0x) | 253_006 (3.2x) | 3 | 214_307 (2.7x) | 3 / 3 | 201_826 (2.6x) | 2 |
+| MAZE FAR 7x7 | 1_108_731 (4.6x) | 996_071 (4.2x) | 1_110_001 (4.6x) | 15 | 822_409 (3.4x) | 15 / 13 | 1_930_180 (8.0x) | 12 |
+| SERPENTINE NEAR 7x7 | 277_076 (3.4x) | 234_826 (2.9x) | 251_566 (3.1x) | 3 | 211_867 (2.6x) | 3 / 3 | 176_194 (2.2x) | 1 |
+| SERPENTINE FAR 7x7 | 1_315_077 (5.1x) | 1_134_927 (4.4x) | 1_301_137 (5.1x) | 16 | 857_620 (3.3x) | 16 / 14 | 2_271_018 (8.8x) | 9 |
+| UNREACHABLE NEAR 7x7 | 1_345_264 (19.8x) | 1_005_804 (14.8x) | 1_407_464 (20.7x) | 10 | 507_639 (7.5x) | 10 / 0 | 452_488 (6.7x) | 5 |
+| UNREACHABLE FAR 7x7 | 1_338_894 (14.9x) | 1_002_184 (11.2x) | 1_366_464 (15.2x) | 10 | 517_589 (5.8x) | 10 / 0 | 550_408 (6.1x) | 3 |
+| EMPTY D1 17x14 | 100_685 (1.6x) | 91_045 (1.5x) | 91_045 (1.5x) | 1 | 104_395 (1.7x) | 1 / 1 | 143_193 (2.3x) | 2 |
+| EMPTY D2 17x14 | 305_194 (3.9x) | 249_704 (3.2x) | 238_494 (3.0x) | 2 | 173_146 (2.2x) | 2 / 2 | 139_117 (1.8x) | 1 |
+| EMPTY D5 17x14 | 965_682 (5.8x) | 959_462 (5.8x) | 766_732 (4.6x) | 5 | 348_399 (2.1x) | 5 / 5 | 316_814 (1.9x) | 1 |
+| EMPTY D10 17x14 | 2_216_722 (7.1x) | 3_057_872 (9.8x) | 2_061_722 (6.6x) | 10 | 640_474 (2.0x) | 10 / 10 | 620_594 (2.0x) | 1 |
+| CAVE D1 17x14 | 100_685 (1.7x) | 91_045 (1.5x) | 91_045 (1.5x) | 1 | 104_395 (1.7x) | 1 / 1 | 140_823 (2.3x) | 2 |
+| CAVE D2 17x14 | 304_124 (3.9x) | 248_634 (3.2x) | 237_424 (3.1x) | 2 | 172_026 (2.2x) | 2 / 2 | 131_187 (1.7x) | 1 |
+| CAVE D5 17x14 | 1_673_960 (7.6x) | 1_724_180 (7.8x) | 1_582_350 (7.2x) | 10 | 509_132 (2.3x) | 8 / 7 | 565_461 (2.6x) | 3 |
+| CAVE D10 17x14 | 3_130_890 (8.4x) | 3_557_340 (9.6x) | 3_497_470 (9.4x) | 18 | 927_990 (2.5x) | 16 / 13 | 898_735 (2.4x) | 3 |
+
+### Where the gas goes (microbenchmarks)
+
+100 positions (119 down to 20 of 17x14, target 202), per op = `(test - bench_astar_micro_loop) /
+100`; `log2` and `expand` also subtract the `POW128` lookup of `bench_astar_micro_bit`.
+
+| Piece | Test | Measured | Budget | Per op |
+|---|---|---:|---:|---:|
+| Loop | `bench_astar_micro_loop` | 173_756 | 183_000 | |
+| `POW128` lookup | `bench_astar_micro_bit` | 300_756 | 316_000 | 1_270 |
+| Index of a one-hot limb (`LOG[bit mod 131]`, `bounded_int` division) | `bench_astar_micro_log2` | 528_756 | 556_000 | 2_280 |
+| Coordinates, `u8` `DivRem` by `2W` (loser) | `bench_astar_micro_coords` | 477_206 | 502_000 | 3_035 |
+| **Coordinates, `bounded_int` division and sign** | `bench_astar_micro_coords_bounded` | 455_056 | 478_000 | 2_813 |
+| Classes with checked `u8` operations (loser), coordinates excluded | `bench_astar_micro_classes` | 1_165_186 | 1_224_000 | 6_880 |
+| **Classes with `bounded_int` sums, differences and signs**, coordinates excluded | `bench_astar_micro_classes_bounded` | 882_416 | 927_000 | 4_274 |
+| **Whole expansion** (index, coordinates, classes, 3 products, limb conversions, 7 to 12 bitwise, bucket updates) | `bench_astar_micro_expand` | 2_514_322 | 2_641_000 | 22_136 |
+
+Per expanded tile, `Astar::search` pays the expansion (22.1k) plus 13k for the pop, the log, the
+loop and the backtracking: 35.5k, about 320 CASM steps (`--tracked-resource cairo-steps`: 319
+steps, 33 range checks, 9 bitwise applications per tile). A BFS layer is 110 steps and advances
+the whole frontier. Even on EMPTY, where A* expands exactly the path, one expansion (35.5k) costs
+more than one BFS layer plus one backtracking step (19.3k + 8.4k).
+
+### Iterations on `Astar::search`
+
+| Version | EMPTY far | CAVE far | EMPTY near | EMPTY d5 |
+|---|---:|---:|---:|---:|
+| v1: buckets as limb pairs in structs, classes by checked `u8` operations, `f` in `u8` | 854_603 | 3_364_829 | 148_079 | 241_697 |
+| v2: buckets as 10 `u128` locals, constants in a `Box`, classes on one limb when the neighbourhood fits (`try_into` instead of 3 wide conversions, 7 bitwise instead of 12) | 742_588 | 3_024_334 | 143_529 | 225_727 |
+| v3: classes and coordinates with `bounded_int`, `h`, `g`, `f` as felts | 670_788 | 2_730_794 | 135_849 | 207_327 |
+| v4: state in a struct, step inlined, loop unrolled twice | 676_856 | 2_765_412 | 132_877 | 205_485 |
+| **v5 = final: chained backtracking** (a closer neighbour of the previous entry skips the neighbour scan) | **661_956** | **2_806_132** | **132_457** | **203_385** |
+
+v4 (+0.9 % / -2.2 %) and v5 (-2.2 % / +1.5 %) are two consecutive ideas under 2 %: the iteration
+stopped. Not tried: coordinates carried along the chain of closer neighbours instead of the index
+and the division. Its measured ceiling (index 2.3k + coordinates 2.8k per expansion, all 19
+expansions) takes EMPTY far to 565k at best, -0.8 % against `Bfs::search`: under 5 %.
+
+The tie-break matters on caves: the heap, which orders a bucket exactly by `h`, expands 10 and 18
+tiles on CAVE d5 and d10 where the buckets expand 15 and 22 (69 both on CAVE far). With the
+heap's counts, the buckets would still cost about 380k and 660k (26k + 35.5k per expanded tile)
+against 221k and 372k.
+
+### Sierra code size
+
+Statements of the function and every function it calls, test build.
+
+| Formulation | Statements |
+|---|---:|
+| `Bfs::search` | 23_061 |
+| **`Astar::search`** (bitmap buckets) | 11_552 |
+| `variant_heap` (`search_queue` with `DictHeap`) | 7_918 |
+| `variant_sorted` | 6_824 |
+| `variant_scan` | 7_030 |
+| `variant_greedy` | 6_269 |
+| `variant_pruned` | 10_688 |
+
+### Reference `origami_map`
+
+`scarb test -p origami_map -f astar` (cairo-test estimate, square grid, 4 directions):
+`test_astar_search_large` (18x14, 17-tile path) 17_888_210, `test_astar_search_medium` (4x4, 7
+tiles) 2_399_452. `Astar::search` on EMPTY far 17x14 (19 tiles) costs 661_956, 27x less; on CAVE
+far (24 tiles, 69 expanded) 2_806_132, 6.4x less.
+
+### Decision
+
+* **Not exported.** `Astar::search` loses to `Bfs::search` on every realistic class: +16 % to
+  +24 % on open boards (EMPTY far, d2 to d10, near pairs), +17 % to +297 % on caves, +20 % to
+  +160 % on mazes and serpentines, 4x to 11x on unreachable targets (it closes the whole
+  component tile by tile, the BFS floods it by layers). Boards of at most 128 bits are worse still
+  (+47 % to +480 %): the BFS has a single-limb path there.
+* **Only adjacent endpoints** favour it: -7.9 % (EMPTY d1) and -6.6 % (CAVE d1). The gain is the
+  prologue (no dilation constants: about 26k of fixed cost against about 55k), not the search; one
+  step is not a realistic search class.
+* **Open lists**: the bitmap buckets win. A `Felt252Dict` heap, a sorted array and a scanned array
+  pay a push per neighbour and an index per popped entry: 1.5x to 228x the BFS.
+* **Greedy best-first** is not cheaper to run: 1.7x to 15x the BFS, paths 21 % (CAVE far, 29 vs
+  24) and 8 % (CAVE d10, 13 vs 12) longer.
+* **Pruned BFS**: pruning does not reduce the number of layers, which is what a BFS pays for, and
+  the balls cost one dilation each: 1.7x to 40x the BFS (iterative deepening repeats the search
+  81 times on SERPENTINE far).
+
+### Budgets
+
+Measured: the tables above; budget = `ceil(1.05 * measured, 1000)`.
+
+| Pair (`bench_astar_<column>_<pair>`) | `search` | `variant_heap` | `variant_sorted` | `variant_scan` | `variant_greedy` | `variant_pruned` |
+|---|---:|---:|---:|---:|---:|---:|
+| `empty_near_17x14` | 140_000 | 554_000 | 472_000 | 419_000 | 241_000 | 192_000 |
+| `empty_far_17x14` | 696_000 | 4_163_000 | 6_584_000 | 4_948_000 | 1_183_000 | 1_190_000 |
+| `cave_near_17x14` | 138_000 | 498_000 | 412_000 | 387_000 | 250_000 | 209_000 |
+| `cave_far_17x14` | 2_947_000 | 14_111_000 | 12_869_000 | 19_235_000 | 2_989_000 | 6_221_000 |
+| `maze_near_17x14` | 130_000 | 256_000 | 231_000 | 247_000 | 218_000 | 190_000 |
+| `maze_far_17x14` | 3_741_000 | 7_792_000 | 6_543_000 | 7_605_000 | 4_503_000 | 31_754_000 |
+| `serpentine_near_17x14` | 130_000 | 295_000 | 250_000 | 268_000 | 227_000 | 190_000 |
+| `serpentine_far_17x14` | 4_202_000 | 7_373_000 | 6_705_000 | 7_544_000 | 5_233_000 | 105_674_000 |
+| `unreachable_near_17x14` | 3_191_000 | 19_654_000 | 18_247_000 | 37_346_000 | 4_073_000 | 3_937_000 |
+| `unreachable_far_17x14` | 3_006_000 | 22_944_000 | 29_790_000 | 63_004_000 | 4_057_000 | 3_193_000 |
+| `empty_near_7x7` | 128_000 | 509_000 | 427_000 | 393_000 | 233_000 | 186_000 |
+| `empty_far_7x7` | 230_000 | 979_000 | 907_000 | 813_000 | 391_000 | 358_000 |
+| `cave_near_7x7` | 127_000 | 541_000 | 459_000 | 407_000 | 235_000 | 186_000 |
+| `cave_far_7x7` | 230_000 | 931_000 | 807_000 | 757_000 | 388_000 | 359_000 |
+| `maze_near_7x7` | 138_000 | 293_000 | 249_000 | 266_000 | 226_000 | 212_000 |
+| `maze_far_7x7` | 654_000 | 1_165_000 | 1_046_000 | 1_166_000 | 864_000 | 2_027_000 |
+| `serpentine_near_7x7` | 127_000 | 291_000 | 247_000 | 265_000 | 223_000 | 186_000 |
+| `serpentine_far_7x7` | 661_000 | 1_381_000 | 1_192_000 | 1_367_000 | 901_000 | 2_385_000 |
+| `unreachable_near_7x7` | 414_000 | 1_413_000 | 1_057_000 | 1_478_000 | 534_000 | 476_000 |
+| `unreachable_far_7x7` | 388_000 | 1_406_000 | 1_053_000 | 1_435_000 | 544_000 | 578_000 |
+| `empty_d1_17x14` | 60_000 | 106_000 | 96_000 | 96_000 | 110_000 | 151_000 |
+| `empty_d2_17x14` | 103_000 | 321_000 | 263_000 | 251_000 | 182_000 | 147_000 |
+| `empty_d5_17x14` | 214_000 | 1_014_000 | 1_008_000 | 806_000 | 366_000 | 333_000 |
+| `empty_d10_17x14` | 400_000 | 2_328_000 | 3_211_000 | 2_165_000 | 673_000 | 652_000 |
+| `cave_d1_17x14` | 60_000 | 106_000 | 96_000 | 96_000 | 110_000 | 148_000 |
+| `cave_d2_17x14` | 100_000 | 320_000 | 262_000 | 250_000 | 181_000 | 138_000 |
+| `cave_d5_17x14` | 657_000 | 1_758_000 | 1_811_000 | 1_662_000 | 535_000 | 594_000 |
+| `cave_d10_17x14` | 946_000 | 3_288_000 | 3_736_000 | 3_673_000 | 975_000 | 944_000 |
+
+| Test | Measured | Budget |
+|---|---:|---:|
+| `bench_astar_bfs_empty_d1_17x14` | 62_023 | 66_000 |
+| `bench_astar_bfs_empty_d2_17x14` | 79_109 | 84_000 |
+| `bench_astar_bfs_empty_d5_17x14` | 165_609 | 174_000 |
+| `bench_astar_bfs_empty_d10_17x14` | 313_179 | 329_000 |
+| `bench_astar_bfs_cave_d1_17x14` | 60_350 | 64_000 |
+| `bench_astar_bfs_cave_d2_17x14` | 77_756 | 82_000 |
+| `bench_astar_bfs_cave_d5_17x14` | 221_088 | 233_000 |
+| `bench_astar_bfs_cave_d10_17x14` | 371_744 | 391_000 |
 
 ## L3 Dial
 
